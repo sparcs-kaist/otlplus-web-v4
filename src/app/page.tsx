@@ -1,8 +1,10 @@
+import TestButton from "@/common/components/Test";
+
 export default function Home() {
   return (
     <div>
       <main>
-        <p>Hello, World!</p>
+        <TestButton/>
       </main>
       <footer>
       
