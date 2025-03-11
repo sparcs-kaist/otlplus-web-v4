@@ -1,6 +1,7 @@
 {
   "name": "otlplus-web",
-  "version": "0.1.0",
+  "version": "4.0.0-alpha.1",
+  "description": "OTL Plus Web v4 (NextJS)",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
@@ -9,7 +10,6 @@
     "lint": "next lint",
     "format": "prettier --cache --write .",
     "format:nowrite": "prettier --cache --check .",
-    "postinstall": "husky init",
     "prepare": "husky",
     "husky:pre-commit": "pnpm format:nowrite",
     "husky:pre-push": "pnpm lint && pnpm build"
@@ -33,6 +33,10 @@
     "husky": "^9.1.7",
     "prettier": "^3.5.3",
     "typescript": "^5"
+  },
+  "engines": {
+    "node": "^22.14.0",
+    "pnpm": "^10.6.2"
   },
   "packageManager": "pnpm@10.6.2"
 }
