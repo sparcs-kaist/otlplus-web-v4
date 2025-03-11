@@ -6,7 +6,6 @@
 
 **STEP 1.** Install pnpm@10
 
-
 ```bash
 npm install --global corepack@latest
 
@@ -19,13 +18,10 @@ pnpm -v
 
 Check that the version string is 10.6.2 (or later)
 
-
 **STEP 2.** Install dependencies
 
 ```bash
-pnpm i 
+pnpm i
 ```
-
-
 
 **STEP 3.** Configure linter & formatter (eslint & prettier)

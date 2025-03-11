@@ -8,9 +8,10 @@
     "start": "next start",
     "lint": "next lint",
     "format": "prettier --cache --write .",
+    "format:nowrite": "prettier --cache .",
     "postinstall": "husky init",
     "prepare": "husky",
-    "husky:pre-commit": "pnpm format",
+    "husky:pre-commit": "pnpm format:nowrite",
     "husky:pre-push": "pnpm lint && pnpm build"
   },
   "dependencies": {

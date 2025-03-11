@@ -1,12 +1,19 @@
 /* reset css */
 /* 모든 여백 제거 */
-body, h1, h2, h3, p, ul, ol {
+body,
+h1,
+h2,
+h3,
+p,
+ul,
+ol {
   margin: 0;
   padding: 0;
 }
 
 /* 리스트 점 없애기 */
-ul, ol {
+ul,
+ol {
   list-style: none;
 }
 
@@ -17,12 +24,18 @@ ul, ol {
 
 /* normalize css */
 /* HTML5 요소 스타일 정리 */
-article, aside, footer, header, nav, section {
+article,
+aside,
+footer,
+header,
+nav,
+section {
   display: block;
 }
 
 /* 폰트 상속 문제 해결 */
-button, input {
+button,
+input {
   font: inherit;
 }
 
@@ -34,7 +47,7 @@ table {
 
 /* OTL Custom Global styles */
 body {
-  font-family: var(--font-pretendard), 'Times New Roman', sans-serif;
+  font-family: var(--font-pretendard), "Times New Roman", sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
