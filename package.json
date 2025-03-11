@@ -15,10 +15,14 @@
     "husky:pre-push": "pnpm lint && pnpm build"
   },
   "dependencies": {
+    "@tanstack/react-query": "^5.67.2",
+    "axios": "^1.8.2",
+    "loglevel": "^1.9.2",
     "next": "15.2.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "styled-components": "^6.1.15"
+    "styled-components": "^6.1.15",
+    "zod": "^3.24.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
@@ -28,6 +32,7 @@
     "eslint": "^9",
     "eslint-config-next": "15.2.1",
     "eslint-config-prettier": "^10.1.1",
+    "eslint-import-resolver-typescript": "^3.8.4",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-prettier": "^5.2.3",
     "husky": "^9.1.7",

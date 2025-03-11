@@ -12,14 +12,33 @@ const compat = new FlatCompat({
 
 const eslintConfig = [
   ...compat.config({
-    extends: ["next/core-web-vitals", "next/typescript", "prettier", "plugin:import/recommended"],
+    extends: [
+      "next/core-web-vitals",
+      "next/typescript",
+      "prettier",
+      "plugin:import/recommended",
+    ],
+    settings: {
+      "import/resolver": {
+        typescript: {
+          project: "tsconfig.json",
+        },
+      },
+    },
     rules: {
+      "import/named": "off",
       "import/order": [
         "error",
         {
-          warnOnUnassignedImports: true,
-          groups: [["builtin", "external"], "internal", ["parent", "sibling"], "index", "object"],
-          pathGroups: [
+          "warnOnUnassignedImports": true,
+          "groups": [
+            ["builtin", "external"],
+            "internal",
+            ["parent", "sibling"],
+            "index",
+            "object",
+          ],
+          "pathGroups": [
             {
               pattern: "~/**",
               group: "external",
@@ -28,9 +47,9 @@ const eslintConfig = [
             { pattern: "@*", group: "internal", position: "after" },
             { pattern: "@*/**", group: "internal", position: "after" },
           ],
-          pathGroupsExcludedImportTypes: ["react"],
+          "pathGroupsExcludedImportTypes": ["react"],
           "newlines-between": "always",
-          alphabetize: {
+          "alphabetize": {
             order: "asc",
             caseInsensitive: true,
           },
