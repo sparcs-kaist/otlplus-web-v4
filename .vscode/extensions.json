@@ -1,0 +1,10 @@
+{
+  "recommendations": [
+    "esbenp.prettier-vscode",
+    "yoavbls.pretty-ts-errors",
+    "vscode-icons-team.vscode-icons",
+    "styled-components.vscode-styled-components",
+    "naumovs.color-highlight",
+    "dbaeumer.vscode-eslint"
+  ]
+}

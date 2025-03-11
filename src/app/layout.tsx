@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 
+import TestButton from "@/common/components/Test";
 import StyledComponentsRegistry from "@/lib/styled-components/registry";
+
 import "./globals.css";
 
 const pretendard = localFont({

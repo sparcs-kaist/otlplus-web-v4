@@ -4,11 +4,9 @@ export default function Home() {
   return (
     <div>
       <main>
-        <TestButton/>
+        <TestButton />
       </main>
-      <footer>
-      
-      </footer>
+      <footer></footer>
     </div>
   );
 }
