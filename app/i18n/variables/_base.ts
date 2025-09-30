@@ -5,7 +5,7 @@ export const commonI18nBase = {
     dark: "다크 모드",
   },
   credits: {
-    credits: "만든 사람들",
+    makers: "만든 사람들",
     license: "라이선스",
     privacyPolicy: "개인정보취급방침",
   },

@@ -8,7 +8,7 @@ export const commonI18nEn: CommonI18nBaseType = {
     dark: "Dark Mode",
   },
   credits: {
-    credits: "Credits",
+    makers: "Credits",
     license: "License",
     privacyPolicy: "Privacy Policy",
   },
