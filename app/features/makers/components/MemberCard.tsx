@@ -3,7 +3,7 @@ import styled from "@emotion/styled"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 
-const StyledCard = styled(FlexWrapper)<{ isPM: boolean }>`
+const StyledCard = styled(FlexWrapper)`
   height: 100px;
   border-radius: 12px;
   padding: 16px;
@@ -12,8 +12,6 @@ const StyledCard = styled(FlexWrapper)<{ isPM: boolean }>`
   background-color: ${({ theme }) => theme.colors.Background.Tab.default};
   transition: box-shadow 0.2s ease-in-out;
   color: #eba12a;
-  background-image: ${({ isPM }) =>
-    isPM ? "linear-gradient(135deg, #fff3d1 0%, #ffffff 100%)" : "none"};
 `
 
 const StyledImage = styled.img`
@@ -28,16 +26,8 @@ interface MemberCardProps {
 }
 
 const MemberCard: React.FC<MemberCardProps> = ({ name, nickname, role }) => {
-  const isPM = role === "PM"
-
   return (
-    <StyledCard
-      direction="row"
-      gap={8}
-      justify="space-between"
-      align="center"
-      isPM={isPM}
-    >
+    <StyledCard direction="row" gap={8} justify="space-between" align="center">
       <FlexWrapper direction="column" gap={5}>
         <Typography type="BigBold" color="Text.dark" style={{ marginLeft: "4px" }}>
           {name}
