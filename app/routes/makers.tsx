@@ -7,7 +7,6 @@ import MemberSection from "@/features/makers/sections/MemberSection"
 import ProjectSection from "@/features/makers/sections/ProjectSection"
 import { MakersList } from "@/utils/makersList"
 
-
 const MakersWrapper = styled(FlexWrapper)`
   flex: 1 0 0;
   min-height: 0;
