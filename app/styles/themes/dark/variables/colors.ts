@@ -54,6 +54,7 @@ export const darkThemeColors: ThemeType["colors"] = {
     dark: "#D6D6D6",
   },
   Text: {
+    bright: "#FFFFFF",
     disable: "#AAAAAA",
     placeholder: "#AAAAAA",
     lighter: "#888888",
