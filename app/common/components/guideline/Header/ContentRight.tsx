@@ -1,4 +1,4 @@
-import { useContext, useState } from "react"
+import { useContext } from "react"
 
 import styled from "@emotion/styled"
 import DarkModeIcon from "@mui/icons-material/DarkMode"
@@ -26,31 +26,22 @@ interface ContentRightProps {
 }
 
 const ContentRight: React.FC<ContentRightProps> = ({ setAccountPageOpen, userName }) => {
-  const [language, setLanguage] = useState<string>("ko")
-  const [darkMode, setDarkMode] = useState<boolean>(false)
-
   const { i18n } = useTranslation()
-  const { setSelectedTheme } = useContext(SelectedThemeContext)
+  const { selectedTheme, setSelectedTheme } = useContext(SelectedThemeContext)
 
   const changeLanguage = () => {
-    if (language === "ko") {
-      setLanguage("en")
-      i18n.changeLanguage("en")
-    } else {
-      setLanguage("ko")
-      i18n.changeLanguage("ko")
-    }
+    const newLang = i18n.language === "ko" ? "en" : "ko"
+    i18n.changeLanguage(newLang)
   }
 
   const changeThemeMode = () => {
-    setDarkMode(!darkMode)
-    setSelectedTheme(darkMode ? "light" : "dark")
+    setSelectedTheme(selectedTheme === "dark" ? "light" : "dark")
   }
 
   return (
     <ContentRightWrapper direction="row" justify="space-between" align="center" gap={16}>
       <Icon size={16} onClick={changeThemeMode}>
-        {darkMode ? <LightModeIcon /> : <DarkModeIcon />}
+        {selectedTheme === "dark" ? <LightModeIcon /> : <DarkModeIcon />}
       </Icon>
       <Icon size={16} onClick={changeLanguage}>
         <LanguageIcon />

@@ -5,13 +5,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { I18nextProvider } from "react-i18next"
 
 import i18n from "@/libs/i18n"
-import themes, { type ThemeKeys } from "@/styles/themes"
-
-export type ThemeKeysWithAuto = ThemeKeys | "auto"
+import themes from "@/styles/themes"
+import useThemeStore, { type Theme } from "@/utils/useThemeStore"
 
 export const SelectedThemeContext = React.createContext<{
-  selectedTheme: ThemeKeysWithAuto
-  setSelectedTheme: (theme: ThemeKeysWithAuto) => void
+  selectedTheme: Theme
+  setSelectedTheme: (theme: Theme) => void
 }>({
   selectedTheme: "light",
   setSelectedTheme: () => {},
@@ -20,15 +19,9 @@ export const SelectedThemeContext = React.createContext<{
 const Providers: React.FC<React.PropsWithChildren> = (props) => {
   const queryClient = new QueryClient()
 
-  const [selectedTheme, setSelectedTheme] = React.useState<ThemeKeysWithAuto>("light")
+  const { selectedTheme, setSelectedTheme } = useThemeStore()
 
   const extractedTheme = React.useMemo(() => {
-    if (selectedTheme === "auto") {
-      return themes[
-        window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
-      ]
-    }
-
     return themes[selectedTheme]
   }, [selectedTheme])
 

@@ -22,7 +22,7 @@ export const darkThemeColors: ThemeType["colors"] = {
       highlight: "#FFFFFF",
     },
     Page: {
-      default: "#F9F0F0",
+      default: "#000000",
     },
     Section: {
       default: "#FFFFFF",
