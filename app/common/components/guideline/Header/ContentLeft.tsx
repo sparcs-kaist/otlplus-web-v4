@@ -36,12 +36,16 @@ const StyledLink = styled(Link)`
   }
 `
 
-const ContentLeft: React.FC = () => {
+interface ContentLeftProps {
+  setMobileMenuOpen: () => void
+}
+
+const ContentLeft: React.FC<ContentLeftProps> = ({ setMobileMenuOpen }) => {
   const { t } = useTranslation()
 
   return (
     <ContentLeftWrapper direction="row" justify="space-between" align="center" gap={0}>
-      <StyledLink to="/">
+      <StyledLink to="/" onClick={setMobileMenuOpen}>
         <StyledImg src="/headerIcon.png" alt="Logo" />
       </StyledLink>
       <Menu direction="row" gap={24}>

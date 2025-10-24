@@ -1,21 +1,27 @@
 import styled from "@emotion/styled"
+import { motion } from "framer-motion"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router-dom"
 
-import FlexWrapper from "@/common/primitives/FlexWrapper"
-
-const Menu = styled(FlexWrapper)`
+const Menu = styled(motion.div)`
   width: 100%;
-  position: fixed;
-  z-index: 1000;
+  position: absolute;
+  z-index: 100;
   background-color: ${({ theme }) => theme.colors.Background.Page.default};
-  padding: 10px 20px 20px 20px;
+  border-width: 10px 20px;
+  border-color: ${({ theme }) => theme.colors.Background.Page.default};
+  border-style: solid;
+  display: flex;
+  flex-direction: column;
+  transition: max-height 1s ease-in-out;
+  overflow: hidden;
 `
 
 const StyledLink = styled(Link)`
   text-decoration: none;
   color: ${({ theme }) => theme.colors.Text.default};
   font-size: ${({ theme }) => theme.fonts.Big.fontSize}px;
+  padding-bottom: 10px;
 
   &:hover {
     color: ${({ theme }) => theme.colors.Highlight.default};
@@ -33,8 +39,19 @@ const MobileMenu: React.FC<MobileMenuProps> = ({ setMobileMenuOpen }) => {
     setMobileMenuOpen(false)
   }
 
+  const frameVariants = {
+    hidden: { height: 0 },
+    visible: { height: "auto" },
+  }
+
   return (
-    <Menu direction="column" gap={10}>
+    <Menu
+      initial="hidden"
+      animate="visible"
+      exit="hidden"
+      variants={frameVariants}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
+    >
       <StyledLink to="/dictionary" onClick={handleLinkClick}>
         {t("header.dictionary")}
       </StyledLink>

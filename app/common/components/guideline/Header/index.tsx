@@ -3,6 +3,7 @@ import { useEffect, useState } from "react"
 import styled from "@emotion/styled"
 import CloseIcon from "@mui/icons-material/Close"
 import MenuIcon from "@mui/icons-material/Menu"
+import { AnimatePresence } from "framer-motion"
 
 import exampleUserInfo from "@/api/example/UserInfo"
 import type { GETUserInfoResponse } from "@/api/users/$userId/info"
@@ -65,7 +66,7 @@ const Header: React.FC = () => {
       />
       <HeaderBar />
       <HeaderInner>
-        <ContentLeft />
+        <ContentLeft setMobileMenuOpen={() => setMobileMenuOpen(false)} />
         <ContentRight
           setAccountPageOpen={setAccountPageOpen}
           userName={userInfo ? userInfo.name : "Sign in"}
@@ -74,7 +75,9 @@ const Header: React.FC = () => {
           <Icon size={18}>{mobileMenuOpen ? <CloseIcon /> : <MenuIcon />}</Icon>
         </MobileMenuButtonWrapper>
       </HeaderInner>
-      {mobileMenuOpen && <MobileMenu setMobileMenuOpen={setMobileMenuOpen} />}
+      <AnimatePresence>
+        {mobileMenuOpen && <MobileMenu setMobileMenuOpen={setMobileMenuOpen} />}
+      </AnimatePresence>
     </HeaderWrapper>
   )
 }
