@@ -15,7 +15,16 @@ const WriteReviewWrapper = styled(FlexWrapper)`
 
 const WriteReviewWrapperInner = styled(FlexWrapper)`
   flex: 1 0 0;
+  width: 100%;
   overflow: auto;
+`
+
+const ReviewLeftSectionWrapper = styled.div`
+  flex: 1 0 0;
+`
+
+const ReviewRightSectionWrapper = styled.div`
+  flex: 4 0 0;
 `
 
 export default function WriteReviews() {
@@ -78,8 +87,12 @@ export default function WriteReviews() {
           gap={12}
           padding="0px 0px 15px 0px"
         >
-          <ReviewLeftSection takenLectures={takenLectures} />
-          <ReviewRightSection />
+          <ReviewLeftSectionWrapper>
+            <ReviewLeftSection takenLectures={takenLectures} />
+          </ReviewLeftSectionWrapper>
+          <ReviewRightSectionWrapper>
+            <ReviewRightSection />
+          </ReviewRightSectionWrapper>
         </WriteReviewWrapperInner>
       </WriteReviewWrapper>
     </>

@@ -25,7 +25,6 @@ function Index() {
 
   return (
     <StyledWidget
-      width={1248}
       direction="column"
       align="stretch"
       justify="stretch"

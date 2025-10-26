@@ -24,7 +24,6 @@ const TakenLecturesWrapper = styled(FlexWrapper)`
 function Index({ takenLectures }: reviewLeftSectionType) {
   return (
     <Widget
-      width={288}
       direction="column"
       align="stretch"
       gap={12}
