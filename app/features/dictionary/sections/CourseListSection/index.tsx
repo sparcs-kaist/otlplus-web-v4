@@ -1,5 +1,6 @@
 import { useState } from "react"
 
+import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import CircleIcon from "@mui/icons-material/Circle"
 import { Trans, useTranslation } from "react-i18next"
@@ -12,7 +13,6 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import CourseBlock from "@/features/dictionary/components/CourseBlock"
-import themes from "@/styles/themes"
 
 const CourseListSectionInner = styled(FlexWrapper)`
     width: 100%;
@@ -70,6 +70,7 @@ const CourseListSection: React.FC<CourseListSectionProps> = ({
     setSelectedCourseId,
 }) => {
     const { t } = useTranslation()
+    const theme = useTheme()
 
     const [searchResult, setSearchResult] = useState<GETCoursesResponse | null>(
         exampleCourseSearchResults,
@@ -113,7 +114,7 @@ const CourseListSection: React.FC<CourseListSectionProps> = ({
                                     icon: (
                                         <Icon
                                             size={12}
-                                            color={themes.light.colors.Highlight.default}
+                                            color={theme.colors.Highlight.default}
                                         >
                                             <CircleIcon />
                                         </Icon>

@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react"
 
 import styled from "@emotion/styled"
-import CloseIcon from "@mui/icons-material/Close"
 import MenuIcon from "@mui/icons-material/Menu"
-import { AnimatePresence } from "framer-motion"
 
 import exampleUserInfo from "@/api/example/UserInfo"
 import type { GETUserInfoResponse } from "@/api/users/$userId/info"
@@ -12,74 +10,89 @@ import AccountPageModal from "@/features/account/AccountPageModal"
 import { media } from "@/styles/themes/media"
 import useIsMobile from "@/utils/useIsMobile"
 
-import ContentLeft from "./ContentLeft"
-import ContentRight from "./ContentRight"
-import MobileMenu from "./MobileMenu"
+import Menu from "./Menu"
+import MobileSidebar from "./MobileSidebar"
+import Setting from "./Setting"
 
 const HeaderWrapper = styled.div`
-  height: max-content;
+    width: 100%;
+    height: max-content;
+    z-index: 500;
+    background-color: ${({ theme }) => theme.colors.Background.Page.default};
+    position: fixed;
 `
 
 const HeaderBar = styled.div`
-  width: 100%;
-  height: 5px;
-  background: ${({ theme }) => theme.colors.Highlight.default};
+    width: 100%;
+    height: 5px;
+    background: ${({ theme }) => theme.colors.Highlight.default};
 `
 
 const HeaderInner = styled.header`
-  height: 50px;
-  padding-inline: 24px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  white-space: nowrap;
-  gap: 16px;
+    height: 50px;
+    padding-inline: 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    white-space: nowrap;
+    gap: 16px;
 `
 
-const MobileMenuButtonWrapper = styled.div`
-  display: none;
+const MobileSidebarButtonWrapper = styled.div`
+    display: none;
 
-  ${media.mobile} {
-    display: block;
-  }
+    ${media.mobile} {
+        display: block;
+    }
 `
 
 const Header: React.FC = () => {
-  const isMobile = useIsMobile()
+    const isMobile = useIsMobile()
 
-  const [accountPageOpen, setAccountPageOpen] = useState<boolean>(false)
-  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false)
+    const [accountPageOpen, setAccountPageOpen] = useState<boolean>(false)
+    const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false)
 
-  const [userInfo, setUserInfo] = useState<GETUserInfoResponse | null>(exampleUserInfo)
+    const [userInfo, setUserInfo] = useState<GETUserInfoResponse | null>(exampleUserInfo)
 
-  useEffect(() => {
-    if (!isMobile) setMobileMenuOpen(false)
-  }, [isMobile])
+    useEffect(() => {
+        if (!isMobile) setMobileSidebarOpen(false)
+    }, [isMobile])
 
-  return (
-    <HeaderWrapper>
-      <AccountPageModal
-        userInfo={userInfo}
-        setUserInfo={setUserInfo}
-        accountPageOpen={accountPageOpen}
-        setAccountPageOpen={setAccountPageOpen}
-      />
-      <HeaderBar />
-      <HeaderInner>
-        <ContentLeft setMobileMenuOpen={() => setMobileMenuOpen(false)} />
-        <ContentRight
-          setAccountPageOpen={setAccountPageOpen}
-          userName={userInfo ? userInfo.name : "Sign in"}
-        />
-        <MobileMenuButtonWrapper onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-          <Icon size={18}>{mobileMenuOpen ? <CloseIcon /> : <MenuIcon />}</Icon>
-        </MobileMenuButtonWrapper>
-      </HeaderInner>
-      <AnimatePresence>
-        {mobileMenuOpen && <MobileMenu setMobileMenuOpen={setMobileMenuOpen} />}
-      </AnimatePresence>
-    </HeaderWrapper>
-  )
+    return (
+        <HeaderWrapper>
+            <AccountPageModal
+                userInfo={userInfo}
+                setUserInfo={setUserInfo}
+                accountPageOpen={accountPageOpen}
+                setAccountPageOpen={setAccountPageOpen}
+            />
+            <HeaderBar />
+            <HeaderInner>
+                <Menu setMobileSidebarOpen={() => setMobileSidebarOpen(false)} />
+                <Setting
+                    setAccountPageOpen={setAccountPageOpen}
+                    userName={userInfo ? userInfo.name : "Sign in"}
+                    mobileSidebar={false}
+                />
+                <MobileSidebarButtonWrapper onClick={() => setMobileSidebarOpen(true)}>
+                    <Icon size={18}>
+                        <MenuIcon />
+                    </Icon>
+                </MobileSidebarButtonWrapper>
+            </HeaderInner>
+            <MobileSidebar
+                setMobileSidebarOpen={setMobileSidebarOpen}
+                mobileSidebarOpen={mobileSidebarOpen}
+                sidebarHeader={
+                    <Setting
+                        setAccountPageOpen={setAccountPageOpen}
+                        userName={userInfo ? userInfo.name : "Sign in"}
+                        mobileSidebar={true}
+                    />
+                }
+            />
+        </HeaderWrapper>
+    )
 }
 
 export default Header

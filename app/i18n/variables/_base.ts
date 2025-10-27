@@ -25,6 +25,7 @@ export const commonI18nBase = {
         am: "오전",
         pm: "오후",
         year: "연도",
+        language: "언어",
         type: {
             basic: "기초",
             major: "전공",

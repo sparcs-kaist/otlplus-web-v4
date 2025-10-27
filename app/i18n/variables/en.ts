@@ -28,6 +28,7 @@ export const commonI18nEn: CommonI18nBaseType = {
         am: "AM",
         pm: "PM",
         year: "year",
+        language: "Language",
         type: {
             basic: "Basic",
             major: "Major",
