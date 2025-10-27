@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react"
+
 import { type GETUserPastLecturesResponse } from "@/api/users/$userId/lectures"
 import { type GETWritableReviewsResponse } from "@/api/users/writable-reviews"
 import Line from "@/common/components/Line"
@@ -11,6 +13,19 @@ interface TakenLectureSubSectionProps {
     lecturesWrap: GETUserPastLecturesResponse["lecturesWrap"][number]
     selectedLecture: GETWritableReviewsResponse | null
     setSelectedLecture: (lecture: GETWritableReviewsResponse) => void
+}
+
+function isSameLecture(
+    lecture: GETUserPastLecturesResponse["lecturesWrap"][number]["lectures"][number],
+    lecture2: GETWritableReviewsResponse,
+    year: number,
+    semester: number,
+) {
+    return (
+        lecture.courseId === lecture2.courseId &&
+        year === lecture2.year &&
+        semester === lecture2.semester
+    )
 }
 
 function TakenLectureSubSection({
@@ -34,7 +49,6 @@ function TakenLectureSubSection({
                         onClick={() => {
                             const { name, courseId, professors } = lecture
                             const { year, semester } = lecturesWrap
-                            console.log(lecture, lecturesWrap)
                             setSelectedLecture({
                                 name,
                                 courseId,
@@ -44,7 +58,20 @@ function TakenLectureSubSection({
                             })
                         }}
                     >
-                        <LectureSimpleBlock key={lid} lecture={lecture} />
+                        <LectureSimpleBlock
+                            key={lid}
+                            lecture={lecture}
+                            isSelected={
+                                selectedLecture
+                                    ? isSameLecture(
+                                          lecture,
+                                          selectedLecture,
+                                          lecturesWrap.year,
+                                          lecturesWrap.semester,
+                                      )
+                                    : false
+                            }
+                        />
                     </FlexWrapper>
                 ))}
             </FlexWrapper>

@@ -60,7 +60,6 @@ function ReviewWritingBlock({ lecture }: ReviewWritingBlockProps) {
                     lecture?.year,
                     semesterToString(lecture?.semester || SemesterEnum.SPRING),
                 ].map((text, idx) => {
-                    console.log(lecture)
                     return (
                         <Typography type={"Normal"} color={"Text.lighter"} key={idx}>
                             {text}

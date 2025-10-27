@@ -1,3 +1,5 @@
+import { useState } from "react"
+
 import styled from "@emotion/styled"
 
 import { type GETUserPastLecturesResponse } from "@/api/users/$userId/lectures"
