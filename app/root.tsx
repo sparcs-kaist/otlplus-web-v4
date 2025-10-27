@@ -1,7 +1,14 @@
 import React from "react"
 
 import styled from "@emotion/styled"
-import { isRouteErrorResponse, Links, Meta, Outlet, Scripts, ScrollRestoration, } from "react-router"
+import {
+    Links,
+    Meta,
+    Outlet,
+    Scripts,
+    ScrollRestoration,
+    isRouteErrorResponse,
+} from "react-router"
 
 import Header from "@/common/components/guideline/Header"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
@@ -55,15 +62,16 @@ const AppWrapper = styled(FlexWrapper)`
     overflow: hidden;
 `
 
-const OutletWrapper = styled.div`
+const OutletWrapper = styled(FlexWrapper)`
     margin-top: 60px;
+    flex: 1 1 auto;
 `
 
 export default function App() {
     return (
         <AppWrapper direction="column" align="stretch" justify="stretch" gap={0}>
             <Header />
-            <OutletWrapper>
+            <OutletWrapper direction="column" gap={0} align="stretch">
                 <Outlet />
             </OutletWrapper>
         </AppWrapper>
