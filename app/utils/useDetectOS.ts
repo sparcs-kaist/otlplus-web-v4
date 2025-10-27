@@ -1,20 +1,23 @@
 import { useEffect, useState } from "react"
 
-export type OS = "ios" | "android" | "PC"
+export type OS = "ios" | "android" | "mac" | "PC"
 
 const getOS = (): OS => {
-  if (!(navigator.maxTouchPoints && navigator.maxTouchPoints > 2)) return "PC"
-  const userAgent = window.navigator.userAgent.toLowerCase()
-  if (/android/.test(userAgent)) return "android"
-  else return "ios"
+    const userAgent = window.navigator.userAgent.toLowerCase()
+    if (!(navigator.maxTouchPoints && navigator.maxTouchPoints > 2)) {
+        if (/mac/.test(userAgent)) return "mac"
+        else return "PC"
+    }
+    if (/android/.test(userAgent)) return "android"
+    else return "ios"
 }
 
 export const useDetectOS = (): OS => {
-  const [os, setOs] = useState<OS>("PC")
+    const [os, setOs] = useState<OS>("PC")
 
-  useEffect(() => {
-    setOs(getOS())
-  }, [])
+    useEffect(() => {
+        setOs(getOS())
+    }, [])
 
-  return os
+    return os
 }

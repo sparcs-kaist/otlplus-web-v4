@@ -35,17 +35,40 @@ const MobileDisabledWrapper = styled.div`
     }
 `
 
+const MobileOnlyWrapper = styled.div`
+    display: none;
+
+    ${media.mobile} {
+        display: block;
+    }
+`
+
 function Footer() {
     const { t } = useTranslation()
+    const os = useDetectOS()
 
-    function taxiLink() {
-        switch (useDetectOS()) {
-            case "ios":
-                return "https://apps.apple.com/fi/app/taxi-for-kaist/id6447231158"
-            case "android":
-                return "https://play.google.com/store/apps/details?id=org.sparcs.taxi_app&pcampaignid=web_share "
+    function serviceLink(service: string) {
+        const taxiIOSLink = "https://apps.apple.com/kr/app/taxi-for-kaist/id6447231158"
+        const taxiAndroidLink =
+            "https://play.google.com/store/apps/details?id=org.sparcs.taxi_app"
+        const otlIOSLink = "https://apps.apple.com/kr/app/otl/id1579878255"
+        const otlAndroidLink =
+            "https://play.google.com/store/apps/details?id=org.sparcs.otlplus"
+        const araIOSLink = "https://apps.apple.com/us/app/ara-for-kaist/id6457209147"
+        const araAndroidLink =
+            "https://play.google.com/store/apps/details?id=org.sparcs.newara"
+        switch (service) {
+            case "taxi":
+                if (os == "ios" || os == "mac") return taxiIOSLink
+                else return taxiAndroidLink
+            case "otl":
+                if (os == "ios" || os == "mac") return otlIOSLink
+                else return otlAndroidLink
+            case "ara":
+                if (os == "ios" || os == "mac") return araIOSLink
+                else return araAndroidLink
             default:
-                return "https://taxi.sparcs.org"
+                return ""
         }
     }
 
@@ -72,34 +95,36 @@ function Footer() {
                         gap={100}
                         padding="12.5px 0"
                     >
-                        <FlexWrapper
-                            direction="column"
-                            justify="flex-start"
-                            align="flex-start"
-                            gap={30}
-                        >
-                            <Typography type="BigBold" color="Highlight.default">
-                                SPARCS
-                            </Typography>
-                            <FlexWrapper direction="column" gap={10}>
-                                <StyledLink
-                                    href="https://www.sparcs.org/"
-                                    target="_blank"
-                                >
-                                    <Typography type="SmallBold" color="Text.default">
-                                        About SPARCS
-                                    </Typography>
-                                </StyledLink>
-                                <StyledLink
-                                    href="https://www.instagram.com/sparcs.kaist"
-                                    target="_blank"
-                                >
-                                    <Typography type="SmallBold" color="Text.default">
-                                        Instagram
-                                    </Typography>
-                                </StyledLink>
+                        <MobileDisabledWrapper>
+                            <FlexWrapper
+                                direction="column"
+                                justify="flex-start"
+                                align="flex-start"
+                                gap={30}
+                            >
+                                <Typography type="BigBold" color="Highlight.default">
+                                    SPARCS
+                                </Typography>
+                                <FlexWrapper direction="column" gap={10}>
+                                    <StyledLink
+                                        href="https://www.sparcs.org/"
+                                        target="_blank"
+                                    >
+                                        <Typography type="SmallBold" color="Text.default">
+                                            About SPARCS
+                                        </Typography>
+                                    </StyledLink>
+                                    <StyledLink
+                                        href="https://www.instagram.com/sparcs.kaist"
+                                        target="_blank"
+                                    >
+                                        <Typography type="SmallBold" color="Text.default">
+                                            Instagram
+                                        </Typography>
+                                    </StyledLink>
+                                </FlexWrapper>
                             </FlexWrapper>
-                        </FlexWrapper>
+                        </MobileDisabledWrapper>
                         <MobileDisabledWrapper>
                             <FlexWrapper
                                 direction="column"
@@ -116,7 +141,15 @@ function Footer() {
                                         target="_blank"
                                     >
                                         <Typography type="SmallBold" color="Text.default">
-                                            ARA
+                                            Ara
+                                        </Typography>
+                                    </StyledLink>
+                                    <StyledLink
+                                        href="https://taxi.sparcs.org/"
+                                        target="_blank"
+                                    >
+                                        <Typography type="SmallBold" color="Text.default">
+                                            Taxi
                                         </Typography>
                                     </StyledLink>
                                     <StyledLink
@@ -133,35 +166,40 @@ function Footer() {
                                 </FlexWrapper>
                             </FlexWrapper>
                         </MobileDisabledWrapper>
-                        <MobileDisabledWrapper>
-                            <FlexWrapper
-                                direction="column"
-                                justify="flex-start"
-                                align="flex-start"
-                                gap={30}
-                            >
-                                <Typography type="BigBold" color="Highlight.default">
-                                    Apps
-                                </Typography>
-                                <FlexWrapper direction="column" gap={10}>
-                                    <StyledLink href={taxiLink()} target="_blank">
-                                        <Typography type="SmallBold" color="Text.default">
-                                            Taxi
-                                        </Typography>
-                                    </StyledLink>
-                                    {useDetectOS() == "ios" && (
-                                        <StyledLink href="">
-                                            <Typography
-                                                type="SmallBold"
-                                                color="Text.default"
-                                            >
-                                                Sparcs One
-                                            </Typography>
-                                        </StyledLink>
-                                    )}
-                                </FlexWrapper>
+                        <FlexWrapper
+                            direction="column"
+                            justify="flex-start"
+                            align="flex-start"
+                            gap={30}
+                        >
+                            <Typography type="BigBold" color="Highlight.default">
+                                Apps
+                            </Typography>
+                            <FlexWrapper direction="column" gap={10}>
+                                {/*{useDetectOS() == "ios" && (*/}
+                                {/*    <StyledLink href="">*/}
+                                {/*        <Typography type="SmallBold" color="Text.default">*/}
+                                {/*            Buddy app*/}
+                                {/*        </Typography>*/}
+                                {/*    </StyledLink>*/}
+                                {/*)}*/}
+                                <StyledLink href={serviceLink("otl")} target="_blank">
+                                    <Typography type="SmallBold" color="Text.default">
+                                        OTL app
+                                    </Typography>
+                                </StyledLink>
+                                <StyledLink href={serviceLink("taxi")} target="_blank">
+                                    <Typography type="SmallBold" color="Text.default">
+                                        Taxi
+                                    </Typography>
+                                </StyledLink>
+                                <StyledLink href={serviceLink("ara")} target="_blank">
+                                    <Typography type="SmallBold" color="Text.default">
+                                        Ara
+                                    </Typography>
+                                </StyledLink>
                             </FlexWrapper>
-                        </MobileDisabledWrapper>
+                        </FlexWrapper>
                         <FlexWrapper
                             direction="column"
                             justify="flex-start"
@@ -187,6 +225,16 @@ function Footer() {
                                         {t("credits.credits")}
                                     </Typography>
                                 </StyledReactLink>
+                                <MobileOnlyWrapper>
+                                    <StyledLink
+                                        href="https://www.instagram.com/sparcs.kaist"
+                                        target="_blank"
+                                    >
+                                        <Typography type="SmallBold" color="Text.default">
+                                            Instagram
+                                        </Typography>
+                                    </StyledLink>
+                                </MobileOnlyWrapper>
                                 <StyledReactLink to="">
                                     <Typography type="SmallBold" color="Text.default">
                                         {t("credits.contact")}
