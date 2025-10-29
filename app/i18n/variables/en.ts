@@ -6,6 +6,7 @@ export const commonI18nEn: CommonI18nBaseType = {
         credits: "Credits",
         license: "License",
         privacyPolicy: "Privacy Policy",
+        contact: "Contact Us",
     },
     common: {
         class: "Class",
@@ -27,6 +28,7 @@ export const commonI18nEn: CommonI18nBaseType = {
         am: "AM",
         pm: "PM",
         year: "year",
+        language: "Language",
         type: {
             basic: "Basic",
             major: "Major",

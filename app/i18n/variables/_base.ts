@@ -1,8 +1,9 @@
 export const commonI18nBase = {
     credits: {
         credits: "만든 사람들",
-        license: "라이선스",
+        license: "이용 약관",
         privacyPolicy: "개인정보취급방침",
+        contact: "문의하기",
     },
     common: {
         class: "분류",
@@ -24,6 +25,7 @@ export const commonI18nBase = {
         am: "오전",
         pm: "오후",
         year: "연도",
+        language: "언어",
         type: {
             basic: "기초",
             major: "전공",
