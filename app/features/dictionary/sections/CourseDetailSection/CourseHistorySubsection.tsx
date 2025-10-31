@@ -11,6 +11,7 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import CourseHistoryChip from "@/features/dictionary/components/CourseHistoryChip"
+import professorName from "@/utils/professorName"
 import useIsDevice from "@/utils/useIsDevice"
 
 const CourseHistory = styled(motion.div)`
@@ -135,14 +136,7 @@ const CourseHistorySubsection: React.FC<CourseHistorySubsectionProps> = ({
                                             classData.professors[0].id
                                         }
                                         chipIndex={classData.classNo}
-                                        chipText={
-                                            classData.professors.length > 1
-                                                ? classData.professors[0].name +
-                                                  t("common.professors.over") +
-                                                  (classData.professors.length - 1) +
-                                                  t("common.professors.people")
-                                                : classData.professors[0]?.name
-                                        }
+                                        chipText={professorName(classData.professors)}
                                         onClick={() => {
                                             if (
                                                 selectedProfessorId ===
