@@ -4,6 +4,7 @@ import styled from "@emotion/styled"
 
 import Modal from "@/common/components/Modal"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
+import Widget from "@/common/primitives/Widget"
 import CourseDetailSection from "@/features/dictionary/sections/CourseDetailSection"
 import CourseListSection from "@/features/dictionary/sections/CourseListSection"
 import { media } from "@/styles/themes/media"
@@ -23,12 +24,9 @@ const DictionaryWrapper = styled(FlexWrapper)`
     }
 `
 
-const SectionWrapper = styled(FlexWrapper)`
+const SectionWrapper = styled(Widget)`
     height: 100%;
-    border-radius: 12px;
-    padding: 16px;
     overflow: hidden;
-    background-color: ${({ theme }) => theme.colors.Background.Section.default};
 `
 
 const CourseListSectionWrapper = styled(SectionWrapper)`
@@ -88,13 +86,23 @@ export default function DictionaryPage() {
 
     return (
         <DictionaryWrapper direction="row" align="stretch" justify="center" gap={12}>
-            <CourseListSectionWrapper direction="column" align="stretch" gap={0}>
+            <CourseListSectionWrapper
+                direction="column"
+                align="stretch"
+                gap={0}
+                borderRadius={12}
+            >
                 <CourseListSection
                     selectedCourseId={selectedCourseId}
                     setSelectedCourseId={setSelectedCourseId}
                 />
             </CourseListSectionWrapper>
-            <CourseDetailSectionWrapper direction="column" align="stretch" gap={0}>
+            <CourseDetailSectionWrapper
+                direction="column"
+                align="stretch"
+                gap={0}
+                borderRadius={12}
+            >
                 <CourseDetailSection selectedCourseId={selectedCourseId} />
             </CourseDetailSectionWrapper>
             {isTablet && (
