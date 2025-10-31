@@ -921,7 +921,7 @@ const exampleCourse: GETCourseDetailResponse = {
                             name: "ㅇㄴ마에ㅏㅐㄴㅁㅇ",
                         },
                         {
-                            id: 564345463e54,
+                            id: 56434546354,
                             name: "ㄹㅇㄴㅁㄹㄴㄹ",
                         },
                     ],
