@@ -165,6 +165,8 @@ export const commonI18nEn: CommonI18nBaseType = {
     dictionary: {
         courseHistory: "Course History",
         notOffered: "Not offered",
+        over: " and ",
+        people: " others",
         courseCountInfo:
             "Total<space/><bold>{{count}}</bold><space/>courses<space/>(<icon/>: offered this semester)",
         sort: "Sort",

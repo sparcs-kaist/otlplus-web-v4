@@ -13,6 +13,7 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import CourseBlock from "@/features/dictionary/components/CourseBlock"
+import { media } from "@/styles/themes/media"
 
 const CourseListSectionInner = styled(FlexWrapper)`
     width: 100%;
@@ -23,6 +24,7 @@ const CourseListSectionInner = styled(FlexWrapper)`
 const SearchSubSection = styled.div`
     border-radius: 6px;
     border: 1px solid ${({ theme }) => theme.colors.Line.divider};
+    max-height: 100%;
 `
 
 const NoResultText = styled(Typography)`
@@ -41,7 +43,6 @@ const HeaderText = styled(Typography)`
 `
 
 const SortWrapper = styled(FlexWrapper)`
-    width: 35%;
     white-space: nowrap;
 `
 

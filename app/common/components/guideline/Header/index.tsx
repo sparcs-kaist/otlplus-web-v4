@@ -8,7 +8,7 @@ import type { GETUserInfoResponse } from "@/api/users/$userId/info"
 import Icon from "@/common/primitives/Icon"
 import AccountPageModal from "@/features/account/AccountPageModal"
 import { media } from "@/styles/themes/media"
-import useIsMobile from "@/utils/useIsMobile"
+import useIsDevice from "@/utils/useIsDevice"
 
 import Menu from "./Menu"
 import MobileSidebar from "./MobileSidebar"
@@ -47,7 +47,7 @@ const MobileSidebarButtonWrapper = styled.div`
 `
 
 const Header: React.FC = () => {
-    const isMobile = useIsMobile()
+    const isMobile = useIsDevice("mobile")
 
     const [accountPageOpen, setAccountPageOpen] = useState<boolean>(false)
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false)

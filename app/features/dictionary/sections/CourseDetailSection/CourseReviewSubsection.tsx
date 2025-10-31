@@ -13,85 +13,116 @@ import CourseReviewLanguageChip from "@/features/dictionary/components/CourseRev
 import ReviewWritingBlock from "@/features/dictionary/components/ReviewWritingBlock"
 
 const NumberWrapper = styled(FlexWrapper)`
-  width: 100%;
-  padding: 10px 165px;
+    width: 300px;
+    padding: 10px;
+`
+
+const NumberContent = styled(FlexWrapper)`
+    flex: 1 0 0;
 `
 
 const ReviewWrapper = styled.div`
-  padding: 8px 6px;
-  width: 100%;
-  border-radius: 6px;
-  border: 1px ${({ theme }) => theme.colors.Background.Block.dark} solid;
-  background-color: ${({ theme }) => theme.colors.Background.Block.default};
+    padding: 8px 6px;
+    width: 100%;
+    border-radius: 6px;
+    border: 1px ${({ theme }) => theme.colors.Background.Block.dark} solid;
+    background-color: ${({ theme }) => theme.colors.Background.Block.default};
 `
 
 interface CourseReviewSubsectionProps {
-  selectedProfessorId: number | null
+    selectedProfessorId: number | null
 }
 
 const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
-  selectedProfessorId,
+    selectedProfessorId,
 }) => {
-  const { t } = useTranslation()
+    const { t } = useTranslation()
 
-  const [reviews, setReviews] = useState<GETReviewsResponse | null>(exampleReviews)
-  const [reviewLanguage, setReviewLanguage] = useState("all")
+    const [reviews, setReviews] = useState<GETReviewsResponse | null>(exampleReviews)
+    const [reviewLanguage, setReviewLanguage] = useState("all")
 
-  return (
-    <>
-      <Typography type={"NormalBold"} color={"Text.default"}>
-        {t("dictionary.review")}
-      </Typography>
-      <FlexWrapper direction="column" gap={6}>
-        <Typography type={"NormalBold"} color={"Text.default"}>
-          {t("dictionary.reviewLanguage")}
-        </Typography>
-        <FlexWrapper direction="row" gap={6}>
-          {["all", "english"].map((lang) => (
-            <CourseReviewLanguageChip
-              key={lang}
-              selected={reviewLanguage == lang}
-              chipText={t(`dictionary.reviewLanguageOptions.${lang}`)}
-              onClick={() => setReviewLanguage(lang)}
-            />
-          ))}
-        </FlexWrapper>
-      </FlexWrapper>
-      <NumberWrapper direction="row" gap={0} justify={"space-between"} align={"center"}>
-        {[
-          [
-            getAverageScoreLabel(reviews?.averageGrade, reviews?.reviews.length),
-            t("common.grade"),
-          ],
-          [
-            getAverageScoreLabel(reviews?.averageLoad, reviews?.reviews.length),
-            t("common.load"),
-          ],
-          [
-            getAverageScoreLabel(reviews?.averageSpeech, reviews?.reviews.length),
-            t("common.speech"),
-          ],
-        ].map(([value, label], index) => (
-          <FlexWrapper key={index} direction="column" gap={0} align={"center"}>
-            <Typography type={"Bigger"} color={"Text.default"}>
-              {value}
+    return (
+        <>
+            <Typography type={"NormalBold"} color={"Text.default"}>
+                {t("dictionary.review")}
             </Typography>
-            <Typography type={"Smaller"} color={"Text.default"}>
-              {label}
-            </Typography>
-          </FlexWrapper>
-        ))}
-      </NumberWrapper>
-      {exampleReviews.reviews.length > 0 && (
-        <ReviewWritingBlock courseName={exampleReviews.reviews[0].courseName} />
-      )}
-      {reviews?.reviews.map((review, index) => (
-        <ReviewWrapper>
-          <ReviewBlock review={review} likeReview={() => {}} key={index} />
-        </ReviewWrapper>
-      ))}
-    </>
-  )
+            <FlexWrapper direction="column" gap={6}>
+                <Typography type={"NormalBold"} color={"Text.default"}>
+                    {t("dictionary.reviewLanguage")}
+                </Typography>
+                <FlexWrapper direction="row" gap={6}>
+                    {["all", "english"].map((lang) => (
+                        <CourseReviewLanguageChip
+                            key={lang}
+                            selected={reviewLanguage == lang}
+                            chipText={t(`dictionary.reviewLanguageOptions.${lang}`)}
+                            onClick={() => setReviewLanguage(lang)}
+                        />
+                    ))}
+                </FlexWrapper>
+            </FlexWrapper>
+            <FlexWrapper
+                direction={"row"}
+                gap={0}
+                justify="center"
+                align="center"
+                style={{ width: "100%" }}
+            >
+                <NumberWrapper
+                    direction="row"
+                    gap={0}
+                    justify={"space-between"}
+                    align={"center"}
+                >
+                    {[
+                        [
+                            getAverageScoreLabel(
+                                reviews?.averageGrade,
+                                reviews?.reviews.length,
+                            ),
+                            t("common.grade"),
+                        ],
+                        [
+                            getAverageScoreLabel(
+                                reviews?.averageLoad,
+                                reviews?.reviews.length,
+                            ),
+                            t("common.load"),
+                        ],
+                        [
+                            getAverageScoreLabel(
+                                reviews?.averageSpeech,
+                                reviews?.reviews.length,
+                            ),
+                            t("common.speech"),
+                        ],
+                    ].map(([value, label], index) => (
+                        <NumberContent
+                            key={index}
+                            direction="column"
+                            gap={0}
+                            align={"center"}
+                        >
+                            <Typography type={"Bigger"} color={"Text.default"}>
+                                {value}
+                            </Typography>
+                            <Typography type={"Smaller"} color={"Text.default"}>
+                                {label}
+                            </Typography>
+                        </NumberContent>
+                    ))}
+                </NumberWrapper>
+            </FlexWrapper>
+            {exampleReviews.reviews.length > 0 && (
+                <ReviewWritingBlock courseName={exampleReviews.reviews[0].courseName} />
+            )}
+            {reviews?.reviews.map((review, index) => (
+                <ReviewWrapper>
+                    <ReviewBlock review={review} likeReview={() => {}} key={index} />
+                </ReviewWrapper>
+            ))}
+        </>
+    )
 }
 
 export default CourseReviewSubsection
