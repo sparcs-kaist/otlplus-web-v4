@@ -15,7 +15,7 @@ const ProjectCardWrapper = styled.div`
   gap: 15px;
   justify-content: center;
   margin: 36px 0 0 0;
-  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
 `
 
 interface ProjectSectionProps {
