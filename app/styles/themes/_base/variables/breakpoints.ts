@@ -1,7 +1,8 @@
-// each breakpoint represents the maximum width for that device type
+export type DeviceType = "mobile" | "tablet" | "laptop" | "desktop"
 
-export const breakpoints = {
-  mobile: 720,
-  tablet: 960,
-  laptop: 1440,
+export const breakpoints: Record<DeviceType, number> = {
+    mobile: 720,
+    tablet: 960,
+    laptop: 1440,
+    desktop: Infinity,
 }

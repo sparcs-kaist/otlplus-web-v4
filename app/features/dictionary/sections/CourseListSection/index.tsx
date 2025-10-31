@@ -23,6 +23,7 @@ const CourseListSectionInner = styled(FlexWrapper)`
 const SearchSubSection = styled.div`
     border-radius: 6px;
     border: 1px solid ${({ theme }) => theme.colors.Line.divider};
+    max-height: 100%;
 `
 
 const NoResultText = styled(Typography)`
@@ -41,7 +42,6 @@ const HeaderText = styled(Typography)`
 `
 
 const SortWrapper = styled(FlexWrapper)`
-    width: 35%;
     white-space: nowrap;
 `
 
@@ -72,7 +72,7 @@ const CourseListSection: React.FC<CourseListSectionProps> = ({
     const { t } = useTranslation()
     const theme = useTheme()
 
-    const [searchResult, setSearchResult] = useState<GETCoursesResponse | null>(
+    const [searchResult, setSearchResult] = useState<GETCoursesResponse>(
         exampleCourseSearchResults,
     )
     const [sortOption, setSortOption] = useState<number>(0)
@@ -92,7 +92,7 @@ const CourseListSection: React.FC<CourseListSectionProps> = ({
                     }}
                 />
             </SearchSubSection>
-            {searchResult ? (
+            {searchResult.length !== 0 ? (
                 <>
                     <FlexWrapper
                         direction="row"
@@ -152,11 +152,9 @@ const CourseListSection: React.FC<CourseListSectionProps> = ({
                     </CourseBlockWrapper>
                 </>
             ) : (
-                <FlexWrapper direction="column" gap={0} justify="stretch" align="center">
-                    <Typography type={"Bigger"} color={"Text.placeholder"}>
-                        {t("dictionary.noResults")}
-                    </Typography>
-                </FlexWrapper>
+                <NoResultText type={"Bigger"} color={"Text.placeholder"}>
+                    {t("dictionary.noResults")}
+                </NoResultText>
             )}
         </CourseListSectionInner>
     )

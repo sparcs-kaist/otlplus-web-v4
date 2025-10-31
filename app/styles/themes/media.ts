@@ -1,12 +1,10 @@
-import { breakpoints } from "@/styles/themes/_base/variables/breakpoints"
+import { type DeviceType, breakpoints } from "@/styles/themes/_base/variables/breakpoints"
 
-type Breakpoint = "mobile" | "tablet" | "laptop"
-
-export const media = Object.keys(breakpoints as Record<Breakpoint, number>).reduce(
-  (acc, label) => {
-    const breakpoint = label as Breakpoint
-    acc[breakpoint] = `@media (max-width: ${breakpoints[breakpoint]}px)`
-    return acc
-  },
-  {} as Record<Breakpoint, string>,
+export const media = Object.keys(breakpoints as Record<DeviceType, number>).reduce(
+    (acc, label) => {
+        const breakpoint = label as DeviceType
+        acc[breakpoint] = `@media (max-width: ${breakpoints[breakpoint]}px)`
+        return acc
+    },
+    {} as Record<DeviceType, string>,
 )

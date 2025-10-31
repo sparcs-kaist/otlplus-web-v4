@@ -12,8 +12,12 @@ const CourseInfo = styled(FlexWrapper)`
 `
 
 const NumberWrapper = styled(FlexWrapper)`
-    width: 100%;
-    padding: 10px 165px;
+    width: 300px;
+    padding: 10px;
+`
+
+const NumberContent = styled(FlexWrapper)`
+    flex: 1 0 0;
 `
 
 const DetailHeaderText = styled(Typography)`
@@ -50,22 +54,27 @@ const CourseInfoSubsection: React.FC<CourseInfoSubsectionProps> = ({ courseDetai
             <NumberWrapper
                 direction="row"
                 gap={0}
-                justify={"space-between"}
+                justify={"space-around"}
                 align={"center"}
             >
                 {[
-                    [courseDetail?.num_classes, t("common.numClasses")],
-                    [courseDetail?.num_labs, t("common.numLabs")],
+                    [courseDetail?.classDuration, t("common.numClasses")],
+                    [courseDetail?.expDuration, t("common.numLabs")],
                     [courseDetail?.credit, t("common.credit")],
                 ].map(([value, label], index) => (
-                    <FlexWrapper key={index} direction="column" gap={0} align={"center"}>
+                    <NumberContent
+                        key={index}
+                        direction="column"
+                        gap={0}
+                        align={"center"}
+                    >
                         <Typography type={"Bigger"} color={"Text.default"}>
                             {value}
                         </Typography>
                         <Typography type={"Smaller"} color={"Text.default"}>
                             {label}
                         </Typography>
-                    </FlexWrapper>
+                    </NumberContent>
                 ))}
             </NumberWrapper>
         </>

@@ -4,11 +4,6 @@ import { SemesterEnum } from "@/common/enum/semesterEnum"
 import { DepartmentSchema } from "@/common/schemas/department"
 import { ProfessorSchema } from "@/common/schemas/professor"
 
-// GET /api/courses/:courseId
-const CourseHistoryProfessorSchema = ProfessorSchema.extend({
-    classNo: z.string(),
-})
-
 export const getCourseDetail = z.object({
     response: z.object({
         id: z.number().int(),
@@ -20,14 +15,21 @@ export const getCourseDetail = z.object({
             z.object({
                 year: z.number().int(),
                 semester: z.nativeEnum(SemesterEnum),
-                professors: z.array(CourseHistoryProfessorSchema),
+                classes: z.array(
+                    z.object({
+                        lectureId: z.number().int(),
+                        classNo: z.string(),
+                        professors: z.array(ProfessorSchema),
+                    }),
+                ),
+                myLectureId: z.number().int(),
             }),
         ),
         summary: z.string(),
         credit: z.number().int(),
-        credit_au: z.number().int(),
-        num_classes: z.number().int(),
-        num_labs: z.number().int(),
+        creditAU: z.number().int(),
+        classDuration: z.number().int(),
+        expDuration: z.number().int(),
     }),
 })
 

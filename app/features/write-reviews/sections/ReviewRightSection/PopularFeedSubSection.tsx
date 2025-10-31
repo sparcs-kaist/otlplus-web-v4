@@ -12,7 +12,9 @@ interface PopularFeedSubSectionProps {
 }
 
 const ReviewWrapper = styled(FlexWrapper)`
-    background: ${({ theme }) => theme.colors.Background.Block.default};
+    padding: 8px 6px;
+    border: 1px ${({ theme }) => theme.colors.Background.Block.dark} solid;
+    background-color: ${({ theme }) => theme.colors.Background.Block.default};
     border-radius: 6px;
 `
 
