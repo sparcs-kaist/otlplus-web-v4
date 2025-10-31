@@ -32,6 +32,7 @@ const ModalContainer = styled.div<{ fullScreen: boolean }>`
     flex-direction: column;
     gap: 20px;
     pointer-events: auto;
+    overflow: auto;
 `
 
 const HeaderWrapper = styled.div`
@@ -53,7 +54,7 @@ interface ModalProps {
 const CloseIconWrapper = styled.div`
     width: 32px;
     height: 32px;
-    padding: 6px;
+    padding: 4px;
     color: ${({ theme }) => theme.colors.Text.placeholder};
 `
 
@@ -97,7 +98,7 @@ const Modal: React.FC<ModalProps> = ({
                     <HeaderWrapper>
                         <Typography type="BigBold">{title}</Typography>
                         <CloseIconWrapper>
-                            <Icon onClick={onClose} size={20}>
+                            <Icon onClick={onClose} size={24}>
                                 <CloseIcon />
                             </Icon>
                         </CloseIconWrapper>
