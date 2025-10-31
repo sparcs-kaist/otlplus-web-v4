@@ -15,7 +15,9 @@ interface WriteReviewsSubSectionType {
 }
 
 const ReviewWrapper = styled(FlexWrapper)`
-    background: ${({ theme }) => theme.colors.Background.Block.default};
+    padding: 8px 6px;
+    border: 1px ${({ theme }) => theme.colors.Background.Block.dark} solid;
+    background-color: ${({ theme }) => theme.colors.Background.Block.default};
     border-radius: 6px;
 `
 
@@ -48,13 +50,7 @@ function WriteReviewsSubSection({ selectedLecture }: WriteReviewsSubSectionType)
                     </Typography>
                 </FlexWrapper>
                 {exampleReviews.reviews.map((review, idx) => (
-                    <ReviewWrapper
-                        direction="column"
-                        align="stretch"
-                        gap={0}
-                        padding="8px 10px"
-                        key={idx}
-                    >
+                    <ReviewWrapper direction="column" align="stretch" gap={0} key={idx}>
                         <ReviewBlock review={review} likeReview={likeReview} />
                     </ReviewWrapper>
                 ))}
