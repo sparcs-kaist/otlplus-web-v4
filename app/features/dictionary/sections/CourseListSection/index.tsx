@@ -13,7 +13,6 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import CourseBlock from "@/features/dictionary/components/CourseBlock"
-import { media } from "@/styles/themes/media"
 
 const CourseListSectionInner = styled(FlexWrapper)`
     width: 100%;
@@ -73,7 +72,7 @@ const CourseListSection: React.FC<CourseListSectionProps> = ({
     const { t } = useTranslation()
     const theme = useTheme()
 
-    const [searchResult, setSearchResult] = useState<GETCoursesResponse | null>(
+    const [searchResult, setSearchResult] = useState<GETCoursesResponse>(
         exampleCourseSearchResults,
     )
     const [sortOption, setSortOption] = useState<number>(0)
@@ -93,7 +92,7 @@ const CourseListSection: React.FC<CourseListSectionProps> = ({
                     }}
                 />
             </SearchSubSection>
-            {searchResult ? (
+            {searchResult.length !== 0 ? (
                 <>
                     <FlexWrapper
                         direction="row"
@@ -153,11 +152,9 @@ const CourseListSection: React.FC<CourseListSectionProps> = ({
                     </CourseBlockWrapper>
                 </>
             ) : (
-                <FlexWrapper direction="column" gap={0} justify="stretch" align="center">
-                    <Typography type={"Bigger"} color={"Text.placeholder"}>
-                        {t("dictionary.noResults")}
-                    </Typography>
-                </FlexWrapper>
+                <NoResultText type={"Bigger"} color={"Text.placeholder"}>
+                    {t("dictionary.noResults")}
+                </NoResultText>
             )}
         </CourseListSectionInner>
     )
