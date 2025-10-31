@@ -66,6 +66,7 @@ const SearchResultWrapper = styled.div`
     width: 100%;
     overflow-y: auto;
     height: 248px;
+    margin-bottom: 10px;
 
     scrollbar-width: none;
 `
@@ -73,7 +74,7 @@ const SearchResultWrapper = styled.div`
 const SearchResultText = styled(Typography)`
     padding: 8px 10px;
     cursor: pointer;
-    height: 32px;
+    min-height: 32px;
 
     &:hover {
         background-color: ${({ theme }) => theme.colors.Background.Block.default};
