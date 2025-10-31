@@ -103,6 +103,10 @@ export const commonI18nEn: CommonI18nBaseType = {
             "1yearShort": "In-1-Year",
             thisSemesterShort: "This-Semester",
         },
+        professors: {
+            over: " and ",
+            people: " others",
+        },
         review: {
             writingPlaceholder: "Please describe your evaluation of grades, load, etc.",
             like: "Like ",
@@ -165,8 +169,6 @@ export const commonI18nEn: CommonI18nBaseType = {
     dictionary: {
         courseHistory: "Course History",
         notOffered: "Not offered",
-        over: " and ",
-        people: " others",
         courseCountInfo:
             "Total<space/><bold>{{count}}</bold><space/>courses<space/>(<icon/>: offered this semester)",
         sort: "Sort",

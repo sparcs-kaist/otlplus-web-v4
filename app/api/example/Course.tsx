@@ -939,7 +939,7 @@ const exampleCourse: GETCourseDetailResponse = {
                     lectureId: 1908737,
                 },
             ],
-            myLectureId: 0,
+            myLectureId: 1908737,
         },
     ],
     summary:

@@ -6,6 +6,9 @@ import CloseIcon from "@mui/icons-material/Close"
 import type { GETCourseDetailResponse } from "@/api/courses/$courseId"
 import exampleCourse from "@/api/example/Course"
 import Credits from "@/common/components/Credits"
+import ReviewWritingBlock, {
+    type ReviewWritingBlockProps,
+} from "@/common/components/reviews/ReviewWritingBlock"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
@@ -59,8 +62,32 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
         exampleCourse,
     )
     const [selectedProfessorId, setSelectedProfessorId] = useState<number | null>(null)
+    const [writableReviewProps, setWritableReviewProps] = useState<
+        ReviewWritingBlockProps[]
+    >([])
     const reviewSectionRef = useRef<HTMLDivElement>(null)
 
+    useEffect(() => {
+        if (courseDetail) {
+            const writableReviews: ReviewWritingBlockProps[] = []
+            courseDetail.history.forEach((history) => {
+                if (history.myLectureId !== 0) {
+                    const professors =
+                        history.classes.find(
+                            (cls) => cls.lectureId === history.myLectureId,
+                        )?.professors || []
+                    writableReviews.push({
+                        name: courseDetail.name,
+                        lectureId: history.myLectureId,
+                        professors: professors,
+                        year: history.year,
+                        semester: history.semester,
+                    })
+                }
+            })
+            setWritableReviewProps(writableReviews)
+        }
+    }, [courseDetail])
     useEffect(() => {
         if (selectedProfessorId !== null) {
             reviewSectionRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -115,9 +142,14 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
                         />
                     </CourseDetailWrapper>
                     <Divider />
-                    <CourseDetailWrapper ref={reviewSectionRef} direction="column" gap={10}>
+                    <CourseDetailWrapper
+                        ref={reviewSectionRef}
+                        direction="column"
+                        gap={10}
+                    >
                         <CourseReviewSubsection
                             selectedProfessorId={selectedProfessorId}
+                            writableReviewProps={writableReviewProps}
                         />
                     </CourseDetailWrapper>
                 </>

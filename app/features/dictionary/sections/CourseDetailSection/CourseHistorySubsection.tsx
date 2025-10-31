@@ -138,9 +138,9 @@ const CourseHistorySubsection: React.FC<CourseHistorySubsectionProps> = ({
                                         chipText={
                                             classData.professors.length > 1
                                                 ? classData.professors[0].name +
-                                                  t("dictionary.over") +
+                                                  t("common.professors.over") +
                                                   (classData.professors.length - 1) +
-                                                  t("dictionary.people")
+                                                  t("common.professors.people")
                                                 : classData.professors[0]?.name
                                         }
                                         onClick={() => {

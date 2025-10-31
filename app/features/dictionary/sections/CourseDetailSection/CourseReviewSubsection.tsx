@@ -6,11 +6,13 @@ import { useTranslation } from "react-i18next"
 import exampleReviews from "@/api/example/Reviews"
 import type { GETReviewsResponse } from "@/api/reviews"
 import ReviewBlock from "@/common/components/blocks/ReviewBlock"
+import ReviewWritingBlock, {
+    type ReviewWritingBlockProps,
+} from "@/common/components/reviews/ReviewWritingBlock"
 import { getAverageScoreLabel } from "@/common/enum/scoreEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import CourseReviewLanguageChip from "@/features/dictionary/components/CourseReviewLanguageChip"
-import ReviewWritingBlock from "@/features/dictionary/components/ReviewWritingBlock"
 
 const NumberWrapper = styled(FlexWrapper)`
     width: 300px;
@@ -31,10 +33,12 @@ const ReviewWrapper = styled.div`
 
 interface CourseReviewSubsectionProps {
     selectedProfessorId: number | null
+    writableReviewProps: ReviewWritingBlockProps[]
 }
 
 const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
     selectedProfessorId,
+    writableReviewProps,
 }) => {
     const { t } = useTranslation()
 
@@ -113,9 +117,8 @@ const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
                     ))}
                 </NumberWrapper>
             </FlexWrapper>
-            {exampleReviews.reviews.length > 0 && (
-                <ReviewWritingBlock courseName={exampleReviews.reviews[0].courseName} />
-            )}
+            {exampleReviews.reviews.length > 0 &&
+                writableReviewProps.map((props) => <ReviewWritingBlock {...props} />)}
             {reviews?.reviews.map((review, index) => (
                 <ReviewWrapper>
                     <ReviewBlock review={review} likeReview={() => {}} key={index} />

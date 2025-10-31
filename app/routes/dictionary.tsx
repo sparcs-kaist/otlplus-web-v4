@@ -27,6 +27,7 @@ const DictionaryWrapper = styled(FlexWrapper)`
 const SectionWrapper = styled(Widget)`
     height: 100%;
     overflow: hidden;
+    padding: 16px;
 `
 
 const CourseListSectionWrapper = styled(SectionWrapper)`

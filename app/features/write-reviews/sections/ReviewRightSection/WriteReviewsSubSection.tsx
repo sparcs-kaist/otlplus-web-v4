@@ -29,7 +29,13 @@ function WriteReviewsSubSection({ selectedLecture }: WriteReviewsSubSectionType)
                         values={{ lectureName: selectedLecture.name }}
                     />
                 </Typography>
-                <ReviewWritingBlock lecture={selectedLecture} />
+                <ReviewWritingBlock
+                    name={selectedLecture.name}
+                    lectureId={0}
+                    professors={selectedLecture.professors}
+                    year={selectedLecture.year}
+                    semester={selectedLecture.semester}
+                />
             </FlexWrapper>
             <Line height={1} color="Line.default" />
             <FlexWrapper direction="column" gap={12} align="stretch">

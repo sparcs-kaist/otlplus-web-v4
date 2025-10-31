@@ -100,6 +100,10 @@ export const commonI18nBase = {
             "1yearShort": "1년이내",
             thisSemesterShort: "이번학기",
         },
+        professors: {
+            over: " 외 ",
+            people: "명",
+        },
         review: {
             writingPlaceholder: "학점, 로드 등의 평가에 대하여 설명해주세요.",
             like: "좋아요",
@@ -159,8 +163,6 @@ export const commonI18nBase = {
     dictionary: {
         courseHistory: "개설이력",
         notOffered: "미개설",
-        over: " 외 ",
-        people: "명",
         courseCountInfo: "총 <bold>{{count}}</bold>개 과목 (<icon/>: 이번 학기 개설)",
         sort: "정렬",
         noResults: "결과 없음",
