@@ -14,7 +14,7 @@ const MakersWrapper = styled(FlexWrapper)`
 `
 
 export default function MakersPage() {
-  const [currentIndex, setCurrentIndex] = useState(9)
+  const [currentIndex, setCurrentIndex] = useState(10)
 
   return (
     <MakersWrapper direction="column" align="center" justify="stretch" gap={36}>

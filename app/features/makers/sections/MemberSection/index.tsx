@@ -31,7 +31,12 @@ const MemberSection: React.FC<MemberSectionProps> = ({ membersList }) => {
       <MemberCardWrapper>
         {membersList.map((field, index) =>
           field.members.map((member) => (
-            <MemberCard name={member.name} nickname={member.nickname} role={field.role} />
+            <MemberCard
+              name={member.name}
+              nickname={member.nickname}
+              role={field.role}
+              hover={member.hover}
+            />
           )),
         )}
       </MemberCardWrapper>
