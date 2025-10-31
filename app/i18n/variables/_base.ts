@@ -1,13 +1,9 @@
 export const commonI18nBase = {
-    example: "예시 번역",
-    toggleTheme: {
-        light: "라이트 모드",
-        dark: "다크 모드",
-    },
     credits: {
         credits: "만든 사람들",
-        license: "라이선스",
+        license: "이용 약관",
         privacyPolicy: "개인정보취급방침",
+        contact: "문의하기",
     },
     common: {
         class: "분류",
@@ -29,6 +25,7 @@ export const commonI18nBase = {
         am: "오전",
         pm: "오후",
         year: "연도",
+        language: "언어",
         type: {
             basic: "기초",
             major: "전공",
@@ -110,11 +107,11 @@ export const commonI18nBase = {
         search: {
             search: "검색",
             cancel: "취소",
-            grade: "학년",
+            level: "학년",
             department: "학과",
             term: "기간",
             all: "전체",
-            groups: "분류",
+            type: "분류",
             placeholder: "과목명, 교수명을 등을 검색해보세요",
         },
         semesters: {

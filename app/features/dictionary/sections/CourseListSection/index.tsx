@@ -1,18 +1,18 @@
 import { useState } from "react"
 
+import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import CircleIcon from "@mui/icons-material/Circle"
 import { Trans, useTranslation } from "react-i18next"
 
-import type { GETCoursesResponse } from "@/api/courses"
+import { type GETCoursesResponse } from "@/api/courses"
 import exampleCourseSearchResults from "@/api/example/CourseSearchResults"
 import ScrollableDropdown from "@/common/components/ScrollableDropdown"
+import SearchArea, { type SearchParamsType } from "@/common/components/search/SearchArea"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import CourseBlock from "@/features/dictionary/components/CourseBlock"
-import DictionarySearchArea from "@/features/dictionary/components/DictionarySearchArea"
-import themes from "@/styles/themes"
 
 const CourseListSectionInner = styled(FlexWrapper)`
     width: 100%;
@@ -22,7 +22,6 @@ const CourseListSectionInner = styled(FlexWrapper)`
 
 const SearchSubSection = styled.div`
     border-radius: 6px;
-    padding: 0 16px;
     border: 1px solid ${({ theme }) => theme.colors.Line.divider};
 `
 
@@ -71,6 +70,7 @@ const CourseListSection: React.FC<CourseListSectionProps> = ({
     setSelectedCourseId,
 }) => {
     const { t } = useTranslation()
+    const theme = useTheme()
 
     const [searchResult, setSearchResult] = useState<GETCoursesResponse | null>(
         exampleCourseSearchResults,
@@ -85,7 +85,12 @@ const CourseListSection: React.FC<CourseListSectionProps> = ({
             gap={8}
         >
             <SearchSubSection>
-                <DictionarySearchArea />
+                <SearchArea
+                    options={["type", "department", "level", "term"]}
+                    onSearch={(params: SearchParamsType) => {
+                        alert(JSON.stringify(params))
+                    }}
+                />
             </SearchSubSection>
             {searchResult ? (
                 <>
@@ -109,7 +114,7 @@ const CourseListSection: React.FC<CourseListSectionProps> = ({
                                     icon: (
                                         <Icon
                                             size={12}
-                                            color={themes.light.colors.Highlight.default}
+                                            color={theme.colors.Highlight.default}
                                         >
                                             <CircleIcon />
                                         </Icon>
@@ -127,7 +132,7 @@ const CourseListSection: React.FC<CourseListSectionProps> = ({
                                     options={[
                                         t("dictionary.sortOptions.code"),
                                         t("dictionary.sortOptions.popularity"),
-                                        t("dictionary.sortOptions.enrollment"),
+                                        t("dictionary.sortOptions.studentCount"),
                                     ]}
                                     setSelectedOption={setSortOption}
                                     selectedOption={sortOption}

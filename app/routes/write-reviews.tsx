@@ -13,7 +13,6 @@ import ReviewRightSection from "@/features/write-reviews/sections/ReviewRightSec
 const WriteReviewWrapper = FlexWrapper
 
 const WriteReviewWrapperInner = styled(FlexWrapper)`
-    flex: 1 0 0;
     overflow: auto;
 `
 
@@ -62,6 +61,7 @@ export default function WriteReviews() {
                 justify="center"
                 gap={12}
                 padding="0px 0px 15px 0px"
+                flex="1 0 0"
             >
                 <ReviewLeftSection
                     takenLectures={takenLectures}

@@ -2,15 +2,11 @@ import { type CommonI18nBaseType, commonI18nBase } from "./_base"
 
 export const commonI18nEn: CommonI18nBaseType = {
     ...commonI18nBase,
-    example: "Example Translation",
-    toggleTheme: {
-        light: "Light Mode",
-        dark: "Dark Mode",
-    },
     credits: {
         credits: "Credits",
         license: "License",
         privacyPolicy: "Privacy Policy",
+        contact: "Contact Us",
     },
     common: {
         class: "Class",
@@ -32,6 +28,7 @@ export const commonI18nEn: CommonI18nBaseType = {
         am: "AM",
         pm: "PM",
         year: "year",
+        language: "Language",
         type: {
             basic: "Basic",
             major: "Major",
@@ -113,11 +110,11 @@ export const commonI18nEn: CommonI18nBaseType = {
         search: {
             search: "Search",
             cancel: "Cancel",
-            grade: "Grade",
+            level: "Grade",
             department: "Department",
             term: "Term",
             all: "All",
-            groups: "Groups",
+            type: "Groups",
             placeholder: "Enter keywords",
         },
         semesters: {

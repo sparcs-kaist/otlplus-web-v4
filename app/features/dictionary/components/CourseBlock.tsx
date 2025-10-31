@@ -1,3 +1,4 @@
+import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import CircleIcon from "@mui/icons-material/Circle"
 import { useTranslation } from "react-i18next"
@@ -6,7 +7,6 @@ import type { GETCoursesResponse } from "@/api/courses"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
-import themes from "@/styles/themes"
 
 interface CourseBlockProps {
     course: GETCoursesResponse[number]
@@ -42,6 +42,7 @@ const CourseBlock: React.FC<CourseBlockProps> = ({
     selectCourseId,
 }) => {
     const { t } = useTranslation()
+    const theme = useTheme()
 
     return (
         <CourseBlockInner
@@ -59,8 +60,8 @@ const CourseBlock: React.FC<CourseBlockProps> = ({
                     size={12}
                     color={
                         course.open
-                            ? themes.light.colors.Highlight.default
-                            : themes.light.colors.Text.disable
+                            ? theme.colors.Highlight.default
+                            : theme.colors.Text.disable
                     }
                 >
                     <CircleIcon />
