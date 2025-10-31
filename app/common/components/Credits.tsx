@@ -1,7 +1,13 @@
+import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
+import { Link } from "react-router"
 
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
+
+const StyledLink = styled(Link)`
+  text-decoration: none;
+`
 
 const Credits: React.FC = () => {
   const { t } = useTranslation()
@@ -12,9 +18,11 @@ const Credits: React.FC = () => {
         OTL PLUS
       </Typography>
       <FlexWrapper direction="row" gap={12} justify={"space-between"}>
-        <Typography color={"Text.placeholder"} type={"Big"}>
-          {t("credits.credits")}
-        </Typography>
+        <StyledLink to={"/makers"}>
+          <Typography color={"Text.placeholder"} type={"Big"}>
+            {t("credits.makers")}
+          </Typography>
+        </StyledLink>
         <Typography color={"Text.placeholder"} type={"Big"}>
           |
         </Typography>
