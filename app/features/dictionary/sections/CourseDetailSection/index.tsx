@@ -2,8 +2,9 @@ import React, { useState } from "react"
 
 import styled from "@emotion/styled"
 
-import type { GETCourseDetailResponse } from "@/api/courses/$courseId"
+import { type GETCourseDetailResponse } from "@/api/courses/$courseId"
 import exampleCourse from "@/api/example/Course"
+import { exampleUserWritableReviews } from "@/api/example/UserWritableReviews"
 import Credits from "@/common/components/Credits"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
@@ -16,7 +17,14 @@ const CourseDetailSectionInner = styled(FlexWrapper)`
     width: 100%;
     height: 100%;
     overflow-y: auto;
+    width: 100%;
+    height: 100%;
+    overflow-y: auto;
 
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+        display: none;
+    }
     scrollbar-width: none;
     &::-webkit-scrollbar {
         display: none;
@@ -25,9 +33,16 @@ const CourseDetailSectionInner = styled(FlexWrapper)`
 
 const CourseDetailWrapper = styled(FlexWrapper)`
     width: 100%;
+    width: 100%;
 `
 
 const CourseTitle = styled(FlexWrapper)`
+    width: 100%;
+    position: sticky;
+    top: 0;
+    background-color: ${({ theme }) => theme.colors.Background.Section.default};
+    z-index: 10;
+    padding-bottom: 10px;
     width: 100%;
     position: sticky;
     top: 0;
@@ -40,15 +55,16 @@ const Divider = styled.div`
     width: 100%;
     min-height: 1px;
     background-color: ${({ theme }) => theme.colors.Line.divider};
+    width: 100%;
+    min-height: 1px;
+    background-color: ${({ theme }) => theme.colors.Line.divider};
 `
 
 interface CourseDetailSectionProps {
     selectedCourseId: number | null
 }
 
-const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
-    selectedCourseId,
-}) => {
+function CourseDetailSection({ selectedCourseId }: CourseDetailSectionProps) {
     const [courseDetail, setCourseDetail] = useState<GETCourseDetailResponse | null>(
         exampleCourse,
     )
@@ -89,9 +105,7 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
                     </CourseDetailWrapper>
                     <Divider />
                     <CourseDetailWrapper direction="column" gap={10}>
-                        <CourseReviewSubsection
-                            selectedProfessorId={selectedProfessorId}
-                        />
+                        <CourseReviewSubsection lecture={exampleUserWritableReviews} />
                     </CourseDetailWrapper>
                 </>
             ) : (

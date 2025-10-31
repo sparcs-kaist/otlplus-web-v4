@@ -26,6 +26,10 @@ const MainWrapperInner = styled(FlexWrapper)`
 `
 
 const SearchSectionWrapper = styled(FlexWrapper)`
+<<<<<<< HEAD
+    height: 68px;
+    z-index: 2;
+=======
     width: 100%;
     height: 68px;
     z-index: 2;
@@ -33,6 +37,7 @@ const SearchSectionWrapper = styled(FlexWrapper)`
 
 const StretechedFlexWrapper = styled(FlexWrapper)`
     flex: 1 1 auto;
+>>>>>>> main
 `
 
 export default function Home() {
@@ -44,8 +49,18 @@ export default function Home() {
 
     return (
         <>
+<<<<<<< HEAD
+            <MainWrapper direction="column" align="center" gap={240}>
+                <MainWrapperInner
+                    direction="column"
+                    align="center"
+                    justify="stretch"
+                    gap={60}
+                >
+=======
             <MainWrapper direction="column" align="center" gap={60}>
                 <MainWrapperInner direction="column" align="center" gap={60}>
+>>>>>>> main
                     <SearchSectionWrapper direction="row" justify="center" gap={0}>
                         <SearchSection
                             timeFilter={timeFilter}
@@ -68,6 +83,17 @@ export default function Home() {
                                         lectureName="이산구조"
                                     />
                                 </FlexWrapper>
+<<<<<<< HEAD
+                                <FlexWrapper
+                                    direction="column"
+                                    align="stretch"
+                                    gap={24}
+                                    flex="1 1 auto"
+                                >
+                                    <AdFeedSection src="/ad.png" />
+                                    <AdFeedSection src="/ad.png" />
+                                </FlexWrapper>
+=======
                                 <StretechedFlexWrapper
                                     direction="column"
                                     align="stretch"
@@ -76,6 +102,7 @@ export default function Home() {
                                     <AdFeedSection src="/ad.png" />
                                     <AdFeedSection src="/ad.png" />
                                 </StretechedFlexWrapper>
+>>>>>>> main
                             </FlexWrapper>
                         </FlexWrapper>
                         <FlexWrapper direction="row" align="stretch" gap={24}>
