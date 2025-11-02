@@ -6,39 +6,46 @@ import Modal from "@/common/components/Modal"
 import Typography from "@/common/primitives/Typography"
 import AccountInfoSection from "@/features/account/sections/AccountInfoSection"
 import AccountInterestedMajorSection from "@/features/account/sections/AccountInterestedMajorSection"
+import useIsDevice from "@/utils/useIsDevice"
 
 const LogoutButton = styled(Typography)`
-  cursor: pointer;
+    cursor: pointer;
 `
 
 interface AccountPageModalProps {
-  userInfo: GETUserInfoResponse | null
-  setUserInfo: React.Dispatch<React.SetStateAction<GETUserInfoResponse | null>>
-  accountPageOpen: boolean
-  setAccountPageOpen: React.Dispatch<React.SetStateAction<boolean>>
+    userInfo: GETUserInfoResponse | null
+    setUserInfo: React.Dispatch<React.SetStateAction<GETUserInfoResponse | null>>
+    accountPageOpen: boolean
+    setAccountPageOpen: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 const AccountPageModal: React.FC<AccountPageModalProps> = ({
-  userInfo,
-  setUserInfo,
-  accountPageOpen,
-  setAccountPageOpen,
+    userInfo,
+    setUserInfo,
+    accountPageOpen,
+    setAccountPageOpen,
 }) => {
-  const { t } = useTranslation()
+    const isTablet = useIsDevice("tablet")
 
-  return (
-    <Modal
-      isOpen={accountPageOpen}
-      onClose={() => setAccountPageOpen(false)}
-      title={t("account.title")}
-    >
-      <AccountInfoSection userInfo={userInfo} />
-      <AccountInterestedMajorSection userInfo={userInfo} setUserInfo={setUserInfo} />
-      <LogoutButton type="Normal" color="Highlight.default">
-        {t("account.logout")}
-      </LogoutButton>
-    </Modal>
-  )
+    const { t } = useTranslation()
+
+    return (
+        <Modal
+            isOpen={accountPageOpen}
+            onClose={() => setAccountPageOpen(false)}
+            title={t("account.title")}
+            fullScreen={isTablet}
+        >
+            <AccountInfoSection userInfo={userInfo} />
+            <AccountInterestedMajorSection
+                userInfo={userInfo}
+                setUserInfo={setUserInfo}
+            />
+            <LogoutButton type="Normal" color="Highlight.default">
+                {t("account.logout")}
+            </LogoutButton>
+        </Modal>
+    )
 }
 
 export default AccountPageModal
