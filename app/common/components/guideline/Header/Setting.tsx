@@ -45,7 +45,9 @@ const Setting: React.FC<SettingProps> = ({
                 direction={mobileSidebar ? "row" : "column"}
                 gap={4}
                 align="center"
-                onClick={() => i18n.changeLanguage(i18n.language === "ko" ? "en" : "ko")}
+                onClick={() =>
+                    i18n.changeLanguage(i18n.resolvedLanguage === "ko" ? "en" : "ko")
+                }
             >
                 <Icon size={16}>
                     <LanguageIcon />

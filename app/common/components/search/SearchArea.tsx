@@ -150,7 +150,12 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
     }
 
     return (
-        <FlexWrapper direction="column" align="stretch" gap={0}>
+        <FlexWrapper
+            direction="column"
+            align="stretch"
+            gap={0}
+            style={{ maxHeight: "100%" }}
+        >
             <FlexWrapper
                 direction="column"
                 align="stretch"
@@ -212,41 +217,37 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
                         style={{
                             overflow: "hidden",
                             display: "flex",
-                            gap: "12px",
+                            gap: "16px",
                             flexDirection: "column",
+                            alignItems: "stretch",
+                            padding: "16px",
+                            flexShrink: 1,
                         }}
                     >
-                        <FlexWrapper
-                            direction="column"
-                            align="stretch"
-                            padding="16px"
-                            gap={16}
-                        >
-                            <SearchFilterArea
-                                options={options}
-                                onChange={onChange}
-                                // 임시 방편, 나중에 방법 알아내면 수정할 예정
-                                {...(withTimeFilter(options, timeFilter) as any)}
-                            />
-                            <FlexWrapper direction="row" justify="flex-end" gap={8}>
-                                <Button
-                                    $paddingLeft={24}
-                                    $paddingTop={9}
-                                    onClick={handleReset}
-                                >
-                                    <Typography>취소</Typography>
-                                </Button>
-                                <Button
-                                    $paddingLeft={24}
-                                    $paddingTop={9}
-                                    type="selected"
-                                    onClick={() => {
-                                        handleSubmit(chipsOptions, value)
-                                    }}
-                                >
-                                    <Typography>검색</Typography>
-                                </Button>
-                            </FlexWrapper>
+                        <SearchFilterArea
+                            options={options}
+                            onChange={onChange}
+                            // 임시 방편, 나중에 방법 알아내면 수정할 예정
+                            {...(withTimeFilter(options, timeFilter) as any)}
+                        />
+                        <FlexWrapper direction="row" justify="flex-end" gap={8}>
+                            <Button
+                                $paddingLeft={24}
+                                $paddingTop={9}
+                                onClick={handleReset}
+                            >
+                                <Typography>취소</Typography>
+                            </Button>
+                            <Button
+                                $paddingLeft={24}
+                                $paddingTop={9}
+                                type="selected"
+                                onClick={() => {
+                                    handleSubmit(chipsOptions, value)
+                                }}
+                            >
+                                <Typography>검색</Typography>
+                            </Button>
                         </FlexWrapper>
                     </motion.div>
                 )}
