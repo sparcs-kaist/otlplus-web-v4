@@ -1,0 +1,117 @@
+name: CD
+
+on:
+  push:
+    branches: [rc]
+  release:
+    types: [created]
+
+env:
+  NODE_VERSION: 20
+
+jobs:
+  deploy-dev:
+    name: Deploy to Dev
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/rc' && github.event_name == 'push'
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.7.1
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+        env:
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN_DEV }}
+          VITE_DEV_MODE: true
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Upload to S3 Dev
+        run: |
+          aws s3 sync build/ s3://otl-plus-dev/ --delete
+          echo "✅ Uploaded build files to S3 Dev: s3://otl-plus-dev/"
+
+      - name: Invalidate CloudFront cache
+        if: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_DEV != '' }}
+        run: |
+          aws cloudfront create-invalidation \
+            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_DEV }} \
+            --paths "/*"
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    if: github.event_name == 'release'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.7.1
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm build
+        env:
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN_PROD }}
+          VITE_DEV_MODE: false
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Upload to S3 Production
+        run: |
+          aws s3 sync build/ s3://otl.sparcs.org-1/${{ github.event.release.tag_name }}/ --delete
+          echo "✅ Uploaded build files to S3 Production: s3://otl.sparcs.org-1/${{ github.event.release.tag_name }}/"
+
+      - name: Create build archive
+        run: |
+          cd build
+          tar -czf ../build-${{ github.event.release.tag_name }}.tar.gz .
+          cd ..
+
+      - name: Upload release asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./build-${{ github.event.release.tag_name }}.tar.gz
+          asset_name: build-${{ github.event.release.tag_name }}.tar.gz
+          asset_content_type: application/gzip
+
