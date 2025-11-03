@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react"
+import { useContext, useEffect, useState } from "react"
 
 import styled from "@emotion/styled"
 import MenuIcon from "@mui/icons-material/Menu"
 
+import { SelectedThemeContext } from "@/Providers"
 import exampleUserInfo from "@/api/example/UserInfo"
 import type { GETUserInfoResponse } from "@/api/users/$userId/info"
 import Icon from "@/common/primitives/Icon"
@@ -48,6 +49,7 @@ const MobileSidebarButtonWrapper = styled.div`
 
 const Header: React.FC = () => {
     const isMobile = useIsDevice("mobile")
+    const { selectedTheme } = useContext(SelectedThemeContext)
 
     const [accountPageOpen, setAccountPageOpen] = useState<boolean>(false)
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false)
@@ -66,7 +68,7 @@ const Header: React.FC = () => {
                 accountPageOpen={accountPageOpen}
                 setAccountPageOpen={setAccountPageOpen}
             />
-            <HeaderBar />
+            {selectedTheme !== "dark" && <HeaderBar />}
             <HeaderInner>
                 <Menu setMobileSidebarOpen={() => setMobileSidebarOpen(false)} />
                 <Setting

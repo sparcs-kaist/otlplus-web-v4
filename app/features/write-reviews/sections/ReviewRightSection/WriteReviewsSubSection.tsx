@@ -25,7 +25,7 @@ function WriteReviewsSubSection({ selectedLecture }: WriteReviewsSubSectionType)
     return (
         <FlexWrapper direction="column" align="stretch" gap={12}>
             <FlexWrapper direction="column" gap={12} align="center">
-                <Typography type="NormalBold">
+                <Typography type="NormalBold" color="Text.default">
                     <Trans
                         i18nKey="writeReviews.write.title"
                         values={{ lectureName: selectedLecture.name }}
@@ -42,7 +42,7 @@ function WriteReviewsSubSection({ selectedLecture }: WriteReviewsSubSectionType)
             <Line height={1} color="Line.default" />
             <FlexWrapper direction="column" gap={12} align="stretch">
                 <FlexWrapper direction="column" gap={0} align="center">
-                    <Typography type="NormalBold">
+                    <Typography type="NormalBold" color="Text.default">
                         <Trans
                             i18nKey="writeReviews.write.related"
                             values={{ lectureName: selectedLecture.name }}

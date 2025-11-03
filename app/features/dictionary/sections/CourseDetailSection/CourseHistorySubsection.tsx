@@ -23,20 +23,7 @@ const CourseHistory = styled(motion.div)`
     gap: 20px;
 
     &::-webkit-scrollbar {
-        height: 7px;
-    }
-
-    &::-webkit-scrollbar-track {
-        background-color: white;
-    }
-
-    &::-webkit-scrollbar-thumb {
-        background-color: ${({ theme }) => theme.colors.Line.default};
-        border-radius: 8px;
-    }
-
-    &:hover::-webkit-scrollbar-thumb {
-        background-color: ${({ theme }) => theme.colors.Line.dark};
+        height: 0;
     }
 `
 

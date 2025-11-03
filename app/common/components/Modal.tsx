@@ -22,7 +22,7 @@ const Overlay = styled.div`
 `
 
 const ModalContainer = styled.div<{ fullScreen: boolean }>`
-    background: white;
+    background: ${({ theme }) => theme.colors.Background.Section.default};
     border-radius: ${(props) => (props.fullScreen ? "0px" : "12px")};
     min-width: ${(props) => (props.fullScreen ? "100dvw" : "630px")};
     width: ${(props) => (props.fullScreen ? "100dvw" : "auto")};
@@ -96,7 +96,9 @@ const Modal: React.FC<ModalProps> = ({
             <ModalContainer onClick={(e) => e.stopPropagation()} fullScreen={fullScreen}>
                 {header && (
                     <HeaderWrapper>
-                        <Typography type="BigBold">{title}</Typography>
+                        <Typography type="BigBold" color="Text.default">
+                            {title}
+                        </Typography>
                         <CloseIconWrapper>
                             <Icon onClick={onClose} size={24}>
                                 <CloseIcon />

@@ -251,7 +251,7 @@ function SearchFilterArea<ops extends readonly SearchOptions[]>({
         <SearchFilterAreaWrapper direction="column" align="stretch" gap={12}>
             {options.map((option) => (
                 <FlexWrapper direction="column" gap={6} key={option}>
-                    <Typography type="NormalBold">
+                    <Typography type="NormalBold" color="Text.default">
                         {t(`common.search.${option}`)}
                     </Typography>
                     <FlexWrapper direction="column" gap={0}>

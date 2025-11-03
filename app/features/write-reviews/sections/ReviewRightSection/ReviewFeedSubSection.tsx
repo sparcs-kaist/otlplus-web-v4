@@ -36,7 +36,9 @@ function ReviewFeedSubSection({ reviews, likeReview }: ReviewFeedSubSectionProps
     return (
         <FlexWrapper direction="column" align="stretch" gap={12}>
             <FlexWrapper direction="row" align="center" gap={8}>
-                <Typography type="NormalBold">{t("common.year")}</Typography>
+                <Typography type="NormalBold" color="Text.default">
+                    {t("common.year")}
+                </Typography>
                 <DropDownWrapper direction="row" gap={0}>
                     <ScrollableDropdown
                         options={options}
@@ -46,7 +48,7 @@ function ReviewFeedSubSection({ reviews, likeReview }: ReviewFeedSubSectionProps
                 </DropDownWrapper>
             </FlexWrapper>
             <FlexWrapper direction="column" align="center" gap={12}>
-                <Typography type="NormalBold">
+                <Typography type="NormalBold" color="Text.default">
                     <Trans
                         i18nKey="writeReviews.reviewFeed.title"
                         values={{
@@ -56,8 +58,10 @@ function ReviewFeedSubSection({ reviews, likeReview }: ReviewFeedSubSectionProps
                     />
                 </Typography>
                 <FlexWrapper direction="column" align="center" gap={0}>
-                    <Typography type="Bigger">{reviews.reviews.length}</Typography>
-                    <Typography type="Smaller">
+                    <Typography type="Bigger" color="Text.default">
+                        {reviews.reviews.length}
+                    </Typography>
+                    <Typography type="Smaller" color="Text.default">
                         {t("writeReviews.reviewFeed.total")}
                     </Typography>
                 </FlexWrapper>

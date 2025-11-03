@@ -24,7 +24,7 @@ function LikedReviewsSection({ reviews, likeReview }: LikedReviewsSectionProps) 
     return (
         <FlexWrapper direction="column" align="stretch" gap={12}>
             <FlexWrapper direction="column" align="center" gap={12}>
-                <Typography type="NormalBold">
+                <Typography type="NormalBold" color="Text.default">
                     {t("writeReviews.likedReviews.title")}
                 </Typography>
             </FlexWrapper>

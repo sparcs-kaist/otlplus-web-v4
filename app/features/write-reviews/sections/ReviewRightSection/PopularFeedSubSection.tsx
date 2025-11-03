@@ -24,7 +24,7 @@ function PopularFeedSubSection({ reviews, likeReview }: PopularFeedSubSectionPro
     return (
         <FlexWrapper direction="column" align="stretch" gap={12}>
             <FlexWrapper direction="column" align="center" gap={12}>
-                <Typography type="NormalBold">
+                <Typography type="NormalBold" color="Text.default">
                     {t("writeReviews.tabs.popularFeed")}
                 </Typography>
             </FlexWrapper>

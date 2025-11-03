@@ -14,18 +14,22 @@ interface GradeButtonProps {
 }
 
 const GradeButtonDefaultStyle = (theme: ThemeType) => css`
+    border: 1px solid rgba(194, 194, 194, 0.2);
     background-color: ${theme.colors.Background.Tab.darker};
-    color: ${theme.colors.Background.Section.default};
+    color: ${theme.colors.Text.default};
+    opacity: 50%;
 `
 
 const GradeButtonHoveredStyle = (theme: ThemeType) => css`
     background-color: ${theme.colors.Text.disable};
     color: ${theme.colors.Background.Section.default};
+    opacity: 100%;
 `
 
 const GradeButtonSelectedStyle = (theme: ThemeType) => css`
     background-color: ${theme.colors.Text.lighter};
     color: ${theme.colors.Background.Section.default};
+    opacity: 100%;
 `
 
 const GradeButtonWrapper = styled(FlexWrapper)`
@@ -70,7 +74,7 @@ function Grade({ children, onClick, isSelected = false }: GradeButtonProps) {
                 onMouseOut={handleMouseOut}
                 onClick={onClick}
             >
-                <Typography type="NormalBold">{children}</Typography>
+                <Typography type="Small">{children}</Typography>
             </GradeButton>
         </GradeButtonWrapper>
     )

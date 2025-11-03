@@ -69,7 +69,9 @@ const ScheduleSection: React.FC<ScheduleSectionProps> = (props) => {
                             </Typography>
                         </FlexWrapper>
                         <FlexWrapper direction="row" justify="center" gap={0}>
-                            <Typography type="BiggerBold">{timeLeft}</Typography>
+                            <Typography type="BiggerBold" color="Text.dark">
+                                {timeLeft}
+                            </Typography>
                         </FlexWrapper>
                     </FlexWrapper>
                     <FlexWrapper direction="column" gap={0}>

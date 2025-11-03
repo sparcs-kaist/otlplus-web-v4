@@ -17,7 +17,7 @@ export const darkThemeColors: ThemeType["colors"] = {
     Background: {
         Block: {
             default: "#505050",
-            dark: "#737373",
+            dark: "#2f2f2f",
             darker: "#1e1e1e",
             highlight: "#000000",
         },
@@ -26,7 +26,7 @@ export const darkThemeColors: ThemeType["colors"] = {
         },
         Section: {
             default: "#414141",
-            transparent: "rgba(28,28,28,0.87)",
+            transparent: "#1C1C1CDD",
         },
         Tab: {
             default: "#000000",

@@ -9,7 +9,8 @@ const StyledCard = styled(FlexWrapper)<{ isSelected: boolean }>`
     padding: 16px;
     cursor: pointer;
     text-align: center;
-    box-shadow: ${({ isSelected }) => isSelected && `0 4px 12px rgba(0, 0, 0, 0.1);`};
+    box-shadow: ${({ isSelected, theme }) =>
+        isSelected && `0 4px 12px ${theme.colors.Line.dark};`};
     background-color: ${({ theme }) => theme.colors.Background.Tab.default};
     transition: box-shadow 0.2s ease-in-out;
 `

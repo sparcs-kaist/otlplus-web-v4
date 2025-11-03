@@ -94,23 +94,23 @@ function ReviewWritingBlock({
                     area={true}
                 />
             </ReviewBoxWrapper>
-            <GradesWrapper direction="row" gap={12}>
-                {(
-                    [
-                        [t("common.grade"), reviewGrade, setReviewGrade],
-                        [t("common.load"), reviewLoad, setReviewLoad],
-                        [t("common.speech"), reviewSpeech, setReviewSpeech],
-                    ] as [string, ScoreEnum, Dispatch<SetStateAction<ScoreEnum>>][]
-                ).map(([tag, currentState, DispatchFunction]) => (
-                    <FlexWrapper direction="row" gap={6} align="center" key={tag}>
-                        <Typography type="Normal" color="Text.default">
-                            {tag}
-                        </Typography>
-                        <GradeWrap score={currentState} setScore={DispatchFunction} />
-                    </FlexWrapper>
-                ))}
-            </GradesWrapper>
-            <FlexWrapper direction="row" gap={0} justify={"end"}>
+            <FlexWrapper direction="row" gap={0} justify="space-between" align="center">
+                <GradesWrapper direction="row" gap={12}>
+                    {(
+                        [
+                            [t("common.grade"), reviewGrade, setReviewGrade],
+                            [t("common.load"), reviewLoad, setReviewLoad],
+                            [t("common.speech"), reviewSpeech, setReviewSpeech],
+                        ] as [string, ScoreEnum, Dispatch<SetStateAction<ScoreEnum>>][]
+                    ).map(([tag, currentState, DispatchFunction]) => (
+                        <FlexWrapper direction="row" gap={6} align="center" key={tag}>
+                            <Typography type="Normal" color="Text.default">
+                                {tag}
+                            </Typography>
+                            <GradeWrap score={currentState} setScore={DispatchFunction} />
+                        </FlexWrapper>
+                    ))}
+                </GradesWrapper>
                 <Button
                     type={
                         reviewText && reviewGrade && reviewSpeech && reviewLoad

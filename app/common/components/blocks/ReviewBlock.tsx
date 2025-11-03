@@ -1,3 +1,4 @@
+import styled from "@emotion/styled"
 import FavoriteIcon from "@mui/icons-material/Favorite"
 import FavoriteBorderOutlinedIcon from "@mui/icons-material/FavoriteBorderOutlined"
 import { useTranslation } from "react-i18next"
@@ -9,6 +10,10 @@ import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import { type Review } from "@/common/schemas/review"
 import professorName from "@/utils/professorName"
+
+const Content = styled(Typography)`
+    line-height: 1.5;
+`
 
 interface ReviewBlockProps {
     review: Review
@@ -34,9 +39,9 @@ function ReviewBlock({ review, likeReview }: ReviewBlockProps) {
                 </Typography>
             </FlexWrapper>
             <FlexWrapper direction="row" gap={0}>
-                <Typography type="Normal" color="Text.default">
+                <Content type="Normal" color="Text.default">
                     {review.content}
-                </Typography>
+                </Content>
             </FlexWrapper>
             <FlexWrapper direction="row" justify="space-between" gap={0}>
                 <FlexWrapper direction="row" gap={8}>

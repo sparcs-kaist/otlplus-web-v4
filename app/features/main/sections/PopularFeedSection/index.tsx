@@ -1,4 +1,3 @@
-import styled from "@emotion/styled"
 import { Trans } from "react-i18next"
 
 import type { GETReviewsResponse } from "@/api/reviews"
@@ -28,11 +27,17 @@ function PopularFeedSection({ reviews, likeReview }: PopularFeedSectionProps) {
                             />
                         ),
                         space: <>&nbsp;</>,
-                        normal: <Typography type="BiggerBold" children={undefined} />,
+                        normal: (
+                            <Typography
+                                type="BiggerBold"
+                                color="Text.default"
+                                children={undefined}
+                            />
+                        ),
                     }}
                 />
             </FlexWrapper>
-            <FlexWrapper direction="column" gap={15}>
+            <FlexWrapper direction="column" gap={30}>
                 {reviews.reviews.map((review, idx) => (
                     <ReviewBlock key={idx} review={review} likeReview={likeReview} />
                 ))}
