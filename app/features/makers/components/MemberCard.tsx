@@ -12,6 +12,10 @@ const StyledCard = styled(FlexWrapper)`
     background-color: ${({ theme }) => theme.colors.Background.Tab.default};
     transition: box-shadow 0.2s ease-in-out;
     color: #eba12a;
+
+    &:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
 `
 
 const StyledImage = styled.img`
