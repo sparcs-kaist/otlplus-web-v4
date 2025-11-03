@@ -40,6 +40,7 @@ const HeaderInner = styled.header`
 `
 
 const MobileSidebarButtonWrapper = styled.div`
+    color: ${({ theme }) => theme.colors.Text.default};
     display: none;
 
     ${media.mobile} {

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react"
 
+import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight"
 import { AnimatePresence, motion } from "framer-motion"
@@ -58,6 +59,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
     setMobileSidebarOpen,
     sidebarHeader,
 }) => {
+    const theme = useTheme()
     const { t } = useTranslation()
 
     const mouseDownTargetRef = useRef<EventTarget | null>(null)
@@ -116,7 +118,11 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
                                 </StyledLink>
                             </FlexWrapper>
                         </FlexWrapper>
-                        <Icon size={20} onClick={() => setMobileSidebarOpen(false)}>
+                        <Icon
+                            size={20}
+                            onClick={() => setMobileSidebarOpen(false)}
+                            color={theme.colors.Text.default}
+                        >
                             <KeyboardArrowRightIcon />
                         </Icon>
                     </Sidebar>
