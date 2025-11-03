@@ -11,7 +11,12 @@ interface ThemeState {
 const useThemeStore = create<ThemeState>()(
     persist(
         (set) => ({
-            selectedTheme: "light",
+            selectedTheme:
+                typeof window !== "undefined" &&
+                window.matchMedia &&
+                window.matchMedia("(prefers-color-scheme: dark)").matches
+                    ? "dark"
+                    : "light",
             setSelectedTheme: (theme) => set({ selectedTheme: theme }),
         }),
         {
