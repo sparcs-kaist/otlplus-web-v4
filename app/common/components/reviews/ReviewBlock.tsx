@@ -1,3 +1,4 @@
+import styled from "@emotion/styled"
 import FavoriteIcon from "@mui/icons-material/Favorite"
 import FavoriteBorderOutlinedIcon from "@mui/icons-material/FavoriteBorderOutlined"
 import { useTranslation } from "react-i18next"
@@ -10,17 +11,30 @@ import Typography from "@/common/primitives/Typography"
 import { type Review } from "@/common/schemas/review"
 import professorName from "@/utils/professorName"
 
+const Content = styled(Typography)`
+    line-height: 1.5;
+`
+
+const ReviewWrapper = styled.div`
+    padding: 8px 6px;
+    width: 100%;
+    border-radius: 6px;
+    border: 1px ${({ theme }) => theme.colors.Background.Block.dark} solid;
+    background-color: ${({ theme }) => theme.colors.Background.Block.default};
+`
+
 interface ReviewBlockProps {
     review: Review
     likeReview: (reviewId: number) => void
+    withWrapper?: boolean
 }
 
-function ReviewBlock({ review, likeReview }: ReviewBlockProps) {
+function ReviewBlock({ review, likeReview, withWrapper = true }: ReviewBlockProps) {
     const { t } = useTranslation()
 
     if (!review) return
 
-    return (
+    const reviewContent = (
         <FlexWrapper direction="column" align="stretch" gap={8} padding="0px 4px">
             <FlexWrapper direction="row" gap={6}>
                 <Typography type="NormalBold" color="Text.default">
@@ -34,9 +48,9 @@ function ReviewBlock({ review, likeReview }: ReviewBlockProps) {
                 </Typography>
             </FlexWrapper>
             <FlexWrapper direction="row" gap={0}>
-                <Typography type="Normal" color="Text.default">
+                <Content type="Normal" color="Text.default">
                     {review.content}
-                </Typography>
+                </Content>
             </FlexWrapper>
             <FlexWrapper direction="row" justify="space-between" gap={0}>
                 <FlexWrapper direction="row" gap={8}>
@@ -72,6 +86,10 @@ function ReviewBlock({ review, likeReview }: ReviewBlockProps) {
             </FlexWrapper>
         </FlexWrapper>
     )
+
+    if (withWrapper) {
+        return <ReviewWrapper>{reviewContent}</ReviewWrapper>
+    } else return reviewContent
 }
 
 export default ReviewBlock

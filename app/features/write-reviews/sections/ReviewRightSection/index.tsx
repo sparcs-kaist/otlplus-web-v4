@@ -20,7 +20,11 @@ interface ReviewRightSectionProps {
 
 const StyledWidget = styled(Widget)`
     background: transparent;
-    overflow: hidden;
+    overflow: auto;
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
 `
 
 const ReviewRightSubSection = styled(FlexWrapper)`
@@ -52,7 +56,7 @@ function ReviewRightSection({ selectedLecture }: ReviewRightSectionProps) {
                 gap={0}
                 padding="16px"
             >
-                <FlexWrapper direction="column" align="stretch" gap={12} padding="12px">
+                <FlexWrapper direction="column" align="stretch" gap={12}>
                     {(() => {
                         switch (tab) {
                             case "write":

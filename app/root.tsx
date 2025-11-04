@@ -60,6 +60,7 @@ const AppWrapper = styled(FlexWrapper)`
     min-height: 100%;
     position: absolute;
     overflow: hidden;
+    background-color: ${({ theme }) => theme.colors.Background.Page.default};
 `
 
 const OutletWrapper = styled(FlexWrapper)`

@@ -19,6 +19,8 @@ interface ReviewSectionProps {
 
 const ReviewBoxWrapper = styled(FlexWrapper)`
     height: 173px;
+    border-radius: 4px;
+    background-color: ${({ theme }) => theme.colors.Background.Block.default};
 `
 
 const ScoreGrid = styled.div`

@@ -1,4 +1,3 @@
-import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
 
 import type { GETSchedulesResponse } from "@/api/schedules"
@@ -18,7 +17,9 @@ function ScheduleFeedSection({ schedules }: ScheduleFeedSectionProps) {
     return (
         <Widget direction="column" gap={20} align="stretch" padding="30px" flex="1 1 0">
             <FlexWrapper direction="row" gap={0}>
-                <Typography type="BiggerBold">{t("main.scheduleFeed.title")}</Typography>
+                <Typography type="BiggerBold" color="Text.default">
+                    {t("main.scheduleFeed.title")}
+                </Typography>
             </FlexWrapper>
             <FlexWrapper direction="column" align="stretch" gap={15}>
                 {schedules.map((schedule, idx) => (
@@ -28,7 +29,9 @@ function ScheduleFeedSection({ schedules }: ScheduleFeedSectionProps) {
                                 {schedule.from.getMonth() + 1}/{schedule.from.getDate()} -{" "}
                                 {schedule.to.getMonth() + 1}/{schedule.to.getDate()}
                             </Typography>
-                            <Typography type="BigBold">{schedule.name}</Typography>
+                            <Typography type="BigBold" color="Text.default">
+                                {schedule.name}
+                            </Typography>
                         </FlexWrapper>
                         {idx < schedules.length - 1 ? (
                             <Line height={1} color="Line.default" />

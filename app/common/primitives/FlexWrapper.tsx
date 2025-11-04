@@ -2,7 +2,7 @@ import isPropValid from "@emotion/is-prop-valid"
 import styled from "@emotion/styled"
 
 export interface FlexWrapperProps {
-    direction: "row" | "column"
+    direction: "row" | "column" | "row-reverse" | "column-reverse"
     gap: number
     justify?: string
     align?: string

@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next"
 
 import exampleReviews from "@/api/example/Reviews"
 import type { GETReviewsResponse } from "@/api/reviews"
-import ReviewBlock from "@/common/components/blocks/ReviewBlock"
+import ReviewBlock from "@/common/components/reviews/ReviewBlock"
 import ReviewWritingBlock, {
     type ReviewWritingBlockProps,
 } from "@/common/components/reviews/ReviewWritingBlock"
@@ -21,14 +21,6 @@ const NumberWrapper = styled(FlexWrapper)`
 
 const NumberContent = styled(FlexWrapper)`
     flex: 1 0 0;
-`
-
-const ReviewWrapper = styled.div`
-    padding: 8px 6px;
-    width: 100%;
-    border-radius: 6px;
-    border: 1px ${({ theme }) => theme.colors.Background.Block.dark} solid;
-    background-color: ${({ theme }) => theme.colors.Background.Block.default};
 `
 
 interface CourseReviewSubsectionProps {
@@ -119,10 +111,8 @@ const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
             </FlexWrapper>
             {exampleReviews.reviews.length > 0 &&
                 writableReviewProps.map((props) => <ReviewWritingBlock {...props} />)}
-            {reviews?.reviews.map((review, index) => (
-                <ReviewWrapper>
-                    <ReviewBlock review={review} likeReview={() => {}} key={index} />
-                </ReviewWrapper>
+            {reviews?.reviews.map((review) => (
+                <ReviewBlock review={review} likeReview={() => {}} key={review.id} />
             ))}
         </>
     )

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react"
 
+import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown"
 import { motion } from "framer-motion"
@@ -23,20 +24,7 @@ const CourseHistory = styled(motion.div)`
     gap: 20px;
 
     &::-webkit-scrollbar {
-        height: 7px;
-    }
-
-    &::-webkit-scrollbar-track {
-        background-color: white;
-    }
-
-    &::-webkit-scrollbar-thumb {
-        background-color: ${({ theme }) => theme.colors.Line.default};
-        border-radius: 8px;
-    }
-
-    &:hover::-webkit-scrollbar-thumb {
-        background-color: ${({ theme }) => theme.colors.Line.dark};
+        height: 0;
     }
 `
 
@@ -69,6 +57,7 @@ const CourseHistorySubsection: React.FC<CourseHistorySubsectionProps> = ({
     setSelectedProfessorId,
 }) => {
     const { t } = useTranslation()
+    const theme = useTheme()
     const isMobile = useIsDevice("mobile")
 
     const historyScroll = useRef<HTMLDivElement | null>(null)
@@ -99,11 +88,12 @@ const CourseHistorySubsection: React.FC<CourseHistorySubsectionProps> = ({
                 gap={0}
                 justify="space-between"
                 style={{ width: "100%" }}
+                onClick={() => setIsHistoryFolded((prev) => !prev)}
             >
                 <Typography type={"NormalBold"} color={"Text.default"}>
                     {t("dictionary.courseHistory")}
                 </Typography>
-                <Icon size={20} onClick={() => setIsHistoryFolded((prev) => !prev)}>
+                <Icon size={20} color={theme.colors.Text.default}>
                     <FoldButton isFolded={isHistoryFolded} />
                 </Icon>
             </FlexWrapper>

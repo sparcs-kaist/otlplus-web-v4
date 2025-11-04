@@ -10,6 +10,10 @@ const LinkText = styled(Typography)`
     display: inline-block;
 `
 
+const Caption = styled(Typography)`
+    opacity: 50%;
+`
+
 interface AccountInfoSectionProps {
     userInfo: GETUserInfoResponse | null
 }
@@ -32,7 +36,7 @@ const Index: React.FC<AccountInfoSectionProps> = ({ userInfo }) => {
                     </Typography>
                 </FlexWrapper>
             ))}
-            <Typography type={"Smaller"} color={"Text.disable"}>
+            <Caption type={"Smaller"} color={"Text.default"}>
                 <Trans
                     i18nKey="account.sparcsssoCaption"
                     components={{
@@ -50,7 +54,7 @@ const Index: React.FC<AccountInfoSectionProps> = ({ userInfo }) => {
                         ),
                     }}
                 />
-            </Typography>
+            </Caption>
             {[
                 [t("account.schoolId"), userInfo?.studentNumber],
                 [t("account.course"), userInfo?.course],
@@ -68,7 +72,7 @@ const Index: React.FC<AccountInfoSectionProps> = ({ userInfo }) => {
                     </Typography>
                 </FlexWrapper>
             ))}
-            <Typography type={"Smaller"} color={"Text.disable"}>
+            <Caption type={"Smaller"} color={"Text.default"}>
                 <Trans
                     i18nKey="account.kaistPortalCaption"
                     components={{
@@ -84,7 +88,7 @@ const Index: React.FC<AccountInfoSectionProps> = ({ userInfo }) => {
                         ),
                     }}
                 />
-            </Typography>
+            </Caption>
         </FlexWrapper>
     )
 }

@@ -14,7 +14,8 @@ function GradeWrap({ score, setScore }: GradeWrapProps) {
                 <Grade
                     key={idx}
                     onClick={() => {
-                        setScore(5 - idx)
+                        if (score === 5 - idx) setScore(0)
+                        else setScore(5 - idx)
                     }}
                     isSelected={score === 5 - idx}
                 >

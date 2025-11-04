@@ -1,14 +1,13 @@
 import React, { useEffect, useRef, useState } from "react"
 
+import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import CloseIcon from "@mui/icons-material/Close"
 
 import type { GETCourseDetailResponse } from "@/api/courses/$courseId"
 import exampleCourse from "@/api/example/Course"
 import Credits from "@/common/components/Credits"
-import ReviewWritingBlock, {
-    type ReviewWritingBlockProps,
-} from "@/common/components/reviews/ReviewWritingBlock"
+import { type ReviewWritingBlockProps } from "@/common/components/reviews/ReviewWritingBlock"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
@@ -58,6 +57,8 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
     isMobileModal = false,
     onMobileModalClose,
 }) => {
+    const theme = useTheme()
+
     const [courseDetail, setCourseDetail] = useState<GETCourseDetailResponse | null>(
         exampleCourse,
     )
@@ -121,7 +122,11 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
                                 {courseDetail?.name}
                             </Typography>
                             {isMobileModal && (
-                                <Icon size={20} onClick={onMobileModalClose}>
+                                <Icon
+                                    size={20}
+                                    onClick={onMobileModalClose}
+                                    color={theme.colors.Text.default}
+                                >
                                     <CloseIcon />
                                 </Icon>
                             )}

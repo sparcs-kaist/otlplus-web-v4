@@ -5,7 +5,7 @@ import { Trans, useTranslation } from "react-i18next"
 
 import type { GETReviewsResponse } from "@/api/reviews"
 import ScrollableDropdown from "@/common/components/ScrollableDropdown"
-import ReviewBlock from "@/common/components/blocks/ReviewBlock"
+import ReviewBlock from "@/common/components/reviews/ReviewBlock"
 import { SemesterEnum, semesterToString } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
@@ -20,13 +20,6 @@ const DropDownWrapper = styled(FlexWrapper)`
     height: 36px;
 `
 
-const ReviewWrapper = styled(FlexWrapper)`
-    padding: 8px 6px;
-    border: 1px ${({ theme }) => theme.colors.Background.Block.dark} solid;
-    background-color: ${({ theme }) => theme.colors.Background.Block.default};
-    border-radius: 6px;
-`
-
 const options = ["2023", "2022", "2021", "2020", "2019", "2018", "2017"]
 
 function ReviewFeedSubSection({ reviews, likeReview }: ReviewFeedSubSectionProps) {
@@ -36,7 +29,9 @@ function ReviewFeedSubSection({ reviews, likeReview }: ReviewFeedSubSectionProps
     return (
         <FlexWrapper direction="column" align="stretch" gap={12}>
             <FlexWrapper direction="row" align="center" gap={8}>
-                <Typography type="NormalBold">{t("common.year")}</Typography>
+                <Typography type="NormalBold" color="Text.default">
+                    {t("common.year")}
+                </Typography>
                 <DropDownWrapper direction="row" gap={0}>
                     <ScrollableDropdown
                         options={options}
@@ -46,7 +41,7 @@ function ReviewFeedSubSection({ reviews, likeReview }: ReviewFeedSubSectionProps
                 </DropDownWrapper>
             </FlexWrapper>
             <FlexWrapper direction="column" align="center" gap={12}>
-                <Typography type="NormalBold">
+                <Typography type="NormalBold" color="Text.default">
                     <Trans
                         i18nKey="writeReviews.reviewFeed.title"
                         values={{
@@ -56,23 +51,21 @@ function ReviewFeedSubSection({ reviews, likeReview }: ReviewFeedSubSectionProps
                     />
                 </Typography>
                 <FlexWrapper direction="column" align="center" gap={0}>
-                    <Typography type="Bigger">{reviews.reviews.length}</Typography>
-                    <Typography type="Smaller">
+                    <Typography type="Bigger" color="Text.default">
+                        {reviews.reviews.length}
+                    </Typography>
+                    <Typography type="Smaller" color="Text.default">
                         {t("writeReviews.reviewFeed.total")}
                     </Typography>
                 </FlexWrapper>
             </FlexWrapper>
             <FlexWrapper direction="column" align="stretch" gap={12}>
-                {reviews.reviews.map((review, idx) => (
-                    <ReviewWrapper
-                        direction="column"
-                        align="stretch"
-                        gap={0}
-                        padding="8px 10px"
-                        key={idx}
-                    >
-                        <ReviewBlock review={review} likeReview={likeReview} />
-                    </ReviewWrapper>
+                {reviews.reviews.map((review) => (
+                    <ReviewBlock
+                        review={review}
+                        likeReview={likeReview}
+                        key={review.id}
+                    />
                 ))}
             </FlexWrapper>
         </FlexWrapper>

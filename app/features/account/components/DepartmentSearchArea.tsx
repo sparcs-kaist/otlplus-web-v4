@@ -60,6 +60,8 @@ const SearchInput = styled.input`
     outline: none;
     flex-grow: 1;
     min-width: 150px;
+    background-color: ${({ theme }) => theme.colors.Background.Section.default};
+    color: ${({ theme }) => theme.colors.Text.default};
 `
 
 const SearchResultWrapper = styled.div`
