@@ -39,6 +39,7 @@ const HeaderText = styled(Typography)`
     align-items: center;
     gap: 1px;
     font-size: ${({ theme }) => theme.fonts.Normal.fontSize}px;
+    flex-wrap: wrap;
 `
 
 const SortWrapper = styled(FlexWrapper)`

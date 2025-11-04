@@ -54,7 +54,7 @@ function Footer() {
         const otlIOSLink = "https://apps.apple.com/kr/app/otl/id1579878255"
         const otlAndroidLink =
             "https://play.google.com/store/apps/details?id=org.sparcs.otlplus"
-        const araIOSLink = "https://apps.apple.com/us/app/ara-for-kaist/id6457209147"
+        const araIOSLink = "https://apps.apple.com/kr/app/ara-for-kaist/id6457209147"
         const araAndroidLink =
             "https://play.google.com/store/apps/details?id=org.sparcs.newara"
         switch (service) {
