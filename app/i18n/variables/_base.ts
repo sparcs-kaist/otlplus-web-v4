@@ -100,6 +100,10 @@ export const commonI18nBase = {
             "1yearShort": "1년이내",
             thisSemesterShort: "이번학기",
         },
+        professors: {
+            over: " 외 ",
+            people: "명",
+        },
         review: {
             writingPlaceholder: "학점, 로드 등의 평가에 대하여 설명해주세요.",
             like: "좋아요",

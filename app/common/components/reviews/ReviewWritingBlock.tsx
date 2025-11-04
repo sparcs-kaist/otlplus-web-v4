@@ -3,7 +3,6 @@ import { type Dispatch, type SetStateAction, useState } from "react"
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
 
-import { type GETWritableReviewsResponse } from "@/api/users/writable-reviews"
 import Button from "@/common/components/Button"
 import GradeWrap from "@/common/components/GradeWrap"
 import { ScoreEnum } from "@/common/enum/scoreEnum"
@@ -11,6 +10,7 @@ import { SemesterEnum, semesterToString } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import TextInputArea from "@/common/primitives/TextInputArea"
 import Typography from "@/common/primitives/Typography"
+import type { Professor } from "@/common/schemas/professor"
 import professorName from "@/utils/professorName"
 
 const ReviewWrapper = styled(FlexWrapper)`
@@ -25,11 +25,25 @@ const ReviewBoxWrapper = styled(FlexWrapper)`
     height: 160px;
 `
 
-interface ReviewWritingBlockProps {
-    lecture: GETWritableReviewsResponse
+const GradesWrapper = styled(FlexWrapper)`
+    flex-wrap: wrap;
+`
+
+export interface ReviewWritingBlockProps {
+    name: string
+    lectureId: number
+    professors: Professor[]
+    year: number
+    semester: SemesterEnum
 }
 
-function ReviewWritingBlock({ lecture }: ReviewWritingBlockProps) {
+function ReviewWritingBlock({
+    name,
+    lectureId,
+    professors,
+    year,
+    semester,
+}: ReviewWritingBlockProps) {
     const { t } = useTranslation()
 
     const [reviewText, setReviewText] = useState<string>("")
@@ -53,12 +67,12 @@ function ReviewWritingBlock({ lecture }: ReviewWritingBlockProps) {
         <ReviewWrapper direction="column" gap={8} align="stretch">
             <FlexWrapper direction="row" gap={6} align={"center"}>
                 <Typography type={"NormalBold"} color={"Text.default"}>
-                    {lecture?.name}
+                    {name}
                 </Typography>
                 {[
-                    professorName(lecture.professors),
-                    lecture?.year,
-                    semesterToString(lecture?.semester || SemesterEnum.SPRING),
+                    professorName(professors),
+                    year,
+                    semesterToString(semester || SemesterEnum.SPRING),
                 ].map((text, idx) => {
                     return (
                         <Typography type={"Normal"} color={"Text.lighter"} key={idx}>
@@ -80,23 +94,23 @@ function ReviewWritingBlock({ lecture }: ReviewWritingBlockProps) {
                     area={true}
                 />
             </ReviewBoxWrapper>
-            <FlexWrapper direction="row" gap={12}>
-                {(
-                    [
-                        [t("common.grade"), reviewGrade, setReviewGrade],
-                        [t("common.load"), reviewLoad, setReviewLoad],
-                        [t("common.speech"), reviewSpeech, setReviewSpeech],
-                    ] as [string, ScoreEnum, Dispatch<SetStateAction<ScoreEnum>>][]
-                ).map(([tag, currentState, DispatchFunction]) => (
-                    <FlexWrapper direction="row" gap={6} align="center" key={tag}>
-                        <Typography type="Normal" color="Text.default">
-                            {tag}
-                        </Typography>
-                        <GradeWrap score={currentState} setScore={DispatchFunction} />
-                    </FlexWrapper>
-                ))}
-            </FlexWrapper>
-            <FlexWrapper direction="row" gap={0} justify={"end"}>
+            <FlexWrapper direction="row" gap={20} justify="space-between" align="center">
+                <GradesWrapper direction="row" gap={12}>
+                    {(
+                        [
+                            [t("common.grade"), reviewGrade, setReviewGrade],
+                            [t("common.load"), reviewLoad, setReviewLoad],
+                            [t("common.speech"), reviewSpeech, setReviewSpeech],
+                        ] as [string, ScoreEnum, Dispatch<SetStateAction<ScoreEnum>>][]
+                    ).map(([tag, currentState, DispatchFunction]) => (
+                        <FlexWrapper direction="row" gap={6} align="center" key={tag}>
+                            <Typography type="Normal" color="Text.default">
+                                {tag}
+                            </Typography>
+                            <GradeWrap score={currentState} setScore={DispatchFunction} />
+                        </FlexWrapper>
+                    ))}
+                </GradesWrapper>
                 <Button
                     type={
                         reviewText && reviewGrade && reviewSpeech && reviewLoad

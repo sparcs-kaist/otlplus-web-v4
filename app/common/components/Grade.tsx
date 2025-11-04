@@ -1,4 +1,4 @@
-import React, { useState } from "react"
+import React from "react"
 
 import { css } from "@emotion/react"
 import styled from "@emotion/styled"
@@ -14,18 +14,22 @@ interface GradeButtonProps {
 }
 
 const GradeButtonDefaultStyle = (theme: ThemeType) => css`
+    border: 1px solid rgba(194, 194, 194, 0.2);
     background-color: ${theme.colors.Background.Tab.darker};
-    color: ${theme.colors.Background.Section.default};
+    color: ${theme.colors.Text.default};
+    opacity: 50%;
 `
 
 const GradeButtonHoveredStyle = (theme: ThemeType) => css`
     background-color: ${theme.colors.Text.disable};
     color: ${theme.colors.Background.Section.default};
+    opacity: 100%;
 `
 
 const GradeButtonSelectedStyle = (theme: ThemeType) => css`
     background-color: ${theme.colors.Text.lighter};
     color: ${theme.colors.Background.Section.default};
+    opacity: 100%;
 `
 
 const GradeButtonWrapper = styled(FlexWrapper)`
@@ -34,7 +38,7 @@ const GradeButtonWrapper = styled(FlexWrapper)`
     cursor: pointer;
 `
 
-const GradeButton = styled.button<{ isHovered: boolean; isSelected: boolean }>`
+const GradeButton = styled.button<{ isSelected: boolean }>`
     width: 100%;
     height: 100%;
     border-radius: 100%;
@@ -46,31 +50,17 @@ const GradeButton = styled.button<{ isHovered: boolean; isSelected: boolean }>`
     padding-top: 2.5px;
 
     ${({ theme }) => GradeButtonDefaultStyle(theme)}
-    ${({ theme, isHovered }) => isHovered && GradeButtonHoveredStyle(theme)}
-  ${({ theme, isSelected }) => isSelected && GradeButtonSelectedStyle(theme)}
+    &:hover {
+        ${({ theme }) => GradeButtonHoveredStyle(theme)}
+    }
+    ${({ theme, isSelected }) => isSelected && GradeButtonSelectedStyle(theme)}
 `
 
 function Grade({ children, onClick, isSelected = false }: GradeButtonProps) {
-    const [isHovered, setIsHovered] = useState(false)
-
-    const handleMouseOver = () => {
-        setIsHovered(true)
-    }
-
-    const handleMouseOut = () => {
-        setIsHovered(false)
-    }
-
     return (
         <GradeButtonWrapper direction="row" justify="center" align="center" gap={0}>
-            <GradeButton
-                isHovered={isHovered}
-                isSelected={isSelected}
-                onMouseOver={handleMouseOver}
-                onMouseOut={handleMouseOut}
-                onClick={onClick}
-            >
-                <Typography type="NormalBold">{children}</Typography>
+            <GradeButton isSelected={isSelected} onClick={onClick}>
+                <Typography type="Small">{children}</Typography>
             </GradeButton>
         </GradeButtonWrapper>
     )

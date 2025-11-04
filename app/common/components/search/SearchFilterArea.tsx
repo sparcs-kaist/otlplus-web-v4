@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 
+import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
 
 import FlexWrapper from "@/common/primitives/FlexWrapper"
@@ -100,6 +101,16 @@ export type SearchFilterAreaProps<ops extends readonly SearchOptions[]> = {
 } & TimeProps<ops>
 
 const ChipsDetail = SearchOptionsChipsDetail
+
+const SearchFilterAreaWrapper = styled(FlexWrapper)`
+    flex: 1 1 auto;
+    overflow: auto;
+
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+        display: none;
+    }
+`
 
 function SearchFilterArea<ops extends readonly SearchOptions[]>({
     options,
@@ -237,10 +248,10 @@ function SearchFilterArea<ops extends readonly SearchOptions[]>({
     }, [selectedOptions])
 
     return (
-        <FlexWrapper direction="column" align="stretch" gap={12}>
+        <SearchFilterAreaWrapper direction="column" align="stretch" gap={12}>
             {options.map((option) => (
                 <FlexWrapper direction="column" gap={6} key={option}>
-                    <Typography type="NormalBold">
+                    <Typography type="NormalBold" color="Text.default">
                         {t(`common.search.${option}`)}
                     </Typography>
                     <FlexWrapper direction="column" gap={0}>
@@ -271,7 +282,7 @@ function SearchFilterArea<ops extends readonly SearchOptions[]>({
                     </FlexWrapper>
                 </FlexWrapper>
             ))}
-        </FlexWrapper>
+        </SearchFilterAreaWrapper>
     )
 }
 

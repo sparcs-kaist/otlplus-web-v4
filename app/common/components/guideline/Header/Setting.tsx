@@ -1,8 +1,13 @@
+import { useContext, useState } from "react"
+
 import styled from "@emotion/styled"
+import DarkModeIcon from "@mui/icons-material/DarkMode"
 import LanguageIcon from "@mui/icons-material/Language"
+import LightModeIcon from "@mui/icons-material/LightMode"
 import PersonIcon from "@mui/icons-material/Person"
 import { useTranslation } from "react-i18next"
 
+import { SelectedThemeContext } from "@/Providers"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
@@ -32,6 +37,11 @@ const Setting: React.FC<SettingProps> = ({
     mobileSidebar,
 }) => {
     const { t, i18n } = useTranslation()
+    const { selectedTheme, setSelectedTheme } = useContext(SelectedThemeContext)
+
+    const changeThemeMode = () => {
+        setSelectedTheme(selectedTheme === "dark" ? "light" : "dark")
+    }
 
     return (
         <SettingWrapper
@@ -41,11 +51,18 @@ const Setting: React.FC<SettingProps> = ({
             gap={mobileSidebar ? 9 : 16}
             mobileSidebar={mobileSidebar}
         >
+            {!mobileSidebar && (
+                <Icon size={16} onClick={changeThemeMode}>
+                    {selectedTheme === "dark" ? <LightModeIcon /> : <DarkModeIcon />}
+                </Icon>
+            )}
             <LanguageButtonWrapper
                 direction={mobileSidebar ? "row" : "column"}
                 gap={4}
                 align="center"
-                onClick={() => i18n.changeLanguage(i18n.language === "ko" ? "en" : "ko")}
+                onClick={() =>
+                    i18n.changeLanguage(i18n.resolvedLanguage === "ko" ? "en" : "ko")
+                }
             >
                 <Icon size={16}>
                     <LanguageIcon />

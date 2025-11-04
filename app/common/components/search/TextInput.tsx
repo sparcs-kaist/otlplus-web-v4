@@ -1,4 +1,4 @@
-import React, { forwardRef, useEffect } from "react"
+import { forwardRef, useEffect } from "react"
 import type { ChangeEvent, InputHTMLAttributes } from "react"
 
 import { css } from "@emotion/css"
@@ -34,6 +34,7 @@ const Input = styled.input<{
     color: rgba(51, 51, 51, 1);
     border: 0;
     padding: 8px;
+    background-color: ${({ theme }) => theme.colors.Background.Section.default};
 
     &::placeholder {
         color: ${({ $placeholderColor }) => $placeholderColor || "#aaaaaa"};

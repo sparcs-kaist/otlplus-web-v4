@@ -26,7 +26,7 @@ export const links: Route.LinksFunction = () => [
     },
     {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap",
     },
 ]
 
@@ -60,6 +60,7 @@ const AppWrapper = styled(FlexWrapper)`
     min-height: 100%;
     position: absolute;
     overflow: hidden;
+    background-color: ${({ theme }) => theme.colors.Background.Page.default};
 `
 
 const OutletWrapper = styled(FlexWrapper)`

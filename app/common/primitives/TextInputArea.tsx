@@ -54,8 +54,8 @@ const Input = styled.input<TextInputProps & { hasError: boolean }>`
     gap: 8px;
     font-size: 14px;
     line-height: 17.5px;
-    color: rgba(51, 51, 51, 1);
-    background-color: rgba(245, 245, 245, 1);
+    color: ${({ theme }) => theme.colors.Text.default};
+    background-color: ${({ theme }) => theme.colors.Background.Section.default};
     flex: 1;
     ${({ disabled }) => disabled && disabledStyle}
     ${({ hasError }) => hasError && errorBorderStyle}
