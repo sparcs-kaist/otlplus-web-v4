@@ -29,6 +29,7 @@ const ButtonInner = styled.div<{
     font-weight: ${({ theme }) => theme.fonts.Normal.fontWeight};
     line-height: 17.5px;
     font-weight: 400;
+    white-space: nowrap;
 `
 
 const ButtonDefaultInner = styled(ButtonInner)`

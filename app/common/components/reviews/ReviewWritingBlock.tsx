@@ -94,7 +94,7 @@ function ReviewWritingBlock({
                     area={true}
                 />
             </ReviewBoxWrapper>
-            <FlexWrapper direction="row" gap={0} justify="space-between" align="center">
+            <FlexWrapper direction="row" gap={20} justify="space-between" align="center">
                 <GradesWrapper direction="row" gap={12}>
                     {(
                         [
