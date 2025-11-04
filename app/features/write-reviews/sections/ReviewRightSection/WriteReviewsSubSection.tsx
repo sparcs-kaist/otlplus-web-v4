@@ -1,10 +1,9 @@
-import styled from "@emotion/styled"
 import { Trans } from "react-i18next"
 
 import exampleReviews from "@/api/example/Reviews"
 import { type GETWritableReviewsResponse } from "@/api/users/writable-reviews"
 import Line from "@/common/components/Line"
-import ReviewBlock from "@/common/components/blocks/ReviewBlock"
+import ReviewBlock from "@/common/components/reviews/ReviewBlock"
 import ReviewWritingBlock from "@/common/components/reviews/ReviewWritingBlock"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
@@ -13,13 +12,6 @@ import likeReview from "@/utils/reviews/likeReview"
 interface WriteReviewsSubSectionType {
     selectedLecture: GETWritableReviewsResponse
 }
-
-const ReviewWrapper = styled(FlexWrapper)`
-    padding: 8px 6px;
-    border: 1px ${({ theme }) => theme.colors.Background.Block.dark} solid;
-    background-color: ${({ theme }) => theme.colors.Background.Block.default};
-    border-radius: 6px;
-`
 
 function WriteReviewsSubSection({ selectedLecture }: WriteReviewsSubSectionType) {
     return (
@@ -50,9 +42,11 @@ function WriteReviewsSubSection({ selectedLecture }: WriteReviewsSubSectionType)
                     </Typography>
                 </FlexWrapper>
                 {exampleReviews.reviews.map((review, idx) => (
-                    <ReviewWrapper direction="column" align="stretch" gap={0} key={idx}>
-                        <ReviewBlock review={review} likeReview={likeReview} />
-                    </ReviewWrapper>
+                    <ReviewBlock
+                        review={review}
+                        likeReview={likeReview}
+                        key={review.id}
+                    />
                 ))}
             </FlexWrapper>
         </FlexWrapper>

@@ -15,17 +15,26 @@ const Content = styled(Typography)`
     line-height: 1.5;
 `
 
+const ReviewWrapper = styled.div`
+    padding: 8px 6px;
+    width: 100%;
+    border-radius: 6px;
+    border: 1px ${({ theme }) => theme.colors.Background.Block.dark} solid;
+    background-color: ${({ theme }) => theme.colors.Background.Block.default};
+`
+
 interface ReviewBlockProps {
     review: Review
     likeReview: (reviewId: number) => void
+    withWrapper?: boolean
 }
 
-function ReviewBlock({ review, likeReview }: ReviewBlockProps) {
+function ReviewBlock({ review, likeReview, withWrapper = true }: ReviewBlockProps) {
     const { t } = useTranslation()
 
     if (!review) return
 
-    return (
+    const reviewContent = (
         <FlexWrapper direction="column" align="stretch" gap={8} padding="0px 4px">
             <FlexWrapper direction="row" gap={6}>
                 <Typography type="NormalBold" color="Text.default">
@@ -77,6 +86,10 @@ function ReviewBlock({ review, likeReview }: ReviewBlockProps) {
             </FlexWrapper>
         </FlexWrapper>
     )
+
+    if (withWrapper) {
+        return <ReviewWrapper>{reviewContent}</ReviewWrapper>
+    } else return reviewContent
 }
 
 export default ReviewBlock

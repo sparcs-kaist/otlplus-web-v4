@@ -1,7 +1,7 @@
 import { Trans } from "react-i18next"
 
 import type { GETReviewsResponse } from "@/api/reviews"
-import ReviewBlock from "@/common/components/blocks/ReviewBlock"
+import ReviewBlock from "@/common/components/reviews/ReviewBlock"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import Widget from "@/common/primitives/Widget"
@@ -37,8 +37,13 @@ function ReviewFeedSection({ reviews, likeReview }: ReviewFeedSectionProps) {
                 />
             </FlexWrapper>
             <FlexWrapper direction="column" gap={30}>
-                {reviews.reviews.map((review, idx) => (
-                    <ReviewBlock key={idx} review={review} likeReview={likeReview} />
+                {reviews.reviews.map((review) => (
+                    <ReviewBlock
+                        key={review.id}
+                        review={review}
+                        likeReview={likeReview}
+                        withWrapper={false}
+                    />
                 ))}
             </FlexWrapper>
         </Widget>

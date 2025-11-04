@@ -20,7 +20,11 @@ interface ReviewRightSectionProps {
 
 const StyledWidget = styled(Widget)`
     background: transparent;
-    overflow: hidden;
+    overflow: auto;
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
 `
 
 const ReviewRightSubSection = styled(FlexWrapper)`
