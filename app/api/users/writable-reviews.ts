@@ -10,7 +10,7 @@ export const getWritableReviews = z.object({
         courseId: z.number().int(),
         professors: z.array(ProfessorSchema),
         year: z.number().int(),
-        semester: z.nativeEnum(SemesterEnum),
+        semester: z.enum(SemesterEnum),
     }),
 })
 

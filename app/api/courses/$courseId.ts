@@ -14,7 +14,7 @@ export const getCourseDetail = z.object({
         history: z.array(
             z.object({
                 year: z.number().int(),
-                semester: z.nativeEnum(SemesterEnum),
+                semester: z.enum(SemesterEnum),
                 classes: z.array(
                     z.object({
                         lectureId: z.number().int(),

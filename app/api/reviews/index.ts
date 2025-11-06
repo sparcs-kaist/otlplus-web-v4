@@ -18,7 +18,7 @@ export const getReviews = z.object({
             "popular-feed",
         ]),
         year: z.number().int().optional(),
-        semester: z.nativeEnum(SemesterEnum).optional(),
+        semester: z.enum(SemesterEnum).optional(),
     }),
     response: z.object({
         reviews: z.array(ReviewSchema),
