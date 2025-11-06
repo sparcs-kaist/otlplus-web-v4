@@ -6,6 +6,8 @@ import Modal from "@/common/components/Modal"
 import Typography from "@/common/primitives/Typography"
 import AccountInfoSection from "@/features/account/sections/AccountInfoSection"
 import AccountInterestedMajorSection from "@/features/account/sections/AccountInterestedMajorSection"
+import { axiosClient } from "@/libs/axios"
+import { removeLocalStorageItem } from "@/utils/localStorage"
 import useIsDevice from "@/utils/useIsDevice"
 
 const LogoutButton = styled(Typography)`
@@ -29,6 +31,16 @@ const AccountPageModal: React.FC<AccountPageModalProps> = ({
 
     const { t } = useTranslation()
 
+    const handleLogout = () => {
+        if (process.env.NODE_ENV === "production") {
+            location.href = `/session/logout`
+        } else {
+            removeLocalStorageItem("devStudentId")
+            axiosClient.defaults.headers.common["X-AUTH-SID"] = ""
+            location.reload()
+        }
+    }
+
     return (
         <Modal
             isOpen={accountPageOpen}
@@ -41,7 +53,7 @@ const AccountPageModal: React.FC<AccountPageModalProps> = ({
                 userInfo={userInfo}
                 setUserInfo={setUserInfo}
             />
-            <LogoutButton type="Normal" color="Highlight.default">
+            <LogoutButton type="Normal" color="Highlight.default" onClick={handleLogout}>
                 {t("account.logout")}
             </LogoutButton>
         </Modal>

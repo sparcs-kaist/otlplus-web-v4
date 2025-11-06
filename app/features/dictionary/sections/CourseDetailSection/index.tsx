@@ -4,13 +4,13 @@ import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import CloseIcon from "@mui/icons-material/Close"
 
-import type { GETCourseDetailResponse } from "@/api/courses/$courseId"
-import exampleCourse from "@/api/example/Course"
+import { type GETCourseDetailResponse, getCourseDetail } from "@/api/courses/$courseId"
 import Credits from "@/common/components/Credits"
 import { type ReviewWritingBlockProps } from "@/common/components/reviews/ReviewWritingBlock"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
+import { useAPI } from "@/utils/api/useAPI"
 
 import CourseHistorySubsection from "./CourseHistorySubsection"
 import CourseInfoSubsection from "./CourseInfoSubsection"
@@ -59,15 +59,21 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
 }) => {
     const theme = useTheme()
 
-    const [courseDetail, setCourseDetail] = useState<GETCourseDetailResponse | null>(
-        exampleCourse,
-    )
+    const query = useAPI<GETCourseDetailResponse>({
+        endpoint: `/courses/${selectedCourseId}`,
+        method: "GET",
+        responseSchema: getCourseDetail,
+        enabled: selectedCourseId !== null,
+    })
+
+    const courseDetail: GETCourseDetailResponse | null = query.data ?? null
+
     const [selectedProfessorId, setSelectedProfessorId] = useState<number | null>(null)
     const [writableReviewProps, setWritableReviewProps] = useState<
         ReviewWritingBlockProps[]
     >([])
-    const reviewSectionRef = useRef<HTMLDivElement>(null)
 
+    const reviewSectionRef = useRef<HTMLDivElement>(null)
     useEffect(() => {
         if (courseDetail) {
             const writableReviews: ReviewWritingBlockProps[] = []

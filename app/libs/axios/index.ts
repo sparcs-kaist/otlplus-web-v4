@@ -12,8 +12,8 @@ import mockInterceptor from "./_axios/axiosMockInterceptor"
  * @description Axios Client used for backend API requests that require NO authentication
  */
 export const axiosClient = axios.create({
-    withCredentials: true,
-    baseURL: clientEnv.VITE_APP_API_URL,
+  baseURL: clientEnv.VITE_APP_API_URL,
+  withCredentials: true,
 })
 
 // Defines middleware for axiosClient
@@ -33,7 +33,8 @@ axiosClient.interceptors.response.use(
  */
 
 export const axiosClientWithAuth = axios.create({
-    withCredentials: true,
+  baseURL: clientEnv.VITE_APP_API_URL,
+  withCredentials: true,
 })
 
 axiosClientWithAuth.interceptors.request.use(

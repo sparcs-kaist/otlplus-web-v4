@@ -4,11 +4,14 @@ import styled from "@emotion/styled"
 import MenuIcon from "@mui/icons-material/Menu"
 
 import { SelectedThemeContext } from "@/Providers"
-import exampleUserInfo from "@/api/example/UserInfo"
-import type { GETUserInfoResponse } from "@/api/users/$userId/info"
+import { type GETUserInfoResponse, getUserInfo } from "@/api/users/$userId/info"
 import Icon from "@/common/primitives/Icon"
 import AccountPageModal from "@/features/account/AccountPageModal"
+import DeveloperLoginModal from "@/features/account/DeveloperLoginModal"
+import { axiosClient } from "@/libs/axios"
 import { media } from "@/styles/themes/media"
+import { useAPI } from "@/utils/api/useAPI"
+import { getLocalStorageItem } from "@/utils/localStorage"
 import useIsDevice from "@/utils/useIsDevice"
 
 import Menu from "./Menu"
@@ -49,20 +52,56 @@ const MobileSidebarButtonWrapper = styled.div`
 `
 
 const Header: React.FC = () => {
+    const query = useAPI<GETUserInfoResponse>({
+        endpoint: `/users/info`,
+        method: "GET",
+        responseSchema: getUserInfo,
+    })
+
     const isMobile = useIsDevice("mobile")
     const { selectedTheme } = useContext(SelectedThemeContext)
 
     const [accountPageOpen, setAccountPageOpen] = useState<boolean>(false)
+    const [developerLoginOpen, setDeveloperLoginOpen] = useState(false)
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false)
 
-    const [userInfo, setUserInfo] = useState<GETUserInfoResponse | null>(exampleUserInfo)
+    const [userInfo, setUserInfo] = useState<GETUserInfoResponse | null>(null)
 
+    const handleAccountButtonClick = () => {
+        if (userInfo === null) {
+            if (process.env.NODE_ENV === "development") {
+                setDeveloperLoginOpen(true)
+            } else {
+                location.href = `/session/login`
+            }
+        } else {
+            setAccountPageOpen(true)
+        }
+    }
+
+    useEffect(() => {
+        if (process.env.NODE_ENV === "development") {
+            const devStudentId = getLocalStorageItem("devStudentId")
+            if (devStudentId) {
+                axiosClient.defaults.headers.common["X-AUTH-SID"] = devStudentId
+            }
+        }
+    }, [])
+    useEffect(() => {
+        if (query.data) {
+            setUserInfo(query.data)
+        }
+    }, [query.data])
     useEffect(() => {
         if (!isMobile) setMobileSidebarOpen(false)
     }, [isMobile])
 
     return (
         <HeaderWrapper>
+            <DeveloperLoginModal
+                developerLoginModalOpen={developerLoginOpen}
+                setDeveloperLoginModalOpen={setDeveloperLoginOpen}
+            />
             <AccountPageModal
                 userInfo={userInfo}
                 setUserInfo={setUserInfo}
@@ -73,7 +112,7 @@ const Header: React.FC = () => {
             <HeaderInner>
                 <Menu setMobileSidebarOpen={() => setMobileSidebarOpen(false)} />
                 <Setting
-                    setAccountPageOpen={setAccountPageOpen}
+                    handleAccountButtonClick={handleAccountButtonClick}
                     userName={userInfo ? userInfo.name : "Sign in"}
                     mobileSidebar={false}
                 />
@@ -88,7 +127,7 @@ const Header: React.FC = () => {
                 mobileSidebarOpen={mobileSidebarOpen}
                 sidebarHeader={
                     <Setting
-                        setAccountPageOpen={setAccountPageOpen}
+                        handleAccountButtonClick={handleAccountButtonClick}
                         userName={userInfo ? userInfo.name : "Sign in"}
                         mobileSidebar={true}
                     />
