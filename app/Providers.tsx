@@ -16,9 +16,9 @@ export const SelectedThemeContext = React.createContext<{
     setSelectedTheme: () => {},
 })
 
-const Providers: React.FC<React.PropsWithChildren> = (props) => {
-    const queryClient = new QueryClient()
+const queryClient = new QueryClient()
 
+const Providers: React.FC<React.PropsWithChildren> = (props) => {
     const { selectedTheme, setSelectedTheme } = useThemeStore()
 
     const extractedTheme = React.useMemo(() => {
