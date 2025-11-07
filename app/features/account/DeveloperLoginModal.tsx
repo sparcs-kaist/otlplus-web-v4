@@ -15,6 +15,8 @@ const IdInput = styled.input`
     font-size: 16px;
     border-radius: 6px;
     border: 1px solid #ccc;
+    background-color: ${({ theme }) => theme.colors.Background.Section.default};
+    color: ${({ theme }) => theme.colors.Text.default};
 
     &:focus {
         outline: none;
@@ -36,6 +38,10 @@ const DeveloperLoginModal: React.FC<DeveloperLoginModalProps> = ({
 
     const handleLogin = () => {
         if (input) {
+            if (input.match(/[^0-9]/)) {
+                alert("학번은 숫자만 입력 가능합니다.")
+                return
+            }
             setLocalStorageItem("devStudentId", input)
             axiosClient.defaults.headers.common["X-AUTH-SID"] = input
             location.reload()
