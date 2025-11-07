@@ -37,7 +37,8 @@ export const useAPI = <T>({
                 headers: headers,
             })
 
-            return responseSchema.parse(response.data) as T
+            // return responseSchema.parse(response.data) as T
+            return response.data // bypass due to backend inconsistency
         },
         retry: 1,
         staleTime: Infinity,

@@ -62,7 +62,7 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
     const query = useAPI<GETCourseDetailResponse>({
         endpoint: `/courses/${selectedCourseId}`,
         method: "GET",
-        responseSchema: getCourseDetail,
+        responseSchema: getCourseDetail.shape.response,
         enabled: selectedCourseId !== null,
     })
 
@@ -72,6 +72,11 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
     const [writableReviewProps, setWritableReviewProps] = useState<
         ReviewWritingBlockProps[]
     >([])
+
+    useEffect(() => {
+        console.log(selectedCourseId)
+        console.log(query.data)
+    }, [query.data, selectedCourseId])
 
     const reviewSectionRef = useRef<HTMLDivElement>(null)
     useEffect(() => {
