@@ -137,6 +137,8 @@ export const commonI18nEn: CommonI18nBaseType = {
             saturday: "Sat",
             sunday: "Sun",
         },
+        completedCourse: "Completed",
+        wishlist: "Wishlist",
     },
     header: {
         dictionary: "Dictionary",

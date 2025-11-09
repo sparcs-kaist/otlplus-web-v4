@@ -133,6 +133,8 @@ export const commonI18nBase = {
             saturday: "토요일",
             sunday: "일요일",
         },
+        completedCourse: "수강완료",
+        wishlist: "찜목록",
     },
     header: {
         dictionary: "과목사전",

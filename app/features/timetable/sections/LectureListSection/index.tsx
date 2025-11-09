@@ -1,0 +1,296 @@
+import { useEffect, useRef, useState } from "react"
+
+import { useTheme } from "@emotion/react"
+import styled from "@emotion/styled"
+import CircleIcon from "@mui/icons-material/Circle"
+import { Trans, useTranslation } from "react-i18next"
+
+import ScrollableDropdown from "@/common/components/ScrollableDropdown"
+import SearchArea, { type SearchParamsType } from "@/common/components/search/SearchArea"
+import FlexWrapper from "@/common/primitives/FlexWrapper"
+import Icon from "@/common/primitives/Icon"
+import Typography from "@/common/primitives/Typography"
+import CourseBlock from "@/features/dictionary/components/CourseBlock"
+import type { GETLecturesResponse } from "@/api/lectures"
+import exampleLectureSearchResults from "@/api/example/LectureSearchResults"
+import formatProfessorName from "./formatProfessorName"
+import AddIcon from "@mui/icons-material/Add"
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder"
+import FavoriteIcon from "@mui/icons-material/Favorite"
+import exampleUserWishlistResults from "@/api/example/UserWishList"
+
+const LectureListSectionInner = styled(FlexWrapper)`
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+`
+
+const SearchSubSection = styled.div`
+    border-radius: 6px;
+    border: 1px solid ${({ theme }) => theme.colors.Line.divider};
+    max-height: 100%;
+`
+
+const NoResultText = styled(Typography)`
+    width: 100%;
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+`
+
+const HeaderText = styled(Typography)`
+    display: flex;
+    align-items: center;
+    gap: 1px;
+    font-size: ${({ theme }) => theme.fonts.Normal.fontSize}px;
+    flex-wrap: wrap;
+`
+
+const SortWrapper = styled(FlexWrapper)`
+    white-space: nowrap;
+`
+
+const DropDownWrapper = styled(FlexWrapper)`
+    height: 36px;
+`
+
+const CourseBlockWrapper = styled(FlexWrapper)`
+    height: fit-content;
+    overflow-y: auto;
+
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+        display: none;
+    }
+`
+
+const CourseItemWrapper = styled.div<{isSelected: boolean}>`
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    border-radius: 8px;
+    background-color: ${({ theme }) => theme.colors.Background.Block.default};
+    transition: all 0.2s ease;
+    transform: ${({ isSelected }) => (isSelected ? 'translateY(-2px)' : 'none')};
+    box-shadow: ${({ isSelected }) =>
+        isSelected
+        ? '0 4px 8px rgba(0, 0, 0, 0.15)'
+        : 'none'
+    };
+    overflow: hidden;
+    flex-shrink: 0;
+`
+
+const CourseTitleWrapper = styled.div`
+    width: 100%;
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    flex-direction: row;
+    justify-content: space-between;
+`
+
+const LectureItemWrapper = styled.div<{isHighlighted: boolean}>`
+    width: 100%;
+    display: flex;
+    align-items: center;
+    padding: 8px 12px 8px 18px;
+    flex-direction: row;
+    justify-content: space-between;
+    background-color: ${({ isHighlighted, theme }) => 
+        isHighlighted 
+        ? theme.colors.Background.Block.dark 
+        : theme.colors.Background.Block.default };
+`
+
+const Divider = styled.div`
+    width: 95%;
+    height: 0.5px;
+    background-color: ${({ theme }) => theme.colors.Line.dark};
+    align-self: center;
+`;
+
+const Chip = styled.div<{isSelected: boolean}>`
+    display: flex;
+    align-items: center;
+    padding: 8px 12px;
+    flex-direction: row;
+    gap: 8px;
+    border-radius: 6px;
+    background-color: ${({ isSelected, theme }) => 
+        isSelected 
+        ? theme.colors.Background.Button.highlightDark 
+        : theme.colors.Background.Button.highlight };
+    cursor: pointer;
+    &:hover {
+        background-color: ${({ theme }) => theme.colors.Background.Button.highlightDark };
+    }
+`
+
+interface LectureListSectionProps {
+    selectedLectureId: number | null
+    setSelectedLectureId: React.Dispatch<React.SetStateAction<number | null>>
+}
+
+const LectureListSection: React.FC<LectureListSectionProps> = ({
+    selectedLectureId,
+    setSelectedLectureId,
+}) => {
+    const { t } = useTranslation()
+    const theme = useTheme()
+
+    const [searchResult, setSearchResult] = useState<GETLecturesResponse>(
+        exampleLectureSearchResults,
+    )
+    const [sortOption, setSortOption] = useState<number>(0);
+    const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
+    const wrapperRef = useRef<HTMLDivElement>(null);
+
+    const [isWishlist, setIsWishlist] = useState<boolean>(false);
+
+    useEffect(()=> {
+        if (isWishlist) {
+            setSearchResult(exampleUserWishlistResults);
+        } else {
+            setSearchResult(exampleLectureSearchResults);
+        }
+    }, [isWishlist])
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+        if (
+            wrapperRef.current &&
+            !wrapperRef.current.contains(event.target as Node)
+        ) {
+            setSelectedLectureId(null);
+            setSelectedCourseId(null);
+        }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    return (
+        <LectureListSectionInner
+            direction="column"
+            justify="stretch"
+            align="stretch"
+            gap={8}
+        >
+            <SearchSubSection>
+                <SearchArea
+                    options={["type", "department", "level", "term"]}
+                    onSearch={(params: SearchParamsType) => {
+                        alert(JSON.stringify(params))
+                    }}
+                />
+            </SearchSubSection>
+            <FlexWrapper
+                direction="row"
+                gap={0}
+                justify={"space-between"}
+                align={"center"}
+            >
+                <Chip isSelected={isWishlist} onClick={() => {setIsWishlist(!isWishlist)}}>
+                    <Icon size={15} color={theme.colors.Highlight.default}>
+                        {isWishlist ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+                    </Icon>
+                    <Typography type={"Normal"} color={"Highlight.default"}>
+                        {t("common.wishlist")}
+                    </Typography>
+                </Chip>
+                <DropDownWrapper direction="row" gap={0}>
+                    <ScrollableDropdown
+                        options={[
+                            t("dictionary.sortOptions.code"),
+                            t("dictionary.sortOptions.popularity"),
+                            t("dictionary.sortOptions.studentCount"),
+                        ]}
+                        setSelectedOption={setSortOption}
+                        selectedOption={sortOption}
+                    />
+                </DropDownWrapper>
+            </FlexWrapper>
+            {searchResult.courses.length !== 0 ? (
+                <CourseBlockWrapper direction="column" gap={12} ref={wrapperRef}>
+                    {searchResult.courses.map((course, idx) => {
+                        const courseId = course.lectures[0].courseId;
+                        const opacity = selectedCourseId != null && selectedCourseId !== courseId ? 0.3 : 1;
+                        return (
+                        <CourseItemWrapper isSelected={selectedCourseId === courseId} key={idx} style={{opacity: opacity}}>
+                            <CourseTitleWrapper>
+                                <FlexWrapper direction="row" gap={6} style={{opacity: course.completed ? 0.3 : 1}}>
+                                    <Typography type={"NormalBold"} color={"Text.default"}>
+                                        {course.name}
+                                    </Typography>
+                                    <Typography type={"Normal"} color={"Text.default"}>
+                                        {course.code}
+                                    </Typography>
+                                </FlexWrapper>
+                                {course.completed 
+                                    ?
+                                    <Typography type={"Normal"} color={"Text.default"}>
+                                        {t('common.completedCourse')}
+                                    </Typography> 
+                                    : 
+                                    <Typography type={"Normal"} color={"Highlight.default"}>
+                                        {course.type}
+                                    </Typography>}
+                            </CourseTitleWrapper>
+                            <Divider />
+                            {course.lectures.map((lecture, idx) => {
+                                return (
+                                    <>
+                                        <LectureItemWrapper 
+                                            onClick={() => {
+                                                if (lecture.id === selectedLectureId) { 
+                                                    setSelectedLectureId(null); 
+                                                    setSelectedCourseId(null);
+                                                    return;
+                                                }
+                                                setSelectedLectureId(lecture.id); 
+                                                setSelectedCourseId(courseId)
+                                            }}
+                                            isHighlighted={selectedLectureId === lecture.id}
+                                            key={idx}
+                                        >
+                                            <FlexWrapper direction="row" gap={6} style={{opacity: course.completed ? 0.3 : 1}}>
+                                                <Typography type={"NormalBold"} color={"Text.default"}>
+                                                    {lecture.classNo}
+                                                </Typography>
+                                                <Typography type={"Normal"} color={"Text.default"}>
+                                                    {formatProfessorName(lecture.professors)}
+                                                </Typography>
+                                            </FlexWrapper>
+                                            <FlexWrapper direction="row" gap={6} 
+                                                style={{opacity: course.completed ? 0.3 : 1}}
+                                                onClick={(e) => e.stopPropagation()}
+                                            >
+                                                {/* TODO: 클릭 시 이벤트 추가하기 */}
+                                                <Icon size={15} onClick={() => console.log('favorite')}>
+                                                    <FavoriteBorderIcon />
+                                                </Icon>
+                                                <Icon size={15} onClick={() => console.log('add')}>
+                                                    <AddIcon />
+                                                </Icon>
+                                            </FlexWrapper>
+                                        </LectureItemWrapper>
+                                        {idx !== course.lectures.length - 1 && <Divider />}
+                                    </>
+                                )
+                            })}
+                        </CourseItemWrapper>
+                    )})}
+                    <div style={{ height: 4 }} />
+                </CourseBlockWrapper>
+            ) : (
+                <NoResultText type={"Bigger"} color={"Text.placeholder"}>
+                    {t("dictionary.noResults")}
+                </NoResultText>
+            )}
+        </LectureListSectionInner>
+    )
+}
+
+export default LectureListSection
