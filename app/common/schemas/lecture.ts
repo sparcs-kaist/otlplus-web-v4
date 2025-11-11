@@ -38,4 +38,5 @@ export const LectureSchema = z.object({
 })
 
 export type ClassTime = z.infer<typeof ClassTimeSchema>
+export type ExamTime = z.infer<typeof ExamTimeSchema>
 export type Lecture = z.infer<typeof LectureSchema>

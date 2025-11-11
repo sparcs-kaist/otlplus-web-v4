@@ -2,15 +2,13 @@ import { useEffect, useRef, useState } from "react"
 
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
-import CircleIcon from "@mui/icons-material/Circle"
-import { Trans, useTranslation } from "react-i18next"
+import { useTranslation } from "react-i18next"
 
 import ScrollableDropdown from "@/common/components/ScrollableDropdown"
 import SearchArea, { type SearchParamsType } from "@/common/components/search/SearchArea"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
-import CourseBlock from "@/features/dictionary/components/CourseBlock"
 import type { GETLecturesResponse } from "@/api/lectures"
 import exampleLectureSearchResults from "@/api/example/LectureSearchResults"
 import formatProfessorName from "./formatProfessorName"
@@ -143,11 +141,24 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     const [searchResult, setSearchResult] = useState<GETLecturesResponse>(
         exampleLectureSearchResults,
     )
+    const [isInWish, setIsInWish] = useState<number[]>([]);
+
     const [sortOption, setSortOption] = useState<number>(0);
     const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
     const wrapperRef = useRef<HTMLDivElement>(null);
+    const outerRef = useRef<HTMLDivElement>(null);
 
     const [isWishlist, setIsWishlist] = useState<boolean>(false);
+
+    useEffect(() => {
+        setIsInWish(exampleUserWishlistResults.courses.map(course => course.lectures.map(lec => lec.id)).flat());
+    }, [isWishlist])
+
+    useEffect(()=> {
+        if (selectedLectureId === null) {
+            setSelectedCourseId(null);
+        }
+    }, [selectedLectureId]);
 
     useEffect(()=> {
         if (isWishlist) {
@@ -162,6 +173,8 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
         if (
             wrapperRef.current &&
             !wrapperRef.current.contains(event.target as Node)
+            && outerRef.current &&
+            outerRef.current.contains(event.target as Node)
         ) {
             setSelectedLectureId(null);
             setSelectedCourseId(null);
@@ -171,12 +184,22 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
+    const handleLikeClick = (wish: boolean, lectureId: number) => {
+        if (wish) {
+            setIsInWish(prev => prev.filter(id => id !== lectureId));
+        } else {
+            setIsInWish(prev => [...prev, lectureId]);
+        }
+        // 여기에 api call 추가
+    }
+
     return (
         <LectureListSectionInner
             direction="column"
             justify="stretch"
             align="stretch"
             gap={8}
+            ref={outerRef}
         >
             <SearchSubSection>
                 <SearchArea
@@ -240,6 +263,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                             </CourseTitleWrapper>
                             <Divider />
                             {course.lectures.map((lecture, idx) => {
+                                const wish = isInWish.includes(lecture.id);
                                 return (
                                     <>
                                         <LectureItemWrapper 
@@ -268,9 +292,16 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                                                 onClick={(e) => e.stopPropagation()}
                                             >
                                                 {/* TODO: 클릭 시 이벤트 추가하기 */}
-                                                <Icon size={15} onClick={() => console.log('favorite')}>
-                                                    <FavoriteBorderIcon />
-                                                </Icon>
+                                                {wish 
+                                                ? 
+                                                    <Icon size={15} color='#E54C65' onClick={() => handleLikeClick(wish, lecture.id)}>
+                                                        <FavoriteIcon />
+                                                    </Icon>
+                                                : 
+                                                    <Icon size={15} onClick={() => handleLikeClick(wish, lecture.id)}>
+                                                        <FavoriteBorderIcon />
+                                                    </Icon> 
+                                                }
                                                 <Icon size={15} onClick={() => console.log('add')}>
                                                     <AddIcon />
                                                 </Icon>

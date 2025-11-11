@@ -8,6 +8,7 @@ import CourseDetailSection from "@/features/dictionary/sections/CourseDetailSect
 import { set } from "zod";
 import CourseListSection from "@/features/dictionary/sections/CourseListSection";
 import LectureListSection from "@/features/timetable/sections/LectureListSection";
+import LectureDetailSection from "@/features/timetable/sections/LectureDetailSection";
 
 const TimetableWrapper = styled.div`
   display: flex;
@@ -78,6 +79,7 @@ const LectureListArea = styled.div`
 export default function Timetable() {
     const searchAreaRef = useRef<HTMLDivElement>(null);
     const contentsAreaRef = useRef<HTMLDivElement>(null);
+    const outerRef = useRef<HTMLDivElement>(null);
 
     const [index, setIndex] = useState<number>(0);
 
@@ -88,11 +90,9 @@ export default function Timetable() {
     const [lectureId, setLectureId] = useState<number | null>(null);
 
     useEffect(() => {
-        if (searchedId !== null) {
-            setLectureId(searchedId);
-            setSelectedId(null);
-            setHoverId(null);
-        }
+      setLectureId(searchedId);
+      setSelectedId(null);
+      setHoverId(null);
     }, [searchedId]);
 
     useEffect(() => {
@@ -108,6 +108,10 @@ export default function Timetable() {
             setLectureId(hoverId);
         }
     }, [hoverId]);
+    
+    // useEffect(() => {
+    //   console.log("Selected lecture ID changed:", lectureId);
+    // }, [lectureId]);
 
     // 양 쪽의 높이를 일정하게 맞추기 위함 - 스크롤이 들어가는 경우도 있어서 css 스타일만으로 구현 불가,,?
     useEffect(() => {
@@ -122,15 +126,32 @@ export default function Timetable() {
         return () => window.removeEventListener('resize', matchHeight);
     }, []);
 
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+        if (
+            searchAreaRef.current &&
+            !searchAreaRef.current.contains(event.target as Node) &&
+            contentsAreaRef.current &&
+            !contentsAreaRef.current.contains(event.target as Node) &&
+            outerRef.current &&
+            outerRef.current.contains(event.target as Node)
+        ) {
+            setSearchedId(null);
+        }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
     return (
-        <TimetableWrapper>
+        <TimetableWrapper ref={outerRef}>
             <SearchAreaWrapper ref={searchAreaRef}>
                 <LectureListArea>
                     <LectureListSection selectedLectureId={searchedId} setSelectedLectureId={setSearchedId} />
                 </LectureListArea>
                 <StyledDivider direction="column" />
                 <LectureInfoArea>
-                  <CourseDetailSection selectedCourseId={lectureId}/>
+                  <LectureDetailSection selectedLectureId={lectureId}/>
                 </LectureInfoArea>
             </SearchAreaWrapper>
             <ContentsAreaWrapper ref={contentsAreaRef}>

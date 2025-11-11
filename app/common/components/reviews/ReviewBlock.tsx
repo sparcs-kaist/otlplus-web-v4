@@ -27,16 +27,19 @@ interface ReviewBlockProps {
     review: Review
     likeReview: (reviewId: number) => void
     withWrapper?: boolean
+    isDictionary?: boolean
 }
 
-function ReviewBlock({ review, likeReview, withWrapper = true }: ReviewBlockProps) {
+function ReviewBlock({ review, likeReview, withWrapper = true, isDictionary = true }: ReviewBlockProps) {
     const { t } = useTranslation()
 
     if (!review) return
 
     const reviewContent = (
         <FlexWrapper direction="column" align="stretch" gap={8} padding="0px 4px">
-            <FlexWrapper direction="row" gap={6}>
+            {
+            isDictionary 
+            ? (<FlexWrapper direction="row" gap={6}>
                 <Typography type="NormalBold" color="Text.default">
                     {review.courseName}
                 </Typography>
@@ -46,7 +49,13 @@ function ReviewBlock({ review, likeReview, withWrapper = true }: ReviewBlockProp
                 <Typography type="Normal" color="Text.lighter">
                     {review.year} {semesterToString(review.semester)}
                 </Typography>
-            </FlexWrapper>
+            </FlexWrapper>) 
+            : (
+                <Typography type="Normal" color="Text.lighter">
+                    {review.year} {semesterToString(review.semester)}
+                </Typography>
+                ) 
+            }
             <FlexWrapper direction="row" gap={0}>
                 <Content type="Normal" color="Text.default">
                     {review.content}
@@ -67,7 +76,7 @@ function ReviewBlock({ review, likeReview, withWrapper = true }: ReviewBlockProp
                         {t("common.speech")} {ScoreEnum[review.speech]}
                     </Typography>
                 </FlexWrapper>
-                <FlexWrapper
+                {isDictionary && <FlexWrapper
                     direction="row"
                     gap={4}
                     onClick={() => likeReview && likeReview(review.id)}
@@ -82,7 +91,7 @@ function ReviewBlock({ review, likeReview, withWrapper = true }: ReviewBlockProp
                             <FavoriteBorderOutlinedIcon />
                         )}
                     </Icon>
-                </FlexWrapper>
+                </FlexWrapper>}
             </FlexWrapper>
         </FlexWrapper>
     )

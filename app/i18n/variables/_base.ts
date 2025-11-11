@@ -25,7 +25,10 @@ export const commonI18nBase = {
         am: "오전",
         pm: "오후",
         year: "연도",
+        room: "장소",
         language: "언어",
+        limit: "정원",
+        exam: "시험",
         type: {
             basic: "기초",
             major: "전공",
@@ -140,6 +143,7 @@ export const commonI18nBase = {
         dictionary: "과목사전",
         timetable: "모의시간표",
         writeReviews: "과목후기 작성하기",
+        syllabus: "실라버스",
     },
     main: {
         hisTimeTable: "<name>{{name}}</name><normal>님의 시간표</normal>",

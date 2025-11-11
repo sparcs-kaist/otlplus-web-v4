@@ -20,6 +20,7 @@ export const commonI18nEn: CommonI18nBaseType = {
         numLabs: "Lab Hours",
         credit: "Credits",
         cancel: "Cancel",
+        room: "Room",
         save: "Save",
         edit: "Edit",
         hours: "Hours",
@@ -29,6 +30,8 @@ export const commonI18nEn: CommonI18nBaseType = {
         pm: "PM",
         year: "year",
         language: "Language",
+        limit: "Limit",
+        exam: "Exam",
         type: {
             basic: "Basic",
             major: "Major",
@@ -144,6 +147,7 @@ export const commonI18nEn: CommonI18nBaseType = {
         dictionary: "Dictionary",
         writeReviews: "Write Reviews",
         timetable: "Timetable",
+        syllabus: "Syllabus",
     },
     main: {
         hisTimeTable: "<name>{{name}}</name><normal>'s Timetable</normal>",
