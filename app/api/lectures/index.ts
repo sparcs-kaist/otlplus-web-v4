@@ -24,7 +24,7 @@ export const getLectures = z.object({
         name: z.string(),
         code: z.string(),
         type: z.string(),
-        completedCourse: z.boolean(),
+        completed: z.boolean(),
         lectures: z.array(LectureSchema),
       }),
     ),

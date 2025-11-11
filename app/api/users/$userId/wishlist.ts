@@ -5,11 +5,15 @@ import { LectureSchema } from "@/common/schemas/lecture"
 // GET /api/users/:userId/wishlist
 export const getWishlist = z.object({
   response: z.object({
-    name: z.string(),
-    code: z.string(),
-    type: z.string(),
-    completedLecture: z.boolean(),
-    lectures: z.array(LectureSchema),
+    courses: z.array(
+      z.object({
+        name: z.string(),
+        code: z.string(),
+        type: z.string(),
+        completed: z.boolean(),
+        lectures: z.array(LectureSchema),
+      }),
+    ),
   }),
 })
 
