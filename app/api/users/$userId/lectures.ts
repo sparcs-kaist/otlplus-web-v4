@@ -7,7 +7,7 @@ import { ProfessorSchema } from "@/common/schemas/professor"
 export const getUserPastLectures = z.object({
     query: z.object({
         year: z.number().int().optional(),
-        semester: z.nativeEnum(SemesterEnum).optional(),
+        semester: z.enum(SemesterEnum).optional(),
     }),
     response: z.object({
         totalLectures: z.number().int(),
@@ -16,7 +16,7 @@ export const getUserPastLectures = z.object({
         lecturesWrap: z.array(
             z.object({
                 year: z.number().int(),
-                semester: z.nativeEnum(SemesterEnum),
+                semester: z.enum(SemesterEnum),
                 lectures: z.array(
                     z.object({
                         name: z.string(),

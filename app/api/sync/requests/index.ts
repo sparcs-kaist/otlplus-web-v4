@@ -4,14 +4,14 @@ import { SemesterEnum } from "@/common/enum/semesterEnum"
 
 // POST /api/sync/requests
 export const createSyncRequest = z.object({
-  body: z.object({
-    year: z.number().int(),
-    semester: z.nativeEnum(SemesterEnum),
-  }),
-  response: z.object({
-    requestId: z.string(),
-    createdAt: z.date(),
-  }),
+    body: z.object({
+        year: z.number().int(),
+        semester: z.enum(SemesterEnum),
+    }),
+    response: z.object({
+        requestId: z.string(),
+        createdAt: z.date(),
+    }),
 })
 
 export type POSTSyncRequestBody = z.infer<typeof createSyncRequest.shape.body>
