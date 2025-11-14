@@ -7,8 +7,9 @@ import { useTranslation } from "react-i18next"
 import { axiosClient as axios } from "@/libs/axios"
 
 import {
+    type DynamicPath,
+    type GetOriginalPath,
     type Method,
-    type Path,
     type getAPIRequestType,
     type getAPIResponseType,
 } from "./getAPIType"
@@ -21,10 +22,10 @@ type UseAPIOptions = {
 }
 
 export function useAPI<
-    M extends Method<P>,
-    P extends Path,
-    Req extends getAPIRequestType<M, P>,
-    Res extends getAPIResponseType<M, P>,
+    M extends Method<GetOriginalPath<P>>,
+    P extends DynamicPath,
+    Req extends getAPIRequestType<Method<GetOriginalPath<P>>, P>,
+    Res extends getAPIResponseType<Method<GetOriginalPath<P>>, P>,
 >(method: M, path: P, ops: UseAPIOptions = {}) {
     const [params, setParams] = useState<Req>(null as Req)
     const { i18n } = useTranslation()

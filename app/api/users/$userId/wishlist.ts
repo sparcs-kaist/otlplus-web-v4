@@ -3,24 +3,24 @@ import { z } from "zod"
 import { LectureSchema } from "@/common/schemas/lecture"
 
 // GET /api/users/:userId/wishlist
-export const getWishlist = z.object({
-  response: z.object({
+export const GETRequest = z.object({})
+
+export const GETResponse = z.object({
     name: z.string(),
     code: z.string(),
     type: z.string(),
     completedLecture: z.boolean(),
     lectures: z.array(LectureSchema),
-  }),
 })
 
-export type GETWishlistResponse = z.infer<typeof getWishlist.shape.response>
+export type GETWishlistResponse = z.infer<typeof GETResponse>
 
 // PATCH /api/users/:userId/wishlist
-export const patchWishlist = z.object({
-  body: z.object({
+export const PATCHRequest = z.object({
     lectureId: z.number().int(),
     action: z.enum(["add", "remove"]),
-  }),
 })
 
-export type PATCHWishlistBody = z.infer<typeof patchWishlist.shape.body>
+export const PATCHResponse = z.object({})
+
+export type PATCHWishlistBody = z.infer<typeof PATCHRequest>
