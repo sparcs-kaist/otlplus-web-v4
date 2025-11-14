@@ -7,6 +7,9 @@ type APIEndPointsType = typeof APIEndPoints
 export type Path = keyof APIEndPointsType
 export type Method<P extends Path> = APIEndPointsType[P][number]
 
+type FixedPath<T extends string> = T extends `${infer Start}:${string}` ? never : T
+type FixedPaths = FixedPath<keyof APIEndPointsType>
+
 type ConvertDynamicPath<T extends string> =
     T extends `${infer Start}:${infer Param}/${infer Rest}`
         ? `${Start}${string}/${ConvertDynamicPath<Rest>}`
@@ -14,29 +17,22 @@ type ConvertDynamicPath<T extends string> =
           ? `${Start}${string}`
           : T
 
+type test = "/courses/fififi" | `/courses/${string}`
+
 export type DynamicPath = ConvertDynamicPath<Path>
 
 export type GetOriginalPath<T extends DynamicPath> = {
     [P in Path]: T extends ConvertDynamicPath<P> ? P : never
 }[Path]
 
-type APIMapType<P extends Path> = {
-    [K in P]: Record<Method<K>, any>
-}
-type APIMapTypeAssertion<T extends APIMapType<Path>> = T
-
-type APIRequestMap = APIMapTypeAssertion<RequestMap>
-type APIResponseMap = APIMapTypeAssertion<ResponseMap>
-
 export type getAPIRequestType<
     M extends Method<GetOriginalPath<P>>,
     P extends DynamicPath,
-> = APIRequestMap[GetOriginalPath<P>][Extract<M, keyof APIRequestMap[GetOriginalPath<P>]>]
+> = RequestMap[GetOriginalPath<P>][Extract<M, keyof RequestMap[GetOriginalPath<P>]>]
 
 export type getAPIResponseType<
     M extends Method<GetOriginalPath<P>>,
     P extends DynamicPath,
-> = APIResponseMap[GetOriginalPath<P>][Extract<
-    M,
-    keyof APIResponseMap[GetOriginalPath<P>]
->]
+> = ResponseMap[GetOriginalPath<P>][Extract<M, keyof ResponseMap[GetOriginalPath<P>]>]
+
+export { type RequestMap, type ResponseMap }

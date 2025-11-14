@@ -10,8 +10,8 @@ import {
     type DynamicPath,
     type GetOriginalPath,
     type Method,
-    type getAPIRequestType,
-    type getAPIResponseType,
+    type RequestMap,
+    type ResponseMap,
 } from "./getAPIType"
 
 type UseAPIOptions = {
@@ -21,11 +21,19 @@ type UseAPIOptions = {
     gcTime?: number
 }
 
+useAPI("PATCH", "/reviews/hello/liked")
+
 export function useAPI<
     M extends Method<GetOriginalPath<P>>,
     P extends DynamicPath,
-    Req extends getAPIRequestType<Method<GetOriginalPath<P>>, P>,
-    Res extends getAPIResponseType<Method<GetOriginalPath<P>>, P>,
+    Req extends RequestMap[GetOriginalPath<P>][Extract<
+        M,
+        keyof RequestMap[GetOriginalPath<P>]
+    >],
+    Res extends ResponseMap[GetOriginalPath<P>][Extract<
+        M,
+        keyof ResponseMap[GetOriginalPath<P>]
+    >],
 >(method: M, path: P, ops: UseAPIOptions = {}) {
     const [params, setParams] = useState<Req>(null as Req)
     const { i18n } = useTranslation()
