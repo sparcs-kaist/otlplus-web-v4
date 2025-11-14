@@ -11,7 +11,7 @@ export default defineConfig({
         tsconfigPaths(),
         svgr(),
         APIConstructor({
-            baseUrl: "/api",
+            baseUrl: "/",
         }),
     ],
     server: {
