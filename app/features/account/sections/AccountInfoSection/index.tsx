@@ -1,7 +1,7 @@
 import styled from "@emotion/styled"
 import { Trans, useTranslation } from "react-i18next"
 
-import type { GETUserInfoResponse } from "@/api/users/$userId/info"
+import type { GETUserInfoResponse } from "@/api/users/info"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 
