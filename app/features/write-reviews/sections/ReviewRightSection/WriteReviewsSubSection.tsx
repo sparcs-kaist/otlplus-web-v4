@@ -7,7 +7,6 @@ import ReviewBlock from "@/common/components/reviews/ReviewBlock"
 import ReviewWritingBlock from "@/common/components/reviews/ReviewWritingBlock"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
-import likeReview from "@/utils/reviews/likeReview"
 
 interface WriteReviewsSubSectionType {
     selectedLecture: GETWritableReviewsResponse
@@ -42,11 +41,7 @@ function WriteReviewsSubSection({ selectedLecture }: WriteReviewsSubSectionType)
                     </Typography>
                 </FlexWrapper>
                 {exampleReviews.reviews.map((review, idx) => (
-                    <ReviewBlock
-                        review={review}
-                        likeReview={likeReview}
-                        key={review.id}
-                    />
+                    <ReviewBlock review={review} key={review.id} />
                 ))}
             </FlexWrapper>
         </FlexWrapper>

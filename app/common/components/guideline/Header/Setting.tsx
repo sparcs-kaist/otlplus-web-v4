@@ -1,4 +1,4 @@
-import { useContext, useState } from "react"
+import { useContext, useEffect, useState } from "react"
 
 import styled from "@emotion/styled"
 import DarkModeIcon from "@mui/icons-material/DarkMode"
@@ -11,6 +11,7 @@ import { SelectedThemeContext } from "@/Providers"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
+import { axiosClient } from "@/libs/axios"
 
 const SettingWrapper = styled(FlexWrapper)<{ mobileSidebar: boolean }>`
     color: ${({ theme }) => theme.colors.Text.default};
@@ -26,13 +27,13 @@ const AccountButtonWrapper = styled(FlexWrapper)`
 `
 
 interface SettingProps {
-    setAccountPageOpen: (open: boolean) => void
+    handleAccountButtonClick: () => void
     userName: string
     mobileSidebar: boolean
 }
 
 const Setting: React.FC<SettingProps> = ({
-    setAccountPageOpen,
+    handleAccountButtonClick,
     userName,
     mobileSidebar,
 }) => {
@@ -42,6 +43,15 @@ const Setting: React.FC<SettingProps> = ({
     const changeThemeMode = () => {
         setSelectedTheme(selectedTheme === "dark" ? "light" : "dark")
     }
+
+    const changeLanguage = () => {
+        i18n.changeLanguage(i18n.resolvedLanguage === "ko" ? "en" : "ko")
+        axiosClient.defaults.headers.common["Accept-Language"] = i18n.resolvedLanguage
+    }
+
+    useEffect(() => {
+        axiosClient.defaults.headers.common["Accept-Language"] = i18n.resolvedLanguage
+    }, [])
 
     return (
         <SettingWrapper
@@ -60,9 +70,7 @@ const Setting: React.FC<SettingProps> = ({
                 direction={mobileSidebar ? "row" : "column"}
                 gap={4}
                 align="center"
-                onClick={() =>
-                    i18n.changeLanguage(i18n.resolvedLanguage === "ko" ? "en" : "ko")
-                }
+                onClick={changeLanguage}
             >
                 <Icon size={16}>
                     <LanguageIcon />
@@ -73,9 +81,7 @@ const Setting: React.FC<SettingProps> = ({
                 direction="row"
                 gap={4}
                 align="center"
-                onClick={() => {
-                    setAccountPageOpen(true)
-                }}
+                onClick={handleAccountButtonClick}
             >
                 <Icon size={16}>
                     <PersonIcon />

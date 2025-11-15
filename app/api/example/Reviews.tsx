@@ -6,7 +6,7 @@ const exampleReviews: GETReviewsResponse = {
             id: 30579,
             courseId: 745,
             courseName: "이산구조",
-            professors: [
+            professor: [
                 {
                     id: 1534,
                     name: "박진아",
@@ -27,7 +27,7 @@ const exampleReviews: GETReviewsResponse = {
             id: 29854,
             courseId: 745,
             courseName: "이산구조",
-            professors: [
+            professor: [
                 {
                     id: 2057,
                     name: "이주영",
@@ -48,7 +48,7 @@ const exampleReviews: GETReviewsResponse = {
             id: 32899,
             courseId: 745,
             courseName: "이산구조",
-            professors: [
+            professor: [
                 {
                     id: 1534,
                     name: "박진아",
@@ -69,7 +69,7 @@ const exampleReviews: GETReviewsResponse = {
             id: 93429,
             courseId: 745,
             courseName: "이산구조",
-            professors: [
+            professor: [
                 {
                     id: 2057,
                     name: "이주영",
@@ -90,7 +90,7 @@ const exampleReviews: GETReviewsResponse = {
     averageGrade: 13.0,
     averageLoad: 13.5,
     averageSpeech: 13.5,
-    myReviewId: 29854,
+    myReviewId: [29854],
 }
 
 export default exampleReviews

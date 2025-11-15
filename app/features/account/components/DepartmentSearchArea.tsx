@@ -101,7 +101,7 @@ const DepartmentSearchArea: React.FC<DepartmentSearchAreaProps> = ({
 
     function findDepartmentNameById(id: number): string | undefined {
         const DepartmentList = i18n.language === "en" ? DepartmentsEN : Departments
-        const department = DepartmentList.find((dept) => dept.id === id)
+        const department = DepartmentList.departments.find((dept) => dept.id === id)
         return department ? department.name : undefined
     }
 
@@ -130,7 +130,7 @@ const DepartmentSearchArea: React.FC<DepartmentSearchAreaProps> = ({
 
     useEffect(() => {
         const DepartmentList = i18n.language === "en" ? DepartmentsEN : Departments
-        const filtered = (DepartmentList as Department[]).filter((dept) => {
+        const filtered = (DepartmentList.departments as Department[]).filter((dept) => {
             const isNotSelected = !currentDepartment
                 .map((dept) => dept.id)
                 .includes(dept.id)

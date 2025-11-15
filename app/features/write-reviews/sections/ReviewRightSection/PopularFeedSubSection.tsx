@@ -7,10 +7,9 @@ import Typography from "@/common/primitives/Typography"
 
 interface PopularFeedSubSectionProps {
     reviews: GETReviewsResponse
-    likeReview: (reviewId: number) => void
 }
 
-function PopularFeedSubSection({ reviews, likeReview }: PopularFeedSubSectionProps) {
+function PopularFeedSubSection({ reviews }: PopularFeedSubSectionProps) {
     const { t } = useTranslation()
 
     return (
@@ -22,11 +21,7 @@ function PopularFeedSubSection({ reviews, likeReview }: PopularFeedSubSectionPro
             </FlexWrapper>
             <FlexWrapper direction="column" align="stretch" gap={12}>
                 {reviews.reviews.map((review) => (
-                    <ReviewBlock
-                        review={review}
-                        likeReview={likeReview}
-                        key={review.id}
-                    />
+                    <ReviewBlock review={review} key={review.id} />
                 ))}
             </FlexWrapper>
         </FlexWrapper>

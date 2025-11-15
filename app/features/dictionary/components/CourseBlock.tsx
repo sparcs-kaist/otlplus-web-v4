@@ -9,7 +9,7 @@ import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 
 interface CourseBlockProps {
-    course: GETCoursesResponse[number]
+    course: GETCoursesResponse["courses"][number]
     isSelected: boolean
     selectCourseId: React.Dispatch<React.SetStateAction<number | null>>
 }
@@ -67,7 +67,7 @@ const CourseBlock: React.FC<CourseBlockProps> = ({
                     <CircleIcon />
                 </Icon>
                 <Typography type={"NormalBold"} color={"Text.default"}>
-                    {course.title}
+                    {course.name}
                 </Typography>
                 <Typography type={"Normal"} color={"Text.placeholder"}>
                     {course.code}

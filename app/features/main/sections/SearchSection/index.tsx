@@ -1,7 +1,10 @@
 import styled from "@emotion/styled"
+import { useTranslation } from "react-i18next"
+import { useNavigate } from "react-router"
 
 import SearchArea, { type SearchParamsType } from "@/common/components/search/SearchArea"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
+import checkEmpty from "@/utils/search/checkEmpty"
 
 const SearchSectionInner = styled(FlexWrapper)`
     width: 645px;
@@ -17,13 +20,34 @@ const SearchImg = styled.img<{ src: string }>`
 `
 
 function SearchSection() {
+    const { t } = useTranslation()
+    const navigate = useNavigate()
+
+    const handleSearch = (params: SearchParamsType) => {
+        if (checkEmpty(params)) {
+            alert(t("common.search.empty"))
+            return
+        }
+        const queryString = new URLSearchParams()
+
+        Object.entries(params).forEach(([key, value]) => {
+            if (Array.isArray(value)) {
+                value.forEach((val) => {
+                    queryString.append(key, val.toString())
+                })
+            } else if (value !== undefined && value !== null && value !== "") {
+                queryString.append(key, value.toString())
+            }
+        })
+
+        navigate(`/dictionary?${queryString.toString()}`)
+    }
+
     return (
         <SearchSectionInner direction="column" align="stretch" gap={0} padding="8px 8px">
             <SearchArea
                 options={["type", "department", "level", "term"]}
-                onSearch={(params: SearchParamsType) => {
-                    alert(JSON.stringify(params))
-                }}
+                onSearch={handleSearch}
                 SearchIcon={<SearchImg src="/searchIcon.png" alt="search" />}
             />
         </SearchSectionInner>

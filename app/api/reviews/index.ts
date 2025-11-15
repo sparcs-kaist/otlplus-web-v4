@@ -12,6 +12,8 @@ export const GETRequest = z.object({
     mode: z.enum(["default", "recent", "hall-of-fame", "review-feed", "popular-feed"]),
     year: z.number().int().optional(),
     semester: z.enum(SemesterEnum).optional(),
+    offset: z.number().int(),
+    limit: z.number().int(),
 })
 
 export const GETResponse = z.object({
@@ -19,7 +21,7 @@ export const GETResponse = z.object({
     averageGrade: z.number(),
     averageLoad: z.number(),
     averageSpeech: z.number(),
-    myReviewId: z.number().nullable(),
+    myReviewId: z.array(z.number().int())
 })
 
 export type GETReviewsQuery = z.infer<typeof GETRequest>
@@ -30,11 +32,11 @@ export const POSTRequest = z.object({
     courseId: z.number().int(),
     professor: ProfessorSchema,
     year: z.number().int(),
-    semester: z.nativeEnum(SemesterEnum),
+    semester: z.enum(SemesterEnum),
     content: z.string(),
-    grade: z.nativeEnum(ScoreEnum),
-    load: z.nativeEnum(ScoreEnum),
-    speech: z.nativeEnum(ScoreEnum),
+    grade: z.enum(ScoreEnum),
+    load: z.enum(ScoreEnum),
+    speech: z.enum(ScoreEnum),
 })
 
 export const POSTResponse = z.object({
