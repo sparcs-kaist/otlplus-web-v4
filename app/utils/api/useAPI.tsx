@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query"
 import { type AxiosHeaders } from "axios"
 import { useTranslation } from "react-i18next"
 
-import { axiosClient as axios } from "@/libs/axios"
+import { axiosClient } from "@/libs/axios"
 
 import {
     type DynamicPath,
@@ -20,8 +20,6 @@ type UseAPIOptions = {
     staleTime?: number
     gcTime?: number
 }
-
-useAPI("PATCH", "/reviews/hello/liked")
 
 export function useAPI<
     M extends Method<GetOriginalPath<P>>,
@@ -39,25 +37,24 @@ export function useAPI<
     const { i18n } = useTranslation()
     const { headers, enabled, staleTime = Infinity, gcTime = 5 * 60 * 1000 } = ops
 
-    const q = useQuery<Res>({
-        queryKey: [params, i18n.resolvedLanguage],
-        queryFn: async () => {
-            const { data, status, statusText } = await axios.request<Res>({
-                method,
-                url: path,
-                params,
-                data: params,
-                headers: headers || {},
-            })
+    return [
+        setParams,
+        useQuery<Res>({
+            queryKey: [path, params, i18n.resolvedLanguage],
+            queryFn: async () => {
+                const { data, status, statusText } = await axiosClient.request<Res>({
+                    method: method,
+                    url: path,
+                    params: params,
+                    headers: headers || {},
+                })
 
-            return data
-        },
-        initialData: null as Res,
-        retry: 1,
-        staleTime,
-        gcTime,
-        enabled: enabled === true || params !== null,
-    })
-
-    return [setParams, q] as const
+                return data
+            },
+            retry: 1,
+            staleTime: staleTime,
+            gcTime: gcTime,
+            enabled: enabled || params !== null,
+        }),
+    ] as const
 }
