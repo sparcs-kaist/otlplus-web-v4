@@ -4,7 +4,7 @@ import { Search } from "@mui/icons-material"
 import { AnimatePresence, motion } from "framer-motion"
 import { useTranslation } from "react-i18next"
 
-import { type GETCoursesQuery } from "@/api/courses"
+import { Departments } from "@/api/example/Departments"
 import { type SearchOptions } from "@/common/interface/SearchOptions"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
@@ -21,12 +21,12 @@ import SearchFilterArea, {
 import TextInput from "./TextInput"
 
 export type SearchParamsType = {
-    type?: GETCoursesQuery["type"]
-    department?: GETCoursesQuery["department"]
-    level?: GETCoursesQuery["level"]
-    term?: GETCoursesQuery["term"]
-    time?: GETCoursesQuery["time"]
-    keyword: GETCoursesQuery["keyword"]
+    type?: string[]
+    department?: number[]
+    level?: number[]
+    term?: number
+    time?: TimeBlock
+    keyword: string
 }
 
 type TimeProps<ops extends readonly SearchOptions[]> = "time" extends ops[number]
@@ -123,6 +123,14 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
                             result[key] = (value as [any, string][]).map(
                                 (x) => x[0],
                             ) as any
+                        if (key == "department") {
+                            result[key] = result[key]?.map(
+                                (dept) =>
+                                    Departments.departments.find(
+                                        (d) => d.code === dept.toString(),
+                                    )?.id as number,
+                            )
+                        }
                     }
                 }
             },
