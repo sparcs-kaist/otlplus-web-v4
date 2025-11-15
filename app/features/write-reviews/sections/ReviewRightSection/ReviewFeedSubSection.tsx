@@ -10,19 +10,19 @@ import { SemesterEnum, semesterToString } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 
-interface ReviewFeedSubSectionProps {
-    reviews: GETReviewsResponse
-    likeReview: (reviewId: number) => void
-}
 const DropDownWrapper = styled(FlexWrapper)`
     flex: 1 0 1;
     width: 225px;
     height: 36px;
 `
 
+interface ReviewFeedSubSectionProps {
+    reviews: GETReviewsResponse
+}
+
 const options = ["2023", "2022", "2021", "2020", "2019", "2018", "2017"]
 
-function ReviewFeedSubSection({ reviews, likeReview }: ReviewFeedSubSectionProps) {
+function ReviewFeedSubSection({ reviews }: ReviewFeedSubSectionProps) {
     const [year, setYear] = useState(0)
     const { t } = useTranslation()
 
@@ -61,11 +61,7 @@ function ReviewFeedSubSection({ reviews, likeReview }: ReviewFeedSubSectionProps
             </FlexWrapper>
             <FlexWrapper direction="column" align="stretch" gap={12}>
                 {reviews.reviews.map((review) => (
-                    <ReviewBlock
-                        review={review}
-                        likeReview={likeReview}
-                        key={review.id}
-                    />
+                    <ReviewBlock review={review} key={review.id} />
                 ))}
             </FlexWrapper>
         </FlexWrapper>

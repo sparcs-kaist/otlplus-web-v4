@@ -120,6 +120,7 @@ export const commonI18nEn: CommonI18nBaseType = {
             all: "All",
             type: "Groups",
             placeholder: "Enter keywords",
+            empty: "Please select at least one search filter",
         },
         semesters: {
             spring: "Spring",

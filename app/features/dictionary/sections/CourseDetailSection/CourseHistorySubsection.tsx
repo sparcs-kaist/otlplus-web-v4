@@ -24,6 +24,20 @@ const CourseHistory = styled(motion.div)`
     gap: 20px;
 
     &::-webkit-scrollbar {
+        height: 7px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background-color: ${({ theme }) => theme.colors.Background.Section.default};
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background-color: ${({ theme }) => theme.colors.Line.default};
+        border-radius: 8px;
+    }
+
+    &:hover::-webkit-scrollbar-thumb {
+        background-color: ${({ theme }) => theme.colors.Line.dark};
         height: 0;
     }
 `
@@ -34,7 +48,7 @@ const CourseHistoryBlock = styled(FlexWrapper)`
 
 const FoldButton = styled(KeyboardArrowDownIcon)<{ isFolded: boolean }>`
     transform: ${(props) => (props.isFolded ? "rotate(0deg)" : "rotate(180deg)")};
-    transition: transform 0.3s ease-in-out;
+    transition: transform 0.2s ease-in-out;
 `
 
 const NoHistoryText = styled(Typography)`
@@ -101,7 +115,7 @@ const CourseHistorySubsection: React.FC<CourseHistorySubsectionProps> = ({
                 ref={historyScroll}
                 initial={{ height: isHistoryFolded ? 0 : "auto" }}
                 animate={{ height: isHistoryFolded ? 0 : "auto" }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
             >
                 {courseDetail?.history.map((history, index) => (
                     <CourseHistoryBlock

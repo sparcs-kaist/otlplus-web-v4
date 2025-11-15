@@ -2,7 +2,10 @@ import i18n from "i18next"
 
 import { type Professor } from "@/common/schemas/professor"
 
-function professorName(professors: Professor[]) {
+function professorName(professors: Professor | Professor[]): string {
+    if (!Array.isArray(professors)) {
+        professors = [professors]
+    }
     if (professors.length === 0) return ""
     return `${professors[0].name}${professors.length > 1 ? i18n.t("common.professors.over") + (professors.length - 1) + i18n.t("common.professors.people") : ""}`
 }

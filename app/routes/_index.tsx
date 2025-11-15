@@ -1,5 +1,3 @@
-import { useState } from "react"
-
 import styled from "@emotion/styled"
 
 import exampleReviews from "@/api/example/Reviews"
@@ -7,7 +5,6 @@ import exampleScheduleFeed from "@/api/example/ScheduleFeed"
 import User from "@/api/example/UserInfo"
 import Footer from "@/common/components/guideline/Footer"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
-import { type TimeBlock } from "@/common/schemas/timeblock"
 import AdFeedSection from "@/features/main/sections/AdFeedSection"
 import PopularFeedSection from "@/features/main/sections/PopularFeedSection"
 import ReviewFeedSection from "@/features/main/sections/ReviewFeedSection"
@@ -16,6 +13,7 @@ import ScheduleFeedSection from "@/features/main/sections/ScheduleFeedSection"
 import ScheduleSection from "@/features/main/sections/ScheduleSection"
 import SearchSection from "@/features/main/sections/SearchSection"
 import TimeTableSection from "@/features/main/sections/TimeTableSection"
+import { useAPI } from "@/utils/api/useAPI"
 
 const MainWrapper = styled(FlexWrapper)`
     margin-top: 60px;
@@ -31,10 +29,6 @@ const SearchSectionWrapper = styled(FlexWrapper)`
 `
 
 export default function Home() {
-    function likeReview(reviewId: number) {
-        alert("like review " + reviewId)
-    }
-
     return (
         <>
             <MainWrapper direction="column" align="center" gap={240}>
@@ -75,14 +69,8 @@ export default function Home() {
                             </FlexWrapper>
                         </FlexWrapper>
                         <FlexWrapper direction="row" align="stretch" gap={24}>
-                            <ReviewFeedSection
-                                reviews={exampleReviews}
-                                likeReview={likeReview}
-                            />
-                            <PopularFeedSection
-                                reviews={exampleReviews}
-                                likeReview={likeReview}
-                            />
+                            <ReviewFeedSection reviews={exampleReviews} />
+                            <PopularFeedSection reviews={exampleReviews} />
                             <ScheduleFeedSection schedules={exampleScheduleFeed} />
                         </FlexWrapper>
                     </FlexWrapper>
