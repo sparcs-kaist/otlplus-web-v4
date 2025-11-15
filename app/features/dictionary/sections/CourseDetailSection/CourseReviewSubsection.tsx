@@ -1,10 +1,11 @@
-import React, { useState } from "react"
+import React, { useEffect, useImperativeHandle, useState } from "react"
 
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
 
 import exampleReviews from "@/api/example/Reviews"
-import type { GETReviewsResponse } from "@/api/reviews"
+import { type GETReviewsResponse } from "@/api/reviews"
+import LoadingCircle from "@/common/components/LoadingCircle"
 import ReviewBlock from "@/common/components/reviews/ReviewBlock"
 import ReviewWritingBlock, {
     type ReviewWritingBlockProps,
@@ -13,6 +14,7 @@ import { getAverageScoreLabel } from "@/common/enum/scoreEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import CourseReviewLanguageChip from "@/features/dictionary/components/CourseReviewLanguageChip"
+import { useAPI } from "@/utils/api/useAPI"
 
 const NumberWrapper = styled(FlexWrapper)`
     width: 300px;
@@ -24,20 +26,88 @@ const NumberContent = styled(FlexWrapper)`
 `
 
 interface CourseReviewSubsectionProps {
+    selectedCourseId: number | null
     selectedProfessorId: number | null
     writableReviewProps: ReviewWritingBlockProps[]
+    ref?: React.Ref<CourseReviewSubsectionHandle>
 }
 
+export type CourseReviewSubsectionHandle = {
+    loadMoreReviews: () => void
+}
+
+const LIMIT = 100
+
 const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
+    selectedCourseId,
     selectedProfessorId,
     writableReviewProps,
+    ref,
 }) => {
     const { t } = useTranslation()
 
-    const [reviews, setReviews] = useState<GETReviewsResponse | null>(exampleReviews)
+    const [reviews, setReviews] = useState<GETReviewsResponse | null>(null)
     const [reviewLanguage, setReviewLanguage] = useState("all")
+    const [enabled, setEnabled] = useState(false)
 
-    return (
+    const [setParams, query] = useAPI("GET", "/reviews", {
+        enabled: enabled,
+    })
+
+    const loadMoreReviews = () => {
+        if (!enabled) return
+        if (query.isLoading) return
+        setParams((prevState) => ({
+            ...prevState,
+            offset: prevState.offset + LIMIT,
+        }))
+    }
+
+    useImperativeHandle(ref, () => ({ loadMoreReviews }))
+
+    useEffect(() => {
+        setParams({
+            mode: "default",
+            courseId: selectedCourseId || undefined,
+            professorId: selectedProfessorId || undefined,
+            limit: LIMIT,
+            offset: 0,
+        })
+    }, [])
+
+    useEffect(() => {
+        setReviews(null)
+        setParams((prevState) => {
+            if (selectedProfessorId === null || selectedCourseId === null) {
+                return { ...prevState, offset: 0 }
+            } else {
+                return { ...prevState, offset: 0, professorId: selectedProfessorId }
+            }
+        })
+        setEnabled(selectedCourseId !== null)
+    }, [selectedProfessorId, selectedCourseId])
+
+    useEffect(() => {
+        if (query.data !== undefined) {
+            setReviews((prevState) => {
+                if (prevState == null) return query.data
+                return {
+                    averageGrade: query.data.averageGrade,
+                    averageLoad: query.data.averageLoad,
+                    averageSpeech: query.data.averageSpeech,
+                    myReviewId: [],
+                    reviews: [...prevState.reviews, ...query.data.reviews],
+                }
+            })
+            if (query.data.reviews.length < LIMIT) {
+                setEnabled(false)
+            }
+        }
+    }, [query.data])
+
+    return reviews === null && query.isLoading ? (
+        <LoadingCircle />
+    ) : (
         <>
             <Typography type={"NormalBold"} color={"Text.default"}>
                 {t("dictionary.review")}
