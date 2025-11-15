@@ -50,19 +50,8 @@ function ReviewBlock({
     const { t } = useTranslation()
     const navigator = useNavigate()
 
-    const [likeReviewMutation, mutation] = useAPI("PATCH", `/reviews/${review.id}/liked`)
-
-    const [likeOverride, setLikeOverride] = useState<boolean | null>(null)
-
-    if (!review) return
-
-    const likeReview = (e: React.MouseEvent) => {
-        e.stopPropagation()
-        likeReviewMutation({
-            reviewId: review.id,
-            action: (likeOverride ?? review.likedByUser) ? "unlike" : "like",
-        })
-        if (!isError) {
+    const [mutation, requestFunction] = useAPI("PATCH", `/reviews/${review.id}/liked`, {
+        onSuccess: () => {
             setLikeOverride((prev) => {
                 if (prev === null) {
                     return !review.likedByUser
@@ -70,7 +59,19 @@ function ReviewBlock({
                     return !prev
                 }
             })
-        }
+        },
+    })
+
+    const [likeOverride, setLikeOverride] = useState<boolean | null>(null)
+
+    if (!review) return
+
+    const likeReview = (e: React.MouseEvent) => {
+        e.stopPropagation()
+        requestFunction({
+            reviewId: review.id,
+            action: (likeOverride ?? review.likedByUser) ? "unlike" : "like",
+        })
     }
 
     const reviewContent = (
