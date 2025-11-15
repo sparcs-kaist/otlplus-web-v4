@@ -25,14 +25,38 @@ const ReviewWrapper = styled.div`
 
 interface ReviewBlockProps {
     review: Review
-    likeReview: (reviewId: number) => void
     withWrapper?: boolean
 }
 
 function ReviewBlock({ review, likeReview, withWrapper = true }: ReviewBlockProps) {
+function ReviewBlock({
+    review,
+    withWrapper = true,
+}: ReviewBlockProps) {
     const { t } = useTranslation()
 
+    const [setParams, query] = useAPI("PATCH", `/reviews/${review.id}/liked`)
+
+    const [likeOverride, setLikeOverride] = useState<boolean | null>(null)
+
     if (!review) return
+
+    const likeReview = (e: React.MouseEvent) => {
+        e.stopPropagation()
+        // setParams({
+        //     reviewId: review.id,
+        //     action: (likeOverride ?? review.likedByUser) ? "unlike" : "like",
+        // })
+        if (!query.error) {
+            setLikeOverride((prev) => {
+                if (prev === null) {
+                    return !review.likedByUser
+                } else {
+                    return !prev
+                }
+            })
+        }
+    }
 
     const reviewContent = (
         <FlexWrapper direction="column" align="stretch" gap={8} padding="0px 4px">
@@ -41,7 +65,7 @@ function ReviewBlock({ review, likeReview, withWrapper = true }: ReviewBlockProp
                     {review.courseName}
                 </Typography>
                 <Typography type="Normal" color="Text.lighter">
-                    {professorName(review.professors)}
+                    {professorName(review.professor)}
                 </Typography>
                 <Typography type="Normal" color="Text.lighter">
                     {review.year} {semesterToString(review.semester)}
@@ -67,16 +91,12 @@ function ReviewBlock({ review, likeReview, withWrapper = true }: ReviewBlockProp
                         {t("common.speech")} {ScoreEnum[review.speech]}
                     </Typography>
                 </FlexWrapper>
-                <FlexWrapper
-                    direction="row"
-                    gap={4}
-                    onClick={() => likeReview && likeReview(review.id)}
-                >
+                <FlexWrapper direction="row" gap={4} onClick={(e) => likeReview(e)}>
                     <Typography type="Normal" color="Highlight.default">
                         {t("common.review.like")}
                     </Typography>
                     <Icon size={18} color="crimson">
-                        {review.likedByUser ? (
+                        {(likeOverride ?? review.likedByUser) ? (
                             <FavoriteIcon />
                         ) : (
                             <FavoriteBorderOutlinedIcon />

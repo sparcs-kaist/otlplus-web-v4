@@ -111,9 +111,22 @@ const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
             </FlexWrapper>
             {exampleReviews.reviews.length > 0 &&
                 writableReviewProps.map((props) => <ReviewWritingBlock {...props} />)}
-            {reviews?.reviews.map((review) => (
-                <ReviewBlock review={review} likeReview={() => {}} key={review.id} />
-            ))}
+            {reviews?.reviews.map((review) => {
+                if (
+                    reviewLanguage === "english" &&
+                    !/^[A-Za-z0-9\s\p{P}\p{S}]+$/u.test(review.content)
+                ) {
+                    return null
+                } else {
+                    return (
+                        <ReviewBlock
+                            review={review}
+                            key={review.id}
+                            linkToDictionary={false}
+                        />
+                    )
+                }
+            })}
         </>
     )
 }

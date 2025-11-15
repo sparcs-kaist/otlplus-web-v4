@@ -8,7 +8,7 @@ export const ReviewSchema = z.object({
     id: z.number().int(),
     courseId: z.number().int(),
     courseName: z.string(),
-    professors: z.array(ProfessorSchema),
+    professor: z.array(ProfessorSchema),
     year: z.number().int(),
     semester: z.enum(SemesterEnum),
     content: z.string(),

@@ -36,10 +36,6 @@ const ReviewRightSubSection = styled(FlexWrapper)`
 function ReviewRightSection({ selectedLecture }: ReviewRightSectionProps) {
     const [tab, setTab] = useState<TabType>("write")
 
-    function likeReview(reviewId: number) {
-        alert("like review " + reviewId)
-    }
-
     return (
         <StyledWidget
             width={1248}
@@ -66,26 +62,11 @@ function ReviewRightSection({ selectedLecture }: ReviewRightSectionProps) {
                                     />
                                 )
                             case "popularFeed":
-                                return (
-                                    <PopularFeedSubSection
-                                        reviews={exampleReviews}
-                                        likeReview={likeReview}
-                                    />
-                                )
+                                return <PopularFeedSubSection reviews={exampleReviews} />
                             case "reviewFeed":
-                                return (
-                                    <ReviewFeedSubSection
-                                        reviews={exampleReviews}
-                                        likeReview={likeReview}
-                                    />
-                                )
+                                return <ReviewFeedSubSection reviews={exampleReviews} />
                             case "liked":
-                                return (
-                                    <LikedReviewsSection
-                                        reviews={exampleReviews}
-                                        likeReview={likeReview}
-                                    />
-                                )
+                                return <LikedReviewsSection reviews={exampleReviews} />
                             default:
                                 return null
                         }
