@@ -1,7 +1,7 @@
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
 
-import type { GETUserInfoResponse } from "@/api/users/$userId/info"
+import type { GETUserInfoResponse } from "@/api/users/info"
 import Modal from "@/common/components/Modal"
 import Typography from "@/common/primitives/Typography"
 import AccountInfoSection from "@/features/account/sections/AccountInfoSection"
@@ -36,7 +36,9 @@ const AccountPageModal: React.FC<AccountPageModalProps> = ({
             location.href = `/session/logout`
         } else {
             removeLocalStorageItem("devStudentId")
+            removeLocalStorageItem("devToken")
             axiosClient.defaults.headers.common["X-AUTH-SID"] = ""
+            axiosClient.defaults.headers.common["X-SID-AUTH-TOKEN"] = ""
             location.reload()
         }
     }

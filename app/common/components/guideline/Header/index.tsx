@@ -4,7 +4,7 @@ import styled from "@emotion/styled"
 import MenuIcon from "@mui/icons-material/Menu"
 
 import { SelectedThemeContext } from "@/Providers"
-import { type GETUserInfoResponse, getUserInfo } from "@/api/users/$userId/info"
+import { type GETUserInfoResponse } from "@/api/users/info"
 import Icon from "@/common/primitives/Icon"
 import AccountPageModal from "@/features/account/AccountPageModal"
 import DeveloperLoginModal from "@/features/account/DeveloperLoginModal"
@@ -52,10 +52,8 @@ const MobileSidebarButtonWrapper = styled.div`
 `
 
 const Header: React.FC = () => {
-    const query = useAPI<GETUserInfoResponse>({
-        endpoint: `/users/info`,
-        method: "GET",
-        responseSchema: getUserInfo,
+    const [setParms, query] = useAPI("GET", "/users/info", {
+        enabled: false,
     })
 
     const isMobile = useIsDevice("mobile")
@@ -82,8 +80,10 @@ const Header: React.FC = () => {
     useEffect(() => {
         if (process.env.NODE_ENV === "development") {
             const devStudentId = getLocalStorageItem("devStudentId")
+            const devToken = getLocalStorageItem("devToken")
             if (devStudentId) {
                 axiosClient.defaults.headers.common["X-AUTH-SID"] = devStudentId
+                // axiosClient.defaults.headers.common["X-SID-AUTH-TOKEN"] = devToken
             }
         }
     }, [])
@@ -98,16 +98,20 @@ const Header: React.FC = () => {
 
     return (
         <HeaderWrapper>
-            <DeveloperLoginModal
-                developerLoginModalOpen={developerLoginOpen}
-                setDeveloperLoginModalOpen={setDeveloperLoginOpen}
-            />
-            <AccountPageModal
-                userInfo={userInfo}
-                setUserInfo={setUserInfo}
-                accountPageOpen={accountPageOpen}
-                setAccountPageOpen={setAccountPageOpen}
-            />
+            {developerLoginOpen && (
+                <DeveloperLoginModal
+                    developerLoginModalOpen={developerLoginOpen}
+                    setDeveloperLoginModalOpen={setDeveloperLoginOpen}
+                />
+            )}
+            {accountPageOpen && (
+                <AccountPageModal
+                    userInfo={userInfo}
+                    setUserInfo={setUserInfo}
+                    accountPageOpen={accountPageOpen}
+                    setAccountPageOpen={setAccountPageOpen}
+                />
+            )}
             {selectedTheme !== "dark" && <HeaderBar />}
             <HeaderInner>
                 <Menu setMobileSidebarOpen={() => setMobileSidebarOpen(false)} />

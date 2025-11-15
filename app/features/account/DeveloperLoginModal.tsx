@@ -14,9 +14,10 @@ const IdInput = styled.input`
     padding: 10px;
     font-size: 16px;
     border-radius: 6px;
-    border: 1px solid #ccc;
+    border: 1px solid ${({ theme }) => theme.colors.Line.default};
     background-color: ${({ theme }) => theme.colors.Background.Section.default};
     color: ${({ theme }) => theme.colors.Text.default};
+    margin: 10px 0;
 
     &:focus {
         outline: none;
@@ -34,20 +35,27 @@ const DeveloperLoginModal: React.FC<DeveloperLoginModalProps> = ({
 }) => {
     const isTablet = useIsDevice("tablet")
 
-    const [input, setInput] = useState<string>("")
+    const [idInput, setIdInput] = useState<string>("")
+    const [tokenInput, setTokenInput] = useState<string>("")
 
     const handleLogin = () => {
-        if (input) {
-            if (input.match(/[^0-9]/)) {
-                alert("학번은 숫자만 입력 가능합니다.")
-                return
-            }
-            setLocalStorageItem("devStudentId", input)
-            axiosClient.defaults.headers.common["X-AUTH-SID"] = input
-            location.reload()
-        } else {
+        if (!idInput) {
             alert("학번을 입력해주세요.")
+            return
         }
+        if (idInput.match(/[^0-9]/)) {
+            alert("학번은 숫자만 입력 가능합니다.")
+            return
+        }
+        if (!tokenInput) {
+            alert("토큰을 입력해주세요.")
+            return
+        }
+        setLocalStorageItem("devStudentId", idInput)
+        setLocalStorageItem("devToken", tokenInput)
+        axiosClient.defaults.headers.common["X-AUTH-SID"] = idInput
+        // axiosClient.defaults.headers.common["X-SID-AUTH-TOKEN"] = tokenInput
+        location.reload()
     }
 
     return (
@@ -60,8 +68,19 @@ const DeveloperLoginModal: React.FC<DeveloperLoginModalProps> = ({
             <IdInput
                 type="text"
                 placeholder="학번을 입력해주세요."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
+                value={idInput}
+                onChange={(e) => setIdInput(e.target.value)}
+                onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                        handleLogin()
+                    }
+                }}
+            />
+            <IdInput
+                type="text"
+                placeholder="토큰을 입력해주세요."
+                value={tokenInput}
+                onChange={(e) => setTokenInput(e.target.value)}
                 onKeyDown={(e) => {
                     if (e.key === "Enter") {
                         handleLogin()
