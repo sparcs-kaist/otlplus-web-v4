@@ -65,7 +65,11 @@ function APIConstructor(opts = {}) {
 
         const noExt = rel.replace(/\.[^.]+$/, "")
 
-        if (!rel.startsWith(".")) rel = "./" + noExt
+        rel = "./" + noExt
+        // replace leading ./app with @
+        if (rel.startsWith("./app")) {
+            rel = rel.replace(/^\.\/app/, "@").replace(/^\.\\app/, "@")
+        }
         return rel.replace(/\\/g, "/")
     }
 
