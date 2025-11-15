@@ -62,7 +62,7 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
 }) => {
     const theme = useTheme()
 
-    const [setParams, query] = useAPI("GET", `/courses/${selectedCourseId}`, {
+    const [query] = useAPI("GET", `/courses/${selectedCourseId}`, {
         enabled: selectedCourseId !== null,
     })
 

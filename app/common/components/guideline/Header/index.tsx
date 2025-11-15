@@ -52,7 +52,7 @@ const MobileSidebarButtonWrapper = styled.div`
 `
 
 const Header: React.FC = () => {
-    const [setParms, query] = useAPI("GET", "/users/info", {
+    const [query] = useAPI("GET", "/users/info", {
         enabled: false,
     })
 

@@ -50,7 +50,7 @@ const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
     const [reviewLanguage, setReviewLanguage] = useState("all")
     const [enabled, setEnabled] = useState(false)
 
-    const [setParams, query] = useAPI("GET", "/reviews", {
+    const [query, setParams] = useAPI("GET", "/reviews", {
         enabled: enabled,
     })
 
