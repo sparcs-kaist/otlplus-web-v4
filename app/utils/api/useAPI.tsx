@@ -1,7 +1,11 @@
 import { type Dispatch, type SetStateAction, useState } from "react"
 
 import { type UseMutationOptions, useMutation, useQuery } from "@tanstack/react-query"
-import { type UseMutationResult, type UseQueryResult } from "@tanstack/react-query"
+import {
+    type UseMutateFunction,
+    type UseMutationResult,
+    type UseQueryResult,
+} from "@tanstack/react-query"
 import { type AxiosHeaders } from "axios"
 import { useTranslation } from "react-i18next"
 
@@ -36,7 +40,10 @@ type UseAPIOptions<M, Req, Res> = Merge<
 
 type UseAPIReturn<M, Req, Res> = M extends "GET"
     ? [UseQueryResult<Res, Error>, Dispatch<SetStateAction<Req>>]
-    : [UseMutationResult<Res, Error, Req, unknown>, (params: Req) => void]
+    : [
+          UseMutationResult<Res, Error, Req, unknown>,
+          UseMutateFunction<Res, Error, Req, unknown>,
+      ]
 
 export function useAPI<
     M extends Method<GetOriginalPath<P>>,
@@ -99,10 +106,6 @@ export function useAPI<
             ...mutationOps,
         })
 
-        function recallFunction(params: Req) {
-            mutation.mutate(params, mutationOps)
-        }
-
-        return [mutation, recallFunction] as UseAPIReturn<M, Req, Res>
+        return [mutation, mutation.mutate] as UseAPIReturn<M, Req, Res>
     }
 }
