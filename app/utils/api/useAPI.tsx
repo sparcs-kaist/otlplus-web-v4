@@ -21,7 +21,7 @@ type UseAPIOptions = {
     gcTime?: number
 }
 
-useAPI("PATCH", "/reviews/hello/liked")
+const [q, a] = useAPI("PATCH", "/reviews/dsad/liked")
 
 export function useAPI<
     M extends Method<GetOriginalPath<P>>,

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { use, useEffect, useState } from "react"
 
 import styled from "@emotion/styled"
 
@@ -8,6 +8,7 @@ import Widget from "@/common/primitives/Widget"
 import CourseDetailSection from "@/features/dictionary/sections/CourseDetailSection"
 import CourseListSection from "@/features/dictionary/sections/CourseListSection"
 import { media } from "@/styles/themes/media"
+import { useAPI } from "@/utils/api/useAPI"
 import useIsDevice from "@/utils/useIsDevice"
 
 const DictionaryWrapper = styled(FlexWrapper)`
@@ -74,6 +75,7 @@ export default function DictionaryPage() {
             setMobileModal(true)
         }
     }, [isTablet])
+
     useEffect(() => {
         if (isTablet && selectedCourseId !== null) {
             setMobileModal(true)

@@ -8,7 +8,7 @@ const SearchSectionInner = styled(FlexWrapper)`
     border: 2px solid ${({ theme }) => theme.colors.Highlight.default};
     border-radius: 32px;
     background: ${({ theme }) => theme.colors.Background.Section.default};
-    transition: all 0.3s ease-in-out;
+    transition: height 0.3s ease-in-out;
 `
 
 const SearchImg = styled.img<{ src: string }>`

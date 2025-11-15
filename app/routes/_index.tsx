@@ -1,5 +1,3 @@
-import { useState } from "react"
-
 import styled from "@emotion/styled"
 
 import exampleReviews from "@/api/example/Reviews"
@@ -7,7 +5,6 @@ import exampleScheduleFeed from "@/api/example/ScheduleFeed"
 import User from "@/api/example/UserInfo"
 import Footer from "@/common/components/guideline/Footer"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
-import { type TimeBlock } from "@/common/schemas/timeblock"
 import AdFeedSection from "@/features/main/sections/AdFeedSection"
 import PopularFeedSection from "@/features/main/sections/PopularFeedSection"
 import ReviewFeedSection from "@/features/main/sections/ReviewFeedSection"
@@ -16,6 +13,7 @@ import ScheduleFeedSection from "@/features/main/sections/ScheduleFeedSection"
 import ScheduleSection from "@/features/main/sections/ScheduleSection"
 import SearchSection from "@/features/main/sections/SearchSection"
 import TimeTableSection from "@/features/main/sections/TimeTableSection"
+import { useAPI } from "@/utils/api/useAPI"
 
 const MainWrapper = styled(FlexWrapper)`
     margin-top: 60px;
@@ -36,59 +34,54 @@ export default function Home() {
     }
 
     return (
-        <>
-            <MainWrapper direction="column" align="center" gap={240}>
-                <MainWrapperInner
-                    direction="column"
-                    align="center"
-                    justify="stretch"
-                    gap={60}
-                >
-                    <SearchSectionWrapper direction="row" justify="center" gap={0}>
-                        <SearchSection />
-                    </SearchSectionWrapper>
-                    <FlexWrapper direction="column" justify="center" gap={24}>
-                        <FlexWrapper direction="row" align="stretch" gap={24}>
-                            <FlexWrapper direction="column" align="stretch" gap={0}>
-                                <TimeTableSection user={User} />
-                            </FlexWrapper>
-                            <FlexWrapper direction="column" align="stretch" gap={24}>
-                                <FlexWrapper direction="column" align="stretch" gap={24}>
-                                    <ScheduleSection
-                                        content="2025 봄 수강신청 마감"
-                                        dueDate={new Date("2025-04-11")}
-                                    />
-                                    <ReviewSection
-                                        lectureId={3678}
-                                        lectureName="이산구조"
-                                    />
-                                </FlexWrapper>
-                                <FlexWrapper
-                                    direction="column"
-                                    align="stretch"
-                                    gap={24}
-                                    flex="1 1 auto"
-                                >
-                                    <AdFeedSection src="/ad.png" />
-                                    <AdFeedSection src="/ad.png" />
-                                </FlexWrapper>
-                            </FlexWrapper>
+        <MainWrapper direction="column" align="center" gap={240}>
+            <MainWrapperInner
+                direction="column"
+                align="center"
+                justify="stretch"
+                gap={60}
+            >
+                <SearchSectionWrapper direction="row" justify="center" gap={0}>
+                    <SearchSection />
+                </SearchSectionWrapper>
+                <FlexWrapper direction="column" justify="center" gap={24}>
+                    <FlexWrapper direction="row" align="stretch" gap={24}>
+                        <FlexWrapper direction="column" align="stretch" gap={0}>
+                            <TimeTableSection user={User} />
                         </FlexWrapper>
-                        <FlexWrapper direction="row" align="stretch" gap={24}>
-                            <ReviewFeedSection
-                                reviews={exampleReviews}
-                                likeReview={likeReview}
-                            />
-                            <PopularFeedSection
-                                reviews={exampleReviews}
-                                likeReview={likeReview}
-                            />
-                            <ScheduleFeedSection schedules={exampleScheduleFeed} />
+                        <FlexWrapper direction="column" align="stretch" gap={24}>
+                            <FlexWrapper direction="column" align="stretch" gap={24}>
+                                <ScheduleSection
+                                    content="2025 봄 수강신청 마감"
+                                    dueDate={new Date("2025-04-11")}
+                                />
+                                <ReviewSection lectureId={3678} lectureName="이산구조" />
+                            </FlexWrapper>
+                            <FlexWrapper
+                                direction="column"
+                                align="stretch"
+                                gap={24}
+                                flex="1 1 auto"
+                            >
+                                <AdFeedSection src="/ad.png" />
+                                <AdFeedSection src="/ad.png" />
+                            </FlexWrapper>
                         </FlexWrapper>
                     </FlexWrapper>
-                </MainWrapperInner>
-                <Footer />
-            </MainWrapper>
-        </>
+                    <FlexWrapper direction="row" align="stretch" gap={24}>
+                        <ReviewFeedSection
+                            reviews={exampleReviews}
+                            likeReview={likeReview}
+                        />
+                        <PopularFeedSection
+                            reviews={exampleReviews}
+                            likeReview={likeReview}
+                        />
+                        <ScheduleFeedSection schedules={exampleScheduleFeed} />
+                    </FlexWrapper>
+                </FlexWrapper>
+            </MainWrapperInner>
+            <Footer />
+        </MainWrapper>
     )
 }
