@@ -21,7 +21,7 @@ export const GETResponse = z.object({
     averageGrade: z.number(),
     averageLoad: z.number(),
     averageSpeech: z.number(),
-    myReviewId: z.array(z.number().int())
+    myReviewId: z.array(z.number().int()),
 })
 
 export type GETReviewsQuery = z.infer<typeof GETRequest>
@@ -29,10 +29,7 @@ export type GETReviewsResponse = z.infer<typeof GETResponse>
 
 // POST /api/reviews
 export const POSTRequest = z.object({
-    courseId: z.number().int(),
-    professor: ProfessorSchema,
-    year: z.number().int(),
-    semester: z.enum(SemesterEnum),
+    lectureId: z.number().int(),
     content: z.string(),
     grade: z.enum(ScoreEnum),
     load: z.enum(ScoreEnum),
