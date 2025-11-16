@@ -57,7 +57,7 @@ const Index: React.FC<AccountInfoSectionProps> = ({ userInfo }) => {
             </Caption>
             {[
                 [t("account.schoolId"), userInfo?.studentNumber],
-                [t("account.course"), userInfo?.course],
+                [t("account.course"), userInfo?.degree],
                 [
                     t("account.major"),
                     userInfo?.majorDepartments.map((dept) => dept.name).join(", "),

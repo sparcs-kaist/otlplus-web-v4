@@ -11,7 +11,11 @@ import DeveloperLoginModal from "@/features/account/DeveloperLoginModal"
 import { axiosClient } from "@/libs/axios"
 import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
-import { getLocalStorageItem } from "@/utils/localStorage"
+import {
+    getLocalStorageItem,
+    removeLocalStorageItem,
+    setLocalStorageItem,
+} from "@/utils/localStorage"
 import useIsDevice from "@/utils/useIsDevice"
 
 import Menu from "./Menu"
@@ -90,6 +94,10 @@ const Header: React.FC = () => {
     useEffect(() => {
         if (query.data) {
             setUserInfo(query.data)
+            setLocalStorageItem("userId", query.data.id.toString())
+        } else {
+            setUserInfo(null)
+            removeLocalStorageItem("userId")
         }
     }, [query.data])
     useEffect(() => {

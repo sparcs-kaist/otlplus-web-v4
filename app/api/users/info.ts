@@ -6,10 +6,11 @@ import { DepartmentSchema } from "@/common/schemas/department"
 export const GETRequest = z.object({})
 
 export const GETResponse = z.object({
+    id: z.number().int(),
     name: z.string(),
     mail: z.email(),
     studentNumber: z.number().int(),
-    course: z.string(),
+    degree: z.string(),
     majorDepartments: z.array(DepartmentSchema),
     interestedDepartments: z.array(DepartmentSchema),
 })
