@@ -86,7 +86,6 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
 
     useEffect(() => {
         if (courseDetail) {
-            setSelectedProfessorId(null)
             const writableReviews: ReviewWritingBlockProps[] = []
             courseDetail.history.forEach((history) => {
                 // if (history.myLectureId !== 0) {
@@ -106,6 +105,9 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
             setWritableReviewProps(writableReviews)
         }
     }, [courseDetail])
+    useEffect(() => {
+        setSelectedProfessorId(null)
+    }, [selectedCourseId])
     useEffect(() => {
         if (selectedProfessorId !== null) {
             reviewSectionRef.current?.scrollIntoView({ behavior: "smooth" })

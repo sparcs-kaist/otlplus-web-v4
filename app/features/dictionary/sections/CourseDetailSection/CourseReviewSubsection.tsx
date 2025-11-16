@@ -105,9 +105,7 @@ const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
         }
     }, [query.data])
 
-    return reviews === null && query.isLoading ? (
-        <LoadingCircle />
-    ) : (
+    return (
         <>
             <Typography type={"NormalBold"} color={"Text.default"}>
                 {t("dictionary.review")}
@@ -127,76 +125,84 @@ const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
                     ))}
                 </FlexWrapper>
             </FlexWrapper>
-            <FlexWrapper
-                direction={"row"}
-                gap={0}
-                justify="center"
-                align="center"
-                style={{ width: "100%" }}
-            >
-                <NumberWrapper
-                    direction="row"
-                    gap={0}
-                    justify={"space-between"}
-                    align={"center"}
-                >
-                    {[
-                        [
-                            getAverageScoreLabel(
-                                reviews?.averageGrade,
-                                reviews?.reviews.length,
-                            ),
-                            t("common.grade"),
-                        ],
-                        [
-                            getAverageScoreLabel(
-                                reviews?.averageLoad,
-                                reviews?.reviews.length,
-                            ),
-                            t("common.load"),
-                        ],
-                        [
-                            getAverageScoreLabel(
-                                reviews?.averageSpeech,
-                                reviews?.reviews.length,
-                            ),
-                            t("common.speech"),
-                        ],
-                    ].map(([value, label], index) => (
-                        <NumberContent
-                            key={index}
-                            direction="column"
+            {reviews === null && query.isLoading ? (
+                <LoadingCircle />
+            ) : (
+                <>
+                    <FlexWrapper
+                        direction={"row"}
+                        gap={0}
+                        justify="center"
+                        align="center"
+                        style={{ width: "100%" }}
+                    >
+                        <NumberWrapper
+                            direction="row"
                             gap={0}
+                            justify={"space-between"}
                             align={"center"}
                         >
-                            <Typography type={"Bigger"} color={"Text.default"}>
-                                {value}
-                            </Typography>
-                            <Typography type={"Smaller"} color={"Text.default"}>
-                                {label}
-                            </Typography>
-                        </NumberContent>
-                    ))}
-                </NumberWrapper>
-            </FlexWrapper>
-            {exampleReviews.reviews.length > 0 &&
-                writableReviewProps.map((props) => <ReviewWritingBlock {...props} />)}
-            {reviews?.reviews.map((review) => {
-                if (
-                    reviewLanguage === "english" &&
-                    !/^[A-Za-z0-9\s\p{P}\p{S}]+$/u.test(review.content)
-                ) {
-                    return null
-                } else {
-                    return (
-                        <ReviewBlock
-                            review={review}
-                            key={review.id}
-                            linkToDictionary={false}
-                        />
-                    )
-                }
-            })}
+                            {[
+                                [
+                                    getAverageScoreLabel(
+                                        reviews?.averageGrade,
+                                        reviews?.reviews.length,
+                                    ),
+                                    t("common.grade"),
+                                ],
+                                [
+                                    getAverageScoreLabel(
+                                        reviews?.averageLoad,
+                                        reviews?.reviews.length,
+                                    ),
+                                    t("common.load"),
+                                ],
+                                [
+                                    getAverageScoreLabel(
+                                        reviews?.averageSpeech,
+                                        reviews?.reviews.length,
+                                    ),
+                                    t("common.speech"),
+                                ],
+                            ].map(([value, label], index) => (
+                                <NumberContent
+                                    key={index}
+                                    direction="column"
+                                    gap={0}
+                                    align={"center"}
+                                >
+                                    <Typography type={"Bigger"} color={"Text.default"}>
+                                        {value}
+                                    </Typography>
+                                    <Typography type={"Smaller"} color={"Text.default"}>
+                                        {label}
+                                    </Typography>
+                                </NumberContent>
+                            ))}
+                        </NumberWrapper>
+                    </FlexWrapper>
+                    {exampleReviews.reviews.length > 0 &&
+                        writableReviewProps.map((props) => (
+                            <ReviewWritingBlock {...props} />
+                        ))}
+                    {reviews?.reviews.map((review) => {
+                        if (
+                            reviewLanguage === "english" &&
+                            !/^[A-Za-z0-9\s\p{P}\p{S}]+$/u.test(review.content)
+                        ) {
+                            return null
+                        } else {
+                            return (
+                                <ReviewBlock
+                                    review={review}
+                                    key={review.id}
+                                    linkToDictionary={false}
+                                />
+                            )
+                        }
+                    })}
+                </>
+            )}
         </>
     )
 }
