@@ -40,7 +40,7 @@ type MatchingMembers<A extends DynamicPath, U extends string> = U extends any
         : never
     : never
 
-type GetOriginalPath<A extends DynamicPath> = [ExactMatchPath<A>] extends [never]
+export type GetOriginalPath<A extends DynamicPath> = [ExactMatchPath<A>] extends [never]
     ? MatchingMembers<A, Path>
     : ExactMatchPath<A>
 
