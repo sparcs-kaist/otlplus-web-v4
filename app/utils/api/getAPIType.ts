@@ -19,9 +19,30 @@ type ConvertDynamicPath<T extends string> =
 
 export type DynamicPath = ConvertDynamicPath<Path>
 
-export type GetOriginalPath<T extends DynamicPath> = {
-    [P in Path]: T extends ConvertDynamicPath<P> ? P : never
-}[Path]
+type Comparison<
+    A extends string,
+    B extends string,
+> = A extends `${infer First1}/${infer Rest1}`
+    ? B extends `${infer First2}/${infer Rest2}`
+        ? First1 extends First2
+            ? Comparison<Rest1, Rest2>
+            : false
+        : false
+    : A extends B
+      ? true
+      : false
+
+type ExactMatchPath<A extends string> = Extract<FixedPaths, A>
+
+type MatchingMembers<A extends DynamicPath, U extends string> = U extends any
+    ? Comparison<A, ConvertDynamicPath<U>> extends true
+        ? U
+        : never
+    : never
+
+type GetOriginalPath<A extends DynamicPath> = [ExactMatchPath<A>] extends [never]
+    ? MatchingMembers<A, Path>
+    : ExactMatchPath<A>
 
 export type getAPIRequestType<
     M extends Method<GetOriginalPath<P>>,
