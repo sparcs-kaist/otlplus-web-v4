@@ -1,26 +1,49 @@
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
 import type { ThemeKeys } from "@/styles/themes"
 
-const getInitialTheme = (): ThemeKeys => {
-    if (typeof window !== "undefined") {
+const useTheme = () => {
+    const [theme, setTheme] = useState<ThemeKeys>(() => {
+        if (typeof window === "undefined") {
+            return "light"
+        }
         const savedTheme = localStorage.getItem("theme") as ThemeKeys | null
-        if (savedTheme) return savedTheme
+        if (savedTheme) {
+            return savedTheme
+        }
         return window.matchMedia("(prefers-color-scheme: dark)").matches
             ? "dark"
             : "light"
-    }
-    return "light"
-}
+    })
 
-const useTheme = () => {
-    const [theme, setTheme] = useState<ThemeKeys>(getInitialTheme)
+    const [hasStoredTheme, setHasStoredTheme] = useState(
+        () => typeof window !== "undefined" && localStorage.getItem("theme") !== null,
+    )
 
     useEffect(() => {
-        localStorage.setItem("theme", theme)
-    }, [theme])
+        if (hasStoredTheme) {
+            return
+        }
 
-    return { theme, setTheme }
+        const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
+        const handleChange = (e: MediaQueryListEvent) => {
+            setTheme(e.matches ? "dark" : "light")
+        }
+
+        mediaQuery.addEventListener("change", handleChange)
+
+        return () => {
+            mediaQuery.removeEventListener("change", handleChange)
+        }
+    }, [hasStoredTheme])
+
+    const handleSetTheme = useCallback((newTheme: ThemeKeys) => {
+        localStorage.setItem("theme", newTheme)
+        setHasStoredTheme(true)
+        setTheme(newTheme)
+    }, [])
+
+    return { theme, setTheme: handleSetTheme }
 }
 
 export default useTheme
