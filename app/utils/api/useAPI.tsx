@@ -17,6 +17,9 @@ import {
     type Method,
     type RequestMap,
     type ResponseMap,
+    getOriginalPathValue,
+    getZodSchemaRequest,
+    getZodSchemaResponse,
 } from "./getAPIType"
 
 type UseAPIQueryOptions = {
@@ -64,11 +67,20 @@ export function useAPI<
     const { i18n } = useTranslation()
     const {
         headers = {},
-        enabled = false,
+        enabled = true,
         staleTime = Infinity,
         gcTime = 5 * 60 * 1000,
         ...mutationOps
     } = ops
+
+    const requestSchema = getZodSchemaRequest(
+        getOriginalPathValue(path),
+        method as Method<GetOriginalPath<P>>,
+    )
+    const responseSchema = getZodSchemaResponse(
+        getOriginalPathValue(path),
+        method as Method<GetOriginalPath<P>>,
+    )
 
     if (method === "GET") {
         const [params, setParams] = useState<Req>(null as Req)
@@ -87,7 +99,9 @@ export function useAPI<
             retry: 1,
             staleTime,
             gcTime,
-            enabled: enabled || params !== null,
+            enabled:
+                enabled &&
+                (params !== null || requestSchema.safeParse({})?.success === true),
         })
 
         return [query, setParams] as unknown as UseAPIReturn<M, Req, Res>

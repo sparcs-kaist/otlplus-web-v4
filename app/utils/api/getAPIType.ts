@@ -1,6 +1,6 @@
 import { APIEndPoints } from ".api/types/endpoint"
-import { type RequestMap } from ".api/types/request"
-import { type ResponseMap } from ".api/types/response"
+import { type RequestMap, requestMap } from ".api/types/request"
+import { type ResponseMap, responseMap } from ".api/types/response"
 
 type APIEndPointsType = typeof APIEndPoints
 
@@ -16,8 +16,6 @@ type ConvertDynamicPath<T extends string> =
         : T extends `${infer Start}:${infer Param}`
           ? `${Start}${string}`
           : T
-
-type test = "/courses/fififi" | `/courses/${string}`
 
 export type DynamicPath = ConvertDynamicPath<Path>
 
@@ -36,3 +34,48 @@ export type getAPIResponseType<
 > = ResponseMap[GetOriginalPath<P>][Extract<M, keyof ResponseMap[GetOriginalPath<P>]>]
 
 export { type RequestMap, type ResponseMap }
+
+const originalPaths = Object.keys(APIEndPoints) as Path[]
+const originalPathRegexCache = new Map<Path, RegExp>()
+
+function buildOriginalPathRegex(path: Path): RegExp {
+    let cached = originalPathRegexCache.get(path)
+    if (!cached) {
+        const pattern = path
+            .split("/")
+            .map((segment) =>
+                segment.startsWith(":")
+                    ? "[^/]+"
+                    : segment.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+            )
+            .join("/")
+        cached = new RegExp(`^${pattern}$`)
+        originalPathRegexCache.set(path, cached)
+    }
+    return cached
+}
+
+export function getOriginalPathValue<P extends DynamicPath>(path: P): GetOriginalPath<P> {
+    for (const originalPath of originalPaths) {
+        if (buildOriginalPathRegex(originalPath).test(path)) {
+            return originalPath as GetOriginalPath<P>
+        }
+    }
+    throw new Error(`Unknown API path: ${path}`)
+}
+
+// TODO: 나중에 방법 알아내면 타입 좁힐 예정
+
+export function getZodSchemaRequest<P extends Path, M extends Method<P>>(
+    path: P,
+    method: M,
+): (typeof requestMap)[P][any] {
+    return (requestMap as any)[path][method]
+}
+
+export function getZodSchemaResponse<P extends Path, M extends Method<P>>(
+    path: P,
+    method: M,
+): (typeof responseMap)[P][any] {
+    return (responseMap as any)[path][method]
+}
