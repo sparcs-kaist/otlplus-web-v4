@@ -1,29 +1,26 @@
-import { create } from "zustand"
-import { createJSONStorage, persist } from "zustand/middleware"
+import { useEffect, useState } from "react"
 
-export type Theme = "light" | "dark"
+import type { ThemeKeys } from "@/styles/themes"
 
-interface ThemeState {
-    selectedTheme: Theme
-    setSelectedTheme: (theme: Theme) => void
+const getInitialTheme = (): ThemeKeys => {
+    if (typeof window !== "undefined") {
+        const savedTheme = localStorage.getItem("theme") as ThemeKeys | null
+        if (savedTheme) return savedTheme
+        return window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light"
+    }
+    return "light"
 }
 
-const useThemeStore = create<ThemeState>()(
-    persist(
-        (set) => ({
-            selectedTheme:
-                typeof window !== "undefined" &&
-                window.matchMedia &&
-                window.matchMedia("(prefers-color-scheme: dark)").matches
-                    ? "dark"
-                    : "light",
-            setSelectedTheme: (theme) => set({ selectedTheme: theme }),
-        }),
-        {
-            name: "theme-storage", // localStorage에 저장될 키 이름
-            storage: createJSONStorage(() => localStorage),
-        },
-    ),
-)
+const useTheme = () => {
+    const [theme, setTheme] = useState<ThemeKeys>(getInitialTheme)
 
-export default useThemeStore
+    useEffect(() => {
+        localStorage.setItem("theme", theme)
+    }, [theme])
+
+    return { theme, setTheme }
+}
+
+export default useTheme
