@@ -1,15 +1,16 @@
 import { useState } from "react"
 
 import styled from "@emotion/styled"
+import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 
-import { Departments } from "@/api/example/Departments"
 import type { GETUserInfoResponse } from "@/api/users/info"
 import Button from "@/common/components/Button"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import type { Department } from "@/common/schemas/department"
 import DepartmentSearchArea from "@/features/account/components/DepartmentSearchArea"
+import { useAPI } from "@/utils/api/useAPI"
 
 const AccountInterestedMajorSectionWrapper = styled(FlexWrapper)`
     margin: 10px 0;
@@ -39,6 +40,21 @@ const Index: React.FC<AccountInterestedMajorSectionProps> = ({
     setUserInfo,
 }) => {
     const { t, i18n } = useTranslation()
+    const queryClient = useQueryClient()
+
+    const [query] = useAPI("GET", "/department-options")
+    const [mutation, requestFunction] = useAPI(
+        "PUT",
+        `/users/${userInfo?.id}/interested-departments`,
+        {
+            onSuccess: () => {
+                queryClient.invalidateQueries({ queryKey: ["/users/info"] })
+            },
+        },
+    )
+    const DepartmentList = {
+        departments: query.data as unknown as Department[],
+    }
 
     const [isEditing, setIsEditing] = useState<boolean>(false)
     const [temporaryMajor, setTemporaryMajor] = useState<Department[]>([])
@@ -49,7 +65,7 @@ const Index: React.FC<AccountInterestedMajorSectionProps> = ({
     }
 
     function findDepartmentNameById(id: number): string | undefined {
-        const department = Departments.departments.find((dept) => dept.id === id)
+        const department = DepartmentList.departments?.find((dept) => dept.id === id)
         return department
             ? i18n.language === "en"
                 ? department.code
@@ -58,13 +74,9 @@ const Index: React.FC<AccountInterestedMajorSectionProps> = ({
     }
 
     function saveInterestedMajors() {
-        if (setUserInfo) {
-            setUserInfo((prev) =>
-                prev
-                    ? { ...prev, interestedMajorDepartments: [...temporaryMajor] }
-                    : prev,
-            )
-        }
+        requestFunction({
+            interestedDepartmentIds: temporaryMajor.map((dept) => dept.id),
+        })
         setIsEditing(false)
     }
 

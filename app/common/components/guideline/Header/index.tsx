@@ -4,6 +4,7 @@ import styled from "@emotion/styled"
 import MenuIcon from "@mui/icons-material/Menu"
 
 import { SelectedThemeContext } from "@/Providers"
+import exampleUserInfo from "@/api/example/UserInfo"
 import { type GETUserInfoResponse } from "@/api/users/info"
 import Icon from "@/common/primitives/Icon"
 import AccountPageModal from "@/features/account/AccountPageModal"
