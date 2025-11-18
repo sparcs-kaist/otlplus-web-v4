@@ -151,11 +151,14 @@ export const commonI18nBase = {
             placeholder: "학점, 로드 등의 평가에 대해 설명해주세요.",
             writeAnother: "다른 과목 후기 쓰기",
         },
-        reviewFeed: {
+        popularFeed: {
             title: "<bold>따끈따끈</bold><space/><normal>과목후기</normal>",
         },
-        popularFeed: {
+        likedMajorFeed: {
             title: "<bold>사랑받는</bold><space/><normal>과목후기</normal>",
+        },
+        hallOfFameFeed: {
+            title: "<bold>명예의</bold><space/><normal>전당</normal>",
         },
         scheduleFeed: {
             title: "주요 일정",

@@ -1,21 +1,24 @@
-import { Trans } from "react-i18next"
+import { Trans, useTranslation } from "react-i18next"
 
 import type { GETReviewsResponse } from "@/api/reviews"
 import ReviewBlock from "@/common/components/reviews/ReviewBlock"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
-import Widget from "@/common/primitives/Widget"
 
-interface ReviewFeedSectionProps {
+import Widget from "../../../../common/primitives/Widget"
+
+interface PopularFeedSectionProps {
     reviews: GETReviewsResponse
 }
 
-function ReviewFeedSection({ reviews }: ReviewFeedSectionProps) {
+function HallOfFameFeedSection({ reviews }: PopularFeedSectionProps) {
+    const { i18n } = useTranslation() // 없으면 새로고침 안했을때 언어가 안바껴!
+
     return (
         <Widget direction="column" gap={20} padding="30px" flex="1 1 0">
             <FlexWrapper direction="row" gap={0}>
                 <Trans
-                    i18nKey="main.reviewFeed.title"
+                    i18nKey="main.hallOfFameFeed.title"
                     components={{
                         bold: (
                             <Typography
@@ -24,6 +27,7 @@ function ReviewFeedSection({ reviews }: ReviewFeedSectionProps) {
                                 children={undefined}
                             />
                         ),
+                        space: <>&nbsp;</>,
                         normal: (
                             <Typography
                                 type="BiggerBold"
@@ -31,7 +35,6 @@ function ReviewFeedSection({ reviews }: ReviewFeedSectionProps) {
                                 children={undefined}
                             />
                         ),
-                        space: <>&nbsp;</>,
                     }}
                 />
             </FlexWrapper>
@@ -44,4 +47,4 @@ function ReviewFeedSection({ reviews }: ReviewFeedSectionProps) {
     )
 }
 
-export default ReviewFeedSection
+export default HallOfFameFeedSection

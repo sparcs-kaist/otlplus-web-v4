@@ -6,8 +6,9 @@ import User from "@/api/example/UserInfo"
 import Footer from "@/common/components/guideline/Footer"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import AdFeedSection from "@/features/main/sections/AdFeedSection"
+import HallOfFameFeedSection from "@/features/main/sections/HallOfFameFeedSection"
+import LikedMajorFeedSection from "@/features/main/sections/LikedMajorFeedSection"
 import PopularFeedSection from "@/features/main/sections/PopularFeedSection"
-import ReviewFeedSection from "@/features/main/sections/ReviewFeedSection"
 import ReviewSection from "@/features/main/sections/ReviewSection"
 import ScheduleFeedSection from "@/features/main/sections/ScheduleFeedSection"
 import ScheduleSection from "@/features/main/sections/ScheduleSection"
@@ -47,31 +48,30 @@ export default function Home() {
                                 <TimeTableSection user={User} />
                             </FlexWrapper>
                             <FlexWrapper direction="column" align="stretch" gap={24}>
-                                <FlexWrapper direction="column" align="stretch" gap={24}>
+                                <FlexWrapper
+                                    direction="column"
+                                    align="stretch"
+                                    gap={24}
+                                    flex="1 1 0"
+                                >
                                     <ScheduleSection
                                         content="2025 봄 수강신청 마감"
                                         dueDate={new Date("2025-04-11")}
+                                    />
+                                    <ScheduleFeedSection
+                                        schedules={exampleScheduleFeed}
                                     />
                                     <ReviewSection
                                         lectureId={3678}
                                         lectureName="이산구조"
                                     />
                                 </FlexWrapper>
-                                <FlexWrapper
-                                    direction="column"
-                                    align="stretch"
-                                    gap={24}
-                                    flex="1 1 auto"
-                                >
-                                    <AdFeedSection src="/ad.png" />
-                                    <AdFeedSection src="/ad.png" />
-                                </FlexWrapper>
                             </FlexWrapper>
                         </FlexWrapper>
                         <FlexWrapper direction="row" align="stretch" gap={24}>
-                            <ReviewFeedSection reviews={exampleReviews} />
                             <PopularFeedSection reviews={exampleReviews} />
-                            <ScheduleFeedSection schedules={exampleScheduleFeed} />
+                            <LikedMajorFeedSection reviews={exampleReviews} />
+                            <HallOfFameFeedSection reviews={exampleReviews} />
                         </FlexWrapper>
                     </FlexWrapper>
                 </MainWrapperInner>

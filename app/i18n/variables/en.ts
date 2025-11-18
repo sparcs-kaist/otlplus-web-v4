@@ -157,11 +157,14 @@ export const commonI18nEn: CommonI18nBaseType = {
 
             writeAnother: "Another one",
         },
-        reviewFeed: {
+        popularFeed: {
             title: "<bold>Fresh</bold><space/><normal>Reviews</normal>",
         },
-        popularFeed: {
+        likedMajorFeed: {
             title: "<bold>Popular</bold><space/><normal>Reviews</normal>",
+        },
+        hallOfFameFeed: {
+            title: "<bold>Hall of</bold><space/><normal>Fame</normal>",
         },
         scheduleFeed: {
             title: "School Schedules",

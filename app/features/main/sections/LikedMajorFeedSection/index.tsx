@@ -4,20 +4,21 @@ import type { GETReviewsResponse } from "@/api/reviews"
 import ReviewBlock from "@/common/components/reviews/ReviewBlock"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
-import Widget from "@/common/primitives/Widget"
 
-interface ReviewFeedSectionProps {
+import Widget from "../../../../common/primitives/Widget"
+
+interface PopularFeedSectionProps {
     reviews: GETReviewsResponse
 }
 
-function PopularFeedSection({ reviews }: ReviewFeedSectionProps) {
+function LikedMajorFeedSection({ reviews }: PopularFeedSectionProps) {
     const { i18n } = useTranslation() // 없으면 새로고침 안했을때 언어가 안바껴!
 
     return (
         <Widget direction="column" gap={20} padding="30px" flex="1 1 0">
             <FlexWrapper direction="row" gap={0}>
                 <Trans
-                    i18nKey="main.popularFeed.title"
+                    i18nKey="main.likedMajorFeed.title"
                     components={{
                         bold: (
                             <Typography
@@ -26,6 +27,7 @@ function PopularFeedSection({ reviews }: ReviewFeedSectionProps) {
                                 children={undefined}
                             />
                         ),
+                        space: <>&nbsp;</>,
                         normal: (
                             <Typography
                                 type="BiggerBold"
@@ -33,7 +35,6 @@ function PopularFeedSection({ reviews }: ReviewFeedSectionProps) {
                                 children={undefined}
                             />
                         ),
-                        space: <>&nbsp;</>,
                     }}
                 />
             </FlexWrapper>
@@ -46,4 +47,4 @@ function PopularFeedSection({ reviews }: ReviewFeedSectionProps) {
     )
 }
 
-export default PopularFeedSection
+export default LikedMajorFeedSection
