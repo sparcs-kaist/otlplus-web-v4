@@ -34,9 +34,6 @@ const BlockInner = styled(FlexWrapper)<{ isHovered: boolean; isSelected: boolean
 
 function LectureSimpleBlock({ lecture, isSelected }: LectureSimpleBlockProps) {
     const [isHovered, setIsHovered] = useState(false)
-    useEffect(() => {
-        console.log(lecture, isSelected)
-    }, [isSelected])
 
     return (
         <BlockInner

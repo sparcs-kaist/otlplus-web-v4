@@ -135,7 +135,7 @@ const CourseListSection: React.FC<CourseListSectionProps> = ({
         setSearchResult({ courses: [], totalCount: 0 })
         const fullParam = {
             ...param,
-            order: (["code", "popular", "studentCount"] as const)[sortOption],
+            order: (["code", "popular", "studentCount"] as const)[sortOption] ?? "code",
             offset: 0,
             limit: LIMIT,
         }

@@ -5,31 +5,31 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { I18nextProvider } from "react-i18next"
 
 import i18n from "@/libs/i18n"
-import themes from "@/styles/themes"
-import useThemeStore, { type Theme } from "@/utils/useThemeStore"
+import themes, { type ThemeKeys } from "@/styles/themes"
+import useThemeStore from "@/utils/useThemeStore"
 
 export const SelectedThemeContext = React.createContext<{
-    selectedTheme: Theme
-    setSelectedTheme: (theme: Theme) => void
+    theme: ThemeKeys
+    setTheme: (theme: ThemeKeys) => void
 }>({
-    selectedTheme: "light",
-    setSelectedTheme: () => {},
+    theme: "light",
+    setTheme: () => {},
 })
 
 const queryClient = new QueryClient()
 
 const Providers: React.FC<React.PropsWithChildren> = (props) => {
-    const { selectedTheme, setSelectedTheme } = useThemeStore()
+    const { theme, setTheme } = useThemeStore()
 
     const extractedTheme = React.useMemo(() => {
-        return themes[selectedTheme]
-    }, [selectedTheme])
+        return themes[theme]
+    }, [theme])
 
     return (
         <QueryClientProvider client={queryClient}>
             <I18nextProvider i18n={i18n}>
                 <SelectedThemeContext.Provider
-                    value={{ selectedTheme, setSelectedTheme }}
+                    value={{ theme: theme, setTheme: setTheme }}
                 >
                     <ThemeProvider theme={extractedTheme}>{props.children}</ThemeProvider>
                 </SelectedThemeContext.Provider>

@@ -210,7 +210,7 @@ export const commonI18nEn: CommonI18nBaseType = {
             related: "Related Reviews - {{lectureName}}",
         },
         reviewFeed: {
-            title: "Hall of Fame - {{year}} {{semester}}",
+            title: "Hall of Fame - {{year}}<space/>{{semester}}",
             total: "Total Reviews",
         },
         likedReviews: {

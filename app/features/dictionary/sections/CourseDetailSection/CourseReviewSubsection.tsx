@@ -34,6 +34,7 @@ interface CourseReviewSubsectionProps {
 
 export type CourseReviewSubsectionHandle = {
     loadMoreReviews: () => void
+    isLoading: boolean
 }
 
 const LIMIT = 100
@@ -63,7 +64,7 @@ const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
         }))
     }
 
-    useImperativeHandle(ref, () => ({ loadMoreReviews }))
+    useImperativeHandle(ref, () => ({ loadMoreReviews, isLoading: query.isLoading }))
 
     useEffect(() => {
         setParams({

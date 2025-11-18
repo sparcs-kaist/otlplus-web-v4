@@ -22,7 +22,7 @@ function ScheduleFeedSection({ schedules }: ScheduleFeedSectionProps) {
                 </Typography>
             </FlexWrapper>
             <FlexWrapper direction="column" align="stretch" gap={15}>
-                {schedules.map((schedule, idx) => (
+                {schedules.schedules.map((schedule, idx) => (
                     <FlexWrapper key={idx} direction="column" align="stretch" gap={15}>
                         <FlexWrapper direction="row" justify="space-between" gap={0}>
                             <Typography type="BigBold" color="Highlight.default">
@@ -33,7 +33,7 @@ function ScheduleFeedSection({ schedules }: ScheduleFeedSectionProps) {
                                 {schedule.name}
                             </Typography>
                         </FlexWrapper>
-                        {idx < schedules.length - 1 ? (
+                        {idx < schedules.schedules.length - 1 ? (
                             <Line height={1} color="Line.default" />
                         ) : null}
                     </FlexWrapper>

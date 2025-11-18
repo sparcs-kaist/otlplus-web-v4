@@ -1,6 +1,7 @@
-import { type Dispatch, type SetStateAction, useState } from "react"
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react"
 
 import styled from "@emotion/styled"
+import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 
 import Button from "@/common/components/Button"
@@ -11,6 +12,7 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import TextInputArea from "@/common/primitives/TextInputArea"
 import Typography from "@/common/primitives/Typography"
 import type { Professor } from "@/common/schemas/professor"
+import { useAPI } from "@/utils/api/useAPI"
 import professorName from "@/utils/professorName"
 
 const ReviewWrapper = styled(FlexWrapper)`
@@ -45,6 +47,11 @@ function ReviewWritingBlock({
     semester,
 }: ReviewWritingBlockProps) {
     const { t } = useTranslation()
+    const queryClient = useQueryClient()
+
+    const [mutation, requestFunction] = useAPI("POST", "/reviews", {
+        onSuccess: resetReviewStates,
+    })
 
     const [reviewText, setReviewText] = useState<string>("")
 
@@ -52,15 +59,27 @@ function ReviewWritingBlock({
     const [reviewLoad, setReviewLoad] = useState<ScoreEnum>(0)
     const [reviewSpeech, setReviewSpeech] = useState<ScoreEnum>(0)
 
-    function submitReview() {
-        const submitData = {
-            reviewText,
-            reviewGrade,
-            reviewLoad,
-            reviewSpeech,
-        }
+    function resetReviewStates() {
+        setReviewText("")
+        setReviewGrade(0)
+        setReviewLoad(0)
+        setReviewSpeech(0)
+    }
 
-        alert(JSON.stringify(submitData, null, 2))
+    useEffect(() => {
+        resetReviewStates()
+    }, [lectureId])
+
+    function submitReview() {
+        requestFunction({
+            lectureId: lectureId,
+            content: reviewText,
+            grade: reviewGrade,
+            load: reviewLoad,
+            speech: reviewSpeech,
+        })
+
+        queryClient.invalidateQueries({ queryKey: ["/reviews"] })
     }
 
     return (

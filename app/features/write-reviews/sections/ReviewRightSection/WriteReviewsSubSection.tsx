@@ -1,19 +1,58 @@
+import { useEffect } from "react"
+
 import { Trans } from "react-i18next"
 
-import exampleReviews from "@/api/example/Reviews"
-import { type GETWritableReviewsResponse } from "@/api/users/writable-reviews"
+import Credits from "@/common/components/Credits"
 import Line from "@/common/components/Line"
+import LoadingCircle from "@/common/components/LoadingCircle"
 import ReviewBlock from "@/common/components/reviews/ReviewBlock"
 import ReviewWritingBlock from "@/common/components/reviews/ReviewWritingBlock"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
+import type { WriteReviewsSelectedLectureType } from "@/routes/write-reviews"
+import { useAPI } from "@/utils/api/useAPI"
 
 interface WriteReviewsSubSectionType {
-    selectedLecture: GETWritableReviewsResponse
+    selectedLecture: WriteReviewsSelectedLectureType | null
 }
 
 function WriteReviewsSubSection({ selectedLecture }: WriteReviewsSubSectionType) {
-    return (
+    const [query, setParams] = useAPI("GET", "/reviews")
+
+    useEffect(() => {
+        if (selectedLecture === null) return
+        setParams({
+            mode: "default",
+            courseId: selectedLecture.courseId,
+            professorId: selectedLecture.professors[0]?.id,
+            year: selectedLecture.year,
+            semester: selectedLecture.semester,
+            limit: 10,
+            offset: 0,
+        })
+    }, [selectedLecture])
+
+    return selectedLecture === null ? (
+        <FlexWrapper
+            direction="column"
+            align="stretch"
+            justify="center"
+            flex={"1 1 auto"}
+            gap={12}
+        >
+            <Credits />
+        </FlexWrapper>
+    ) : query.isLoading ? (
+        <FlexWrapper
+            direction="column"
+            align="stretch"
+            justify="center"
+            flex={"1 1 auto"}
+            gap={12}
+        >
+            <LoadingCircle />
+        </FlexWrapper>
+    ) : (
         <FlexWrapper direction="column" align="stretch" gap={12}>
             <FlexWrapper direction="column" gap={12} align="center">
                 <Typography type="NormalBold" color="Text.default">
@@ -24,7 +63,7 @@ function WriteReviewsSubSection({ selectedLecture }: WriteReviewsSubSectionType)
                 </Typography>
                 <ReviewWritingBlock
                     name={selectedLecture.name}
-                    lectureId={0}
+                    lectureId={selectedLecture.lectureId}
                     professors={selectedLecture.professors}
                     year={selectedLecture.year}
                     semester={selectedLecture.semester}
@@ -40,7 +79,7 @@ function WriteReviewsSubSection({ selectedLecture }: WriteReviewsSubSectionType)
                         />
                     </Typography>
                 </FlexWrapper>
-                {exampleReviews.reviews.map((review, idx) => (
+                {query.data?.reviews.map((review, idx) => (
                     <ReviewBlock review={review} key={review.id} />
                 ))}
             </FlexWrapper>

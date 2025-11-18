@@ -4,12 +4,12 @@ import { Search } from "@mui/icons-material"
 import { AnimatePresence, motion } from "framer-motion"
 import { useTranslation } from "react-i18next"
 
-import { Departments } from "@/api/example/Departments"
 import { type SearchOptions } from "@/common/interface/SearchOptions"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import { type TimeBlock } from "@/common/schemas/timeblock"
+import { useAPI } from "@/utils/api/useAPI"
 import { formatTimeAreaToString } from "@/utils/timetable/formatTimeblockToString"
 
 import Button from "../Button"
@@ -32,7 +32,7 @@ export type SearchParamsType = {
 type TimeProps<ops extends readonly SearchOptions[]> = "time" extends ops[number]
     ? {
           timeFilter: TimeBlock | null
-          setTimeFilter: (timeFilter: TimeBlock | null) => {}
+          setTimeFilter: (timeFilter: TimeBlock | null) => object
       }
     : { timeFilter?: never; setTimeFilter?: never }
 
@@ -56,6 +56,8 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
     setTimeFilter,
 }: SearchAreaProps<ops>) {
     const { t } = useTranslation()
+
+    const [query] = useAPI("GET", "/department-options")
 
     const [open, setOpen] = useState<boolean>(false)
     const [value, setValue] = useState<string>("")
@@ -126,9 +128,9 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
                         if (key == "department") {
                             result[key] = result[key]?.map(
                                 (dept) =>
-                                    Departments.departments.find(
-                                        (d) => d.code === dept.toString(),
-                                    )?.id as number,
+                                    // query.data?.departments.find(
+                                    query.data?.find((d) => d.code === dept.toString())
+                                        ?.id as number,
                             )
                         }
                     }

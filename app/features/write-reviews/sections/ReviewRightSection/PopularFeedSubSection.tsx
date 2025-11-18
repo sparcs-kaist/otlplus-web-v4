@@ -1,16 +1,27 @@
+import { useEffect, useState } from "react"
+
 import { useTranslation } from "react-i18next"
 
-import type { GETReviewsResponse } from "@/api/reviews"
+import LoadingCircle from "@/common/components/LoadingCircle"
 import ReviewBlock from "@/common/components/reviews/ReviewBlock"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
+import { useAPI } from "@/utils/api/useAPI"
 
-interface PopularFeedSubSectionProps {
-    reviews: GETReviewsResponse
-}
-
-function PopularFeedSubSection({ reviews }: PopularFeedSubSectionProps) {
+function PopularFeedSubSection() {
     const { t } = useTranslation()
+
+    const [query, setParams] = useAPI("GET", "/reviews")
+
+    const [offset, setOffset] = useState(0)
+
+    useEffect(() => {
+        setParams({
+            mode: "popular-feed",
+            offset: 0,
+            limit: 20,
+        })
+    }, [])
 
     return (
         <FlexWrapper direction="column" align="stretch" gap={12}>
@@ -19,11 +30,15 @@ function PopularFeedSubSection({ reviews }: PopularFeedSubSectionProps) {
                     {t("writeReviews.tabs.popularFeed")}
                 </Typography>
             </FlexWrapper>
-            <FlexWrapper direction="column" align="stretch" gap={12}>
-                {reviews.reviews.map((review) => (
-                    <ReviewBlock review={review} key={review.id} />
-                ))}
-            </FlexWrapper>
+            {query.isLoading ? (
+                <LoadingCircle />
+            ) : (
+                <FlexWrapper direction="column" align="stretch" gap={12}>
+                    {query.data?.reviews.map((review) => (
+                        <ReviewBlock review={review} key={review.id} />
+                    ))}
+                </FlexWrapper>
+            )}
         </FlexWrapper>
     )
 }

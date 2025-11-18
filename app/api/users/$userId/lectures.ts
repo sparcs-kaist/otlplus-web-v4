@@ -10,9 +10,9 @@ export const GETRequest = z.object({
 })
 
 export const GETResponse = z.object({
-    totalLectures: z.number().int(),
-    reviewedLectures: z.number().int(),
-    totalLikes: z.number().int(),
+    totalLecturesCount: z.number().int(),
+    reviewedLecturesCount: z.number().int(),
+    totalLikesCount: z.number().int(),
     lecturesWrap: z.array(
         z.object({
             year: z.number().int(),
@@ -22,7 +22,9 @@ export const GETResponse = z.object({
                     name: z.string(),
                     code: z.string(),
                     courseId: z.number().int(),
+                    lectureId: z.number().int(),
                     professors: z.array(ProfessorSchema),
+                    written: z.boolean(),
                 }),
             ),
         }),

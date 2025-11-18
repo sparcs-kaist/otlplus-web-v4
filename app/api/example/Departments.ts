@@ -1,4 +1,4 @@
-import type { GETDepartmentOptionsResponse } from "@/api/department-options/department-options"
+import type { GETDepartmentOptionsResponse } from "@/api/department-options"
 
 const Departments: GETDepartmentOptionsResponse = {
     departments: [

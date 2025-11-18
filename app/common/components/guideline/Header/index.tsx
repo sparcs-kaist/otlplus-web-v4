@@ -61,7 +61,7 @@ const Header: React.FC = () => {
     })
 
     const isMobile = useIsDevice("mobile")
-    const { selectedTheme } = useContext(SelectedThemeContext)
+    const { theme } = useContext(SelectedThemeContext)
 
     const [accountPageOpen, setAccountPageOpen] = useState<boolean>(false)
     const [developerLoginOpen, setDeveloperLoginOpen] = useState(false)
@@ -97,7 +97,7 @@ const Header: React.FC = () => {
             setLocalStorageItem("userId", query.data.id.toString())
         } else {
             setUserInfo(null)
-            removeLocalStorageItem("userId")
+            // removeLocalStorageItem("userId")
         }
     }, [query.data])
     useEffect(() => {
@@ -120,7 +120,7 @@ const Header: React.FC = () => {
                     setAccountPageOpen={setAccountPageOpen}
                 />
             )}
-            {selectedTheme !== "dark" && <HeaderBar />}
+            {theme !== "dark" && <HeaderBar />}
             <HeaderInner>
                 <Menu setMobileSidebarOpen={() => setMobileSidebarOpen(false)} />
                 <Setting

@@ -68,7 +68,7 @@ function ReviewBlock({
 
     const likeReview = (e: React.MouseEvent) => {
         e.stopPropagation()
-        requestFunction({
+        mutation.mutate({
             reviewId: review.id,
             action: (likeOverride ?? review.likedByUser) ? "unlike" : "like",
         })

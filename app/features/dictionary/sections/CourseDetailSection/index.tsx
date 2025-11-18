@@ -109,10 +109,10 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
         setSelectedProfessorId(null)
     }, [selectedCourseId])
     useEffect(() => {
-        if (selectedProfessorId !== null) {
+        if (selectedProfessorId !== null && !reviewSubsectionRef.current?.isLoading) {
             reviewSectionRef.current?.scrollIntoView({ behavior: "smooth" })
         }
-    }, [selectedProfessorId])
+    }, [selectedProfessorId, query.isLoading])
 
     return (
         <CourseDetailSectionInner

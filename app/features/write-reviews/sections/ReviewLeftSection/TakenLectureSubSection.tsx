@@ -1,23 +1,28 @@
-import { useEffect, useState } from "react"
-
-import { type GETUserPastLecturesResponse } from "@/api/users/$userId/lectures"
-import { type GETWritableReviewsResponse } from "@/api/users/writable-reviews"
 import Line from "@/common/components/Line"
 import { semesterToString } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
+import type { WriteReviewsSelectedLectureType } from "@/routes/write-reviews"
+import type { getAPIResponseType } from "@/utils/api/getAPIType"
 
 import LectureSimpleBlock from "../../components/LectureSimpleBlock"
 
 interface TakenLectureSubSectionProps {
-    lecturesWrap: GETUserPastLecturesResponse["lecturesWrap"][number]
-    selectedLecture: GETWritableReviewsResponse | null
-    setSelectedLecture: (lecture: GETWritableReviewsResponse) => void
+    lecturesWrap: getAPIResponseType<
+        "GET",
+        "/users/$userId/lectures"
+    >["lecturesWrap"][number]
+    selectedLecture: WriteReviewsSelectedLectureType | null
+    setSelectedLecture: (lecture: WriteReviewsSelectedLectureType | null) => void
+    last: boolean
 }
 
 function isSameLecture(
-    lecture: GETUserPastLecturesResponse["lecturesWrap"][number]["lectures"][number],
-    lecture2: GETWritableReviewsResponse,
+    lecture: getAPIResponseType<
+        "GET",
+        "/users/$userId/lectures"
+    >["lecturesWrap"][number]["lectures"][number],
+    lecture2: WriteReviewsSelectedLectureType,
     year: number,
     semester: number,
 ) {
@@ -32,6 +37,7 @@ function TakenLectureSubSection({
     lecturesWrap,
     selectedLecture,
     setSelectedLecture,
+    last,
 }: TakenLectureSubSectionProps) {
     return (
         <FlexWrapper direction="column" align="stretch" justify="stretch" gap={10}>
@@ -47,11 +53,25 @@ function TakenLectureSubSection({
                         align="stretch"
                         justify="stretch"
                         onClick={() => {
+                            if (selectedLecture) {
+                                if (
+                                    isSameLecture(
+                                        lecture,
+                                        selectedLecture,
+                                        lecturesWrap.year,
+                                        lecturesWrap.semester,
+                                    )
+                                ) {
+                                    setSelectedLecture(null)
+                                    return
+                                }
+                            }
                             const { name, courseId, professors } = lecture
                             const { year, semester } = lecturesWrap
                             setSelectedLecture({
                                 name,
                                 courseId,
+                                lectureId: lecture.lectureId,
                                 professors,
                                 year,
                                 semester,
@@ -75,7 +95,7 @@ function TakenLectureSubSection({
                     </FlexWrapper>
                 ))}
             </FlexWrapper>
-            <Line height={2} color="Line.divider" />
+            {!last && <Line height={2} color="Line.divider" />}
         </FlexWrapper>
     )
 }

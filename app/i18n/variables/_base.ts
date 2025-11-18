@@ -203,7 +203,7 @@ export const commonI18nBase = {
             related: "연관 후기 - {{lectureName}}",
         },
         reviewFeed: {
-            title: "명예의 전당 - {{year}} {{semester}}",
+            title: "명예의 전당 - {{year}}<space/>{{semester}}",
             total: "전체 후기",
         },
         likedReviews: {

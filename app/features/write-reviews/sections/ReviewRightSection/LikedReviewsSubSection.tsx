@@ -1,16 +1,27 @@
+import { useEffect, useState } from "react"
+
 import { useTranslation } from "react-i18next"
 
-import type { GETReviewsResponse } from "@/api/reviews"
+import LoadingCircle from "@/common/components/LoadingCircle"
 import ReviewBlock from "@/common/components/reviews/ReviewBlock"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
+import { useAPI } from "@/utils/api/useAPI"
+import { getLocalStorageItem } from "@/utils/localStorage"
 
-interface LikedReviewsSectionProps {
-    reviews: GETReviewsResponse
-}
-
-function LikedReviewsSection({ reviews }: LikedReviewsSectionProps) {
+function LikedReviewsSection() {
     const { t } = useTranslation()
+
+    const [query, setParams] = useAPI(
+        "GET",
+        `/users/${getLocalStorageItem("userId")}/reviews/liked`,
+    )
+
+    useEffect(() => {
+        const userId = getLocalStorageItem("userId")
+        if (userId === null) return
+        setParams({ userId: parseInt(userId) })
+    }, [])
 
     return (
         <FlexWrapper direction="column" align="stretch" gap={12}>
@@ -19,11 +30,15 @@ function LikedReviewsSection({ reviews }: LikedReviewsSectionProps) {
                     {t("writeReviews.likedReviews.title")}
                 </Typography>
             </FlexWrapper>
-            <FlexWrapper direction="column" align="stretch" gap={12}>
-                {reviews.reviews.map((review) => (
-                    <ReviewBlock review={review} key={review.id} />
-                ))}
-            </FlexWrapper>
+            {query.isLoading ? (
+                <LoadingCircle />
+            ) : (
+                <FlexWrapper direction="column" align="stretch" gap={12}>
+                    {query.data?.reviews.map((review) => (
+                        <ReviewBlock review={review} key={review.id} />
+                    ))}
+                </FlexWrapper>
+            )}
         </FlexWrapper>
     )
 }

@@ -38,10 +38,10 @@ const Setting: React.FC<SettingProps> = ({
     mobileSidebar,
 }) => {
     const { t, i18n } = useTranslation()
-    const { selectedTheme, setSelectedTheme } = useContext(SelectedThemeContext)
+    const { theme, setTheme } = useContext(SelectedThemeContext)
 
     const changeThemeMode = () => {
-        setSelectedTheme(selectedTheme === "dark" ? "light" : "dark")
+        setTheme(theme === "dark" ? "light" : "dark")
     }
 
     const changeLanguage = () => {
@@ -63,7 +63,7 @@ const Setting: React.FC<SettingProps> = ({
         >
             {!mobileSidebar && (
                 <Icon size={16} onClick={changeThemeMode}>
-                    {selectedTheme === "dark" ? <LightModeIcon /> : <DarkModeIcon />}
+                    {theme === "dark" ? <LightModeIcon /> : <DarkModeIcon />}
                 </Icon>
             )}
             <LanguageButtonWrapper
