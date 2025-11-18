@@ -27,7 +27,7 @@ function HallOfFameFeedSubSection() {
     )
 
     const [serverSemesters1] = useAPI("GET", "/semesters")
-    const [query, setParams] = useAPI("GET", "/reviews")
+    const [query, setParams] = useAPI("GET", "/reviews", { gcTime: 0 })
 
     const [selectedOption, setSelectedOption] = useState(0)
     const [offset, setOffset] = useState(0)

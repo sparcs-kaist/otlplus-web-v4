@@ -12,7 +12,7 @@ import Widget from "../../../../common/primitives/Widget"
 function HallOfFameFeedSection() {
     const { i18n } = useTranslation() // 없으면 새로고침 안했을때 언어가 안바껴!
 
-    const [query, setParams] = useAPI("GET", "/reviews")
+    const [query, setParams] = useAPI("GET", "/reviews", { gcTime: 0 })
 
     useEffect(() => {
         setParams({

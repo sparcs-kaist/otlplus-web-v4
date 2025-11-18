@@ -53,6 +53,7 @@ const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
 
     const [query, setParams] = useAPI("GET", "/reviews", {
         enabled: enabled,
+        gcTime: 0,
     })
 
     const loadMoreReviews = () => {

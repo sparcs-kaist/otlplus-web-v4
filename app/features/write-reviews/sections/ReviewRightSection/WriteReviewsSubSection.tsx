@@ -17,7 +17,7 @@ interface WriteReviewsSubSectionType {
 }
 
 function WriteReviewsSubSection({ selectedLecture }: WriteReviewsSubSectionType) {
-    const [query, setParams] = useAPI("GET", "/reviews")
+    const [query, setParams] = useAPI("GET", "/reviews", { gcTime: 0 })
 
     useEffect(() => {
         if (selectedLecture === null) return
