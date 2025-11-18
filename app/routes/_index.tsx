@@ -1,20 +1,17 @@
 import styled from "@emotion/styled"
 
-import exampleReviews from "@/api/example/Reviews"
 import exampleScheduleFeed from "@/api/example/ScheduleFeed"
 import User from "@/api/example/UserInfo"
 import Footer from "@/common/components/guideline/Footer"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
-import AdFeedSection from "@/features/main/sections/AdFeedSection"
 import HallOfFameFeedSection from "@/features/main/sections/HallOfFameFeedSection"
 import LikedMajorFeedSection from "@/features/main/sections/LikedMajorFeedSection"
-import PopularFeedSection from "@/features/main/sections/PopularFeedSection"
+import RecentFeedSection from "@/features/main/sections/RecentFeedSection"
 import ReviewSection from "@/features/main/sections/ReviewSection"
 import ScheduleFeedSection from "@/features/main/sections/ScheduleFeedSection"
 import ScheduleSection from "@/features/main/sections/ScheduleSection"
 import SearchSection from "@/features/main/sections/SearchSection"
 import TimeTableSection from "@/features/main/sections/TimeTableSection"
-import { useAPI } from "@/utils/api/useAPI"
 
 const MainWrapper = styled(FlexWrapper)`
     margin-top: 60px;
@@ -54,24 +51,16 @@ export default function Home() {
                                     gap={24}
                                     flex="1 1 0"
                                 >
-                                    <ScheduleSection
-                                        content="2025 봄 수강신청 마감"
-                                        dueDate={new Date("2025-04-11")}
-                                    />
-                                    <ScheduleFeedSection
-                                        schedules={exampleScheduleFeed}
-                                    />
-                                    <ReviewSection
-                                        lectureId={3678}
-                                        lectureName="이산구조"
-                                    />
+                                    <ScheduleSection />
+                                    <ScheduleFeedSection />
+                                    <ReviewSection />
                                 </FlexWrapper>
                             </FlexWrapper>
                         </FlexWrapper>
                         <FlexWrapper direction="row" align="stretch" gap={24}>
-                            <PopularFeedSection reviews={exampleReviews} />
-                            <LikedMajorFeedSection reviews={exampleReviews} />
-                            <HallOfFameFeedSection reviews={exampleReviews} />
+                            <RecentFeedSection />
+                            <LikedMajorFeedSection />
+                            <HallOfFameFeedSection />
                         </FlexWrapper>
                     </FlexWrapper>
                 </MainWrapperInner>

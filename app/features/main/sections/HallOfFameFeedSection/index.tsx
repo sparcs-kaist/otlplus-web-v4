@@ -1,18 +1,28 @@
+import { useEffect } from "react"
+
 import { Trans, useTranslation } from "react-i18next"
 
-import type { GETReviewsResponse } from "@/api/reviews"
 import ReviewBlock from "@/common/components/reviews/ReviewBlock"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
+import { useAPI } from "@/utils/api/useAPI"
 
 import Widget from "../../../../common/primitives/Widget"
 
-interface PopularFeedSectionProps {
-    reviews: GETReviewsResponse
-}
-
-function HallOfFameFeedSection({ reviews }: PopularFeedSectionProps) {
+function HallOfFameFeedSection() {
     const { i18n } = useTranslation() // 없으면 새로고침 안했을때 언어가 안바껴!
+
+    const [query, setParams] = useAPI("GET", "/reviews")
+
+    useEffect(() => {
+        setParams({
+            mode: "hall-of-fame",
+            offset: 0,
+            limit: 3,
+            year: 2024,
+            semester: 3,
+        })
+    }, [])
 
     return (
         <Widget direction="column" gap={20} padding="30px" flex="1 1 0">
@@ -39,7 +49,7 @@ function HallOfFameFeedSection({ reviews }: PopularFeedSectionProps) {
                 />
             </FlexWrapper>
             <FlexWrapper direction="column" gap={30}>
-                {reviews.reviews.map((review) => (
+                {query.data?.reviews.map((review) => (
                     <ReviewBlock key={review.id} review={review} withWrapper={false} />
                 ))}
             </FlexWrapper>

@@ -8,7 +8,7 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import { useAPI } from "@/utils/api/useAPI"
 
-function PopularFeedSubSection() {
+function RecentFeedSubSection() {
     const { t } = useTranslation()
 
     const [query, setParams] = useAPI("GET", "/reviews")
@@ -17,7 +17,7 @@ function PopularFeedSubSection() {
 
     useEffect(() => {
         setParams({
-            mode: "popular-feed",
+            mode: "recent",
             offset: 0,
             limit: 20,
         })
@@ -27,7 +27,7 @@ function PopularFeedSubSection() {
         <FlexWrapper direction="column" align="stretch" gap={12}>
             <FlexWrapper direction="column" align="center" gap={12}>
                 <Typography type="NormalBold" color="Text.default">
-                    {t("writeReviews.tabs.popularFeed")}
+                    {t("writeReviews.tabs.recentFeed")}
                 </Typography>
             </FlexWrapper>
             {query.isLoading ? (
@@ -43,4 +43,4 @@ function PopularFeedSubSection() {
     )
 }
 
-export default PopularFeedSubSection
+export default RecentFeedSubSection

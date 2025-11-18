@@ -8,10 +8,8 @@ export const GETRequest = z.object({})
 
 export const GETResponse = z.object({
     name: z.string(),
-    courseId: z.number().int(),
-    professors: z.array(ProfessorSchema),
-    year: z.number().int(),
-    semester: z.enum(SemesterEnum),
+    lectureId: z.number().int(),
+    totalRemainingCount: z.number().int(),
 })
 
 export type GETWritableReviewsResponse = z.infer<typeof GETResponse>

@@ -8,9 +8,9 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Widget from "@/common/primitives/Widget"
 import type { WriteReviewsSelectedLectureType } from "@/routes/write-reviews"
 
+import HallOfFameFeedSubSection from "./HallOfFameFeedSubSection"
 import LikedReviewsSection from "./LikedReviewsSubSection"
-import PopularFeedSubSection from "./PopularFeedSubSection"
-import ReviewFeedSubSection from "./ReviewFeedSubSection"
+import RecentFeedSubSection from "./RecentFeedSubSection"
 import TabsSubSection from "./TabsSubSection"
 import WriteReviewsSubSection from "./WriteReviewsSubSection"
 
@@ -82,10 +82,10 @@ function ReviewRightSection({
                                         selectedLecture={selectedLecture}
                                     />
                                 )
-                            case "popularFeed":
-                                return <PopularFeedSubSection /> // 띠끈따끈 후기
-                            case "reviewFeed":
-                                return <ReviewFeedSubSection /> // 명예의 전당
+                            case "recentFeed":
+                                return <RecentFeedSubSection /> // 띠끈따끈 후기
+                            case "hallOfFameFeed":
+                                return <HallOfFameFeedSubSection /> // 명예의 전당
                             case "liked":
                                 return <LikedReviewsSection />
                             default:

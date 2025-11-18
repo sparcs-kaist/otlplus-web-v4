@@ -149,6 +149,16 @@ export const commonI18nEn: CommonI18nBaseType = {
         schedule: {
             title: "Due to {{content}}",
             link: "Go to Student Portal",
+            contents: {
+                beginning: "Beginning",
+                end: "End",
+                courseRegistrationPeriodStart: "Start of Course Registration Period",
+                courseRegistrationPeriodEnd: "End of Course Registration Period",
+                courseAddDropPeriodEnd: "End of Course Add & Drop Period",
+                courseDropDeadline: "Deadline to Course Drop",
+                courseEvaluationDeadline: "Deadline to Course Evaluation",
+                gradePosting: "Grade Posting",
+            },
         },
         reviewSection: {
             title: "How did you find the {{lectureName}} course?",
@@ -157,7 +167,7 @@ export const commonI18nEn: CommonI18nBaseType = {
 
             writeAnother: "Another one",
         },
-        popularFeed: {
+        recentFeed: {
             title: "<bold>Fresh</bold><space/><normal>Reviews</normal>",
         },
         likedMajorFeed: {
@@ -212,7 +222,7 @@ export const commonI18nEn: CommonI18nBaseType = {
             title: "Write Reviews - {{lectureName}}",
             related: "Related Reviews - {{lectureName}}",
         },
-        reviewFeed: {
+        hallOfFameFeed: {
             title: "Hall of Fame - {{year}}<space/>{{semester}}",
             total: "Total Reviews",
         },
@@ -221,8 +231,8 @@ export const commonI18nEn: CommonI18nBaseType = {
         },
         tabs: {
             write: "Write Reviews",
-            reviewFeed: "Hall of Fame",
-            popularFeed: "Fresh Reviews",
+            hallOfFameFeed: "Hall of Fame",
+            recentFeed: "Fresh Reviews",
             liked: "My Liked Reviews",
         },
     },

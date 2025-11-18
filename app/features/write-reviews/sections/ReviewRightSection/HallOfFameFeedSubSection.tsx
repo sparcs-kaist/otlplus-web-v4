@@ -19,7 +19,7 @@ const DropDownWrapper = styled(FlexWrapper)`
 
 const LIMIT = 20
 
-function ReviewFeedSubSection() {
+function HallOfFameFeedSubSection() {
     const { t } = useTranslation()
 
     const [serverSemesters, setServerSemesters] = useState<GETSemestersResponse | null>(
@@ -88,7 +88,9 @@ function ReviewFeedSubSection() {
                 </Typography>
                 <DropDownWrapper direction="row" gap={0}>
                     <ScrollableDropdown
-                        options={[t("writeReviews.reviewFeed.total") as string].concat(
+                        options={[
+                            t("writeReviews.hallOfFameFeed.total") as string,
+                        ].concat(
                             serverSemesters?.semesters
                                 ? serverSemesters.semesters.map((sem) => {
                                       return `${sem.year} ${semesterToString(sem.semester)}`
@@ -107,10 +109,10 @@ function ReviewFeedSubSection() {
                     <FlexWrapper direction="column" align="center" gap={12}>
                         <Typography type="NormalBold" color="Text.default">
                             {selectedOption === 0 ? (
-                                t("writeReviews.reviewFeed.total")
+                                t("writeReviews.hallOfFameFeed.total")
                             ) : (
                                 <Trans
-                                    i18nKey="writeReviews.reviewFeed.title"
+                                    i18nKey="writeReviews.hallOfFameFeed.title"
                                     values={{
                                         year:
                                             serverSemesters?.semesters[selectedOption - 1]
@@ -136,7 +138,7 @@ function ReviewFeedSubSection() {
                                 {query.data?.reviews.length}
                             </Typography>
                             <Typography type="Smaller" color="Text.default">
-                                {t("writeReviews.reviewFeed.total")}
+                                {t("writeReviews.hallOfFameFeed.total")}
                             </Typography>
                         </FlexWrapper>
                     </FlexWrapper>
@@ -151,4 +153,4 @@ function ReviewFeedSubSection() {
     )
 }
 
-export default ReviewFeedSubSection
+export default HallOfFameFeedSubSection

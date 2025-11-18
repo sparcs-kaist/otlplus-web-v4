@@ -64,6 +64,8 @@ function ReviewWritingBlock({
         setReviewGrade(0)
         setReviewLoad(0)
         setReviewSpeech(0)
+
+        queryClient.invalidateQueries({ queryKey: ["/reviews"] })
     }
 
     useEffect(() => {
@@ -78,8 +80,6 @@ function ReviewWritingBlock({
             load: reviewLoad,
             speech: reviewSpeech,
         })
-
-        queryClient.invalidateQueries({ queryKey: ["/reviews"] })
     }
 
     return (

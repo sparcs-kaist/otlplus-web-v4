@@ -1,6 +1,6 @@
 import { SemesterEnum } from "@/common/enum/semesterEnum"
 
-import { type GETWritableReviewsResponse } from "../users/writable-reviews"
+import { type GETWritableReviewsResponse } from "../users/writable-review"
 
 const exampleUserWritableReviews: GETWritableReviewsResponse = {
     name: "이산구조",
