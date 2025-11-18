@@ -15,7 +15,7 @@ function RecentFeedSection() {
 
     useEffect(() => {
         setParams({
-            mode: "popular-feed",
+            mode: "recent",
             offset: 0,
             limit: 3,
         })
