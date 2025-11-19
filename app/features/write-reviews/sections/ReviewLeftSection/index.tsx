@@ -34,11 +34,9 @@ function ReviewLeftSection({
         "GET",
         `/users/${getLocalStorageItem("userId")}/lectures`,
     )
-    const [firstRender, setFirstRender] = useState(true)
 
     useEffect(() => {
-        if (!firstRender || takenLectures.isLoading) return
-        setFirstRender(false)
+        if (takenLectures.isLoading) return
         if (takenLectures.data && takenLectures.data.lecturesWrap.length > 0) {
             const firstLectureWrap = takenLectures.data.lecturesWrap[0]
             const firstLecture = firstLectureWrap?.lectures[0]
@@ -53,7 +51,7 @@ function ReviewLeftSection({
                 })
             }
         }
-    }, [takenLectures, setSelectedLecture])
+    }, [takenLectures.data, setSelectedLecture])
 
     return (
         <Widget

@@ -7,6 +7,7 @@ export const writeReviews = {
     write: {
         title: "후기 작성 - {{lectureName}}",
         related: "연관 후기 - {{lectureName}}",
+        edit: "수정하기",
     },
     hallOfFameFeed: {
         title: "명예의 전당 - {{year}}<space/>{{semester}}",

@@ -13,6 +13,7 @@ interface LectureSimpleBlockProps {
         code: string
     }
     isSelected: boolean
+    written: boolean
 }
 
 const HoveredStyle = (theme: ThemeType) => css`
@@ -23,16 +24,21 @@ const SelectedStyle = (theme: ThemeType) => css`
     background: ${theme.colors.Background.Block.darker};
 `
 
-const BlockInner = styled(FlexWrapper)<{ isHovered: boolean; isSelected: boolean }>`
+const BlockInner = styled(FlexWrapper)<{
+    isHovered: boolean
+    isSelected: boolean
+    written: boolean
+}>`
     background: ${({ theme }) => theme.colors.Background.Block.default};
     cursor: pointer;
     border-radius: 5px;
+    opacity: ${({ written, isSelected }) => (isSelected ? 1 : written ? 0.3 : 1)};
 
     ${({ theme, isHovered }) => isHovered && HoveredStyle(theme)};
     ${({ theme, isSelected }) => isSelected && SelectedStyle(theme)};
 `
 
-function LectureSimpleBlock({ lecture, isSelected }: LectureSimpleBlockProps) {
+function LectureSimpleBlock({ lecture, isSelected, written }: LectureSimpleBlockProps) {
     const [isHovered, setIsHovered] = useState(false)
 
     return (
@@ -40,9 +46,10 @@ function LectureSimpleBlock({ lecture, isSelected }: LectureSimpleBlockProps) {
             direction="column"
             align="center"
             gap={2}
-            padding="8px 0px"
+            padding="8px 10px"
             isHovered={isHovered}
             isSelected={isSelected}
+            written={written}
             onMouseOver={() => {
                 setIsHovered(true)
             }}
@@ -50,9 +57,23 @@ function LectureSimpleBlock({ lecture, isSelected }: LectureSimpleBlockProps) {
                 setIsHovered(false)
             }}
         >
-            <Typography type="NormalBold" color="Text.default">
-                {lecture.name}
-            </Typography>
+            <FlexWrapper
+                direction="row"
+                gap={8}
+                justify={written ? "space-between" : "center"}
+                align="center"
+                style={{ width: "100%" }}
+            >
+                {written && <div style={{ width: "37px" }}></div>}
+                <Typography type="NormalBold" color="Text.default">
+                    {lecture.name}
+                </Typography>
+                {written && (
+                    <Typography type="Smaller" color="Text.lighter">
+                        작성 완료
+                    </Typography>
+                )}
+            </FlexWrapper>
             <Typography type="Normal" color="Text.default">
                 {lecture.code}
             </Typography>

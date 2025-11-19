@@ -12,6 +12,7 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import TextInputArea from "@/common/primitives/TextInputArea"
 import Typography from "@/common/primitives/Typography"
 import type { Professor } from "@/common/schemas/professor"
+import type { Review } from "@/common/schemas/review"
 import { useAPI } from "@/utils/api/useAPI"
 import professorName from "@/utils/professorName"
 
@@ -37,6 +38,7 @@ export interface ReviewWritingBlockProps {
     professors: Professor[]
     year: number
     semester: SemesterEnum
+    myReview?: Review
 }
 
 function ReviewWritingBlock({
@@ -45,13 +47,25 @@ function ReviewWritingBlock({
     professors,
     year,
     semester,
+    myReview,
 }: ReviewWritingBlockProps) {
     const { t } = useTranslation()
     const queryClient = useQueryClient()
 
-    const [mutation, requestFunction] = useAPI("POST", "/reviews", {
-        onSuccess: resetReviewStates,
+    const [mutationCreate, requestCreateFunction] = useAPI("POST", "/reviews", {
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["/reviews"] })
+        },
     })
+    const [mutationEdit, requestEditFunction] = useAPI(
+        "PUT",
+        `/reviews/${myReview?.id}`,
+        {
+            onSuccess: () => {
+                queryClient.invalidateQueries({ queryKey: ["/reviews"] })
+            },
+        },
+    )
 
     const [reviewText, setReviewText] = useState<string>("")
 
@@ -64,22 +78,35 @@ function ReviewWritingBlock({
         setReviewGrade(0)
         setReviewLoad(0)
         setReviewSpeech(0)
-
-        queryClient.invalidateQueries({ queryKey: ["/reviews"] })
     }
 
     useEffect(() => {
         resetReviewStates()
-    }, [lectureId])
+        if (myReview) {
+            setReviewText(myReview.content)
+            setReviewGrade(myReview.grade)
+            setReviewLoad(myReview.load)
+            setReviewSpeech(myReview.speech)
+        }
+    }, [])
 
     function submitReview() {
-        requestFunction({
-            lectureId: lectureId,
-            content: reviewText,
-            grade: reviewGrade,
-            load: reviewLoad,
-            speech: reviewSpeech,
-        })
+        if (myReview) {
+            requestEditFunction({
+                content: reviewText,
+                grade: reviewGrade,
+                load: reviewLoad,
+                speech: reviewSpeech,
+            })
+        } else {
+            requestCreateFunction({
+                lectureId: lectureId,
+                content: reviewText,
+                grade: reviewGrade,
+                load: reviewLoad,
+                speech: reviewSpeech,
+            })
+        }
     }
 
     return (
@@ -133,22 +160,17 @@ function ReviewWritingBlock({
                 <Button
                     type={
                         reviewText && reviewGrade && reviewSpeech && reviewLoad
-                            ? "default"
+                            ? myReview
+                                ? "state5"
+                                : "selected"
                             : "disabled"
                     }
                     $paddingLeft={8}
                     $paddingTop={8}
                     onClick={submitReview}
                 >
-                    <Typography
-                        type="Normal"
-                        color={
-                            reviewText && reviewGrade && reviewSpeech && reviewLoad
-                                ? "Highlight.default"
-                                : "Text.disable"
-                        }
-                    >
-                        {t("common.upload")}
+                    <Typography type="Normal">
+                        {myReview ? t("writeReviews.write.edit") : t("common.upload")}
                     </Typography>
                 </Button>
             </FlexWrapper>

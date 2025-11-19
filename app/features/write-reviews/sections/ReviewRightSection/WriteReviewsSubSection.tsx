@@ -67,6 +67,9 @@ function WriteReviewsSubSection({ selectedLecture }: WriteReviewsSubSectionType)
                     professors={selectedLecture.professors}
                     year={selectedLecture.year}
                     semester={selectedLecture.semester}
+                    myReview={query.data?.reviews.find((review) =>
+                        query.data?.myReviewId.includes(review.id),
+                    )}
                 />
             </FlexWrapper>
             <Line height={1} color="Line.default" />
@@ -79,9 +82,13 @@ function WriteReviewsSubSection({ selectedLecture }: WriteReviewsSubSectionType)
                         />
                     </Typography>
                 </FlexWrapper>
-                {query.data?.reviews.map((review, idx) => (
-                    <ReviewBlock review={review} key={review.id} />
-                ))}
+                {query.data?.reviews
+                    .filter((review) => {
+                        return !query.data.myReviewId.includes(review.id)
+                    })
+                    .map((review, idx) => (
+                        <ReviewBlock review={review} key={review.id} />
+                    ))}
             </FlexWrapper>
         </FlexWrapper>
     )

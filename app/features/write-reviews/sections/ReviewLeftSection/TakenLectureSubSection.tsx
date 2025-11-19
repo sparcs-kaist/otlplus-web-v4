@@ -91,6 +91,7 @@ function TakenLectureSubSection({
                                       )
                                     : false
                             }
+                            written={lecture.written}
                         />
                     </FlexWrapper>
                 ))}
