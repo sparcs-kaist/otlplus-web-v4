@@ -80,6 +80,7 @@ function ReviewBlock({
             align="stretch"
             gap={8}
             padding="0 4px"
+            style={{ width: "100%" }}
             onClick={() => {
                 if (linkToDictionary) {
                     navigator(`/dictionary?courseId=${review.courseId}`)

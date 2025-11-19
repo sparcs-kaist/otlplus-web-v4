@@ -48,7 +48,7 @@ function HallOfFameFeedSection() {
                     }}
                 />
             </FlexWrapper>
-            <FlexWrapper direction="column" gap={30}>
+            <FlexWrapper direction="column" gap={30} style={{ width: "100%" }}>
                 {query.data?.reviews.map((review) => (
                     <ReviewBlock key={review.id} review={review} withWrapper={false} />
                 ))}
