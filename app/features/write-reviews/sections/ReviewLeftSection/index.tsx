@@ -34,24 +34,28 @@ function ReviewLeftSection({
         "GET",
         `/users/${getLocalStorageItem("userId")}/lectures`,
     )
+    const [selectedLectureIndex, setSelectedLectureIndex] = useState<number[] | null>(
+        null,
+    )
 
     useEffect(() => {
         if (takenLectures.isLoading) return
         if (takenLectures.data && takenLectures.data.lecturesWrap.length > 0) {
-            const firstLectureWrap = takenLectures.data.lecturesWrap[0]
-            const firstLecture = firstLectureWrap?.lectures[0]
-            if (firstLectureWrap && firstLecture) {
+            const lectureWrap =
+                takenLectures.data.lecturesWrap[selectedLectureIndex?.[0] ?? 0]
+            const lecture = lectureWrap?.lectures[selectedLectureIndex?.[1] ?? 0]
+            if (lectureWrap && lecture) {
                 setSelectedLecture({
-                    name: firstLecture.name,
-                    lectureId: firstLecture.lectureId,
-                    courseId: firstLecture.courseId,
-                    professors: firstLecture.professors,
-                    year: firstLectureWrap.year,
-                    semester: firstLectureWrap.semester,
+                    name: lecture.name,
+                    lectureId: lecture.lectureId,
+                    courseId: lecture.courseId,
+                    professors: lecture.professors,
+                    year: lectureWrap.year,
+                    semester: lectureWrap.semester,
                 })
             }
         }
-    }, [takenLectures.data, setSelectedLecture])
+    }, [takenLectures.data])
 
     return (
         <Widget
@@ -78,9 +82,11 @@ function ReviewLeftSection({
                 {takenLectures.data?.lecturesWrap.map((lecturesWrap, idx) => (
                     <TakenLectureSubSection
                         key={idx}
+                        lectureWrapIndex={idx}
                         lecturesWrap={lecturesWrap}
                         selectedLecture={selectedLecture}
                         setSelectedLecture={setSelectedLecture}
+                        setSelectedLectureIndex={setSelectedLectureIndex}
                         last={idx === takenLectures.data!.lecturesWrap.length - 1}
                     />
                 ))}

@@ -92,7 +92,7 @@ function ReviewBlock({
                     {review.courseName}
                 </Typography>
                 <Typography type="Normal" color="Text.lighter">
-                    {professorName(review.professor)}
+                    {professorName(review.professors)}
                 </Typography>
                 <Typography type="Normal" color="Text.lighter">
                     {review.year} {semesterToString(review.semester)}

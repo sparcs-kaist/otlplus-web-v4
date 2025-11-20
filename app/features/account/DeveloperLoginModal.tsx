@@ -54,7 +54,7 @@ const DeveloperLoginModal: React.FC<DeveloperLoginModalProps> = ({
         setLocalStorageItem("devStudentId", idInput)
         setLocalStorageItem("devToken", tokenInput)
         axiosClient.defaults.headers.common["X-AUTH-SID"] = idInput
-        // axiosClient.defaults.headers.common["X-SID-AUTH-TOKEN"] = tokenInput
+        axiosClient.defaults.headers.common["X-SID-AUTH-TOKEN"] = tokenInput
         location.reload()
     }
 

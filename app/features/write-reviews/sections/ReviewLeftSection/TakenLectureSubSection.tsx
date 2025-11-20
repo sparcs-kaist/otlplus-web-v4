@@ -1,3 +1,5 @@
+import { memo } from "react"
+
 import Line from "@/common/components/Line"
 import { semesterToString } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
@@ -8,12 +10,14 @@ import type { getAPIResponseType } from "@/utils/api/getAPIType"
 import LectureSimpleBlock from "../../components/LectureSimpleBlock"
 
 interface TakenLectureSubSectionProps {
+    lectureWrapIndex: number
     lecturesWrap: getAPIResponseType<
         "GET",
         "/users/$userId/lectures"
     >["lecturesWrap"][number]
     selectedLecture: WriteReviewsSelectedLectureType | null
     setSelectedLecture: (lecture: WriteReviewsSelectedLectureType | null) => void
+    setSelectedLectureIndex: (index: number[] | null) => void
     last: boolean
 }
 
@@ -34,9 +38,11 @@ function isSameLecture(
 }
 
 function TakenLectureSubSection({
+    lectureWrapIndex,
     lecturesWrap,
     selectedLecture,
     setSelectedLecture,
+    setSelectedLectureIndex,
     last,
 }: TakenLectureSubSectionProps) {
     return (
@@ -63,6 +69,7 @@ function TakenLectureSubSection({
                                     )
                                 ) {
                                     setSelectedLecture(null)
+                                    setSelectedLectureIndex(null)
                                     return
                                 }
                             }
@@ -76,6 +83,7 @@ function TakenLectureSubSection({
                                 year,
                                 semester,
                             })
+                            setSelectedLectureIndex([lectureWrapIndex, lid])
                         }}
                     >
                         <LectureSimpleBlock
@@ -101,4 +109,4 @@ function TakenLectureSubSection({
     )
 }
 
-export default TakenLectureSubSection
+export default memo(TakenLectureSubSection)

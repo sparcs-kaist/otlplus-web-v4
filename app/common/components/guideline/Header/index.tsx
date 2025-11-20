@@ -4,7 +4,6 @@ import styled from "@emotion/styled"
 import MenuIcon from "@mui/icons-material/Menu"
 
 import { SelectedThemeContext } from "@/Providers"
-import exampleUserInfo from "@/api/example/UserInfo"
 import { type GETUserInfoResponse } from "@/api/users/info"
 import Icon from "@/common/primitives/Icon"
 import AccountPageModal from "@/features/account/AccountPageModal"
@@ -88,7 +87,7 @@ const Header: React.FC = () => {
             const devToken = getLocalStorageItem("devToken")
             if (devStudentId) {
                 axiosClient.defaults.headers.common["X-AUTH-SID"] = devStudentId
-                // axiosClient.defaults.headers.common["X-SID-AUTH-TOKEN"] = devToken
+                axiosClient.defaults.headers.common["X-SID-AUTH-TOKEN"] = devToken
             }
         }
     }, [])

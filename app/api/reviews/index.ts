@@ -2,7 +2,6 @@ import { z } from "zod"
 
 import { ScoreEnum } from "@/common/enum/scoreEnum"
 import { SemesterEnum } from "@/common/enum/semesterEnum"
-import { ProfessorSchema } from "@/common/schemas/professor"
 import { ReviewSchema } from "@/common/schemas/review"
 
 // GET /api/reviews
