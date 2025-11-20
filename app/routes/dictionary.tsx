@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react"
+import { use, useEffect, useState } from "react"
 
 import styled from "@emotion/styled"
+import { useSearchParams } from "react-router"
 
 import Modal from "@/common/components/Modal"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
@@ -8,6 +9,7 @@ import Widget from "@/common/primitives/Widget"
 import CourseDetailSection from "@/features/dictionary/sections/CourseDetailSection"
 import CourseListSection from "@/features/dictionary/sections/CourseListSection"
 import { media } from "@/styles/themes/media"
+import { useAPI } from "@/utils/api/useAPI"
 import useIsDevice from "@/utils/useIsDevice"
 
 const DictionaryWrapper = styled(FlexWrapper)`
@@ -50,13 +52,13 @@ const CourseDetailSectionWrapper = styled(SectionWrapper)`
 
 export default function DictionaryPage() {
     const isTablet = useIsDevice("tablet")
+    const [searchParams] = useSearchParams()
 
     const [mobileModal, setMobileModal] = useState(false)
-    const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null)
 
+    const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null)
     useEffect(() => {
-        const params = new URLSearchParams(window.location.search)
-        const courseId = params.get("courseId")
+        const courseId = searchParams.get("courseId")
         if (courseId) {
             const courseIdNumber = parseInt(courseId, 10)
             if (!isNaN(courseIdNumber)) {
@@ -74,6 +76,7 @@ export default function DictionaryPage() {
             setMobileModal(true)
         }
     }, [isTablet])
+
     useEffect(() => {
         if (isTablet && selectedCourseId !== null) {
             setMobileModal(true)

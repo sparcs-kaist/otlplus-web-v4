@@ -99,7 +99,7 @@ const TextInput: React.FC<TextInputProps> = ({
                 hasError={!!errorMessage}
                 area={area}
                 disabled={disabled}
-                defaultValue={value}
+                value={value}
                 onChange={handleValueChange}
                 {...props}
             />

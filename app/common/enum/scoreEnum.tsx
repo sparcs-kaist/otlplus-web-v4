@@ -15,7 +15,6 @@ export const getAverageScoreLabel = (
         return "?"
     }
     return [
-        "?",
         "F",
         "F",
         "F",
@@ -31,5 +30,8 @@ export const getAverageScoreLabel = (
         "A-",
         "A",
         "A+",
-    ][Math.round(score)]
+        "A+",
+        "A+",
+        "A+",
+    ][Math.floor(score)]
 }

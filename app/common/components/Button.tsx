@@ -52,7 +52,7 @@ const ButtonSelectedInner = styled(ButtonInner)`
 
 const ButtonDisabledInner = styled(ButtonInner)`
     color: ${({ theme }) => theme.colors.Text.disable};
-    background: ${({ theme }) => theme.colors.Background.Button.default};
+    background: ${({ theme }) => theme.colors.Background.Block.default};
     cursor: not-allowed;
 `
 
@@ -74,12 +74,22 @@ const ButtonHighlightedInner = styled(ButtonInner)`
     }
 `
 
+const ButtonState5Inner = styled(ButtonInner)`
+    color: ${({ theme }) => theme.colors.Text.light};
+    background: ${({ theme }) => theme.colors.Background.Block.darker};
+    cursor: pointer;
+    &:hover {
+        filter: brightness(0.9);
+    }
+`
+
 const ButtonTypeInner = {
     default: ButtonDefaultInner,
     disabled: ButtonDisabledInner,
     selected: ButtonSelectedInner,
     dark: ButtonDarkInner,
     highlighted: ButtonHighlightedInner,
+    state5: ButtonState5Inner,
 }
 
 const ButtonWithTextInner = styled.div`

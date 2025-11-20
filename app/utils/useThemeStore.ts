@@ -1,29 +1,49 @@
-import { create } from "zustand"
-import { createJSONStorage, persist } from "zustand/middleware"
+import { useCallback, useEffect, useState } from "react"
 
-export type Theme = "light" | "dark"
+import type { ThemeKeys } from "@/styles/themes"
 
-interface ThemeState {
-    selectedTheme: Theme
-    setSelectedTheme: (theme: Theme) => void
+const useTheme = () => {
+    const [theme, setTheme] = useState<ThemeKeys>(() => {
+        if (typeof window === "undefined") {
+            return "light"
+        }
+        const savedTheme = localStorage.getItem("theme") as ThemeKeys | null
+        if (savedTheme) {
+            return savedTheme
+        }
+        return window.matchMedia("(prefers-color-scheme: dark)").matches
+            ? "dark"
+            : "light"
+    })
+
+    const [hasStoredTheme, setHasStoredTheme] = useState(
+        () => typeof window !== "undefined" && localStorage.getItem("theme") !== null,
+    )
+
+    useEffect(() => {
+        if (hasStoredTheme) {
+            return
+        }
+
+        const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)")
+        const handleChange = (e: MediaQueryListEvent) => {
+            setTheme(e.matches ? "dark" : "light")
+        }
+
+        mediaQuery.addEventListener("change", handleChange)
+
+        return () => {
+            mediaQuery.removeEventListener("change", handleChange)
+        }
+    }, [hasStoredTheme])
+
+    const handleSetTheme = useCallback((newTheme: ThemeKeys) => {
+        localStorage.setItem("theme", newTheme)
+        setHasStoredTheme(true)
+        setTheme(newTheme)
+    }, [])
+
+    return { theme, setTheme: handleSetTheme }
 }
 
-const useThemeStore = create<ThemeState>()(
-    persist(
-        (set) => ({
-            selectedTheme:
-                typeof window !== "undefined" &&
-                window.matchMedia &&
-                window.matchMedia("(prefers-color-scheme: dark)").matches
-                    ? "dark"
-                    : "light",
-            setSelectedTheme: (theme) => set({ selectedTheme: theme }),
-        }),
-        {
-            name: "theme-storage", // localStorage에 저장될 키 이름
-            storage: createJSONStorage(() => localStorage),
-        },
-    ),
-)
-
-export default useThemeStore
+export default useTheme

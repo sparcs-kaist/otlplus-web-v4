@@ -1,6 +1,7 @@
-import { type Dispatch, type SetStateAction, useState } from "react"
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react"
 
 import styled from "@emotion/styled"
+import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 
 import Button from "@/common/components/Button"
@@ -11,6 +12,9 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import TextInputArea from "@/common/primitives/TextInputArea"
 import Typography from "@/common/primitives/Typography"
 import type { Professor } from "@/common/schemas/professor"
+import type { Review } from "@/common/schemas/review"
+import { useAPI } from "@/utils/api/useAPI"
+import { getLocalStorageItem } from "@/utils/localStorage"
 import professorName from "@/utils/professorName"
 
 const ReviewWrapper = styled(FlexWrapper)`
@@ -35,6 +39,7 @@ export interface ReviewWritingBlockProps {
     professors: Professor[]
     year: number
     semester: SemesterEnum
+    myReview?: Review
 }
 
 function ReviewWritingBlock({
@@ -43,8 +48,28 @@ function ReviewWritingBlock({
     professors,
     year,
     semester,
+    myReview,
 }: ReviewWritingBlockProps) {
     const { t } = useTranslation()
+    const queryClient = useQueryClient()
+
+    const [mutationCreate, requestCreateFunction] = useAPI("POST", "/reviews", {
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["/reviews"] })
+            queryClient.invalidateQueries({
+                queryKey: [`/users/${getLocalStorageItem("userId")}/lectures`],
+            })
+        },
+    })
+    const [mutationEdit, requestEditFunction] = useAPI(
+        "PUT",
+        `/reviews/${myReview?.id}`,
+        {
+            onSuccess: () => {
+                queryClient.invalidateQueries({ queryKey: ["/reviews"] })
+            },
+        },
+    )
 
     const [reviewText, setReviewText] = useState<string>("")
 
@@ -52,15 +77,40 @@ function ReviewWritingBlock({
     const [reviewLoad, setReviewLoad] = useState<ScoreEnum>(0)
     const [reviewSpeech, setReviewSpeech] = useState<ScoreEnum>(0)
 
-    function submitReview() {
-        const submitData = {
-            reviewText,
-            reviewGrade,
-            reviewLoad,
-            reviewSpeech,
-        }
+    function resetReviewStates() {
+        setReviewText("")
+        setReviewGrade(0)
+        setReviewLoad(0)
+        setReviewSpeech(0)
+    }
 
-        alert(JSON.stringify(submitData, null, 2))
+    useEffect(() => {
+        resetReviewStates()
+        if (myReview) {
+            setReviewText(myReview.content)
+            setReviewGrade(myReview.grade)
+            setReviewLoad(myReview.load)
+            setReviewSpeech(myReview.speech)
+        }
+    }, [])
+
+    function submitReview() {
+        if (myReview) {
+            requestEditFunction({
+                content: reviewText,
+                grade: reviewGrade,
+                load: reviewLoad,
+                speech: reviewSpeech,
+            })
+        } else {
+            requestCreateFunction({
+                lectureId: lectureId,
+                content: reviewText,
+                grade: reviewGrade,
+                load: reviewLoad,
+                speech: reviewSpeech,
+            })
+        }
     }
 
     return (
@@ -114,22 +164,17 @@ function ReviewWritingBlock({
                 <Button
                     type={
                         reviewText && reviewGrade && reviewSpeech && reviewLoad
-                            ? "default"
+                            ? myReview
+                                ? "state5"
+                                : "selected"
                             : "disabled"
                     }
                     $paddingLeft={8}
                     $paddingTop={8}
                     onClick={submitReview}
                 >
-                    <Typography
-                        type="Normal"
-                        color={
-                            reviewText && reviewGrade && reviewSpeech && reviewLoad
-                                ? "Highlight.default"
-                                : "Text.disable"
-                        }
-                    >
-                        {t("common.upload")}
+                    <Typography type="Normal">
+                        {myReview ? t("writeReviews.write.edit") : t("common.upload")}
                     </Typography>
                 </Button>
             </FlexWrapper>

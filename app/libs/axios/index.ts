@@ -12,18 +12,19 @@ import mockInterceptor from "./_axios/axiosMockInterceptor"
  * @description Axios Client used for backend API requests that require NO authentication
  */
 export const axiosClient = axios.create({
-  withCredentials: true,
+    baseURL: clientEnv.VITE_APP_API_URL,
+    withCredentials: true,
 })
 
 // Defines middleware for axiosClient
 axiosClient.interceptors.request.use(
-  mockInterceptor.onFulfilled,
-  mockInterceptor.onRejected,
+    mockInterceptor.onFulfilled,
+    mockInterceptor.onRejected,
 )
 
 axiosClient.interceptors.response.use(
-  errorInterceptor.onFulfilled,
-  errorInterceptor.onRejected,
+    errorInterceptor.onFulfilled,
+    errorInterceptor.onRejected,
 )
 
 /**
@@ -32,22 +33,23 @@ axiosClient.interceptors.response.use(
  */
 
 export const axiosClientWithAuth = axios.create({
-  withCredentials: true,
+    baseURL: clientEnv.VITE_APP_API_URL,
+    withCredentials: true,
 })
 
 axiosClientWithAuth.interceptors.request.use(
-  mockInterceptor.onFulfilled,
-  mockInterceptor.onRejected,
+    mockInterceptor.onFulfilled,
+    mockInterceptor.onRejected,
 )
 
 axiosClientWithAuth.interceptors.request.use(
-  tokenInterceptor.onFulfilled,
-  tokenInterceptor.onRejected,
+    tokenInterceptor.onFulfilled,
+    tokenInterceptor.onRejected,
 )
 
 axiosClientWithAuth.interceptors.response.use(
-  errorInterceptor.onFulfilled,
-  errorInterceptor.onRejected,
+    errorInterceptor.onFulfilled,
+    errorInterceptor.onRejected,
 )
 
 /**
@@ -55,32 +57,32 @@ axiosClientWithAuth.interceptors.response.use(
  * @description Defines the mock mode for axiosClient
  */
 export const defineAxiosMock = (() => {
-  if (clientEnv.VITE_APP_API_MOCK_MODE) {
-    const mockAxiosClient = new MockAdapter(axiosClient, {
-      onNoMatch: "passthrough",
-      delayResponse: 1500,
-    })
+    if (clientEnv.VITE_APP_API_MOCK_MODE) {
+        const mockAxiosClient = new MockAdapter(axiosClient, {
+            onNoMatch: "passthrough",
+            delayResponse: 1500,
+        })
 
-    const mockAxiosClientWithAuth = new MockAdapter(axiosClientWithAuth, {
-      onNoMatch: "passthrough",
-      delayResponse: 1500,
-    })
+        const mockAxiosClientWithAuth = new MockAdapter(axiosClientWithAuth, {
+            onNoMatch: "passthrough",
+            delayResponse: 1500,
+        })
 
-    return (_builder: (mock: MockAdapter) => void) => {
-      _builder(mockAxiosClient)
-      _builder(mockAxiosClientWithAuth)
+        return (_builder: (mock: MockAdapter) => void) => {
+            _builder(mockAxiosClient)
+            _builder(mockAxiosClientWithAuth)
+        }
     }
-  }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  return (_builder: (mock: MockAdapter) => void) => {}
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    return (_builder: (mock: MockAdapter) => void) => {}
 })()
 
 export type LibAxiosErrorType = AxiosError
 export const LibAxiosError = AxiosError
 
 export class UnexpectedAPIResponseError extends Error {
-  constructor(response: unknown = "Unexpected API response.") {
-    super(`Unexpected API response: ${response}`)
-  }
+    constructor(response: unknown = "Unexpected API response.") {
+        super(`Unexpected API response: ${response}`)
+    }
 }
