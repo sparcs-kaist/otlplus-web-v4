@@ -9,6 +9,9 @@ import { set } from "zod";
 import CourseListSection from "@/features/dictionary/sections/CourseListSection";
 import LectureListSection from "@/features/timetable/sections/LectureListSection";
 import LectureDetailSection from "@/features/timetable/sections/LectureDetailSection";
+import TimetableSection from "@/features/timetable/sections/TimetableSection";
+import type { TimeBlock } from "@/common/schemas/timeblock";
+
 
 const TimetableWrapper = styled.div`
   display: flex;
@@ -89,6 +92,8 @@ export default function Timetable() {
 
     const [lectureId, setLectureId] = useState<number | null>(null);
 
+    const [timeFilter, setTimeFilter] = useState<TimeBlock | null>(null);
+
     useEffect(() => {
       setLectureId(searchedId);
       setSelectedId(null);
@@ -158,7 +163,14 @@ export default function Timetable() {
                 {/* 시간표 */}
                <TabButtonRow rowLength={3} index={index} setIndex={setIndex}/>
                <Block>
-                  {`여기에 선택된 탭(${index})에 해당하는 시간표 내용이 들어갑니다`}
+                  <TimetableSection 
+                    setTimeFilter={setTimeFilter}
+                    hoverId={hoverId}
+                    setHover={setHoverId}
+                    selectedId={selectedId}
+                    setSelected={setSelectedId}
+                    timetableId={index}
+                  />
                   <StyledDivider direction="column" />
                   <InfoArea>
                     여기에 시간표 관련 정보가 들어갑니다
