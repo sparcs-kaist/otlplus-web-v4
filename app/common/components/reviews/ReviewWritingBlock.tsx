@@ -14,8 +14,8 @@ import Typography from "@/common/primitives/Typography"
 import type { Professor } from "@/common/schemas/professor"
 import type { Review } from "@/common/schemas/review"
 import { useAPI } from "@/utils/api/useAPI"
-import { getLocalStorageItem } from "@/utils/localStorage"
 import professorName from "@/utils/professorName"
+import useUserStore from "@/utils/zustand/useUserStore"
 
 const ReviewWrapper = styled(FlexWrapper)`
     padding: 8px 10px;
@@ -51,13 +51,14 @@ function ReviewWritingBlock({
     myReview,
 }: ReviewWritingBlockProps) {
     const { t } = useTranslation()
+    const { user } = useUserStore()
     const queryClient = useQueryClient()
 
     const [mutationCreate, requestCreateFunction] = useAPI("POST", "/reviews", {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["/reviews"] })
             queryClient.invalidateQueries({
-                queryKey: [`/users/${getLocalStorageItem("userId")}/lectures`],
+                queryKey: [`/users/${user?.id}/lectures`],
             })
         },
     })
@@ -164,9 +165,7 @@ function ReviewWritingBlock({
                 <Button
                     type={
                         reviewText && reviewGrade && reviewSpeech && reviewLoad
-                            ? myReview
-                                ? "state5"
-                                : "selected"
+                            ? "selected"
                             : "disabled"
                     }
                     $paddingLeft={8}

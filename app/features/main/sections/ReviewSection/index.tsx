@@ -1,4 +1,4 @@
-import { type Dispatch, Fragment, type SetStateAction, useEffect, useState } from "react"
+import { type Dispatch, Fragment, type SetStateAction, useState } from "react"
 
 import styled from "@emotion/styled"
 import { Trans, useTranslation } from "react-i18next"
@@ -10,6 +10,7 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import TextInputArea from "@/common/primitives/TextInputArea"
 import Typography from "@/common/primitives/Typography"
 import { useAPI } from "@/utils/api/useAPI"
+import useUserStore from "@/utils/zustand/useUserStore"
 
 import Widget from "../../../../common/primitives/Widget"
 
@@ -28,7 +29,9 @@ const ScoreGrid = styled.div`
 `
 
 function ReviewSection() {
-    const [query] = useAPI("GET", "/users/writable-review")
+    const { user } = useUserStore()
+
+    const [query] = useAPI("GET", "/users/writable-review", { enabled: user !== null })
     const [mutation, requestFunction] = useAPI("POST", "/reviews", {
         onSuccess: resetReviewStates,
     })

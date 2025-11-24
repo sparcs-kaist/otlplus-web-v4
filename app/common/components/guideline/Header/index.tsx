@@ -1,9 +1,8 @@
-import { useContext, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 
 import styled from "@emotion/styled"
 import MenuIcon from "@mui/icons-material/Menu"
 
-import { SelectedThemeContext } from "@/Providers"
 import { type GETUserInfoResponse } from "@/api/users/info"
 import Icon from "@/common/primitives/Icon"
 import AccountPageModal from "@/features/account/AccountPageModal"
@@ -11,12 +10,10 @@ import DeveloperLoginModal from "@/features/account/DeveloperLoginModal"
 import { axiosClient } from "@/libs/axios"
 import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
-import {
-    getLocalStorageItem,
-    removeLocalStorageItem,
-    setLocalStorageItem,
-} from "@/utils/localStorage"
+import { getLocalStorageItem } from "@/utils/localStorage"
 import useIsDevice from "@/utils/useIsDevice"
+import useThemeStore from "@/utils/zustand/useThemeStore"
+import useUserStore from "@/utils/zustand/useUserStore"
 
 import Menu from "./Menu"
 import MobileSidebar from "./MobileSidebar"
@@ -56,18 +53,18 @@ const MobileSidebarButtonWrapper = styled.div`
 `
 
 const Header: React.FC = () => {
-    const [query] = useAPI("GET", "/users/info", {
-        enabled: false,
-    })
-
     const isMobile = useIsDevice("mobile")
-    const { theme } = useContext(SelectedThemeContext)
+
+    const { displayedTheme } = useThemeStore()
+    const { setUser, clearUser } = useUserStore()
+    const [enabled, setEnabled] = useState<boolean>(false)
 
     const [accountPageOpen, setAccountPageOpen] = useState<boolean>(false)
     const [developerLoginOpen, setDeveloperLoginOpen] = useState(false)
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false)
-
     const [userInfo, setUserInfo] = useState<GETUserInfoResponse | null>(null)
+
+    const [query] = useAPI("GET", "/users/info", { enabled: enabled })
 
     const handleAccountButtonClick = () => {
         if (userInfo === null) {
@@ -90,14 +87,15 @@ const Header: React.FC = () => {
                 axiosClient.defaults.headers.common["X-SID-AUTH-TOKEN"] = devToken
             }
         }
+        setEnabled(true)
     }, [])
     useEffect(() => {
         if (query.data) {
             setUserInfo(query.data)
-            setLocalStorageItem("userId", query.data.id.toString())
+            setUser({ id: query.data.id, name: query.data.name })
         } else {
             setUserInfo(null)
-            // removeLocalStorageItem("userId")
+            clearUser()
         }
     }, [query.data])
     useEffect(() => {
@@ -120,7 +118,7 @@ const Header: React.FC = () => {
                     setAccountPageOpen={setAccountPageOpen}
                 />
             )}
-            {theme !== "dark" && <HeaderBar />}
+            {displayedTheme !== "dark" && <HeaderBar />}
             <HeaderInner>
                 <Menu setMobileSidebarOpen={() => setMobileSidebarOpen(false)} />
                 <Setting
