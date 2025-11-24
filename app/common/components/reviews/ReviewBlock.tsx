@@ -25,8 +25,6 @@ const ReviewWrapper = styled.div<{ clickable: boolean }>`
     border-radius: 6px;
     border: 1px ${({ theme }) => theme.colors.Background.Block.dark} solid;
     background-color: ${({ theme }) => theme.colors.Background.Block.default};
-    cursor: ${(props) => (props.clickable ? "pointer" : "default")};
-    user-select: ${(props) => (props.clickable ? "none" : "auto")};
 
     &:hover {
         background-color: ${(props) =>
@@ -34,6 +32,11 @@ const ReviewWrapper = styled.div<{ clickable: boolean }>`
                 ? props.theme.colors.Background.Block.dark
                 : props.theme.colors.Background.Block.default};
     }
+`
+
+const SelectWrapper = styled(FlexWrapper)<{ clickable: boolean }>`
+    cursor: ${(props) => (props.clickable ? "pointer" : "default")};
+    user-select: ${(props) => (props.clickable ? "none" : "auto")};
 `
 
 interface ReviewBlockProps {
@@ -68,19 +71,20 @@ function ReviewBlock({
 
     const likeReview = (e: React.MouseEvent) => {
         e.stopPropagation()
-        mutation.mutate({
+        requestFunction({
             reviewId: review.id,
             action: (likeOverride ?? review.likedByUser) ? "unlike" : "like",
         })
     }
 
     const reviewContent = (
-        <FlexWrapper
+        <SelectWrapper
             direction="column"
             align="stretch"
             gap={8}
             padding="0 4px"
             style={{ width: "100%" }}
+            clickable={linkToDictionary}
             onClick={() => {
                 if (linkToDictionary) {
                     navigator(`/dictionary?courseId=${review.courseId}`)
@@ -131,7 +135,7 @@ function ReviewBlock({
                     </Icon>
                 </FlexWrapper>
             </FlexWrapper>
-        </FlexWrapper>
+        </SelectWrapper>
     )
 
     if (withWrapper) {
