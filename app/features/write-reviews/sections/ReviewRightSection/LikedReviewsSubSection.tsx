@@ -11,10 +11,10 @@ import useUserStore from "@/utils/zustand/useUserStore"
 
 function LikedReviewsSection() {
     const { t } = useTranslation()
-    const { user } = useUserStore()
+    const { user, status } = useUserStore()
 
     const { query, setParams } = useAPI("GET", `/users/${user?.id}/reviews/liked`, {
-        enabled: user !== null,
+        enabled: status === "success",
     })
 
     useEffect(() => {

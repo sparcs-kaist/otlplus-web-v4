@@ -2,11 +2,11 @@ import { useEffect, useState } from "react"
 
 import styled from "@emotion/styled"
 
-import exampleReviews from "@/api/example/Reviews"
 import { type TabType } from "@/common/interface/ReviewWriteTabs"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Widget from "@/common/primitives/Widget"
 import type { WriteReviewsSelectedLectureType } from "@/routes/write-reviews"
+import useUserStore from "@/utils/zustand/useUserStore"
 
 import HallOfFameFeedSubSection from "./HallOfFameFeedSubSection"
 import LikedReviewsSection from "./LikedReviewsSubSection"
@@ -38,8 +38,13 @@ function ReviewRightSection({
     selectedLecture,
     setSelectedLecture,
 }: ReviewRightSectionProps) {
+    const { status } = useUserStore()
+
     const [tab, setTab] = useState<TabType>("write")
 
+    useEffect(() => {
+        if (status === "idle") setTab("recentFeed")
+    }, [status])
     useEffect(() => {
         if (tab !== "write") {
             setSelectedLecture(null)

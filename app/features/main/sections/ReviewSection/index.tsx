@@ -10,7 +10,6 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import TextInputArea from "@/common/primitives/TextInputArea"
 import Typography from "@/common/primitives/Typography"
 import { useAPI } from "@/utils/api/useAPI"
-import useUserStore from "@/utils/zustand/useUserStore"
 
 import Widget from "../../../../common/primitives/Widget"
 
@@ -29,9 +28,7 @@ const ScoreGrid = styled.div`
 `
 
 function ReviewSection() {
-    const { user } = useUserStore()
-
-    const { query } = useAPI("GET", "/users/writable-review", { enabled: user !== null })
+    const { query } = useAPI("GET", "/users/writable-review")
     const { requestFunction } = useAPI("POST", "/reviews", {
         onSuccess: resetReviewStates,
     })

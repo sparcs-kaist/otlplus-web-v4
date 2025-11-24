@@ -30,10 +30,10 @@ function ReviewLeftSection({
     selectedLecture,
     setSelectedLecture,
 }: reviewLeftSectionType) {
-    const { user } = useUserStore()
+    const { user, status } = useUserStore()
 
     const { query: takenLectures } = useAPI("GET", `/users/${user?.id}/lectures`, {
-        enabled: user !== null,
+        enabled: status === "success",
     })
     const [selectedLectureIndex, setSelectedLectureIndex] = useState<number[] | null>(
         null,
