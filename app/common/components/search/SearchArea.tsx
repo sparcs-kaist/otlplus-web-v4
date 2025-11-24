@@ -128,9 +128,9 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
                         if (key == "department") {
                             result[key] = result[key]?.map(
                                 (dept) =>
-                                    // query.data?.departments.find(
-                                    query.data?.find((d) => d.code === dept.toString())
-                                        ?.id as number,
+                                    query.data?.departments.find(
+                                        (d) => d.code === dept.toString(),
+                                    )?.id as number,
                             )
                         }
                     }

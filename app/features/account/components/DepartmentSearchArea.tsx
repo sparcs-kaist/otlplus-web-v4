@@ -95,9 +95,6 @@ const DepartmentSearchArea: React.FC<DepartmentSearchAreaProps> = ({
     const { t } = useTranslation()
 
     const [query] = useAPI("GET", "/department-options")
-    const DepartmentList = {
-        departments: query.data as unknown as Department[],
-    }
 
     const [inputValue, setInputValue] = useState("")
     const [searchResult, setSearchResult] = useState<Department[]>([])
@@ -105,7 +102,7 @@ const DepartmentSearchArea: React.FC<DepartmentSearchAreaProps> = ({
     const searchInput = useRef<HTMLInputElement | null>(null)
 
     function findDepartmentNameById(id: number): string | undefined {
-        const department = DepartmentList.departments?.find((dept) => dept.id === id)
+        const department = query.data?.departments?.find((dept) => dept.id === id)
         return department ? department.name : undefined
     }
 
@@ -133,8 +130,8 @@ const DepartmentSearchArea: React.FC<DepartmentSearchAreaProps> = ({
     }
 
     useEffect(() => {
-        if (!DepartmentList.departments) return
-        const filtered = (DepartmentList.departments as Department[]).filter((dept) => {
+        if (!query.data?.departments) return
+        const filtered = (query.data.departments as Department[]).filter((dept) => {
             const isNotSelected = !currentDepartment
                 .map((dept) => dept.id)
                 .includes(dept.id)

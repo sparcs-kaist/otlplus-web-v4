@@ -4,7 +4,6 @@ import styled from "@emotion/styled"
 import { Trans, useTranslation } from "react-i18next"
 import { Link } from "react-router-dom"
 
-import type { GETSemestersResponse } from "@/api/semesters"
 import { type SemesterEnum, semesterToString } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
@@ -24,8 +23,7 @@ const StyledLink = styled(Link)`
 `
 
 function ScheduleSection() {
-    const [wrongQuery] = useAPI("GET", "/semesters")
-    const [query, setQuery] = useState<GETSemestersResponse | null>(null)
+    const [query] = useAPI("GET", "/semesters")
 
     const [now, setNow] = useState(new Date())
     const [timeLeft, setTimeLeft] = useState<string>("")
@@ -45,15 +43,8 @@ function ScheduleSection() {
     }, [])
 
     useEffect(() => {
-        if (!wrongQuery.data) return
-        setQuery({
-            semesters: wrongQuery.data as unknown as GETSemestersResponse["semesters"],
-        })
-    }, [wrongQuery.data])
-
-    useEffect(() => {
-        if (!query?.semesters) return
-        const currentSemester = query.semesters[query.semesters.length - 1]
+        if (!query.data?.semesters) return
+        const currentSemester = query.data.semesters[query.data.semesters.length - 1]
         if (!currentSemester) return
 
         setYearSemester({
@@ -82,7 +73,7 @@ function ScheduleSection() {
         if (!lastItem) return
         setContentKey(lastItem[0])
         setDueDate(lastItem[1])
-    }, [query])
+    }, [query.data])
 
     useEffect(() => {
         if (!dueDate) return

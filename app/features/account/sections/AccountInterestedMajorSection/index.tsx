@@ -52,9 +52,6 @@ const Index: React.FC<AccountInterestedMajorSectionProps> = ({
             },
         },
     )
-    const DepartmentList = {
-        departments: query.data as unknown as Department[],
-    }
 
     const [isEditing, setIsEditing] = useState<boolean>(false)
     const [temporaryMajor, setTemporaryMajor] = useState<Department[]>([])
@@ -65,7 +62,7 @@ const Index: React.FC<AccountInterestedMajorSectionProps> = ({
     }
 
     function findDepartmentNameById(id: number): string | undefined {
-        const department = DepartmentList.departments?.find((dept) => dept.id === id)
+        const department = query.data?.departments?.find((dept) => dept.id === id)
         return department
             ? i18n.language === "en"
                 ? department.code

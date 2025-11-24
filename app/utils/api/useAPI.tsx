@@ -22,11 +22,12 @@ import {
     getZodSchemaResponse,
 } from "./getAPIType"
 
-type UseAPIQueryOptions = {
+type UseAPIQueryOptions<Res> = {
     headers?: AxiosHeaders
     enabled?: boolean
     staleTime?: number
     gcTime?: number
+    select?: (data: Res) => Res
 }
 
 type Merge<A, B> = [B] extends [never] ? A : A & B
@@ -37,7 +38,7 @@ type UseAPIMutationOptions<Res, Req> = Omit<
 >
 
 type UseAPIOptions<M, Req, Res> = Merge<
-    UseAPIQueryOptions,
+    UseAPIQueryOptions<Res>,
     M extends "GET" ? never : UseAPIMutationOptions<Res, Req>
 >
 
@@ -70,6 +71,7 @@ export function useAPI<
         enabled = true,
         staleTime = Infinity,
         gcTime = 5 * 60 * 1000,
+        select,
         ...mutationOps
     } = ops
 
@@ -94,8 +96,10 @@ export function useAPI<
                     headers,
                 })
 
+                // return responseSchema.parse(data)
                 return data
             },
+            select: select,
             retry: 1,
             staleTime,
             gcTime,
