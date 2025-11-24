@@ -86,7 +86,7 @@ function WriteReviewsSubSection({ selectedLecture }: WriteReviewsSubSectionType)
                     .filter((review) => {
                         return !query.data.myReviewId.includes(review.id)
                     })
-                    .map((review, idx) => (
+                    .map((review) => (
                         <ReviewBlock review={review} key={review.id} />
                     ))}
             </FlexWrapper>

@@ -32,13 +32,9 @@ const EditButton = styled.button`
 
 interface AccountInterestedMajorSectionProps {
     userInfo: GETUserInfoResponse | null
-    setUserInfo?: React.Dispatch<React.SetStateAction<GETUserInfoResponse | null>>
 }
 
-const Index: React.FC<AccountInterestedMajorSectionProps> = ({
-    userInfo,
-    setUserInfo,
-}) => {
+const Index: React.FC<AccountInterestedMajorSectionProps> = ({ userInfo }) => {
     const { t, i18n } = useTranslation()
     const queryClient = useQueryClient()
 
