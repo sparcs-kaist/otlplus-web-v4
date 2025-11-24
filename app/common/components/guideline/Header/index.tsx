@@ -64,7 +64,7 @@ const Header: React.FC = () => {
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false)
     const [userInfo, setUserInfo] = useState<GETUserInfoResponse | null>(null)
 
-    const [query] = useAPI("GET", "/users/info", { enabled: enabled })
+    const { query } = useAPI("GET", "/users/info", { enabled: enabled })
 
     const handleAccountButtonClick = () => {
         if (userInfo === null) {

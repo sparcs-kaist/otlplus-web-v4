@@ -43,11 +43,11 @@ type UseAPIOptions<M, Req, Res> = Merge<
 >
 
 type UseAPIReturn<M, Req, Res> = M extends "GET"
-    ? [UseQueryResult<Res, Error>, Dispatch<SetStateAction<Req>>]
-    : [
-          UseMutationResult<Res, Error, Req, unknown>,
-          UseMutateFunction<Res, Error, Req, unknown>,
-      ]
+    ? { query: UseQueryResult<Res, Error>; setParams: Dispatch<SetStateAction<Req>> }
+    : {
+          mutation: UseMutationResult<Res, Error, Req, unknown>
+          requestFunction: UseMutateFunction<Res, Error, Req, unknown>
+      }
 
 export function useAPI<
     M extends Method<GetOriginalPath<P>>,
@@ -108,7 +108,7 @@ export function useAPI<
                 (params !== null || requestSchema.safeParse({})?.success === true),
         })
 
-        return [query, setParams] as unknown as UseAPIReturn<M, Req, Res>
+        return { query, setParams } as unknown as UseAPIReturn<M, Req, Res>
     } else {
         const mutation = useMutation<Res, Error, Req>({
             mutationFn: async (params: Req) => {
@@ -124,6 +124,10 @@ export function useAPI<
             ...mutationOps,
         })
 
-        return [mutation, mutation.mutate] as UseAPIReturn<M, Req, Res>
+        return { mutation: mutation, requestFunction: mutation.mutate } as UseAPIReturn<
+            M,
+            Req,
+            Res
+        >
     }
 }

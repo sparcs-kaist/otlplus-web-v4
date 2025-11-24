@@ -13,7 +13,7 @@ function LikedReviewsSection() {
     const { t } = useTranslation()
     const { user } = useUserStore()
 
-    const [query, setParams] = useAPI("GET", `/users/${user?.id}/reviews/liked`, {
+    const { query, setParams } = useAPI("GET", `/users/${user?.id}/reviews/liked`, {
         enabled: user !== null,
     })
 

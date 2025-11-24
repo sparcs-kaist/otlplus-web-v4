@@ -54,7 +54,7 @@ function ReviewWritingBlock({
     const { user } = useUserStore()
     const queryClient = useQueryClient()
 
-    const [mutationCreate, requestCreateFunction] = useAPI("POST", "/reviews", {
+    const { requestFunction: requestCreateFunction } = useAPI("POST", "/reviews", {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["/reviews"] })
             queryClient.invalidateQueries({
@@ -62,7 +62,7 @@ function ReviewWritingBlock({
             })
         },
     })
-    const [mutationEdit, requestEditFunction] = useAPI(
+    const { requestFunction: requestEditFunction } = useAPI(
         "PUT",
         `/reviews/${myReview?.id}`,
         {

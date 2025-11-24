@@ -57,7 +57,7 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
 }: SearchAreaProps<ops>) {
     const { t } = useTranslation()
 
-    const [query] = useAPI("GET", "/department-options")
+    const { query } = useAPI("GET", "/department-options")
 
     const [open, setOpen] = useState<boolean>(false)
     const [value, setValue] = useState<string>("")

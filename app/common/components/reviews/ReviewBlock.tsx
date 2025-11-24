@@ -53,7 +53,7 @@ function ReviewBlock({
     const { t } = useTranslation()
     const navigator = useNavigate()
 
-    const [mutation, requestFunction] = useAPI("PATCH", `/reviews/${review.id}/liked`, {
+    const { requestFunction } = useAPI("PATCH", `/reviews/${review.id}/liked`, {
         onSuccess: () => {
             setLikeOverride((prev) => {
                 if (prev === null) {

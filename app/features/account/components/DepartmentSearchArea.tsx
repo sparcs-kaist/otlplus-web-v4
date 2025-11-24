@@ -94,7 +94,7 @@ const DepartmentSearchArea: React.FC<DepartmentSearchAreaProps> = ({
 }) => {
     const { t } = useTranslation()
 
-    const [query] = useAPI("GET", "/department-options")
+    const { query } = useAPI("GET", "/department-options")
 
     const [inputValue, setInputValue] = useState("")
     const [searchResult, setSearchResult] = useState<Department[]>([])

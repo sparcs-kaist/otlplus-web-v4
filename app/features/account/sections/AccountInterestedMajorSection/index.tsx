@@ -42,8 +42,8 @@ const Index: React.FC<AccountInterestedMajorSectionProps> = ({
     const { t, i18n } = useTranslation()
     const queryClient = useQueryClient()
 
-    const [query] = useAPI("GET", "/department-options")
-    const [mutation, requestFunction] = useAPI(
+    const { query } = useAPI("GET", "/department-options")
+    const { requestFunction } = useAPI(
         "PUT",
         `/users/${userInfo?.id}/interested-departments`,
         {

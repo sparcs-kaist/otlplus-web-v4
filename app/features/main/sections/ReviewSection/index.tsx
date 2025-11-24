@@ -31,8 +31,8 @@ const ScoreGrid = styled.div`
 function ReviewSection() {
     const { user } = useUserStore()
 
-    const [query] = useAPI("GET", "/users/writable-review", { enabled: user !== null })
-    const [mutation, requestFunction] = useAPI("POST", "/reviews", {
+    const { query } = useAPI("GET", "/users/writable-review", { enabled: user !== null })
+    const { requestFunction } = useAPI("POST", "/reviews", {
         onSuccess: resetReviewStates,
     })
 

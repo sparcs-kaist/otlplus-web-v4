@@ -21,7 +21,7 @@ const LIMIT = 20
 function HallOfFameFeedSubSection() {
     const { t } = useTranslation()
 
-    const [serverSemesters] = useAPI("GET", "/semesters", {
+    const { query: serverSemesters } = useAPI("GET", "/semesters", {
         select: (data) => {
             return {
                 ...data,
@@ -29,7 +29,7 @@ function HallOfFameFeedSubSection() {
             }
         },
     })
-    const [query, setParams] = useAPI("GET", "/reviews", { gcTime: 0 })
+    const { query, setParams } = useAPI("GET", "/reviews", { gcTime: 0 })
 
     const [selectedOption, setSelectedOption] = useState(0)
     const [offset, setOffset] = useState(0)

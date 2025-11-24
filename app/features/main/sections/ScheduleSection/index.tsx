@@ -23,7 +23,7 @@ const StyledLink = styled(Link)`
 `
 
 function ScheduleSection() {
-    const [query] = useAPI("GET", "/semesters")
+    const { query } = useAPI("GET", "/semesters")
 
     const [now, setNow] = useState(new Date())
     const [timeLeft, setTimeLeft] = useState<string>("")

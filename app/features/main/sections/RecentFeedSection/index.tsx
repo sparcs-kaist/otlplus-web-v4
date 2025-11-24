@@ -11,7 +11,7 @@ import { useAPI } from "@/utils/api/useAPI"
 function RecentFeedSection() {
     const { i18n } = useTranslation() // 없으면 새로고침 안했을때 언어가 안바껴!
 
-    const [query, setParams] = useAPI("GET", "/reviews", { gcTime: 0 })
+    const { query, setParams } = useAPI("GET", "/reviews", { gcTime: 0 })
 
     useEffect(() => {
         setParams({

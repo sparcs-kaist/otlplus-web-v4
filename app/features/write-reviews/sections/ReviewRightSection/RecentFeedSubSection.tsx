@@ -11,7 +11,7 @@ import { useAPI } from "@/utils/api/useAPI"
 function RecentFeedSubSection() {
     const { t } = useTranslation()
 
-    const [query, setParams] = useAPI("GET", "/reviews", { gcTime: 0 })
+    const { query, setParams } = useAPI("GET", "/reviews", { gcTime: 0 })
 
     const [offset, setOffset] = useState(0)
 
