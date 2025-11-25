@@ -34,7 +34,7 @@ type Comparison<
 
 type ExactMatchPath<A extends string> = Extract<FixedPaths, A>
 
-type MatchingMembers<A extends DynamicPath, U extends string> = U extends any
+type MatchingMembers<A extends DynamicPath, U extends Path> = U extends Path
     ? Comparison<A, ConvertDynamicPath<U>> extends true
         ? U
         : never
@@ -53,8 +53,6 @@ export type getAPIResponseType<
     M extends Method<GetOriginalPath<P>>,
     P extends DynamicPath,
 > = ResponseMap[GetOriginalPath<P>][Extract<M, keyof ResponseMap[GetOriginalPath<P>]>]
-
-export { type RequestMap, type ResponseMap }
 
 const originalPaths = Object.keys(APIEndPoints) as Path[]
 const originalPathRegexCache = new Map<Path, RegExp>()
@@ -87,16 +85,16 @@ export function getOriginalPathValue<P extends DynamicPath>(path: P): GetOrigina
 
 // TODO: 나중에 방법 알아내면 타입 좁힐 예정
 
-export function getZodSchemaRequest<P extends Path, M extends Method<P>>(
-    path: P,
+export function getZodSchemaRequest<M extends Method<P>, P extends Path>(
     method: M,
-): (typeof requestMap)[P][any] {
+    path: P,
+): (typeof requestMap)[P][Extract<M, keyof (typeof requestMap)[P]>] {
     return (requestMap as any)[path][method]
 }
 
-export function getZodSchemaResponse<P extends Path, M extends Method<P>>(
-    path: P,
+export function getZodSchemaResponse<M extends Method<P>, P extends Path>(
     method: M,
+    path: P,
 ): (typeof responseMap)[P][any] {
     return (responseMap as any)[path][method]
 }

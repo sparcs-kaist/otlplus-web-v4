@@ -15,8 +15,8 @@ import {
     type DynamicPath,
     type GetOriginalPath,
     type Method,
-    type RequestMap,
-    type ResponseMap,
+    type getAPIRequestType,
+    type getAPIResponseType,
     getOriginalPathValue,
     getZodSchemaRequest,
     getZodSchemaResponse,
@@ -51,14 +51,8 @@ type UseAPIReturn<M, Req, Res> = M extends "GET"
 export function useAPI<
     M extends Method<GetOriginalPath<P>>,
     P extends DynamicPath,
-    Req extends RequestMap[GetOriginalPath<P>][Extract<
-        M,
-        keyof RequestMap[GetOriginalPath<P>]
-    >],
-    Res extends ResponseMap[GetOriginalPath<P>][Extract<
-        M,
-        keyof ResponseMap[GetOriginalPath<P>]
-    >],
+    Req extends getAPIRequestType<M, P>,
+    Res extends getAPIResponseType<M, P>,
 >(
     method: M,
     path: P,
@@ -73,14 +67,8 @@ export function useAPI<
         ...mutationOps
     } = ops
 
-    const requestSchema = getZodSchemaRequest(
-        getOriginalPathValue(path),
-        method as Method<GetOriginalPath<P>>,
-    )
-    const responseSchema = getZodSchemaResponse(
-        getOriginalPathValue(path),
-        method as Method<GetOriginalPath<P>>,
-    )
+    const requestSchema = getZodSchemaRequest(method, getOriginalPathValue(path))
+    const responseSchema = getZodSchemaResponse(method, getOriginalPathValue(path))
 
     if (method === "GET") {
         const [params, setParams] = useState<Req>(null as Req)
