@@ -32,18 +32,14 @@ const EditButton = styled.button`
 
 interface AccountInterestedMajorSectionProps {
     userInfo: GETUserInfoResponse | null
-    setUserInfo?: React.Dispatch<React.SetStateAction<GETUserInfoResponse | null>>
 }
 
-const Index: React.FC<AccountInterestedMajorSectionProps> = ({
-    userInfo,
-    setUserInfo,
-}) => {
+const Index: React.FC<AccountInterestedMajorSectionProps> = ({ userInfo }) => {
     const { t, i18n } = useTranslation()
     const queryClient = useQueryClient()
 
-    const [query] = useAPI("GET", "/department-options")
-    const [mutation, requestFunction] = useAPI(
+    const { query } = useAPI("GET", "/department-options")
+    const { requestFunction } = useAPI(
         "PUT",
         `/users/${userInfo?.id}/interested-departments`,
         {
@@ -52,9 +48,6 @@ const Index: React.FC<AccountInterestedMajorSectionProps> = ({
             },
         },
     )
-    const DepartmentList = {
-        departments: query.data as unknown as Department[],
-    }
 
     const [isEditing, setIsEditing] = useState<boolean>(false)
     const [temporaryMajor, setTemporaryMajor] = useState<Department[]>([])
@@ -65,7 +58,7 @@ const Index: React.FC<AccountInterestedMajorSectionProps> = ({
     }
 
     function findDepartmentNameById(id: number): string | undefined {
-        const department = DepartmentList.departments?.find((dept) => dept.id === id)
+        const department = query.data?.departments?.find((dept) => dept.id === id)
         return department
             ? i18n.language === "en"
                 ? department.code

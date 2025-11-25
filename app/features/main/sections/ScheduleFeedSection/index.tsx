@@ -10,7 +10,7 @@ import Widget from "../../../../common/primitives/Widget"
 function ScheduleFeedSection() {
     const { t } = useTranslation()
 
-    const [query] = useAPI("GET", "/schedules")
+    const { query } = useAPI("GET", "/schedules")
 
     return (
         <Widget

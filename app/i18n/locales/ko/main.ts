@@ -1,5 +1,5 @@
 export const main = {
-    hisTimeTable: "<name>{{name}}</name><normal>님의 시간표</normal>",
+    hisTimeTable: "<name>{{name}}</name><space/><normal>님의 시간표</normal>",
     schedule: {
         title: "{{content}}까지",
         link: "학사 시스템 바로가기",

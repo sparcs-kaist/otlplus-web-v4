@@ -91,7 +91,7 @@ const CourseListSection: React.FC<CourseListSectionProps> = ({
         totalCount: 0,
     })
 
-    const [query, setParams] = useAPI("GET", "/courses", {
+    const { query, setParams } = useAPI("GET", "/courses", {
         enabled: enabled,
     })
 

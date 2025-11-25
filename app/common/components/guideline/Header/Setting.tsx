@@ -1,17 +1,18 @@
-import { useContext, useEffect, useState } from "react"
+import { useEffect } from "react"
 
 import styled from "@emotion/styled"
 import DarkModeIcon from "@mui/icons-material/DarkMode"
 import LanguageIcon from "@mui/icons-material/Language"
 import LightModeIcon from "@mui/icons-material/LightMode"
 import PersonIcon from "@mui/icons-material/Person"
+import SettingsIcon from "@mui/icons-material/Settings"
 import { useTranslation } from "react-i18next"
 
-import { SelectedThemeContext } from "@/Providers"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import { axiosClient } from "@/libs/axios"
+import useThemeStore from "@/utils/zustand/useThemeStore"
 
 const SettingWrapper = styled(FlexWrapper)<{ mobileSidebar: boolean }>`
     color: ${({ theme }) => theme.colors.Text.default};
@@ -38,10 +39,36 @@ const Setting: React.FC<SettingProps> = ({
     mobileSidebar,
 }) => {
     const { t, i18n } = useTranslation()
-    const { theme, setTheme } = useContext(SelectedThemeContext)
+    const { themeSetting, setTheme } = useThemeStore()
 
     const changeThemeMode = () => {
-        setTheme(theme === "dark" ? "light" : "dark")
+        switch (themeSetting) {
+            case "dark":
+                setTheme("light")
+                break
+            case "light":
+                setTheme("system")
+                break
+            case "system":
+                setTheme("dark")
+                break
+            default:
+                setTheme("system")
+                break
+        }
+    }
+
+    const ThemeIcon = () => {
+        switch (themeSetting) {
+            case "dark":
+                return <DarkModeIcon />
+            case "light":
+                return <LightModeIcon />
+            case "system":
+                return <SettingsIcon />
+            default:
+                return <SettingsIcon />
+        }
     }
 
     const changeLanguage = () => {
@@ -63,7 +90,7 @@ const Setting: React.FC<SettingProps> = ({
         >
             {!mobileSidebar && (
                 <Icon size={16} onClick={changeThemeMode}>
-                    {theme === "dark" ? <LightModeIcon /> : <DarkModeIcon />}
+                    <ThemeIcon />
                 </Icon>
             )}
             <LanguageButtonWrapper

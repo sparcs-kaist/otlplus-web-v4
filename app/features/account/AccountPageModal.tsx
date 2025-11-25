@@ -51,10 +51,7 @@ const AccountPageModal: React.FC<AccountPageModalProps> = ({
             fullScreen={isTablet}
         >
             <AccountInfoSection userInfo={userInfo} />
-            <AccountInterestedMajorSection
-                userInfo={userInfo}
-                setUserInfo={setUserInfo}
-            />
+            <AccountInterestedMajorSection userInfo={userInfo} />
             <LogoutButton type="Normal" color="Highlight.default" onClick={handleLogout}>
                 {t("account.logout")}
             </LogoutButton>

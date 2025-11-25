@@ -18,6 +18,7 @@ import { type TabType, TabTypes } from "@/common/interface/ReviewWriteTabs"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
+import useUserStore from "@/utils/zustand/useUserStore"
 
 interface tabsSubSectionType {
     tab: TabType
@@ -48,12 +49,16 @@ const Tab = styled(FlexWrapper)<{ selected: boolean }>`
 
 function TabsSubSection({ tab, setTab }: tabsSubSectionType) {
     const { t } = useTranslation()
+    const { status } = useUserStore()
 
     return (
         <FlexWrapper direction="row" gap={6}>
             {TabTypes.map((tabType, idx) => {
                 const ThisIcon = Icons[idx]
                 const ThisIconFilled = FilledIcons[idx]
+
+                if (status !== "success" && (tabType === "liked" || tabType === "write"))
+                    return null
 
                 return (
                     <Tab

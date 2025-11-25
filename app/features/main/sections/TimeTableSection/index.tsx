@@ -4,11 +4,11 @@ import styled from "@emotion/styled"
 import { Trans, useTranslation } from "react-i18next"
 
 import exampleLectures from "@/api/example/Lectures"
-import type { GETUserInfoResponse } from "@/api/users/$userId/info"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimeBlock } from "@/common/schemas/timeblock"
+import useUserStore from "@/utils/zustand/useUserStore"
 
 import Widget from "../../../../common/primitives/Widget"
 import CustomTimeTableGrid from "../../components/CustomTimeTableGrid"
@@ -18,11 +18,9 @@ const TimeTableInner = styled(FlexWrapper)`
     width: 100%;
 `
 
-interface TimeTableSectionProps {
-    user: GETUserInfoResponse
-}
+const TimeTableSection = () => {
+    const { user } = useUserStore()
 
-const TimeTableSection = ({ user }: TimeTableSectionProps) => {
     const [selected, setSelected] = useState<Lecture | null>(null)
     const [hover, setHover] = useState<Lecture | null>(null)
     const [timeFilter, setTimeFilter] = useState<TimeBlock | null>(null)
@@ -45,7 +43,7 @@ const TimeTableSection = ({ user }: TimeTableSectionProps) => {
                     <FlexWrapper direction="row" gap={0}>
                         <Trans
                             i18nKey="main.hisTimeTable"
-                            values={{ name: user.name }}
+                            values={{ name: user?.name }}
                             components={{
                                 name: (
                                     <Typography
@@ -61,6 +59,7 @@ const TimeTableSection = ({ user }: TimeTableSectionProps) => {
                                         children={undefined}
                                     />
                                 ),
+                                space: <>&nbsp;</>,
                             }}
                         />
                     </FlexWrapper>

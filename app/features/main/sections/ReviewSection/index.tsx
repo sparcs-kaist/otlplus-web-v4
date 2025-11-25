@@ -1,4 +1,4 @@
-import { type Dispatch, Fragment, type SetStateAction, useEffect, useState } from "react"
+import { type Dispatch, Fragment, type SetStateAction, useState } from "react"
 
 import styled from "@emotion/styled"
 import { Trans, useTranslation } from "react-i18next"
@@ -28,8 +28,8 @@ const ScoreGrid = styled.div`
 `
 
 function ReviewSection() {
-    const [query] = useAPI("GET", "/users/writable-review")
-    const [mutation, requestFunction] = useAPI("POST", "/reviews", {
+    const { query } = useAPI("GET", "/users/writable-review")
+    const { requestFunction } = useAPI("POST", "/reviews", {
         onSuccess: resetReviewStates,
     })
 

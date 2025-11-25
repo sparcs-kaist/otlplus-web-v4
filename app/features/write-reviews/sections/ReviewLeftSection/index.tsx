@@ -7,7 +7,7 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Widget from "@/common/primitives/Widget"
 import type { WriteReviewsSelectedLectureType } from "@/routes/write-reviews"
 import { useAPI } from "@/utils/api/useAPI"
-import { getLocalStorageItem } from "@/utils/localStorage"
+import useUserStore from "@/utils/zustand/useUserStore"
 
 import MySummarySubSection from "./MySummarySubSection"
 import TakenLectureSubSection from "./TakenLectureSubSection"
@@ -30,10 +30,11 @@ function ReviewLeftSection({
     selectedLecture,
     setSelectedLecture,
 }: reviewLeftSectionType) {
-    const [takenLectures] = useAPI(
-        "GET",
-        `/users/${getLocalStorageItem("userId")}/lectures`,
-    )
+    const { user, status } = useUserStore()
+
+    const { query: takenLectures } = useAPI("GET", `/users/${user?.id}/lectures`, {
+        enabled: status === "success",
+    })
     const [selectedLectureIndex, setSelectedLectureIndex] = useState<number[] | null>(
         null,
     )

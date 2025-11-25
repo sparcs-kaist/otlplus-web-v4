@@ -137,19 +137,19 @@ const CourseHistorySubsection: React.FC<CourseHistorySubsectionProps> = ({
                                     <CourseHistoryChip
                                         selected={
                                             selectedProfessorId ==
-                                            classData.professors[0].id
+                                            (classData.professors[0]?.id ?? -1)
                                         }
                                         chipIndex={classData.classNo}
                                         chipText={professorName(classData.professors)}
                                         onClick={() => {
                                             if (
                                                 selectedProfessorId ===
-                                                classData.professors[0].id
+                                                (classData.professors[0]?.id ?? -1)
                                             ) {
                                                 setSelectedProfessorId(null)
                                             } else {
                                                 setSelectedProfessorId(
-                                                    classData.professors[0].id,
+                                                    classData.professors[0]?.id ?? null,
                                                 )
                                             }
                                         }}

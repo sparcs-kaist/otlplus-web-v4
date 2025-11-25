@@ -17,7 +17,7 @@ interface WriteReviewsSubSectionType {
 }
 
 function WriteReviewsSubSection({ selectedLecture }: WriteReviewsSubSectionType) {
-    const [query, setParams] = useAPI("GET", "/reviews", { gcTime: 0 })
+    const { query, setParams } = useAPI("GET", "/reviews", { gcTime: 0 })
 
     useEffect(() => {
         if (selectedLecture === null) return
@@ -86,7 +86,7 @@ function WriteReviewsSubSection({ selectedLecture }: WriteReviewsSubSectionType)
                     .filter((review) => {
                         return !query.data.myReviewId.includes(review.id)
                     })
-                    .map((review, idx) => (
+                    .map((review) => (
                         <ReviewBlock review={review} key={review.id} />
                     ))}
             </FlexWrapper>

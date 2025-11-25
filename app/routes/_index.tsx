@@ -1,7 +1,5 @@
 import styled from "@emotion/styled"
 
-import exampleScheduleFeed from "@/api/example/ScheduleFeed"
-import User from "@/api/example/UserInfo"
 import Footer from "@/common/components/guideline/Footer"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import HallOfFameFeedSection from "@/features/main/sections/HallOfFameFeedSection"
@@ -42,7 +40,7 @@ export default function Home() {
                     <FlexWrapper direction="column" justify="center" gap={24}>
                         <FlexWrapper direction="row" align="stretch" gap={24}>
                             <FlexWrapper direction="column" align="stretch" gap={0}>
-                                <TimeTableSection user={User} />
+                                <TimeTableSection />
                             </FlexWrapper>
                             <FlexWrapper direction="column" align="stretch" gap={24}>
                                 <FlexWrapper

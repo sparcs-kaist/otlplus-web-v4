@@ -22,11 +22,12 @@ import {
     getZodSchemaResponse,
 } from "./getAPIType"
 
-type UseAPIQueryOptions = {
+type UseAPIQueryOptions<Res> = {
     headers?: AxiosHeaders
     enabled?: boolean
     staleTime?: number
     gcTime?: number
+    select?: (data: Res) => Res
 }
 
 type Merge<A, B> = [B] extends [never] ? A : A & B
@@ -37,16 +38,16 @@ type UseAPIMutationOptions<Res, Req> = Omit<
 >
 
 type UseAPIOptions<M, Req, Res> = Merge<
-    UseAPIQueryOptions,
+    UseAPIQueryOptions<Res>,
     M extends "GET" ? never : UseAPIMutationOptions<Res, Req>
 >
 
 type UseAPIReturn<M, Req, Res> = M extends "GET"
-    ? [UseQueryResult<Res, Error>, Dispatch<SetStateAction<Req>>]
-    : [
-          UseMutationResult<Res, Error, Req, unknown>,
-          UseMutateFunction<Res, Error, Req, unknown>,
-      ]
+    ? { query: UseQueryResult<Res, Error>; setParams: Dispatch<SetStateAction<Req>> }
+    : {
+          mutation: UseMutationResult<Res, Error, Req, unknown>
+          requestFunction: UseMutateFunction<Res, Error, Req, unknown>
+      }
 
 export function useAPI<
     M extends Method<GetOriginalPath<P>>,
@@ -64,6 +65,7 @@ export function useAPI<
         enabled = true,
         staleTime = Infinity,
         gcTime = 5 * 60 * 1000,
+        select,
         ...mutationOps
     } = ops
 
@@ -82,8 +84,10 @@ export function useAPI<
                     headers,
                 })
 
+                // return responseSchema.parse(data)
                 return data
             },
+            select: select,
             retry: 1,
             staleTime,
             gcTime,
@@ -92,7 +96,7 @@ export function useAPI<
                 (params !== null || requestSchema.safeParse({})?.success === true),
         })
 
-        return [query, setParams] as unknown as UseAPIReturn<M, Req, Res>
+        return { query, setParams } as unknown as UseAPIReturn<M, Req, Res>
     } else {
         const mutation = useMutation<Res, Error, Req>({
             mutationFn: async (params: Req) => {
@@ -108,6 +112,10 @@ export function useAPI<
             ...mutationOps,
         })
 
-        return [mutation, mutation.mutate] as UseAPIReturn<M, Req, Res>
+        return { mutation: mutation, requestFunction: mutation.mutate } as UseAPIReturn<
+            M,
+            Req,
+            Res
+        >
     }
 }

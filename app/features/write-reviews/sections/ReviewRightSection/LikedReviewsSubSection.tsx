@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 
 import { useTranslation } from "react-i18next"
 
@@ -7,20 +7,19 @@ import ReviewBlock from "@/common/components/reviews/ReviewBlock"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import { useAPI } from "@/utils/api/useAPI"
-import { getLocalStorageItem } from "@/utils/localStorage"
+import useUserStore from "@/utils/zustand/useUserStore"
 
 function LikedReviewsSection() {
     const { t } = useTranslation()
+    const { user, status } = useUserStore()
 
-    const [query, setParams] = useAPI(
-        "GET",
-        `/users/${getLocalStorageItem("userId")}/reviews/liked`,
-    )
+    const { query, setParams } = useAPI("GET", `/users/${user?.id}/reviews/liked`, {
+        enabled: status === "success",
+    })
 
     useEffect(() => {
-        const userId = getLocalStorageItem("userId")
-        if (userId === null) return
-        setParams({ userId: parseInt(userId) })
+        if (user === null) return
+        setParams({ userId: user.id })
     }, [])
 
     return (

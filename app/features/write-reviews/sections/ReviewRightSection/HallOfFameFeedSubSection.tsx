@@ -3,7 +3,6 @@ import { useEffect, useState } from "react"
 import styled from "@emotion/styled"
 import { Trans, useTranslation } from "react-i18next"
 
-import type { GETSemestersResponse } from "@/api/semesters"
 import LoadingCircle from "@/common/components/LoadingCircle"
 import ScrollableDropdown from "@/common/components/ScrollableDropdown"
 import ReviewBlock from "@/common/components/reviews/ReviewBlock"
@@ -22,12 +21,15 @@ const LIMIT = 20
 function HallOfFameFeedSubSection() {
     const { t } = useTranslation()
 
-    const [serverSemesters, setServerSemesters] = useState<GETSemestersResponse | null>(
-        null,
-    )
-
-    const [serverSemesters1] = useAPI("GET", "/semesters")
-    const [query, setParams] = useAPI("GET", "/reviews", { gcTime: 0 })
+    const { query: serverSemesters } = useAPI("GET", "/semesters", {
+        select: (data) => {
+            return {
+                ...data,
+                semesters: data.semesters.filter((sem) => sem.year >= 2013),
+            }
+        },
+    })
+    const { query, setParams } = useAPI("GET", "/reviews", { gcTime: 0 })
 
     const [selectedOption, setSelectedOption] = useState(0)
     const [offset, setOffset] = useState(0)
@@ -42,24 +44,13 @@ function HallOfFameFeedSubSection() {
         })
     }, [])
     useEffect(() => {
-        if (!serverSemesters1.data) return
-        setServerSemesters({
-            semesters:
-                (
-                    serverSemesters1.data as unknown as GETSemestersResponse["semesters"]
-                ).filter((sem) => {
-                    return sem.year >= 2013
-                }) ?? [],
-        })
-    }, [serverSemesters1.data])
-    useEffect(() => {
         if (selectedOption === 0) return
         setOffset(0)
         setParams({
             mode: "hall-of-fame",
-            year: serverSemesters?.semesters[selectedOption - 1]?.year ?? 2025,
+            year: serverSemesters.data?.semesters[selectedOption - 1]?.year ?? 2025,
             semester:
-                serverSemesters?.semesters[selectedOption - 1]?.semester ??
+                serverSemesters.data?.semesters[selectedOption - 1]?.semester ??
                 SemesterEnum.SPRING,
             offset: 0,
             limit: LIMIT,
@@ -91,8 +82,8 @@ function HallOfFameFeedSubSection() {
                         options={[
                             t("writeReviews.hallOfFameFeed.total") as string,
                         ].concat(
-                            serverSemesters?.semesters
-                                ? serverSemesters.semesters.map((sem) => {
+                            serverSemesters.data?.semesters
+                                ? serverSemesters.data.semesters.map((sem) => {
                                       return `${sem.year} ${semesterToString(sem.semester)}`
                                   })
                                 : [],
@@ -115,13 +106,14 @@ function HallOfFameFeedSubSection() {
                                     i18nKey="writeReviews.hallOfFameFeed.title"
                                     values={{
                                         year:
-                                            serverSemesters?.semesters[selectedOption - 1]
-                                                ?.year ?? "",
-                                        semester: serverSemesters?.semesters[
+                                            serverSemesters.data?.semesters[
+                                                selectedOption - 1
+                                            ]?.year ?? "",
+                                        semester: serverSemesters.data?.semesters[
                                             selectedOption - 1
                                         ]?.semester
                                             ? semesterToString(
-                                                  serverSemesters.semesters[
+                                                  serverSemesters.data.semesters[
                                                       selectedOption - 1
                                                   ]?.semester as SemesterEnum,
                                               )
