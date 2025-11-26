@@ -27,7 +27,7 @@ const SearchSectionWrapper = styled(FlexWrapper)`
 export default function Home() {
     return (
         <>
-            <MainWrapper direction="column" align="center" gap={240}>
+            <MainWrapper direction="column" align="center" gap={60}>
                 <MainWrapperInner
                     direction="column"
                     align="center"
