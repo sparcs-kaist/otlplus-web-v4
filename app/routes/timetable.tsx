@@ -296,13 +296,13 @@ export default function Timetable() {
         
         // Average grades
         const avgGrade = timetableLectures.length > 0 
-            ? timetableLectures.reduce((sum, lec) => sum + lec.averageGrade, 0) / timetableLectures.length 
+            ? timetableLectures.reduce((sum, lec) => sum + lec.averageGrade, 0) / timetableLectures.length
             : 0;
         const avgLoad = timetableLectures.length > 0 
-            ? timetableLectures.reduce((sum, lec) => sum + lec.averageLoad, 0) / timetableLectures.length 
+            ? timetableLectures.reduce((sum, lec) => sum + lec.averageLoad, 0) / timetableLectures.length
             : 0;
         const avgSpeech = timetableLectures.length > 0 
-            ? timetableLectures.reduce((sum, lec) => sum + lec.averageSpeech, 0) / timetableLectures.length 
+            ? timetableLectures.reduce((sum, lec) => sum + lec.averageSpeech, 0) / timetableLectures.length
             : 0;
         
         // Exam times grouped by day
@@ -366,7 +366,6 @@ export default function Timetable() {
         // In real implementation, re-fetch timetable data here
     }, []);
 
-    // Sync search panel lecture selection with detail view
     useEffect(() => {
         if (searchedId !== null) {
             setLectureId(searchedId);
