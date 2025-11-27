@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
@@ -10,12 +10,16 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import type { GETLecturesResponse } from "@/api/lectures"
+import type { TimeBlock } from "@/common/schemas/timeblock"
 import exampleLectureSearchResults from "@/api/example/LectureSearchResults"
 import formatProfessorName from "./formatProfessorName"
 import AddIcon from "@mui/icons-material/Add"
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder"
 import FavoriteIcon from "@mui/icons-material/Favorite"
 import exampleUserWishlistResults from "@/api/example/UserWishList"
+import { axiosClientWithAuth } from "@/libs/axios"
+import { clientEnv } from "@/env"
+import useUserStore from "@/utils/useUserStore"
 
 const LectureListSectionInner = styled(FlexWrapper)`
     width: 100%;
@@ -129,19 +133,29 @@ const Chip = styled.div<{isSelected: boolean}>`
 interface LectureListSectionProps {
     selectedLectureId: number | null
     setSelectedLectureId: React.Dispatch<React.SetStateAction<number | null>>
+    timeFilter: TimeBlock | null
+    setTimeFilter: React.Dispatch<React.SetStateAction<TimeBlock | null>>
+    currentTimetableId: number | null
+    onLectureAdded?: () => void
 }
 
 const LectureListSection: React.FC<LectureListSectionProps> = ({
     selectedLectureId,
     setSelectedLectureId,
+    timeFilter,
+    setTimeFilter,
+    currentTimetableId,
+    onLectureAdded,
 }) => {
     const { t } = useTranslation()
     const theme = useTheme()
+    const userState = useUserStore()
 
     const [searchResult, setSearchResult] = useState<GETLecturesResponse>(
         exampleLectureSearchResults,
     )
     const [isInWish, setIsInWish] = useState<number[]>([]);
+    const [isLoading, setIsLoading] = useState<boolean>(false);
 
     const [sortOption, setSortOption] = useState<number>(0);
     const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
@@ -150,9 +164,32 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
 
     const [isWishlist, setIsWishlist] = useState<boolean>(false);
 
+    // Fetch user wishlist to know which lectures are favorited
+    const fetchWishlist = useCallback(async () => {
+        if (!userState.isLoggedIn) return;
+        
+        try {
+            const response = await axiosClientWithAuth.get(
+                `${clientEnv.VITE_APP_API_URL}/api/users/${userState.user.id}/wishlist`
+            );
+            const wishlistLectureIds = response.data.courses
+                .flatMap((course: { lectures: { id: number }[] }) => 
+                    course.lectures.map((lec) => lec.id)
+                );
+            setIsInWish(wishlistLectureIds);
+        } catch (error) {
+            console.error("Failed to fetch wishlist:", error);
+            // Fallback to example data in case of error (e.g., mock mode)
+            setIsInWish(
+                exampleUserWishlistResults.courses
+                    .flatMap((course) => course.lectures.map((lec) => lec.id))
+            );
+        }
+    }, [userState]);
+
     useEffect(() => {
-        setIsInWish(exampleUserWishlistResults.courses.map(course => course.lectures.map(lec => lec.id)).flat());
-    }, [isWishlist])
+        fetchWishlist();
+    }, [fetchWishlist])
 
     useEffect(()=> {
         if (selectedLectureId === null) {
@@ -184,13 +221,59 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const handleLikeClick = (wish: boolean, lectureId: number) => {
+    const handleLikeClick = async (wish: boolean, lectureId: number) => {
+        if (!userState.isLoggedIn) {
+            console.warn("User not logged in");
+            return;
+        }
+
+        // Optimistic update
         if (wish) {
             setIsInWish(prev => prev.filter(id => id !== lectureId));
         } else {
             setIsInWish(prev => [...prev, lectureId]);
         }
-        // 여기에 api call 추가
+
+        try {
+            await axiosClientWithAuth.patch(
+                `${clientEnv.VITE_APP_API_URL}/api/users/${userState.user.id}/wishlist`,
+                {
+                    lectureId: lectureId,
+                    action: wish ? "remove" : "add",
+                }
+            );
+        } catch (error) {
+            console.error("Failed to update wishlist:", error);
+            // Revert optimistic update on error
+            if (wish) {
+                setIsInWish(prev => [...prev, lectureId]);
+            } else {
+                setIsInWish(prev => prev.filter(id => id !== lectureId));
+            }
+        }
+    }
+
+    const handleAddToTimetable = async (lectureId: number) => {
+        if (!currentTimetableId) {
+            console.warn("No timetable selected");
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            await axiosClientWithAuth.patch(
+                `${clientEnv.VITE_APP_API_URL}/api/timetables/${currentTimetableId}`,
+                {
+                    lectureId: lectureId,
+                    action: "add",
+                }
+            );
+            onLectureAdded?.();
+        } catch (error) {
+            console.error("Failed to add lecture to timetable:", error);
+        } finally {
+            setIsLoading(false);
+        }
     }
 
     return (
@@ -203,9 +286,12 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
         >
             <SearchSubSection>
                 <SearchArea
-                    options={["type", "department", "level", "term"]}
+                    options={["type", "department", "level", "term", "time"]}
+                    timeFilter={timeFilter}
+                    setTimeFilter={setTimeFilter}
                     onSearch={(params: SearchParamsType) => {
-                        alert(JSON.stringify(params))
+                        console.log("Search params:", params);
+                        // TODO: Implement actual search API call
                     }}
                 />
             </SearchSubSection>
@@ -302,9 +388,14 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                                                         <FavoriteBorderIcon />
                                                     </Icon> 
                                                 }
-                                                <Icon size={15} onClick={() => console.log('add')}>
-                                                    <AddIcon />
-                                                </Icon>
+                                                <span style={{ cursor: isLoading ? 'wait' : 'pointer' }}>
+                                                    <Icon 
+                                                        size={15} 
+                                                        onClick={() => handleAddToTimetable(lecture.id)}
+                                                    >
+                                                        <AddIcon />
+                                                    </Icon>
+                                                </span>
                                             </FlexWrapper>
                                         </LectureItemWrapper>
                                         {idx !== course.lectures.length - 1 && <Divider />}

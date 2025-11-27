@@ -120,6 +120,7 @@ export const commonI18nEn: CommonI18nBaseType = {
             level: "Grade",
             department: "Department",
             term: "Term",
+            time: "Time",
             all: "All",
             type: "Groups",
             placeholder: "Enter keywords",

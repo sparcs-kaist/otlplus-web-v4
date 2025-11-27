@@ -91,7 +91,7 @@ export type ExportDataType = {
 type TimeProps<ops extends readonly SearchOptions[]> = "time" extends ops[number]
     ? {
           timeFilter: TimeBlock | null
-          setTimeFilter: (timeFilter: TimeBlock | null) => {}
+          setTimeFilter: (timeFilter: TimeBlock | null) => void
       }
     : { timeFilter?: never; setTimeFilter?: never }
 
