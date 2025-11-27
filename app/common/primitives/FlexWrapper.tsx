@@ -1,7 +1,9 @@
+import type { HTMLAttributes } from "react"
+
 import isPropValid from "@emotion/is-prop-valid"
 import styled from "@emotion/styled"
 
-export interface FlexWrapperProps {
+export interface FlexWrapperProps extends HTMLAttributes<HTMLDivElement> {
     direction: "row" | "column" | "row-reverse" | "column-reverse"
     gap: number
     justify?: string

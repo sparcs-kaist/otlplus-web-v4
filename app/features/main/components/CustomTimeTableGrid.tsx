@@ -65,23 +65,37 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
   const m = 5
   const begin = 8
   const gridRef = useRef<HTMLDivElement>(null)
-  const dateHeader = [
-    t("common.days.monday"),
-    t("common.days.tuesday"),
-    t("common.days.wednesday"),
-    t("common.days.thursday"),
-    t("common.days.friday"),
-  ]
   const isAnyOver24 = checkAnyOver24(lectureSummary)
   const n = isAnyOver24 ? 38 : 32
   const end = isAnyOver24 ? 27 : 24
   const [cellHeight, setCellHeight] = useState(isAnyOver24 ? 22 : 25)
+  const [dynamicCellWidth, setDynamicCellWidth] = useState(cellWidth)
 
   // 전체 셀 크기를 반응형으로 조정하는 부분
   useEffect(() => {
     const handleResize = () => {
       const fullHeight = 926.5
       setCellHeight(fullHeight / 32)
+
+      if (gridRef.current) {
+        const gridContainer = gridRef.current.parentElement
+        if (gridContainer) {
+          const containerWidth = gridContainer.getBoundingClientRect().width
+          // Account for:
+          // - Time column width (~40px)
+          // - Gap between time and grid (5px from parent FlexWrapper)
+          // - Column padding between the 5 day columns (colPadding * 4 = 20px)
+          const timeColumnWidth = 40
+          const gapFromParent = 5
+          const totalGapsBetweenColumns = colPadding * 4 // 4 gaps between 5 columns
+          const availableWidth = containerWidth - timeColumnWidth - gapFromParent - totalGapsBetweenColumns
+          const calculatedWidth = availableWidth / 5
+          // Set minimum width for readability
+          const minCellWidth = 32
+          const newWidth = Math.max(calculatedWidth, minCellWidth)
+          setDynamicCellWidth(newWidth)
+        }
+      }
     }
 
     window.addEventListener("resize", handleResize)
@@ -124,6 +138,38 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
     }
   }, [lastRow, startRow])
 
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (gridRef.current) {
+      const rect = gridRef.current.getBoundingClientRect()
+      const x = e.clientX - rect.left
+      const y = e.clientY - rect.top
+      const colIndex = Math.floor(x / dynamicCellWidth)
+      const rowIndex = Math.floor(y / cellHeight)
+      
+      setDragging(true)
+      setStartRow(rowIndex)
+      setLastRow(rowIndex)
+      setCol(colIndex)
+    }
+  }
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (dragging && gridRef.current) {
+      const rect = gridRef.current.getBoundingClientRect()
+      const y = e.clientY - rect.top
+      const rowIndex = Math.floor(y / cellHeight)
+      setLastRow(rowIndex)
+    }
+  }
+
+  const handleMouseUp = () => {
+    setDragging(false)
+    setStartRow(null)
+    setLastRow(null)
+    setCol(null)
+    setDraggingArea(new Map(Array.from({ length: m }, (_, rowIndex) => [rowIndex, Array(n).fill(null)])))
+  }
+
   return (
     <SectionWrapper>
       <TimeWrapper cellHeight={cellHeight}>
@@ -135,33 +181,38 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
       </TimeWrapper>
       <FlexWrapper direction="column" gap={0}>
         <FlexWrapper direction="row" gap={5}>
-          {dateHeader.map(
-            (date, index) =>
-              date !== "none" && (
-                <DateWrapper key={index} width={date === "" ? 10 : cellWidth}>
-                  {date}
+          {["monday", "tuesday", "wednesday", "thursday", "friday"].map(
+            (day) => (
+                <DateWrapper
+                  key={day}
+                  width={dynamicCellWidth}
+                >
+                  {t(`common.days.${day}`)}
                 </DateWrapper>
               ),
           )}
         </FlexWrapper>
         <div
-          ref={gridRef}
           style={{
-            display: "inline-block",
+            display: "grid",
+            gridTemplateColumns: `repeat(5, ${dynamicCellWidth}px)`,
+            gridTemplateRows: `repeat(${n}, ${cellHeight}px)`,
             position: "relative",
-            userSelect: "none",
+            width: "100%",
           }}
-          onClick={() => {
-            setSelected(null)
-          }}
+          ref={gridRef}
+          onMouseLeave={handleMouseUp}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
         >
-          {renderGrid(n, m, cellWidth, cellHeight, colPadding, [], 10, 0)}
+          {renderGrid(n, m, dynamicCellWidth, cellHeight, colPadding, [], 10, 0)}
           {renderTargetArea(
             true,
             draggingArea,
             "rgba(229, 76, 101, 0.5)",
             cellHeight,
-            cellWidth,
+            dynamicCellWidth,
             2,
             colPadding,
             [],
@@ -170,7 +221,7 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
           )}
           {renderLectureTile(
             lectureSummary,
-            cellWidth,
+            dynamicCellWidth,
             cellHeight,
             colPadding,
             selected,

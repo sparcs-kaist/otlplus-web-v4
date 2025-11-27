@@ -37,6 +37,9 @@ const HeaderInner = styled.header`
     align-items: center;
     white-space: nowrap;
     gap: 16px;
+    width: 100%;
+    max-width: 1298px;
+    margin: 0 auto;
 `
 
 const MobileSidebarButtonWrapper = styled.div`

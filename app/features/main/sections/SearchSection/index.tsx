@@ -4,7 +4,8 @@ import SearchArea, { type SearchParamsType } from "@/common/components/search/Se
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 
 const SearchSectionInner = styled(FlexWrapper)`
-    width: 645px;
+    width: 100%;
+    max-width: 645px;
     border: 2px solid ${({ theme }) => theme.colors.Highlight.default};
     border-radius: 32px;
     background: ${({ theme }) => theme.colors.Background.Section.default};
