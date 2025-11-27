@@ -51,7 +51,7 @@ const TileWrapper = styled.div<{
 }>`
   display: flex;
   flex-direction: column;
-  padding: 4px 6px;
+  padding: ${({ cellWidth }) => (cellWidth < 60 ? "2px 3px" : "4px 6px")};
   width: ${({ cellWidth }) => `${cellWidth}px`};
   height: ${({ duration, cellHeight }) => `${duration * cellHeight - 4}px`};
   margin-bottom: 2px;
@@ -67,10 +67,18 @@ const TileWrapper = styled.div<{
   cursor: pointer;
 `
 
-const TitleWrapper = styled.span<{ isHighlighted: boolean }>`
+const TitleWrapper = styled.span<{ isHighlighted: boolean; cellWidth: number }>`
   width: 100%;
-  font-size: ${({ theme }) => theme.fonts.Small.fontSize}px;
-  line-height: ${({ theme }) => `${theme.fonts.Small.lineHeight}px`};
+  font-size: ${({ theme, cellWidth }) => {
+    if (cellWidth < 40) return "8px"
+    if (cellWidth < 60) return "9px"
+    return `${theme.fonts.Small.fontSize}px`
+  }};
+  line-height: ${({ theme, cellWidth }) => {
+    if (cellWidth < 40) return "10px"
+    if (cellWidth < 60) return "11px"
+    return `${theme.fonts.Small.lineHeight}px`
+  }};
   font-weight: ${({ theme }) => theme.fonts.Small.fontWeight};
   color: ${({ theme, isHighlighted }) =>
     isHighlighted ? "white" : theme.colors.Text.default};
@@ -80,10 +88,18 @@ const TitleWrapper = styled.span<{ isHighlighted: boolean }>`
   white-space: normal;
 `
 
-const DescWrapper = styled.span<{ isHighlighted: boolean }>`
+const DescWrapper = styled.span<{ isHighlighted: boolean; cellWidth: number }>`
   width: 100%;
-  font-size: ${({ theme }) => theme.fonts.Small.fontSize}px;
-  line-height: ${({ theme }) => `${theme.fonts.Small.lineHeight}px`};
+  font-size: ${({ theme, cellWidth }) => {
+    if (cellWidth < 40) return "7px"
+    if (cellWidth < 60) return "8px"
+    return `${theme.fonts.Small.fontSize}px`
+  }};
+  line-height: ${({ theme, cellWidth }) => {
+    if (cellWidth < 40) return "9px"
+    if (cellWidth < 60) return "10px"
+    return `${theme.fonts.Small.lineHeight}px`
+  }};
   font-weight: ${({ theme }) => theme.fonts.Small.fontWeight};
   color: ${({ isHighlighted }) =>
     isHighlighted ? "rgba(255, 255, 255, 0.6)" : "rgba(102, 102, 102, 0.6)"};
@@ -119,11 +135,11 @@ const LectureTile: React.FC<{
       isHighlighted={isHighlighted}
       cellHeight={cellHeight}
     >
-      <TitleWrapper isHighlighted={isHighlighted}>{lecture.name}</TitleWrapper>
-      <DescWrapper isHighlighted={isHighlighted}>
+      <TitleWrapper isHighlighted={isHighlighted} cellWidth={cellWidth}>{lecture.name}</TitleWrapper>
+      <DescWrapper isHighlighted={isHighlighted} cellWidth={cellWidth}>
         {lecture.professors.map((prof) => prof.name).join(", ")}
       </DescWrapper>
-      <DescWrapper isHighlighted={isHighlighted}>
+      <DescWrapper isHighlighted={isHighlighted} cellWidth={cellWidth}>
         ({timeBlock.buildingCode}) {timeBlock.placeName}
       </DescWrapper>
     </TileWrapper>

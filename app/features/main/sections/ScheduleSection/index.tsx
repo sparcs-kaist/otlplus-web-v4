@@ -51,7 +51,8 @@ const ScheduleSection: React.FC<ScheduleSectionProps> = (props) => {
 
     return (
         <Widget
-            width={418}
+            width="100%"
+            maxWidth={418}
             direction="column"
             align="stretch"
             gap={0}

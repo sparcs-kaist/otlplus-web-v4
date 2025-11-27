@@ -1,7 +1,7 @@
 import { useState } from "react"
 
 import styled from "@emotion/styled"
-import { Trans, useTranslation } from "react-i18next"
+import { Trans } from "react-i18next"
 
 import exampleLectures from "@/api/example/Lectures"
 import type { GETUserInfoResponse } from "@/api/users/$userId/info"
@@ -27,14 +27,19 @@ const TimeTableSection = ({ user }: TimeTableSectionProps) => {
     const [hover, setHover] = useState<Lecture | null>(null)
     const [timeFilter, setTimeFilter] = useState<TimeBlock | null>(null)
 
-    const [selectedOption, setSelectedOption] = useState<number>(0)
-
-    const [lectureSummary, setLectureSummary] = useState<Lecture[]>(exampleLectures)
-
-    const { t } = useTranslation()
+    const [lectureSummary] = useState<Lecture[]>(exampleLectures)
 
     return (
-        <Widget width={856} direction="column" gap={0} padding="30px">
+        <Widget
+            width="100%"
+            maxWidth={856}
+            direction="column"
+            gap={0}
+            padding="30px"
+            style={{
+                padding: window.innerWidth < 720 ? "16px" : "30px",
+            }}
+        >
             <TimeTableInner direction="column" align="stretch" gap={16}>
                 <FlexWrapper
                     direction="row"
@@ -66,7 +71,6 @@ const TimeTableSection = ({ user }: TimeTableSectionProps) => {
                     </FlexWrapper>
                 </FlexWrapper>
                 <CustomTimeTableGrid
-                    cellWidth={150}
                     lectureSummary={lectureSummary || []}
                     setTimeFilter={setTimeFilter}
                     hover={hover}
