@@ -13,6 +13,7 @@ const publicEnvSchema = z.object({
         (value) => stringToBoolean(value as string),
         z.boolean(),
     ),
+    VITE_APP_DEV_API_AUTH_TOKEN: z.string().optional(),
 })
 
 export const clientEnv = publicEnvSchema.parse(import.meta.env)

@@ -16,14 +16,12 @@ const LogoutButton = styled(Typography)`
 
 interface AccountPageModalProps {
     userInfo: GETUserInfoResponse | null
-    setUserInfo: React.Dispatch<React.SetStateAction<GETUserInfoResponse | null>>
     accountPageOpen: boolean
     setAccountPageOpen: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 const AccountPageModal: React.FC<AccountPageModalProps> = ({
     userInfo,
-    setUserInfo,
     accountPageOpen,
     setAccountPageOpen,
 }) => {
@@ -36,9 +34,8 @@ const AccountPageModal: React.FC<AccountPageModalProps> = ({
             location.href = `/session/logout`
         } else {
             removeLocalStorageItem("devStudentId")
-            removeLocalStorageItem("devToken")
-            axiosClient.defaults.headers.common["X-AUTH-SID"] = ""
-            axiosClient.defaults.headers.common["X-SID-AUTH-TOKEN"] = ""
+            delete axiosClient.defaults.headers.common["X-AUTH-SID"]
+            delete axiosClient.defaults.headers.common["X-SID-AUTH-TOKEN"]
             location.reload()
         }
     }

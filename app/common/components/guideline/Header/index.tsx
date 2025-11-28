@@ -5,6 +5,7 @@ import MenuIcon from "@mui/icons-material/Menu"
 
 import { type GETUserInfoResponse } from "@/api/users/info"
 import Icon from "@/common/primitives/Icon"
+import { clientEnv } from "@/env"
 import AccountPageModal from "@/features/account/AccountPageModal"
 import DeveloperLoginModal from "@/features/account/DeveloperLoginModal"
 import { axiosClient } from "@/libs/axios"
@@ -81,7 +82,7 @@ const Header: React.FC = () => {
     useEffect(() => {
         if (process.env.NODE_ENV === "development") {
             const devStudentId = getLocalStorageItem("devStudentId")
-            const devToken = getLocalStorageItem("devToken")
+            const devToken = clientEnv.VITE_APP_DEV_API_AUTH_TOKEN
             if (devStudentId) {
                 axiosClient.defaults.headers.common["X-AUTH-SID"] = devStudentId
                 axiosClient.defaults.headers.common["X-SID-AUTH-TOKEN"] = devToken
@@ -114,7 +115,6 @@ const Header: React.FC = () => {
             {accountPageOpen && (
                 <AccountPageModal
                     userInfo={userInfo}
-                    setUserInfo={setUserInfo}
                     accountPageOpen={accountPageOpen}
                     setAccountPageOpen={setAccountPageOpen}
                 />
