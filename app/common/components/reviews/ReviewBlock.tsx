@@ -15,8 +15,21 @@ import { type Review } from "@/common/schemas/review"
 import { useAPI } from "@/utils/api/useAPI"
 import professorName from "@/utils/professorName"
 
-const Content = styled(Typography)`
+const Content = styled(Typography)<{ overflow: boolean }>`
     line-height: 1.5;
+    width: 100%;
+
+    ${(props) =>
+        props.overflow &&
+        `
+        text-overflow: ellipsis;
+        overflow: hidden;
+        word-break: break-word;
+        
+        display: -webkit-box;
+        -webkit-line-clamp: 5;
+        -webkit-box-orient: vertical;
+    `}
 `
 
 const ReviewWrapper = styled.div<{ clickable: boolean }>`
@@ -35,6 +48,7 @@ const ReviewWrapper = styled.div<{ clickable: boolean }>`
 `
 
 const SelectWrapper = styled(FlexWrapper)<{ clickable: boolean }>`
+    width: 100%;
     cursor: ${(props) => (props.clickable ? "pointer" : "default")};
     user-select: ${(props) => (props.clickable ? "none" : "auto")};
 `
@@ -83,7 +97,6 @@ function ReviewBlock({
             align="stretch"
             gap={8}
             padding="0 4px"
-            style={{ width: "100%" }}
             clickable={linkToDictionary}
             onClick={() => {
                 if (linkToDictionary) {
@@ -102,8 +115,8 @@ function ReviewBlock({
                     {review.year} {semesterToString(review.semester)}
                 </Typography>
             </FlexWrapper>
-            <FlexWrapper direction="row" gap={0}>
-                <Content type="Normal" color="Text.default">
+            <FlexWrapper direction="row" gap={0} style={{ overflow: "hidden" }}>
+                <Content type="Normal" color="Text.default" overflow={!withWrapper}>
                     {review.content}
                 </Content>
             </FlexWrapper>
