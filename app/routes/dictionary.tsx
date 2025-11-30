@@ -9,7 +9,6 @@ import Widget from "@/common/primitives/Widget"
 import CourseDetailSection from "@/features/dictionary/sections/CourseDetailSection"
 import CourseListSection from "@/features/dictionary/sections/CourseListSection"
 import { media } from "@/styles/themes/media"
-import { useAPI } from "@/utils/api/useAPI"
 import useIsDevice from "@/utils/useIsDevice"
 
 const DictionaryWrapper = styled(FlexWrapper)`

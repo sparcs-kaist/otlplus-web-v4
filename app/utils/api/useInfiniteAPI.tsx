@@ -1,7 +1,10 @@
-import { type Dispatch, type SetStateAction, useState } from "react"
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react"
 
-import { useQuery } from "@tanstack/react-query"
-import { type UseQueryResult } from "@tanstack/react-query"
+import {
+    type InfiniteData,
+    type UseInfiniteQueryResult,
+    useInfiniteQuery,
+} from "@tanstack/react-query"
 import { type AxiosHeaders } from "axios"
 import { useTranslation } from "react-i18next"
 
@@ -18,47 +21,85 @@ import {
     getZodSchemaResponse,
 } from "./getAPIType"
 
-type UseAPIQueryOptions = {
+type ArrayKeys<T> = {
+    [K in keyof T]-?: T[K] extends any[] ? K : never
+}[keyof T]
+
+type NestedRes<Res> = ArrayKeys<Res>
+
+type UseAPIQueryOptions<Res> = {
+    infinites: NestedRes<Res>[]
+    limit: number
+    initialOffset?: number
     headers?: AxiosHeaders
     enabled?: boolean
     staleTime?: number
     gcTime?: number
 }
 
-function useInfiniteAPI<
+type NoLimitOffset<T> = Omit<T, "limit" | "offset">
+
+export function useInfiniteAPI<
     M extends Method<GetOriginalPath<P>>,
     P extends DynamicPath,
     Req extends getAPIRequestType<M, P>,
+    FReq extends NoLimitOffset<Req>,
     Res extends getAPIResponseType<M, P>,
 >(
     method: M,
     path: P,
-    ops: UseAPIQueryOptions,
-): [UseQueryResult<Res, Error>, Dispatch<SetStateAction<Req>>] {
+    ops: UseAPIQueryOptions<Res>,
+): {
+    query: UseInfiniteQueryResult<InfiniteData<Res, unknown>, Error>
+    setParams: Dispatch<SetStateAction<FReq>>
+    data: Res | undefined
+} {
     const { i18n } = useTranslation()
     const {
+        infinites,
         headers = {},
         enabled = true,
         staleTime = Infinity,
         gcTime = 5 * 60 * 1000,
+        initialOffset = 0,
+        limit,
     } = ops
+    const [flattenData, setFlattenData] = useState<Res | undefined>(undefined)
+    const [params, setParams] = useState<FReq>(null as unknown as FReq)
+
     const requestSchema = getZodSchemaRequest<M, GetOriginalPath<P>>(
         method,
         getOriginalPathValue(path),
     )
 
-    const [params, setParams] = useState<Req>(null as Req)
-    const query = useQuery<Res>({
+    const query = useInfiniteQuery<Res>({
         queryKey: [path, params, i18n.resolvedLanguage],
-        queryFn: async () => {
+        queryFn: async ({ pageParam = 0 }) => {
+            let offset = initialOffset + (pageParam as number) * limit
+            console.log(pageParam)
+
             const { data } = await axiosClient.request<Res>({
                 method,
                 url: path,
-                params,
+                params: { ...params, offset, limit },
                 headers,
             })
 
             return data
+        },
+        initialPageParam: 0,
+        getNextPageParam: (lastPage, allPages) => {
+            let flag = true
+
+            infinites.forEach((key) => {
+                const lastPageLength = (lastPage[key] as any[]).length
+                if (lastPageLength < limit) flag = false
+            })
+
+            console.log(lastPage, allPages, flag)
+
+            if (flag) return allPages.length
+            return undefined
         },
         retry: 1,
         staleTime,
@@ -67,5 +108,26 @@ function useInfiniteAPI<
             enabled && (params !== null || requestSchema.safeParse({})?.success === true),
     })
 
-    return [query, setParams]
+    useEffect(() => {
+        if (!query.data?.pages) return
+
+        setFlattenData((prev) => {
+            if (prev === undefined) {
+                return query.data.pages[0] as Res
+            } else {
+                const lastPage = query.data.pages[query.data.pages.length - 1]
+
+                prev = { ...prev, ...(lastPage as {}) }
+
+                infinites.forEach((key) => {
+                    const mergedArray = query.data!.pages.flatMap((page) => page[key])
+                    if (prev) (prev[key] as any[]) = mergedArray
+                })
+
+                return prev
+            }
+        })
+    }, [query.data])
+
+    return { query, setParams, data: flattenData }
 }

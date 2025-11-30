@@ -25,15 +25,19 @@ interface tabsSubSectionType {
     setTab: Dispatch<SetStateAction<TabType>>
 }
 
-const Icons = [
-    EditOutlined,
-    WhatshotOutlined,
-    EmojiEventsOutlined,
-    FavoriteBorderOutlined,
-]
+const Icons = {
+    write: EditOutlined,
+    recentFeed: WhatshotOutlined,
+    hallOfFameFeed: EmojiEventsOutlined,
+    liked: FavoriteBorderOutlined,
+}
 
-const FilledIcons = [Edit, Whatshot, EmojiEvents, Favorite]
-
+const FilledIcons = {
+    write: Edit,
+    recentFeed: Whatshot,
+    hallOfFameFeed: EmojiEvents,
+    liked: Favorite,
+}
 const TabSelectedStyle = ({ theme }: { theme: Theme }) => css`
     background: ${theme.colors.Background.Section.default};
     color: ${theme.colors.Highlight.default};
@@ -54,8 +58,8 @@ function TabsSubSection({ tab, setTab }: tabsSubSectionType) {
     return (
         <FlexWrapper direction="row" gap={6}>
             {TabTypes.map((tabType, idx) => {
-                const ThisIcon = Icons[idx]
-                const ThisIconFilled = FilledIcons[idx]
+                const ThisIcon = Icons[tabType]
+                const ThisIconFilled = FilledIcons[tabType]
 
                 if (status !== "success" && (tabType === "liked" || tabType === "write"))
                     return null

@@ -15,7 +15,7 @@ import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import CourseBlock from "@/features/dictionary/components/CourseBlock"
 import type { getAPIResponseType } from "@/utils/api/getAPIType"
-import { useAPI } from "@/utils/api/useAPI"
+import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
 import checkEmpty from "@/utils/search/checkEmpty"
 
 const CourseListSectionInner = styled(FlexWrapper)`
@@ -72,10 +72,10 @@ interface CourseListSectionProps {
 
 const LIMIT = 20
 
-const CourseListSection: React.FC<CourseListSectionProps> = ({
+function CourseListSection({
     selectedCourseId,
     setSelectedCourseId,
-}) => {
+}: CourseListSectionProps) {
     const { t } = useTranslation()
     const theme = useTheme()
     const [searchParams] = useSearchParams()
@@ -91,7 +91,8 @@ const CourseListSection: React.FC<CourseListSectionProps> = ({
         totalCount: 0,
     })
 
-    const { query, setParams } = useAPI("GET", "/courses", {
+    const { query, setParams } = useInfiniteAPI("GET", "/courses", {
+        infinites: ["courses"],
         enabled: enabled,
     })
 
@@ -111,6 +112,7 @@ const CourseListSection: React.FC<CourseListSectionProps> = ({
         if (checkEmpty(param)) return
         handleSearch(param)
     }, [])
+
     useEffect(() => {
         if (query.data !== undefined) {
             const data: GETCoursesResponse["courses"] =

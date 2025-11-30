@@ -112,10 +112,6 @@ export function useAPI<
             ...mutationOps,
         })
 
-        return { mutation: mutation, requestFunction: mutation.mutate } as UseAPIReturn<
-            M,
-            Req,
-            Res
-        >
+        return { mutation, requestFunction: mutation.mutate } as UseAPIReturn<M, Req, Res>
     }
 }

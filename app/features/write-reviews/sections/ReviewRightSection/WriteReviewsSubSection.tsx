@@ -1,6 +1,7 @@
 import { useEffect } from "react"
 
 import { Trans } from "react-i18next"
+import { useOnInView } from "react-intersection-observer"
 
 import Credits from "@/common/components/Credits"
 import Line from "@/common/components/Line"
@@ -10,14 +11,37 @@ import ReviewWritingBlock from "@/common/components/reviews/ReviewWritingBlock"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import type { WriteReviewsSelectedLectureType } from "@/routes/write-reviews"
-import { useAPI } from "@/utils/api/useAPI"
+import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
+
+const Component = ({ call }: { call: () => void }) => {
+    const trackingRef = useOnInView(
+        (inView, entry) => {
+            if (inView) {
+                console.log("Element appeared in view", entry.target)
+                call()
+            } else {
+                console.log("Element left view", entry.target)
+            }
+        },
+        {
+            threshold: 0.5,
+        },
+    )
+
+    return <div ref={trackingRef}></div>
+}
 
 interface WriteReviewsSubSectionType {
     selectedLecture: WriteReviewsSelectedLectureType | null
 }
 
 function WriteReviewsSubSection({ selectedLecture }: WriteReviewsSubSectionType) {
-    const { query, setParams } = useAPI("GET", "/reviews", { gcTime: 0 })
+    const { query, setParams, data } = useInfiniteAPI("GET", "/reviews", {
+        infinites: ["reviews"],
+        gcTime: 0,
+        initialOffset: 0,
+        limit: 10,
+    })
 
     useEffect(() => {
         if (selectedLecture === null) return
@@ -27,8 +51,6 @@ function WriteReviewsSubSection({ selectedLecture }: WriteReviewsSubSectionType)
             professorId: selectedLecture.professors[0]?.id,
             year: selectedLecture.year,
             semester: selectedLecture.semester,
-            limit: 10,
-            offset: 0,
         })
     }, [selectedLecture])
 
@@ -67,8 +89,8 @@ function WriteReviewsSubSection({ selectedLecture }: WriteReviewsSubSectionType)
                     professors={selectedLecture.professors}
                     year={selectedLecture.year}
                     semester={selectedLecture.semester}
-                    myReview={query.data?.reviews.find((review) =>
-                        query.data?.myReviewId.includes(review.id),
+                    myReview={data?.reviews.find((review) =>
+                        data.myReviewId.includes(review.id),
                     )}
                 />
             </FlexWrapper>
@@ -82,13 +104,14 @@ function WriteReviewsSubSection({ selectedLecture }: WriteReviewsSubSectionType)
                         />
                     </Typography>
                 </FlexWrapper>
-                {query.data?.reviews
+                {data?.reviews
                     .filter((review) => {
-                        return !query.data.myReviewId.includes(review.id)
+                        return !data.myReviewId.includes(review.id)
                     })
                     .map((review) => (
                         <ReviewBlock review={review} key={review.id} />
                     ))}
+                <Component call={query.fetchNextPage} />
             </FlexWrapper>
         </FlexWrapper>
     )
