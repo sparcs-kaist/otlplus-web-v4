@@ -73,7 +73,7 @@ export function useInfiniteAPI<
     )
 
     const query = useInfiniteQuery<Res>({
-        queryKey: [path, params, i18n.resolvedLanguage],
+        queryKey: [path, params],
         queryFn: async ({ pageParam = 0 }) => {
             let offset = initialOffset + (pageParam as number) * limit
 
