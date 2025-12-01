@@ -133,8 +133,9 @@ const CourseHistorySubsection: React.FC<CourseHistorySubsectionProps> = ({
                             </NoHistoryText>
                         ) : (
                             <FlexWrapper direction="column" gap={4} align={"center"}>
-                                {history.classes.map((classData) => (
+                                {history.classes.map((classData, idx) => (
                                     <CourseHistoryChip
+                                        key={idx}
                                         selected={
                                             selectedProfessorId ==
                                             (classData.professors[0]?.id ?? -1)

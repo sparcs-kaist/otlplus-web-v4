@@ -27,8 +27,8 @@ type ArrayKeys<T> = {
 
 type NestedRes<Res> = ArrayKeys<Res>
 
-type UseAPIQueryOptions<Res> = {
-    infinites: NestedRes<Res>[]
+type UseAPIQueryOptions<M extends Method<GetOriginalPath<P>>, P extends DynamicPath> = {
+    infinites: ReadonlyArray<NestedRes<getAPIResponseType<M, P>>>
     limit: number
     initialOffset?: number
     headers?: AxiosHeaders
@@ -43,12 +43,12 @@ export function useInfiniteAPI<
     M extends Method<GetOriginalPath<P>>,
     P extends DynamicPath,
     Req extends getAPIRequestType<M, P>,
-    FReq extends NoLimitOffset<Req>,
     Res extends getAPIResponseType<M, P>,
+    FReq extends NoLimitOffset<Req>,
 >(
     method: M,
     path: P,
-    ops: UseAPIQueryOptions<Res>,
+    ops: UseAPIQueryOptions<M, P>,
 ): {
     query: UseInfiniteQueryResult<InfiniteData<Res, unknown>, Error>
     setParams: Dispatch<SetStateAction<FReq>>
@@ -73,10 +73,9 @@ export function useInfiniteAPI<
     )
 
     const query = useInfiniteQuery<Res>({
-        queryKey: [path, params],
+        queryKey: [path, params, i18n.resolvedLanguage],
         queryFn: async ({ pageParam = 0 }) => {
             let offset = initialOffset + (pageParam as number) * limit
-            console.log(pageParam)
 
             const { data } = await axiosClient.request<Res>({
                 method,
@@ -95,8 +94,6 @@ export function useInfiniteAPI<
                 const lastPageLength = (lastPage[key] as any[]).length
                 if (lastPageLength < limit) flag = false
             })
-
-            console.log(lastPage, allPages, flag)
 
             if (flag) return allPages.length
             return undefined
@@ -130,7 +127,7 @@ export function useInfiniteAPI<
     }, [query.data])
 
     useEffect(() => {
-        query.refetch()
+        if (query.isEnabled) query.refetch()
     }, [i18n.resolvedLanguage])
 
     return { query, setParams, data: flattenData }

@@ -15,6 +15,7 @@ import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import CourseBlock from "@/features/dictionary/components/CourseBlock"
 import type { getAPIResponseType } from "@/utils/api/getAPIType"
+import { useAPI } from "@/utils/api/useAPI"
 import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
 import checkEmpty from "@/utils/search/checkEmpty"
 
@@ -91,8 +92,7 @@ function CourseListSection({
         totalCount: 0,
     })
 
-    const { query, setParams } = useInfiniteAPI("GET", "/courses", {
-        infinites: ["courses"],
+    const { query, setParams } = useAPI("GET", "/courses", {
         enabled: enabled,
     })
 

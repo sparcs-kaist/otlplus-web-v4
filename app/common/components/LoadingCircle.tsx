@@ -1,3 +1,5 @@
+import React, { forwardRef } from "react"
+
 import styled from "@emotion/styled"
 import { CircularProgress, ThemeProvider, createTheme } from "@mui/material"
 
@@ -11,14 +13,14 @@ const LoadingCircleWrapper = styled.div`
     flex-grow: 1;
 `
 
-export default function LoadingCircle() {
+export default forwardRef<HTMLDivElement, {}>(function LoadingCircle(_, ref) {
     const theme = createTheme({})
 
     return (
-        <LoadingCircleWrapper>
+        <LoadingCircleWrapper ref={ref}>
             <ThemeProvider theme={theme}>
                 <CircularProgress color="inherit" />
             </ThemeProvider>
         </LoadingCircleWrapper>
     )
-}
+})

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 
 import styled from "@emotion/styled"
 import { Trans, useTranslation } from "react-i18next"
+import { useInView } from "react-intersection-observer"
 
 import LoadingCircle from "@/common/components/LoadingCircle"
 import ScrollableDropdown from "@/common/components/ScrollableDropdown"
@@ -10,6 +11,7 @@ import { SemesterEnum, semesterToString } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import { useAPI } from "@/utils/api/useAPI"
+import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
 
 const DropDownWrapper = styled(FlexWrapper)`
     width: 225px;
@@ -29,7 +31,19 @@ function HallOfFameFeedSubSection() {
             }
         },
     })
-    const { query, setParams } = useAPI("GET", "/reviews", { gcTime: 0 })
+    const { query, setParams, data } = useInfiniteAPI("GET", "/reviews", {
+        gcTime: 0,
+        infinites: ["reviews"],
+        limit: LIMIT,
+    })
+
+    const { ref, inView } = useInView({ threshold: 0 })
+
+    useEffect(() => {
+        if (inView && query.hasNextPage && !query.isFetchingNextPage) {
+            query.fetchNextPage()
+        }
+    }, [inView, query])
 
     const [selectedOption, setSelectedOption] = useState(0)
     const [offset, setOffset] = useState(0)
@@ -39,21 +53,16 @@ function HallOfFameFeedSubSection() {
             mode: "hall-of-fame",
             year: 2025,
             semester: SemesterEnum.SPRING,
-            offset: offset,
-            limit: LIMIT,
         })
     }, [])
     useEffect(() => {
         if (selectedOption === 0) return
-        setOffset(0)
         setParams({
             mode: "hall-of-fame",
             year: serverSemesters.data?.semesters[selectedOption - 1]?.year ?? 2025,
             semester:
                 serverSemesters.data?.semesters[selectedOption - 1]?.semester ??
                 SemesterEnum.SPRING,
-            offset: 0,
-            limit: LIMIT,
         })
     }, [selectedOption])
 
@@ -127,7 +136,7 @@ function HallOfFameFeedSubSection() {
                         </Typography>
                         <FlexWrapper direction="column" align="center" gap={0}>
                             <Typography type="Bigger" color="Text.default">
-                                {query.data?.reviews.length}
+                                {data?.reviews.length}
                             </Typography>
                             <Typography type="Smaller" color="Text.default">
                                 {t("writeReviews.hallOfFameFeed.total")}
@@ -135,9 +144,11 @@ function HallOfFameFeedSubSection() {
                         </FlexWrapper>
                     </FlexWrapper>
                     <FlexWrapper direction="column" align="stretch" gap={12}>
-                        {query.data?.reviews.map((review) => (
+                        {data?.reviews.map((review) => (
                             <ReviewBlock review={review} key={review.id} />
                         ))}
+
+                        {query.hasNextPage && <LoadingCircle ref={ref} />}
                     </FlexWrapper>
                 </>
             )}
