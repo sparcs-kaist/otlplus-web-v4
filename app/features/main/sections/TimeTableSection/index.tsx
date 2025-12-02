@@ -19,7 +19,7 @@ const TimeTableInner = styled(FlexWrapper)`
 `
 
 const TimeTableSection = () => {
-    const { user } = useUserStore()
+    const { user, status } = useUserStore()
 
     const [selected, setSelected] = useState<Lecture | null>(null)
     const [hover, setHover] = useState<Lecture | null>(null)
@@ -32,48 +32,54 @@ const TimeTableSection = () => {
     const { t } = useTranslation()
 
     return (
-        <Widget width={856} direction="column" gap={0} padding="30px">
-            <TimeTableInner direction="column" align="stretch" gap={16}>
-                <FlexWrapper
-                    direction="row"
-                    justify="space-between"
-                    align="center"
-                    gap={0}
-                >
-                    <FlexWrapper direction="row" gap={0}>
-                        <Trans
-                            i18nKey="main.hisTimeTable"
-                            values={{ name: user?.name }}
-                            components={{
-                                name: (
-                                    <Typography
-                                        type="BiggerBold"
-                                        color="Highlight.default"
-                                        children={undefined}
-                                    />
-                                ),
-                                normal: (
-                                    <Typography
-                                        type="BiggerBold"
-                                        color="Text.dark"
-                                        children={undefined}
-                                    />
-                                ),
-                                space: <>&nbsp;</>,
-                            }}
-                        />
+        <Widget width={856} direction="column" gap={0} padding="30px" flex="1 1 auto">
+            {status === "idle" ? (
+                <Typography type="BiggerBold" color="Text.default">
+                    로그인을 해주세요
+                </Typography>
+            ) : (
+                <TimeTableInner direction="column" align="stretch" gap={16}>
+                    <FlexWrapper
+                        direction="row"
+                        justify="space-between"
+                        align="center"
+                        gap={0}
+                    >
+                        <FlexWrapper direction="row" gap={0}>
+                            <Trans
+                                i18nKey="main.hisTimeTable"
+                                values={{ name: user?.name }}
+                                components={{
+                                    name: (
+                                        <Typography
+                                            type="BiggerBold"
+                                            color="Highlight.default"
+                                            children={undefined}
+                                        />
+                                    ),
+                                    normal: (
+                                        <Typography
+                                            type="BiggerBold"
+                                            color="Text.dark"
+                                            children={undefined}
+                                        />
+                                    ),
+                                    space: <>&nbsp;</>,
+                                }}
+                            />
+                        </FlexWrapper>
                     </FlexWrapper>
-                </FlexWrapper>
-                <CustomTimeTableGrid
-                    cellWidth={150}
-                    lectureSummary={lectureSummary || []}
-                    setTimeFilter={setTimeFilter}
-                    hover={hover}
-                    setHover={setHover}
-                    selected={selected}
-                    setSelected={setSelected}
-                />
-            </TimeTableInner>
+                    <CustomTimeTableGrid
+                        cellWidth={150}
+                        lectureSummary={lectureSummary || []}
+                        setTimeFilter={setTimeFilter}
+                        hover={hover}
+                        setHover={setHover}
+                        selected={selected}
+                        setSelected={setSelected}
+                    />
+                </TimeTableInner>
+            )}
         </Widget>
     )
 }
