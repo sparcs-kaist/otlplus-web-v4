@@ -2,24 +2,25 @@ import { useCallback, useEffect, useRef, useState } from "react"
 
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
+import AddIcon from "@mui/icons-material/Add"
+import FavoriteIcon from "@mui/icons-material/Favorite"
+import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder"
 import { useTranslation } from "react-i18next"
 
+import exampleLectureSearchResults from "@/api/example/LectureSearchResults"
+import exampleUserWishlistResults from "@/api/example/UserWishList"
+import type { GETLecturesResponse } from "@/api/lectures"
 import ScrollableDropdown from "@/common/components/ScrollableDropdown"
 import SearchArea, { type SearchParamsType } from "@/common/components/search/SearchArea"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
-import type { GETLecturesResponse } from "@/api/lectures"
 import type { TimeBlock } from "@/common/schemas/timeblock"
-import exampleLectureSearchResults from "@/api/example/LectureSearchResults"
-import formatProfessorName from "./formatProfessorName"
-import AddIcon from "@mui/icons-material/Add"
-import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder"
-import FavoriteIcon from "@mui/icons-material/Favorite"
-import exampleUserWishlistResults from "@/api/example/UserWishList"
-import { axiosClientWithAuth } from "@/libs/axios"
 import { clientEnv } from "@/env"
-import useUserStore from "@/utils/useUserStore"
+import { axiosClientWithAuth } from "@/libs/axios"
+import useUserStore from "@/utils/zustand/useUserStore"
+
+import formatProfessorName from "./formatProfessorName"
 
 const LectureListSectionInner = styled(FlexWrapper)`
     width: 100%;
@@ -67,19 +68,16 @@ const CourseBlockWrapper = styled(FlexWrapper)`
     }
 `
 
-const CourseItemWrapper = styled.div<{isSelected: boolean}>`
+const CourseItemWrapper = styled.div<{ isSelected: boolean }>`
     width: 100%;
     display: flex;
     flex-direction: column;
     border-radius: 8px;
     background-color: ${({ theme }) => theme.colors.Background.Block.default};
     transition: all 0.2s ease;
-    transform: ${({ isSelected }) => (isSelected ? 'translateY(-2px)' : 'none')};
+    transform: ${({ isSelected }) => (isSelected ? "translateY(-2px)" : "none")};
     box-shadow: ${({ isSelected }) =>
-        isSelected
-        ? '0 4px 8px rgba(0, 0, 0, 0.15)'
-        : 'none'
-    };
+        isSelected ? "0 4px 8px rgba(0, 0, 0, 0.15)" : "none"};
     overflow: hidden;
     flex-shrink: 0;
 `
@@ -93,17 +91,17 @@ const CourseTitleWrapper = styled.div`
     justify-content: space-between;
 `
 
-const LectureItemWrapper = styled.div<{isHighlighted: boolean}>`
+const LectureItemWrapper = styled.div<{ isHighlighted: boolean }>`
     width: 100%;
     display: flex;
     align-items: center;
     padding: 8px 12px 8px 18px;
     flex-direction: row;
     justify-content: space-between;
-    background-color: ${({ isHighlighted, theme }) => 
-        isHighlighted 
-        ? theme.colors.Background.Block.dark 
-        : theme.colors.Background.Block.default };
+    background-color: ${({ isHighlighted, theme }) =>
+        isHighlighted
+            ? theme.colors.Background.Block.dark
+            : theme.colors.Background.Block.default};
 `
 
 const Divider = styled.div`
@@ -111,22 +109,22 @@ const Divider = styled.div`
     height: 0.5px;
     background-color: ${({ theme }) => theme.colors.Line.dark};
     align-self: center;
-`;
+`
 
-const Chip = styled.div<{isSelected: boolean}>`
+const Chip = styled.div<{ isSelected: boolean }>`
     display: flex;
     align-items: center;
     padding: 8px 12px;
     flex-direction: row;
     gap: 8px;
     border-radius: 6px;
-    background-color: ${({ isSelected, theme }) => 
-        isSelected 
-        ? theme.colors.Background.Button.highlightDark 
-        : theme.colors.Background.Button.highlight };
+    background-color: ${({ isSelected, theme }) =>
+        isSelected
+            ? theme.colors.Background.Button.highlightDark
+            : theme.colors.Background.Button.highlight};
     cursor: pointer;
     &:hover {
-        background-color: ${({ theme }) => theme.colors.Background.Button.highlightDark };
+        background-color: ${({ theme }) => theme.colors.Background.Button.highlightDark};
     }
 `
 
@@ -149,130 +147,131 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
 }) => {
     const { t } = useTranslation()
     const theme = useTheme()
-    const userState = useUserStore()
+    const { user, status } = useUserStore()
 
     const [searchResult, setSearchResult] = useState<GETLecturesResponse>(
         exampleLectureSearchResults,
     )
-    const [isInWish, setIsInWish] = useState<number[]>([]);
-    const [isLoading, setIsLoading] = useState<boolean>(false);
+    const [isInWish, setIsInWish] = useState<number[]>([])
+    const [isLoading, setIsLoading] = useState<boolean>(false)
 
-    const [sortOption, setSortOption] = useState<number>(0);
-    const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null);
-    const wrapperRef = useRef<HTMLDivElement>(null);
-    const outerRef = useRef<HTMLDivElement>(null);
+    const [sortOption, setSortOption] = useState<number>(0)
+    const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null)
+    const wrapperRef = useRef<HTMLDivElement>(null)
+    const outerRef = useRef<HTMLDivElement>(null)
 
-    const [isWishlist, setIsWishlist] = useState<boolean>(false);
+    const [isWishlist, setIsWishlist] = useState<boolean>(false)
 
     // Fetch user wishlist to know which lectures are favorited
     const fetchWishlist = useCallback(async () => {
-        if (!userState.isLoggedIn) return;
-        
+        if (status === "idle") return
+
         try {
             const response = await axiosClientWithAuth.get(
-                `${clientEnv.VITE_APP_API_URL}/api/users/${userState.user.id}/wishlist`
-            );
-            const wishlistLectureIds = response.data.courses
-                .flatMap((course: { lectures: { id: number }[] }) => 
-                    course.lectures.map((lec) => lec.id)
-                );
-            setIsInWish(wishlistLectureIds);
+                `${clientEnv.VITE_APP_API_URL}/api/users/${user?.id}/wishlist`,
+            )
+            const wishlistLectureIds = response.data.courses.flatMap(
+                (course: { lectures: { id: number }[] }) =>
+                    course.lectures.map((lec) => lec.id),
+            )
+            setIsInWish(wishlistLectureIds)
         } catch (error) {
-            console.error("Failed to fetch wishlist:", error);
+            console.error("Failed to fetch wishlist:", error)
             // Fallback to example data in case of error (e.g., mock mode)
             setIsInWish(
-                exampleUserWishlistResults.courses
-                    .flatMap((course) => course.lectures.map((lec) => lec.id))
-            );
+                exampleUserWishlistResults.courses.flatMap((course) =>
+                    course.lectures.map((lec) => lec.id),
+                ),
+            )
         }
-    }, [userState]);
+    }, [status])
 
     useEffect(() => {
-        fetchWishlist();
+        fetchWishlist()
     }, [fetchWishlist])
 
-    useEffect(()=> {
+    useEffect(() => {
         if (selectedLectureId === null) {
-            setSelectedCourseId(null);
+            setSelectedCourseId(null)
         }
-    }, [selectedLectureId]);
+    }, [selectedLectureId])
 
-    useEffect(()=> {
+    useEffect(() => {
         if (isWishlist) {
-            setSearchResult(exampleUserWishlistResults);
+            setSearchResult(exampleUserWishlistResults)
         } else {
-            setSearchResult(exampleLectureSearchResults);
+            setSearchResult(exampleLectureSearchResults)
         }
     }, [isWishlist])
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
-        if (
-            wrapperRef.current &&
-            !wrapperRef.current.contains(event.target as Node)
-            && outerRef.current &&
-            outerRef.current.contains(event.target as Node)
-        ) {
-            setSelectedLectureId(null);
-            setSelectedCourseId(null);
+            if (
+                wrapperRef.current &&
+                !wrapperRef.current.contains(event.target as Node) &&
+                outerRef.current &&
+                outerRef.current.contains(event.target as Node)
+            ) {
+                setSelectedLectureId(null)
+                setSelectedCourseId(null)
+            }
         }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
+        document.addEventListener("mousedown", handleClickOutside)
+        return () => document.removeEventListener("mousedown", handleClickOutside)
+    }, [])
 
     const handleLikeClick = async (wish: boolean, lectureId: number) => {
-        if (!userState.isLoggedIn) {
-            console.warn("User not logged in");
-            return;
+        if (status === "idle") {
+            console.warn("User not logged in")
+            return
         }
 
         // Optimistic update
         if (wish) {
-            setIsInWish(prev => prev.filter(id => id !== lectureId));
+            setIsInWish((prev) => prev.filter((id) => id !== lectureId))
         } else {
-            setIsInWish(prev => [...prev, lectureId]);
+            setIsInWish((prev) => [...prev, lectureId])
         }
 
         try {
             await axiosClientWithAuth.patch(
-                `${clientEnv.VITE_APP_API_URL}/api/users/${userState.user.id}/wishlist`,
+                `${clientEnv.VITE_APP_API_URL}/api/v2/users/${user?.id}/wishlist`,
                 {
                     lectureId: lectureId,
                     action: wish ? "remove" : "add",
-                }
-            );
+                },
+            )
         } catch (error) {
-            console.error("Failed to update wishlist:", error);
+            console.error("Failed to update wishlist:", error)
             // Revert optimistic update on error
             if (wish) {
-                setIsInWish(prev => [...prev, lectureId]);
+                setIsInWish((prev) => [...prev, lectureId])
             } else {
-                setIsInWish(prev => prev.filter(id => id !== lectureId));
+                setIsInWish((prev) => prev.filter((id) => id !== lectureId))
             }
         }
     }
 
     const handleAddToTimetable = async (lectureId: number) => {
         if (!currentTimetableId) {
-            console.warn("No timetable selected");
-            return;
+            console.warn("No timetable selected")
+            return
         }
 
-        setIsLoading(true);
+        setIsLoading(true)
         try {
             await axiosClientWithAuth.patch(
                 `${clientEnv.VITE_APP_API_URL}/api/timetables/${currentTimetableId}`,
                 {
                     lectureId: lectureId,
                     action: "add",
-                }
-            );
-            onLectureAdded?.();
+                },
+            )
+            onLectureAdded?.()
         } catch (error) {
-            console.error("Failed to add lecture to timetable:", error);
+            console.error("Failed to add lecture to timetable:", error)
         } finally {
-            setIsLoading(false);
+            setIsLoading(false)
         }
     }
 
@@ -290,7 +289,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                     timeFilter={timeFilter}
                     setTimeFilter={setTimeFilter}
                     onSearch={(params: SearchParamsType) => {
-                        console.log("Search params:", params);
+                        console.log("Search params:", params)
                         // TODO: Implement actual search API call
                     }}
                 />
@@ -301,7 +300,12 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                 justify={"space-between"}
                 align={"center"}
             >
-                <Chip isSelected={isWishlist} onClick={() => {setIsWishlist(!isWishlist)}}>
+                <Chip
+                    isSelected={isWishlist}
+                    onClick={() => {
+                        setIsWishlist(!isWishlist)
+                    }}
+                >
                     <Icon size={15} color={theme.colors.Highlight.default}>
                         {isWishlist ? <FavoriteIcon /> : <FavoriteBorderIcon />}
                     </Icon>
@@ -324,86 +328,164 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
             {searchResult.courses.length !== 0 ? (
                 <CourseBlockWrapper direction="column" gap={12} ref={wrapperRef}>
                     {searchResult.courses.map((course, idx) => {
-                        const courseId = course.lectures[0].courseId;
-                        const opacity = selectedCourseId != null && selectedCourseId !== courseId ? 0.3 : 1;
+                        const courseId = course.lectures[0]?.courseId ?? -1
+                        const opacity =
+                            selectedCourseId != null && selectedCourseId !== courseId
+                                ? 0.3
+                                : 1
                         return (
-                        <CourseItemWrapper isSelected={selectedCourseId === courseId} key={idx} style={{opacity: opacity}}>
-                            <CourseTitleWrapper>
-                                <FlexWrapper direction="row" gap={6} style={{opacity: course.completed ? 0.3 : 1}}>
-                                    <Typography type={"NormalBold"} color={"Text.default"}>
-                                        {course.name}
-                                    </Typography>
-                                    <Typography type={"Normal"} color={"Text.default"}>
-                                        {course.code}
-                                    </Typography>
-                                </FlexWrapper>
-                                {course.completed 
-                                    ?
-                                    <Typography type={"Normal"} color={"Text.default"}>
-                                        {t('common.completedCourse')}
-                                    </Typography> 
-                                    : 
-                                    <Typography type={"Normal"} color={"Highlight.default"}>
-                                        {course.type}
-                                    </Typography>}
-                            </CourseTitleWrapper>
-                            <Divider />
-                            {course.lectures.map((lecture, idx) => {
-                                const wish = isInWish.includes(lecture.id);
-                                return (
-                                    <>
-                                        <LectureItemWrapper 
-                                            onClick={() => {
-                                                if (lecture.id === selectedLectureId) { 
-                                                    setSelectedLectureId(null); 
-                                                    setSelectedCourseId(null);
-                                                    return;
-                                                }
-                                                setSelectedLectureId(lecture.id); 
-                                                setSelectedCourseId(courseId)
-                                            }}
-                                            isHighlighted={selectedLectureId === lecture.id}
-                                            key={idx}
+                            <CourseItemWrapper
+                                isSelected={selectedCourseId === courseId}
+                                key={idx}
+                                style={{ opacity: opacity }}
+                            >
+                                <CourseTitleWrapper>
+                                    <FlexWrapper
+                                        direction="row"
+                                        gap={6}
+                                        style={{ opacity: course.completed ? 0.3 : 1 }}
+                                    >
+                                        <Typography
+                                            type={"NormalBold"}
+                                            color={"Text.default"}
                                         >
-                                            <FlexWrapper direction="row" gap={6} style={{opacity: course.completed ? 0.3 : 1}}>
-                                                <Typography type={"NormalBold"} color={"Text.default"}>
-                                                    {lecture.classNo}
-                                                </Typography>
-                                                <Typography type={"Normal"} color={"Text.default"}>
-                                                    {formatProfessorName(lecture.professors)}
-                                                </Typography>
-                                            </FlexWrapper>
-                                            <FlexWrapper direction="row" gap={6} 
-                                                style={{opacity: course.completed ? 0.3 : 1}}
-                                                onClick={(e) => e.stopPropagation()}
-                                            >
-                                                {/* TODO: 클릭 시 이벤트 추가하기 */}
-                                                {wish 
-                                                ? 
-                                                    <Icon size={15} color='#E54C65' onClick={() => handleLikeClick(wish, lecture.id)}>
-                                                        <FavoriteIcon />
-                                                    </Icon>
-                                                : 
-                                                    <Icon size={15} onClick={() => handleLikeClick(wish, lecture.id)}>
-                                                        <FavoriteBorderIcon />
-                                                    </Icon> 
+                                            {course.name}
+                                        </Typography>
+                                        <Typography
+                                            type={"Normal"}
+                                            color={"Text.default"}
+                                        >
+                                            {course.code}
+                                        </Typography>
+                                    </FlexWrapper>
+                                    {course.completed ? (
+                                        <Typography
+                                            type={"Normal"}
+                                            color={"Text.default"}
+                                        >
+                                            {t("common.completedCourse")}
+                                        </Typography>
+                                    ) : (
+                                        <Typography
+                                            type={"Normal"}
+                                            color={"Highlight.default"}
+                                        >
+                                            {course.type}
+                                        </Typography>
+                                    )}
+                                </CourseTitleWrapper>
+                                <Divider />
+                                {course.lectures.map((lecture, idx) => {
+                                    const wish = isInWish.includes(lecture.id)
+                                    return (
+                                        <>
+                                            <LectureItemWrapper
+                                                onClick={() => {
+                                                    if (
+                                                        lecture.id === selectedLectureId
+                                                    ) {
+                                                        setSelectedLectureId(null)
+                                                        setSelectedCourseId(null)
+                                                        return
+                                                    }
+                                                    setSelectedLectureId(lecture.id)
+                                                    setSelectedCourseId(courseId)
+                                                }}
+                                                isHighlighted={
+                                                    selectedLectureId === lecture.id
                                                 }
-                                                <span style={{ cursor: isLoading ? 'wait' : 'pointer' }}>
-                                                    <Icon 
-                                                        size={15} 
-                                                        onClick={() => handleAddToTimetable(lecture.id)}
+                                                key={idx}
+                                            >
+                                                <FlexWrapper
+                                                    direction="row"
+                                                    gap={6}
+                                                    style={{
+                                                        opacity: course.completed
+                                                            ? 0.3
+                                                            : 1,
+                                                    }}
+                                                >
+                                                    <Typography
+                                                        type={"NormalBold"}
+                                                        color={"Text.default"}
                                                     >
-                                                        <AddIcon />
-                                                    </Icon>
-                                                </span>
-                                            </FlexWrapper>
-                                        </LectureItemWrapper>
-                                        {idx !== course.lectures.length - 1 && <Divider />}
-                                    </>
-                                )
-                            })}
-                        </CourseItemWrapper>
-                    )})}
+                                                        {lecture.classNo}
+                                                    </Typography>
+                                                    <Typography
+                                                        type={"Normal"}
+                                                        color={"Text.default"}
+                                                    >
+                                                        {formatProfessorName(
+                                                            lecture.professors,
+                                                        )}
+                                                    </Typography>
+                                                </FlexWrapper>
+                                                <FlexWrapper
+                                                    direction="row"
+                                                    gap={6}
+                                                    style={{
+                                                        opacity: course.completed
+                                                            ? 0.3
+                                                            : 1,
+                                                    }}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                >
+                                                    {/* TODO: 클릭 시 이벤트 추가하기 */}
+                                                    {wish ? (
+                                                        <Icon
+                                                            size={15}
+                                                            color="#E54C65"
+                                                            onClick={() =>
+                                                                handleLikeClick(
+                                                                    wish,
+                                                                    lecture.id,
+                                                                )
+                                                            }
+                                                        >
+                                                            <FavoriteIcon />
+                                                        </Icon>
+                                                    ) : (
+                                                        <Icon
+                                                            size={15}
+                                                            onClick={() =>
+                                                                handleLikeClick(
+                                                                    wish,
+                                                                    lecture.id,
+                                                                )
+                                                            }
+                                                        >
+                                                            <FavoriteBorderIcon />
+                                                        </Icon>
+                                                    )}
+                                                    <span
+                                                        style={{
+                                                            cursor: isLoading
+                                                                ? "wait"
+                                                                : "pointer",
+                                                        }}
+                                                    >
+                                                        <Icon
+                                                            size={15}
+                                                            onClick={() =>
+                                                                handleAddToTimetable(
+                                                                    lecture.id,
+                                                                )
+                                                            }
+                                                        >
+                                                            <AddIcon />
+                                                        </Icon>
+                                                    </span>
+                                                </FlexWrapper>
+                                            </LectureItemWrapper>
+                                            {idx !== course.lectures.length - 1 && (
+                                                <Divider />
+                                            )}
+                                        </>
+                                    )
+                                })}
+                            </CourseItemWrapper>
+                        )
+                    })}
                     <div style={{ height: 4 }} />
                 </CourseBlockWrapper>
             ) : (

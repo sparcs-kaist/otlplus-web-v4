@@ -6,11 +6,15 @@ import { LectureSchema } from "@/common/schemas/lecture"
 export const GETRequest = z.object({})
 
 export const GETResponse = z.object({
-    name: z.string(),
-    code: z.string(),
-    type: z.string(),
-    completed: z.boolean(),
-    lectures: z.array(LectureSchema),
+    courses: z.array(
+        z.object({
+            name: z.string(),
+            code: z.string(),
+            type: z.string(),
+            completed: z.boolean(),
+            lectures: z.array(LectureSchema),
+        }),
+    ),
 })
 
 export type GETWishlistResponse = z.infer<typeof GETResponse>
