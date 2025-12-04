@@ -1,7 +1,7 @@
 import styled from "@emotion/styled"
 import { Trans, useTranslation } from "react-i18next"
 
-import type { GETUserInfoResponse } from "@/api/users/$userId/info"
+import type { GETUserInfoResponse } from "@/api/users/info"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 
@@ -57,7 +57,7 @@ const Index: React.FC<AccountInfoSectionProps> = ({ userInfo }) => {
             </Caption>
             {[
                 [t("account.schoolId"), userInfo?.studentNumber],
-                [t("account.course"), userInfo?.course],
+                [t("account.course"), userInfo?.degree],
                 [
                     t("account.major"),
                     userInfo?.majorDepartments.map((dept) => dept.name).join(", "),

@@ -1,7 +1,10 @@
+import { useState } from "react"
+
 import styled from "@emotion/styled"
 import FavoriteIcon from "@mui/icons-material/Favorite"
 import FavoriteBorderOutlinedIcon from "@mui/icons-material/FavoriteBorderOutlined"
 import { useTranslation } from "react-i18next"
+import { useNavigate } from "react-router"
 
 import { ScoreEnum } from "@/common/enum/scoreEnum"
 import { semesterToString } from "@/common/enum/semesterEnum"
@@ -9,37 +12,99 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import { type Review } from "@/common/schemas/review"
+import { useAPI } from "@/utils/api/useAPI"
 import professorName from "@/utils/professorName"
 
-const Content = styled(Typography)`
+const Content = styled(Typography)<{ overflow: boolean }>`
     line-height: 1.5;
+    width: 100%;
+
+    ${(props) =>
+        props.overflow &&
+        `
+        text-overflow: ellipsis;
+        overflow: hidden;
+        word-break: break-word;
+        
+        display: -webkit-box;
+        -webkit-line-clamp: 5;
+        -webkit-box-orient: vertical;
+    `}
 `
 
-const ReviewWrapper = styled.div`
+const ReviewWrapper = styled.div<{ clickable: boolean }>`
     padding: 8px 6px;
     width: 100%;
     border-radius: 6px;
     border: 1px ${({ theme }) => theme.colors.Background.Block.dark} solid;
     background-color: ${({ theme }) => theme.colors.Background.Block.default};
+
+    &:hover {
+        background-color: ${(props) =>
+            props.clickable
+                ? props.theme.colors.Background.Block.dark
+                : props.theme.colors.Background.Block.default};
+    }
+`
+
+const SelectWrapper = styled(FlexWrapper)<{ clickable: boolean }>`
+    width: 100%;
+    cursor: ${(props) => (props.clickable ? "pointer" : "default")};
+    user-select: ${(props) => (props.clickable ? "none" : "auto")};
 `
 
 interface ReviewBlockProps {
     review: Review
-    likeReview: (reviewId: number) => void
     withWrapper?: boolean
-    isDictionary?: boolean
+    linkToDictionary?: boolean
 }
 
-function ReviewBlock({ review, likeReview, withWrapper = true, isDictionary = true }: ReviewBlockProps) {
+function ReviewBlock({
+    review,
+    withWrapper = true,
+    linkToDictionary = true,
+}: ReviewBlockProps) {
     const { t } = useTranslation()
+    const navigator = useNavigate()
+
+    const { requestFunction } = useAPI("PATCH", `/reviews/${review.id}/liked`, {
+        onSuccess: () => {
+            setLikeOverride((prev) => {
+                if (prev === null) {
+                    return !review.likedByUser
+                } else {
+                    return !prev
+                }
+            })
+        },
+    })
+
+    const [likeOverride, setLikeOverride] = useState<boolean | null>(null)
 
     if (!review) return
 
+    const likeReview = (e: React.MouseEvent) => {
+        e.stopPropagation()
+        requestFunction({
+            reviewId: review.id,
+            action: (likeOverride ?? review.likedByUser) ? "unlike" : "like",
+        })
+    }
+
     const reviewContent = (
-        <FlexWrapper direction="column" align="stretch" gap={8} padding="0px 4px">
-            {
-            isDictionary 
-            ? (<FlexWrapper direction="row" gap={6}>
+        <SelectWrapper
+            direction="column"
+            align="stretch"
+            gap={8}
+            padding="0 4px"
+            clickable={linkToDictionary}
+            onClick={() => {
+                if (linkToDictionary) {
+                    navigator(`/dictionary?courseId=${review.courseId}`)
+                }
+            }}
+        >
+            <FlexWrapper direction="row" gap={6}>
                 <Typography type="NormalBold" color="Text.default">
                     {review.courseName}
                 </Typography>
@@ -49,15 +114,9 @@ function ReviewBlock({ review, likeReview, withWrapper = true, isDictionary = tr
                 <Typography type="Normal" color="Text.lighter">
                     {review.year} {semesterToString(review.semester)}
                 </Typography>
-            </FlexWrapper>) 
-            : (
-                <Typography type="Normal" color="Text.lighter">
-                    {review.year} {semesterToString(review.semester)}
-                </Typography>
-                ) 
-            }
-            <FlexWrapper direction="row" gap={0}>
-                <Content type="Normal" color="Text.default">
+            </FlexWrapper>
+            <FlexWrapper direction="row" gap={0} style={{ overflow: "hidden" }}>
+                <Content type="Normal" color="Text.default" overflow={!withWrapper}>
                     {review.content}
                 </Content>
             </FlexWrapper>
@@ -76,28 +135,24 @@ function ReviewBlock({ review, likeReview, withWrapper = true, isDictionary = tr
                         {t("common.speech")} {ScoreEnum[review.speech]}
                     </Typography>
                 </FlexWrapper>
-                {isDictionary && <FlexWrapper
-                    direction="row"
-                    gap={4}
-                    onClick={() => likeReview && likeReview(review.id)}
-                >
+                <FlexWrapper direction="row" gap={4} onClick={(e) => likeReview(e)}>
                     <Typography type="Normal" color="Highlight.default">
                         {t("common.review.like")}
                     </Typography>
                     <Icon size={18} color="crimson">
-                        {review.likedByUser ? (
+                        {(likeOverride ?? review.likedByUser) ? (
                             <FavoriteIcon />
                         ) : (
                             <FavoriteBorderOutlinedIcon />
                         )}
                     </Icon>
-                </FlexWrapper>}
+                </FlexWrapper>
             </FlexWrapper>
-        </FlexWrapper>
+        </SelectWrapper>
     )
 
     if (withWrapper) {
-        return <ReviewWrapper>{reviewContent}</ReviewWrapper>
+        return <ReviewWrapper clickable={linkToDictionary}>{reviewContent}</ReviewWrapper>
     } else return reviewContent
 }
 
