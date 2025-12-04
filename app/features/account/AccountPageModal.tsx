@@ -1,11 +1,13 @@
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
 
-import type { GETUserInfoResponse } from "@/api/users/$userId/info"
+import type { GETUserInfoResponse } from "@/api/users/info"
 import Modal from "@/common/components/Modal"
 import Typography from "@/common/primitives/Typography"
 import AccountInfoSection from "@/features/account/sections/AccountInfoSection"
 import AccountInterestedMajorSection from "@/features/account/sections/AccountInterestedMajorSection"
+import { axiosClient } from "@/libs/axios"
+import { removeLocalStorageItem } from "@/utils/localStorage"
 import useIsDevice from "@/utils/useIsDevice"
 
 const LogoutButton = styled(Typography)`
@@ -14,20 +16,29 @@ const LogoutButton = styled(Typography)`
 
 interface AccountPageModalProps {
     userInfo: GETUserInfoResponse | null
-    setUserInfo: React.Dispatch<React.SetStateAction<GETUserInfoResponse | null>>
     accountPageOpen: boolean
     setAccountPageOpen: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 const AccountPageModal: React.FC<AccountPageModalProps> = ({
     userInfo,
-    setUserInfo,
     accountPageOpen,
     setAccountPageOpen,
 }) => {
     const isTablet = useIsDevice("tablet")
 
     const { t } = useTranslation()
+
+    const handleLogout = () => {
+        if (process.env.NODE_ENV === "production") {
+            location.href = `/session/logout`
+        } else {
+            removeLocalStorageItem("devStudentId")
+            delete axiosClient.defaults.headers.common["X-AUTH-SID"]
+            delete axiosClient.defaults.headers.common["X-SID-AUTH-TOKEN"]
+            location.reload()
+        }
+    }
 
     return (
         <Modal
@@ -37,11 +48,8 @@ const AccountPageModal: React.FC<AccountPageModalProps> = ({
             fullScreen={isTablet}
         >
             <AccountInfoSection userInfo={userInfo} />
-            <AccountInterestedMajorSection
-                userInfo={userInfo}
-                setUserInfo={setUserInfo}
-            />
-            <LogoutButton type="Normal" color="Highlight.default">
+            <AccountInterestedMajorSection userInfo={userInfo} />
+            <LogoutButton type="Normal" color="Highlight.default" onClick={handleLogout}>
                 {t("account.logout")}
             </LogoutButton>
         </Modal>

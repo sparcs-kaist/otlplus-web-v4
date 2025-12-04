@@ -9,13 +9,9 @@ import { ScoreEnum } from "@/common/enum/scoreEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import TextInputArea from "@/common/primitives/TextInputArea"
 import Typography from "@/common/primitives/Typography"
+import { useAPI } from "@/utils/api/useAPI"
 
 import Widget from "../../../../common/primitives/Widget"
-
-interface ReviewSectionProps {
-    lectureId: number
-    lectureName: string
-}
 
 const ReviewBoxWrapper = styled(FlexWrapper)`
     height: 173px;
@@ -31,7 +27,12 @@ const ScoreGrid = styled.div`
     align-items: end;
 `
 
-function ReviewSection({ lectureId, lectureName }: ReviewSectionProps) {
+function ReviewSection() {
+    const { query } = useAPI("GET", "/users/writable-review")
+    const { requestFunction } = useAPI("POST", "/reviews", {
+        onSuccess: resetReviewStates,
+    })
+
     const [reviewText, setReviewText] = useState("")
     const [reviewGrade, setReviewGrade] = useState<ScoreEnum>(0)
     const [reviewLoad, setReviewLoad] = useState<ScoreEnum>(0)
@@ -39,17 +40,27 @@ function ReviewSection({ lectureId, lectureName }: ReviewSectionProps) {
 
     const { t } = useTranslation()
 
-    function submitReview() {
-        const submitData = {
-            reviewText,
-            reviewGrade,
-            reviewLoad,
-            reviewSpeech,
-            lectureId,
-            lectureName,
-        }
+    function resetReviewStates() {
+        query.refetch()
+        setReviewText("")
+        setReviewGrade(0)
+        setReviewLoad(0)
+        setReviewSpeech(0)
+    }
 
-        alert(JSON.stringify(submitData, null, 2))
+    function submitReview() {
+        if (!query.data) return
+        requestFunction({
+            lectureId: query.data.lectureId,
+            content: reviewText,
+            grade: reviewGrade,
+            load: reviewLoad,
+            speech: reviewSpeech,
+        })
+    }
+
+    if (!query.data) {
+        return null
     }
 
     return (
@@ -57,7 +68,7 @@ function ReviewSection({ lectureId, lectureName }: ReviewSectionProps) {
             <Typography type="BiggerBold" color="Text.default">
                 <Trans
                     i18nKey="main.reviewSection.title"
-                    values={{ lectureName: lectureName }}
+                    values={{ lectureName: query.data?.name }}
                 />
             </Typography>
             <ReviewBoxWrapper
@@ -70,9 +81,8 @@ function ReviewSection({ lectureId, lectureName }: ReviewSectionProps) {
                     placeholder={t("main.reviewSection.placeholder")}
                     type="text"
                     readOnly={false}
-                    handleChange={(value) => {
-                        setReviewText(value)
-                    }}
+                    value={reviewText}
+                    handleChange={setReviewText}
                     area
                 />
             </ReviewBoxWrapper>
@@ -104,7 +114,12 @@ function ReviewSection({ lectureId, lectureName }: ReviewSectionProps) {
                     ))}
                 </ScoreGrid>
                 <FlexWrapper direction="row" justify="flex-end" gap={12}>
-                    <Button type="default" $paddingLeft={8} $paddingTop={8}>
+                    <Button
+                        type="default"
+                        $paddingLeft={8}
+                        $paddingTop={8}
+                        onClick={resetReviewStates}
+                    >
                         <Typography type="Normal">
                             {t("main.reviewSection.writeAnother")}
                         </Typography>

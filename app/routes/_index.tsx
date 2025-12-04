@@ -1,16 +1,10 @@
-import { useState } from "react"
-
 import styled from "@emotion/styled"
 
-import exampleReviews from "@/api/example/Reviews"
-import exampleScheduleFeed from "@/api/example/ScheduleFeed"
-import User from "@/api/example/UserInfo"
 import Footer from "@/common/components/guideline/Footer"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
-import { type TimeBlock } from "@/common/schemas/timeblock"
-import AdFeedSection from "@/features/main/sections/AdFeedSection"
-import PopularFeedSection from "@/features/main/sections/PopularFeedSection"
-import ReviewFeedSection from "@/features/main/sections/ReviewFeedSection"
+import HallOfFameFeedSection from "@/features/main/sections/HallOfFameFeedSection"
+import LikedMajorFeedSection from "@/features/main/sections/LikedMajorFeedSection"
+import RecentFeedSection from "@/features/main/sections/RecentFeedSection"
 import ReviewSection from "@/features/main/sections/ReviewSection"
 import ScheduleFeedSection from "@/features/main/sections/ScheduleFeedSection"
 import ScheduleSection from "@/features/main/sections/ScheduleSection"
@@ -31,13 +25,9 @@ const SearchSectionWrapper = styled(FlexWrapper)`
 `
 
 export default function Home() {
-    function likeReview(reviewId: number) {
-        alert("like review " + reviewId)
-    }
-
     return (
         <>
-            <MainWrapper direction="column" align="center" gap={240}>
+            <MainWrapper direction="column" align="center" gap={60}>
                 <MainWrapperInner
                     direction="column"
                     align="center"
@@ -50,40 +40,25 @@ export default function Home() {
                     <FlexWrapper direction="column" justify="center" gap={24}>
                         <FlexWrapper direction="row" align="stretch" gap={24}>
                             <FlexWrapper direction="column" align="stretch" gap={0}>
-                                <TimeTableSection user={User} />
+                                <TimeTableSection />
                             </FlexWrapper>
                             <FlexWrapper direction="column" align="stretch" gap={24}>
-                                <FlexWrapper direction="column" align="stretch" gap={24}>
-                                    <ScheduleSection
-                                        content="2025 봄 수강신청 마감"
-                                        dueDate={new Date("2025-04-11")}
-                                    />
-                                    <ReviewSection
-                                        lectureId={3678}
-                                        lectureName="이산구조"
-                                    />
-                                </FlexWrapper>
                                 <FlexWrapper
                                     direction="column"
                                     align="stretch"
                                     gap={24}
-                                    flex="1 1 auto"
+                                    flex="1 1 0"
                                 >
-                                    <AdFeedSection src="/ad.png" />
-                                    <AdFeedSection src="/ad.png" />
+                                    <ScheduleSection />
+                                    <ScheduleFeedSection />
+                                    <ReviewSection />
                                 </FlexWrapper>
                             </FlexWrapper>
                         </FlexWrapper>
                         <FlexWrapper direction="row" align="stretch" gap={24}>
-                            <ReviewFeedSection
-                                reviews={exampleReviews}
-                                likeReview={likeReview}
-                            />
-                            <PopularFeedSection
-                                reviews={exampleReviews}
-                                likeReview={likeReview}
-                            />
-                            <ScheduleFeedSection schedules={exampleScheduleFeed} />
+                            <RecentFeedSection />
+                            <LikedMajorFeedSection />
+                            <HallOfFameFeedSection />
                         </FlexWrapper>
                     </FlexWrapper>
                 </MainWrapperInner>
