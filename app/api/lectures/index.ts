@@ -20,13 +20,13 @@ export const GETRequest = z.object({
 
 export const GETResponse = z.object({
     courses: z.array(
-        z.object({
-            name: z.string(),
-            code: z.string(),
-            type: z.string(),
-            completedCourse: z.boolean(),
-            lectures: z.array(LectureSchema),
-        }),
+      z.object({
+        name: z.string(),
+        code: z.string(),
+        type: z.string(),
+        completed: z.boolean(),
+        lectures: z.array(LectureSchema),
+      }),
     ),
 })
 

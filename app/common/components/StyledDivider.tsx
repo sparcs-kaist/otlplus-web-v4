@@ -8,7 +8,7 @@ const StyledDividerRow = styled.div`
 
 const StyledDividerColumn = styled.div`
   width: 1px;
-  height: 100%;
+  align-self: stretch;
   background: ${({ theme }) => theme.colors.Highlight.default};
 `
 

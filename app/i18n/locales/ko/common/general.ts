@@ -18,5 +18,10 @@ export const general = {
     am: "오전",
     pm: "오후",
     year: "연도",
+    room: "장소",
     language: "언어",
-};
+    limit: "정원",
+    exam: "시험",
+    completedCourse: "수강완료",
+    wishlist: "찜목록",
+}
