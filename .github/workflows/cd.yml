@@ -54,7 +54,6 @@ jobs:
           echo "✅ Uploaded build files to S3 Dev: s3://otl-plus-dev/"
 
       - name: Invalidate CloudFront cache
-        if: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_DEV }}
         run: |
           aws cloudfront create-invalidation \
             --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_DEV }} \
