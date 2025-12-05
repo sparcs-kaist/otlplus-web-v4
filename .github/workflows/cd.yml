@@ -13,6 +13,7 @@ jobs:
   deploy-dev:
     name: Deploy to Dev
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/rc' && github.event_name == 'push'
     permissions:
       contents: read
     steps:
@@ -53,7 +54,7 @@ jobs:
           echo "✅ Uploaded build files to S3 Dev: s3://otl-plus-dev/"
 
       - name: Invalidate CloudFront cache
-        if: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_DEV != '' }}
+        if: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_DEV }}
         run: |
           aws cloudfront create-invalidation \
             --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_DEV }} \
@@ -86,8 +87,6 @@ jobs:
         run: pnpm build
         env:
           VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN_PROD }}
-          VITE_APP_API_URL: https://otl.sparcs.org/api
-          VITE_APP_LOG_LEVEL: info
           VITE_DEV_MODE: false
 
       - name: Configure AWS credentials
