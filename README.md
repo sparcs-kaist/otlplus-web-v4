@@ -20,6 +20,7 @@ pnpm install
 
 Copy file .env.example to .env and set your environment variables:
 
+
 ```bash
 cp .env.example .env
 ```
