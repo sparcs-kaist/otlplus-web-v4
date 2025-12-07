@@ -126,6 +126,7 @@ const Header: React.FC = () => {
                     handleAccountButtonClick={handleAccountButtonClick}
                     userName={userInfo ? userInfo.name : "Sign in"}
                     mobileSidebar={false}
+                    isLoading={query.isLoading}
                 />
                 <MobileSidebarButtonWrapper onClick={() => setMobileSidebarOpen(true)}>
                     <Icon size={18}>
@@ -141,6 +142,7 @@ const Header: React.FC = () => {
                         handleAccountButtonClick={handleAccountButtonClick}
                         userName={userInfo ? userInfo.name : "Sign in"}
                         mobileSidebar={true}
+                        isLoading={query.isLoading}
                     />
                 }
             />
