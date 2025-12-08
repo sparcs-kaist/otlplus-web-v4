@@ -63,7 +63,7 @@ jobs:
         run: pnpm build
         env:
           VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN_DEV }}
-          VITE_APP_API_URL: https://otl.dev.sparcs.org/api
+          VITE_APP_API_URL: https://otl.dev.sparcs.org/api/v2
           VITE_APP_LOG_LEVEL: info
           VITE_DEV_MODE: true
 
