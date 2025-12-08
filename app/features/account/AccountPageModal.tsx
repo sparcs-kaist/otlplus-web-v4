@@ -31,7 +31,7 @@ const AccountPageModal: React.FC<AccountPageModalProps> = ({
 
     const handleLogout = () => {
         if (process.env.NODE_ENV === "production") {
-            location.href = `/session/logout`
+            location.href = `/session/logout?next=${window.location.origin}`
         } else {
             removeLocalStorageItem("devStudentId")
             delete axiosClient.defaults.headers.common["X-AUTH-SID"]
