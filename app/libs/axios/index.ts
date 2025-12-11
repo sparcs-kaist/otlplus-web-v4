@@ -74,7 +74,7 @@ export const defineAxiosMock = (() => {
         }
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+     
     return (_builder: (mock: MockAdapter) => void) => {}
 })()
 

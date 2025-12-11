@@ -75,7 +75,7 @@ export function useInfiniteAPI<
     const query = useInfiniteQuery<Res>({
         queryKey: [path, params],
         queryFn: async ({ pageParam = 0 }) => {
-            let offset = initialOffset + (pageParam as number) * limit
+            const offset = initialOffset + (pageParam as number) * limit
 
             const { data } = await axiosClient.request<Res>({
                 method,
@@ -114,7 +114,7 @@ export function useInfiniteAPI<
             } else {
                 const lastPage = query.data.pages[query.data.pages.length - 1]
 
-                prev = { ...prev, ...(lastPage as {}) }
+                prev = { ...prev, ...(lastPage as object) }
 
                 infinites.forEach((key) => {
                     const mergedArray = query.data!.pages.flatMap((page) => page[key])
