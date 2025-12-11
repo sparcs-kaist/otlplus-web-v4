@@ -105,7 +105,7 @@ export function useAPI<
             mutationFn: async (params: Req) => {
                 const { data } = await axiosClient.request<Res>({
                     method: method,
-                    url: path,
+                    url: "/api/v2" + path,
                     data: ["POST", "PUT", "PATCH"].includes(method) ? params : undefined,
                     params: ["DELETE"].includes(method) ? params : undefined,
                     headers: headers || {},

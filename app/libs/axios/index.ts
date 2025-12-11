@@ -74,7 +74,6 @@ export const defineAxiosMock = (() => {
         }
     }
 
-     
     return (_builder: (mock: MockAdapter) => void) => {}
 })()
 
