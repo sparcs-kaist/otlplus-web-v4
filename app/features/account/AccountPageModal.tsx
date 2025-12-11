@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next"
 import type { GETUserInfoResponse } from "@/api/users/info"
 import Modal from "@/common/components/Modal"
 import Typography from "@/common/primitives/Typography"
+import { clientEnv } from "@/env"
 import AccountInfoSection from "@/features/account/sections/AccountInfoSection"
 import AccountInterestedMajorSection from "@/features/account/sections/AccountInterestedMajorSection"
 import { axiosClient } from "@/libs/axios"
@@ -31,7 +32,9 @@ const AccountPageModal: React.FC<AccountPageModalProps> = ({
 
     const handleLogout = () => {
         if (process.env.NODE_ENV === "production") {
-            location.href = `/session/logout?next=${window.location.origin}`
+            location.href =
+                clientEnv.VITE_APP_API_URL +
+                `/session/logout?next=${window.location.origin}`
         } else {
             removeLocalStorageItem("devStudentId")
             delete axiosClient.defaults.headers.common["X-AUTH-SID"]

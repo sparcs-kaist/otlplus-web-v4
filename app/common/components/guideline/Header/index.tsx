@@ -72,7 +72,7 @@ const Header: React.FC = () => {
             if (process.env.NODE_ENV === "development") {
                 setDeveloperLoginOpen(true)
             } else {
-                location.href = `/session/login`
+                location.href = clientEnv.VITE_APP_API_URL + `/session/login`
             }
         } else {
             setAccountPageOpen(true)

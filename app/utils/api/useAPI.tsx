@@ -79,7 +79,7 @@ export function useAPI<
             queryFn: async () => {
                 const { data } = await axiosClient.request<Res>({
                     method,
-                    url: path,
+                    url: "/api/v2" + path,
                     params,
                     headers,
                 })
