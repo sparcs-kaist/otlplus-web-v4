@@ -11,6 +11,9 @@ export enum WeekdayEnum {
 }
 
 export const weekdayToString = (day: WeekdayEnum): string => {
+    if (day < 0 || day > 6) {
+        return ""
+    }
     return [
         i18n.t("common.days.monday"),
         i18n.t("common.days.tuesday"),
@@ -19,5 +22,5 @@ export const weekdayToString = (day: WeekdayEnum): string => {
         i18n.t("common.days.friday"),
         i18n.t("common.days.saturday"),
         i18n.t("common.days.sunday"),
-    ][day]
+    ][day] as unknown as string
 }

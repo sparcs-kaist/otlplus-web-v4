@@ -102,6 +102,9 @@ export function useInfiniteAPI<
         staleTime,
         gcTime,
         enabled:
+            // TODO: fix ts-expect-error
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
             enabled && (params !== null || requestSchema.safeParse({})?.success === true),
     })
 

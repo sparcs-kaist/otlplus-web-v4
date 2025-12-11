@@ -40,7 +40,8 @@ const getColumnIndex = (
         pageStart,
     )
     for (let i = 0; i < m + 1; i++) {
-        if (columnBoundary[i] > mouseX) {
+        const boundary = columnBoundary[i]
+        if (boundary !== undefined && boundary > mouseX) {
             return i - 1
         }
     }
