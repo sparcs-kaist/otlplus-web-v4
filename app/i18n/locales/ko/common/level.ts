@@ -9,4 +9,4 @@ export const level = {
     "800sShort": "800번대",
     "900sShort": "900번대",
     etcShort: "기타",
-};
+}

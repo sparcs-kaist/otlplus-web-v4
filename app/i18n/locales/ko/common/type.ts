@@ -31,4 +31,4 @@ export const type = {
     etcShort: "기타",
     totalCredit: "학점",
     totalAu: "AU",
-};
+}
