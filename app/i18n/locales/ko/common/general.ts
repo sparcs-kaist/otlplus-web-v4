@@ -19,4 +19,4 @@ export const general = {
     pm: "오후",
     year: "연도",
     language: "언어",
-};
+}

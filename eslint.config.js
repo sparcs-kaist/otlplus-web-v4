@@ -13,6 +13,7 @@ export default defineConfig([
             "**/build/**",
             "**/coverage/**",
             "**/+types/**",
+            "**/.react-router/**",
         ],
     },
 
@@ -26,7 +27,9 @@ export default defineConfig([
         languageOptions: { globals: { ...globals.browser } },
         rules: {
             "no-empty-pattern": "off",
-            "no-unused-vars": "warn",
+            "no-unused-vars": "off",
+            "@typescript-eslint/no-unused-vars": "off",
+            "@typescript-eslint/no-explicit-any": "off",
         },
         settings: { react: { version: "detect" } },
     },

@@ -23,7 +23,9 @@ export default function MakersPage() {
                 currentIndex={currentIndex}
                 setCurrentIndex={setCurrentIndex}
             />
-            <MemberSection membersList={MakersList[currentIndex].fields} />
+            {MakersList[currentIndex] && (
+                <MemberSection membersList={MakersList[currentIndex].fields} />
+            )}
         </MakersWrapper>
     )
 }

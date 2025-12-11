@@ -5,8 +5,8 @@ import lightTheme from "./light"
 export type ThemeKeys = "light" | "dark"
 
 const themes: Record<ThemeKeys, _ThemeType> = {
-  light: lightTheme,
-  dark: darkTheme,
+    light: lightTheme,
+    dark: darkTheme,
 }
 
 export type ThemeType = _ThemeType

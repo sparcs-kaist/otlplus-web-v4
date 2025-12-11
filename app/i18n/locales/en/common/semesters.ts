@@ -3,4 +3,4 @@ export const semesters = {
     summer: "Summer",
     fall: "Fall",
     winter: "Winter",
-};
+}

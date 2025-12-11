@@ -6,4 +6,4 @@ export const days = {
     friday: "Fri",
     saturday: "Sat",
     sunday: "Sun",
-};
+}

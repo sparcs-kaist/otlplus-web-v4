@@ -8,4 +8,4 @@ export const search = {
     type: "Groups",
     placeholder: "Enter keywords",
     empty: "Please select at least one search filter",
-};
+}

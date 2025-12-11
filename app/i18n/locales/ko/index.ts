@@ -1,5 +1,5 @@
 import { account } from "./account"
-import { common } from "./common";
+import { common } from "./common"
 import { credits } from "./credits"
 import { dictionary } from "./dictionary"
 import { header } from "./header"

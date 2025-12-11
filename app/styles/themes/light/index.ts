@@ -2,7 +2,7 @@ import type { ThemeType } from "../_base"
 import baseTheme from "../_base"
 
 const lightTheme: ThemeType = {
-  ...baseTheme,
+    ...baseTheme,
 }
 
 export default lightTheme

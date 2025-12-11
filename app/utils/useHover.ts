@@ -8,23 +8,23 @@ import { type RefObject, useEffect, useRef, useState } from "react"
  * return <div ref={hoverRef}>{isHovered ? 'Hovering' : 'Not hovering'}</div>;
  */
 export const useHover = <T extends HTMLElement>(): [RefObject<T | null>, boolean] => {
-  const [isHovered, setIsHovered] = useState<boolean>(false)
-  const ref = useRef<T>(null)
+    const [isHovered, setIsHovered] = useState<boolean>(false)
+    const ref = useRef<T>(null)
 
-  const handleMouseOver = () => setIsHovered(true)
-  const handleMouseOut = () => setIsHovered(false)
+    const handleMouseOver = () => setIsHovered(true)
+    const handleMouseOut = () => setIsHovered(false)
 
-  useEffect(() => {
-    const node = ref.current
-    if (node) {
-      node.addEventListener("mouseover", handleMouseOver)
-      node.addEventListener("mouseout", handleMouseOut)
-      return () => {
-        node.removeEventListener("mouseover", handleMouseOver)
-        node.removeEventListener("mouseout", handleMouseOut)
-      }
-    }
-  }, [ref.current]) // ref.current가 변경될 때 effect를 다시 실행합니다.
+    useEffect(() => {
+        const node = ref.current
+        if (node) {
+            node.addEventListener("mouseover", handleMouseOver)
+            node.addEventListener("mouseout", handleMouseOut)
+            return () => {
+                node.removeEventListener("mouseover", handleMouseOver)
+                node.removeEventListener("mouseout", handleMouseOut)
+            }
+        }
+    }, [ref.current]) // ref.current가 변경될 때 effect를 다시 실행합니다.
 
-  return [ref, isHovered]
+    return [ref, isHovered]
 }

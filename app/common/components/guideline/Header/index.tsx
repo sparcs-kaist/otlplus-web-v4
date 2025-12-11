@@ -72,7 +72,7 @@ const Header: React.FC = () => {
             if (process.env.NODE_ENV === "development") {
                 setDeveloperLoginOpen(true)
             } else {
-                location.href = `/session/login`
+                location.href = clientEnv.VITE_APP_API_URL + `/session/login`
             }
         } else {
             setAccountPageOpen(true)
@@ -126,6 +126,7 @@ const Header: React.FC = () => {
                     handleAccountButtonClick={handleAccountButtonClick}
                     userName={userInfo ? userInfo.name : "Sign in"}
                     mobileSidebar={false}
+                    isLoading={query.isLoading}
                 />
                 <MobileSidebarButtonWrapper onClick={() => setMobileSidebarOpen(true)}>
                     <Icon size={18}>
@@ -141,6 +142,7 @@ const Header: React.FC = () => {
                         handleAccountButtonClick={handleAccountButtonClick}
                         userName={userInfo ? userInfo.name : "Sign in"}
                         mobileSidebar={true}
+                        isLoading={query.isLoading}
                     />
                 }
             />

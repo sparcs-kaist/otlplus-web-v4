@@ -9,4 +9,4 @@ export const level = {
     "800sShort": "800s",
     "900sShort": "900s",
     etcShort: "ETC",
-};
+}

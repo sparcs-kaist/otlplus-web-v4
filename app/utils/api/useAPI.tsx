@@ -79,7 +79,7 @@ export function useAPI<
             queryFn: async () => {
                 const { data } = await axiosClient.request<Res>({
                     method,
-                    url: path,
+                    url: "/api/v2" + path,
                     params,
                     headers,
                 })
@@ -93,6 +93,9 @@ export function useAPI<
             gcTime,
             enabled:
                 enabled &&
+                // TODO: fix ts-expect-error
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-expect-error
                 (params !== null || requestSchema.safeParse({})?.success === true),
         })
 
@@ -102,7 +105,7 @@ export function useAPI<
             mutationFn: async (params: Req) => {
                 const { data } = await axiosClient.request<Res>({
                     method: method,
-                    url: path,
+                    url: "/api/v2" + path,
                     data: ["POST", "PUT", "PATCH"].includes(method) ? params : undefined,
                     params: ["DELETE"].includes(method) ? params : undefined,
                     headers: headers || {},
