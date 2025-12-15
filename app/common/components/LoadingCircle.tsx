@@ -13,7 +13,7 @@ const LoadingCircleWrapper = styled.div`
     flex-grow: 1;
 `
 
-export default forwardRef<HTMLDivElement, {}>(function LoadingCircle(_, ref) {
+export default forwardRef<HTMLDivElement, object>(function LoadingCircle(_, ref) {
     const theme = createTheme({})
 
     return (

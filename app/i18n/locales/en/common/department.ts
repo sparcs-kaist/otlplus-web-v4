@@ -20,4 +20,4 @@ export const department = {
     ssShort: "SS",
     bcsShort: "BCS",
     etcShort: "ETC",
-};
+}

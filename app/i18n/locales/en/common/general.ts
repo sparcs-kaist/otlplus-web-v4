@@ -19,4 +19,4 @@ export const general = {
     pm: "PM",
     year: "year",
     language: "Language",
-};
+}

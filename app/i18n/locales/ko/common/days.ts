@@ -6,4 +6,4 @@ export const days = {
     friday: "금요일",
     saturday: "토요일",
     sunday: "일요일",
-};
+}
