@@ -31,12 +31,14 @@ interface SettingProps {
     handleAccountButtonClick: () => void
     userName: string
     mobileSidebar: boolean
+    isLoading: boolean
 }
 
 const Setting: React.FC<SettingProps> = ({
     handleAccountButtonClick,
     userName,
     mobileSidebar,
+    isLoading,
 }) => {
     const { t, i18n } = useTranslation()
     const { themeSetting, setTheme } = useThemeStore()
@@ -104,22 +106,26 @@ const Setting: React.FC<SettingProps> = ({
                 </Icon>
                 {mobileSidebar && t("common.language")}
             </LanguageButtonWrapper>
-            <AccountButtonWrapper
-                direction="row"
-                gap={4}
-                align="center"
-                onClick={handleAccountButtonClick}
-            >
-                <Icon size={16}>
-                    <PersonIcon />
-                </Icon>
-                <Typography
-                    type={mobileSidebar ? "NormalBold" : "Normal"}
-                    color={"Text.default"}
+            {isLoading ? (
+                "Loading..."
+            ) : (
+                <AccountButtonWrapper
+                    direction="row"
+                    gap={4}
+                    align="center"
+                    onClick={handleAccountButtonClick}
                 >
-                    {userName}
-                </Typography>
-            </AccountButtonWrapper>
+                    <Icon size={16}>
+                        <PersonIcon />
+                    </Icon>
+                    <Typography
+                        type={mobileSidebar ? "NormalBold" : "Normal"}
+                        color={"Text.default"}
+                    >
+                        {userName}
+                    </Typography>
+                </AccountButtonWrapper>
+            )}
         </SettingWrapper>
     )
 }

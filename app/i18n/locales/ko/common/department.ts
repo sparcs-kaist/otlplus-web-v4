@@ -20,4 +20,4 @@ export const department = {
     ssShort: "반시공",
     bcsShort: "뇌인지",
     etcShort: "기타",
-};
+}

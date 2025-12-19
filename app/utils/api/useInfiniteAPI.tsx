@@ -75,11 +75,11 @@ export function useInfiniteAPI<
     const query = useInfiniteQuery<Res>({
         queryKey: [path, params],
         queryFn: async ({ pageParam = 0 }) => {
-            let offset = initialOffset + (pageParam as number) * limit
+            const offset = initialOffset + (pageParam as number) * limit
 
             const { data } = await axiosClient.request<Res>({
                 method,
-                url: path,
+                url: "/api/v2" + path,
                 params: { ...params, offset, limit },
                 headers,
             })
@@ -102,6 +102,9 @@ export function useInfiniteAPI<
         staleTime,
         gcTime,
         enabled:
+            // TODO: fix ts-expect-error
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
             enabled && (params !== null || requestSchema.safeParse({})?.success === true),
     })
 
@@ -114,7 +117,7 @@ export function useInfiniteAPI<
             } else {
                 const lastPage = query.data.pages[query.data.pages.length - 1]
 
-                prev = { ...prev, ...(lastPage as {}) }
+                prev = { ...prev, ...(lastPage as object) }
 
                 infinites.forEach((key) => {
                     const mergedArray = query.data!.pages.flatMap((page) => page[key])
