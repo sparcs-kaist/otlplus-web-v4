@@ -2,6 +2,7 @@ import styled from "@emotion/styled"
 
 import Typography from "@/common/primitives/Typography"
 import ProjectCard from "@/features/makers/components/ProjectCard"
+import { media } from "@/styles/themes/media"
 import type { MakersWrapper } from "@/utils/makersList"
 
 const ProjectSessionWrapper = styled.div`
@@ -16,6 +17,11 @@ const ProjectCardWrapper = styled.div`
   justify-content: center;
   margin: 36px 0 0 0;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+
+  ${media.mobile} {
+    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  }
 `
 
 interface ProjectSectionProps {

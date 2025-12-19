@@ -2,6 +2,7 @@ import styled from "@emotion/styled"
 
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
+import { media } from "@/styles/themes/media"
 import { useHover } from "@/utils/useHover"
 
 const StyledCard = styled(FlexWrapper)`
@@ -15,6 +16,12 @@ const StyledCard = styled(FlexWrapper)`
 
     &:hover {
         box-shadow: 0 4px 12px ${({ theme }) => theme.colors.Line.dark};
+    }
+
+    ${media.mobile} {
+        padding: 12px;
+        height: auto;
+        min-height: 90px;
     }
 `
 

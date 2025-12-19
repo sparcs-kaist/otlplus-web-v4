@@ -2,6 +2,7 @@ import styled from "@emotion/styled"
 
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
+import { media } from "@/styles/themes/media"
 
 const StyledCard = styled(FlexWrapper)<{ isSelected: boolean }>`
     height: 100px;
@@ -13,6 +14,12 @@ const StyledCard = styled(FlexWrapper)<{ isSelected: boolean }>`
         isSelected && `0 4px 12px ${theme.colors.Line.dark};`};
     background-color: ${({ theme }) => theme.colors.Background.Tab.default};
     transition: box-shadow 0.2s ease-in-out;
+
+    ${media.mobile} {
+        padding: 12px;
+        height: auto;
+        min-height: 90px;
+    }
 `
 
 interface ProjectCardProps {

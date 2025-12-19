@@ -2,6 +2,7 @@ import styled from "@emotion/styled"
 
 import Typography from "@/common/primitives/Typography"
 import MemberCard from "@/features/makers/components/MemberCard"
+import { media } from "@/styles/themes/media"
 import type { MemberField } from "@/utils/makersList"
 
 const MemberSessionWrapper = styled.div`
@@ -16,6 +17,11 @@ const MemberCardWrapper = styled.div`
   justify-content: center;
   margin: 36px 0 0 0;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+
+  ${media.mobile} {
+    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
 `
 
 interface MemberSectionProps {
