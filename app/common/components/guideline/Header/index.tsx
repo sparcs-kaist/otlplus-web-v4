@@ -1,15 +1,20 @@
-import { useContext, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 
 import styled from "@emotion/styled"
 import MenuIcon from "@mui/icons-material/Menu"
 
-import { SelectedThemeContext } from "@/Providers"
-import exampleUserInfo from "@/api/example/UserInfo"
-import type { GETUserInfoResponse } from "@/api/users/$userId/info"
+import { type GETUserInfoResponse } from "@/api/users/info"
 import Icon from "@/common/primitives/Icon"
+import { clientEnv } from "@/env"
 import AccountPageModal from "@/features/account/AccountPageModal"
+import DeveloperLoginModal from "@/features/account/DeveloperLoginModal"
+import { axiosClient } from "@/libs/axios"
 import { media } from "@/styles/themes/media"
+import { useAPI } from "@/utils/api/useAPI"
+import { getLocalStorageItem } from "@/utils/localStorage"
 import useIsDevice from "@/utils/useIsDevice"
+import useThemeStore from "@/utils/zustand/useThemeStore"
+import useUserStore from "@/utils/zustand/useUserStore"
 
 import Menu from "./Menu"
 import MobileSidebar from "./MobileSidebar"
@@ -50,30 +55,75 @@ const MobileSidebarButtonWrapper = styled.div`
 
 const Header: React.FC = () => {
     const isMobile = useIsDevice("mobile")
-    const { selectedTheme } = useContext(SelectedThemeContext)
+
+    const { displayedTheme } = useThemeStore()
+    const { setUser, clearUser } = useUserStore()
+    const [enabled, setEnabled] = useState<boolean>(false)
 
     const [accountPageOpen, setAccountPageOpen] = useState<boolean>(false)
+    const [developerLoginOpen, setDeveloperLoginOpen] = useState(false)
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false)
+    const [userInfo, setUserInfo] = useState<GETUserInfoResponse | null>(null)
 
-    const [userInfo, setUserInfo] = useState<GETUserInfoResponse | null>(exampleUserInfo)
+    const { query } = useAPI("GET", "/users/info", { enabled: enabled })
 
+    const handleAccountButtonClick = () => {
+        if (userInfo === null) {
+            if (process.env.NODE_ENV === "development") {
+                setDeveloperLoginOpen(true)
+            } else {
+                location.href = `/session/login`
+            }
+        } else {
+            setAccountPageOpen(true)
+        }
+    }
+
+    useEffect(() => {
+        if (process.env.NODE_ENV === "development") {
+            const devStudentId = getLocalStorageItem("devStudentId")
+            const devToken = clientEnv.VITE_APP_DEV_API_AUTH_TOKEN
+            if (devStudentId) {
+                axiosClient.defaults.headers.common["X-AUTH-SID"] = devStudentId
+                axiosClient.defaults.headers.common["X-SID-AUTH-TOKEN"] = devToken
+            }
+        }
+        setEnabled(true)
+    }, [])
+    useEffect(() => {
+        if (query.isLoading || !enabled) return
+        if (query.data) {
+            setUserInfo(query.data)
+            setUser({ id: query.data.id, name: query.data.name })
+        } else {
+            setUserInfo(null)
+            clearUser()
+        }
+    }, [query.data, query.isLoading, enabled])
     useEffect(() => {
         if (!isMobile) setMobileSidebarOpen(false)
     }, [isMobile])
 
     return (
         <HeaderWrapper>
-            <AccountPageModal
-                userInfo={userInfo}
-                setUserInfo={setUserInfo}
-                accountPageOpen={accountPageOpen}
-                setAccountPageOpen={setAccountPageOpen}
-            />
-            {selectedTheme !== "dark" && <HeaderBar />}
+            {developerLoginOpen && (
+                <DeveloperLoginModal
+                    developerLoginModalOpen={developerLoginOpen}
+                    setDeveloperLoginModalOpen={setDeveloperLoginOpen}
+                />
+            )}
+            {accountPageOpen && (
+                <AccountPageModal
+                    userInfo={userInfo}
+                    accountPageOpen={accountPageOpen}
+                    setAccountPageOpen={setAccountPageOpen}
+                />
+            )}
+            {displayedTheme !== "dark" && <HeaderBar />}
             <HeaderInner>
                 <Menu setMobileSidebarOpen={() => setMobileSidebarOpen(false)} />
                 <Setting
-                    setAccountPageOpen={setAccountPageOpen}
+                    handleAccountButtonClick={handleAccountButtonClick}
                     userName={userInfo ? userInfo.name : "Sign in"}
                     mobileSidebar={false}
                 />
@@ -88,7 +138,7 @@ const Header: React.FC = () => {
                 mobileSidebarOpen={mobileSidebarOpen}
                 sidebarHeader={
                     <Setting
-                        setAccountPageOpen={setAccountPageOpen}
+                        handleAccountButtonClick={handleAccountButtonClick}
                         userName={userInfo ? userInfo.name : "Sign in"}
                         mobileSidebar={true}
                     />

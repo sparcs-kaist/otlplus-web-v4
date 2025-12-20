@@ -4,12 +4,12 @@ import { Search } from "@mui/icons-material"
 import { AnimatePresence, motion } from "framer-motion"
 import { useTranslation } from "react-i18next"
 
-import { type GETCoursesQuery } from "@/api/courses"
 import { type SearchOptions } from "@/common/interface/SearchOptions"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import { type TimeBlock } from "@/common/schemas/timeblock"
+import { useAPI } from "@/utils/api/useAPI"
 import { formatTimeAreaToString } from "@/utils/timetable/formatTimeblockToString"
 
 import Button from "../Button"
@@ -21,18 +21,18 @@ import SearchFilterArea, {
 import TextInput from "./TextInput"
 
 export type SearchParamsType = {
-    type?: GETCoursesQuery["type"]
-    department?: GETCoursesQuery["department"]
-    level?: GETCoursesQuery["level"]
-    term?: GETCoursesQuery["term"]
-    time?: GETCoursesQuery["time"]
-    keyword: GETCoursesQuery["keyword"]
+    type?: string[]
+    department?: number[]
+    level?: number[]
+    term?: number
+    time?: TimeBlock
+    keyword: string
 }
 
 type TimeProps<ops extends readonly SearchOptions[]> = "time" extends ops[number]
     ? {
           timeFilter: TimeBlock | null
-          setTimeFilter: (timeFilter: TimeBlock | null) => {}
+          setTimeFilter: (timeFilter: TimeBlock | null) => object
       }
     : { timeFilter?: never; setTimeFilter?: never }
 
@@ -56,6 +56,8 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
     setTimeFilter,
 }: SearchAreaProps<ops>) {
     const { t } = useTranslation()
+
+    const { query } = useAPI("GET", "/department-options")
 
     const [open, setOpen] = useState<boolean>(false)
     const [value, setValue] = useState<string>("")
@@ -123,6 +125,14 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
                             result[key] = (value as [any, string][]).map(
                                 (x) => x[0],
                             ) as any
+                        if (key == "department") {
+                            result[key] = result[key]?.map(
+                                (dept) =>
+                                    query.data?.departments.find(
+                                        (d) => d.code === dept.toString(),
+                                    )?.id as number,
+                            )
+                        }
                     }
                 }
             },

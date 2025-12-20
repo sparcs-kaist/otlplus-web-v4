@@ -13,7 +13,7 @@ const Credits: React.FC = () => {
     const { t } = useTranslation()
 
     return (
-        <FlexWrapper direction="column" gap={12} align={"center"} justify={"center"}>
+        <FlexWrapper direction="column" gap={12} align={"center"} justify={"stretch"}>
             <Typography color={"Text.placeholder"} type={"Bigger"}>
                 OTL PLUS
             </Typography>

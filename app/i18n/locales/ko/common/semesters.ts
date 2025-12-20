@@ -1,0 +1,6 @@
+export const semesters = {
+    spring: "봄",
+    summer: "여름",
+    fall: "가을",
+    winter: "겨울",
+};

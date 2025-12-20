@@ -4,15 +4,12 @@ import styled from "@emotion/styled"
 import { Trans, useTranslation } from "react-i18next"
 import { Link } from "react-router-dom"
 
+import { type SemesterEnum, semesterToString } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
+import { useAPI } from "@/utils/api/useAPI"
 
 import Widget from "../../../../common/primitives/Widget"
-
-interface ScheduleSectionProps {
-    content: string
-    dueDate: Date
-}
 
 const StyledLink = styled(Link)`
     color: ${({ theme }) => theme.colors.Highlight.default};
@@ -25,9 +22,18 @@ const StyledLink = styled(Link)`
     }
 `
 
-const ScheduleSection: React.FC<ScheduleSectionProps> = (props) => {
+function ScheduleSection() {
+    const { query } = useAPI("GET", "/semesters")
+
     const [now, setNow] = useState(new Date())
     const [timeLeft, setTimeLeft] = useState<string>("")
+
+    const [yearSemester, setYearSemester] = useState<{
+        year: number
+        semester: SemesterEnum
+    } | null>(null)
+    const [contentKey, setContentKey] = useState<string>("")
+    const [dueDate, setDueDate] = useState<Date | null>(null)
 
     const { t } = useTranslation()
 
@@ -37,7 +43,41 @@ const ScheduleSection: React.FC<ScheduleSectionProps> = (props) => {
     }, [])
 
     useEffect(() => {
-        const diff = props.dueDate.getTime() - now.getTime()
+        if (!query.data?.semesters) return
+        const currentSemester = query.data.semesters[query.data.semesters.length - 1]
+        if (!currentSemester) return
+
+        setYearSemester({
+            year: currentSemester.year,
+            semester: currentSemester.semester,
+        })
+
+        const scheduleItems = (
+            Object.entries(currentSemester).filter(
+                ([key, value]) => key !== "year" && key !== "semester" && value !== null,
+            ) as [string, string][]
+        )
+            .map(([key, value]) => [key, new Date(value)] as [string, Date])
+            .sort((a, b) => a[1].getTime() - b[1].getTime())
+
+        for (const [key, date] of scheduleItems) {
+            if (now.getTime() <= date.getTime()) {
+                setContentKey(key)
+                setDueDate(date)
+                return
+            }
+        }
+
+        // If all dates have passed, show the last one
+        const lastItem = scheduleItems[scheduleItems.length - 1]
+        if (!lastItem) return
+        setContentKey(lastItem[0])
+        setDueDate(lastItem[1])
+    }, [query.data])
+
+    useEffect(() => {
+        if (!dueDate) return
+        const diff = dueDate.getTime() - now.getTime()
         const isPast = diff < 0
         const absDiff = Math.abs(diff)
         const days = Math.floor(absDiff / (1000 * 60 * 60 * 24))
@@ -47,7 +87,20 @@ const ScheduleSection: React.FC<ScheduleSectionProps> = (props) => {
         setTimeLeft(
             `D${isPast ? "+" : "-"}${days} ${hours}${t("common.hours")} ${minutes}${t("common.minutes")} ${seconds}${t("common.seconds")}`,
         )
-    }, [now, props.dueDate])
+    }, [now, dueDate])
+
+    function getContentString() {
+        if (!yearSemester) return t(`main.schedule.contents.${contentKey}`)
+        return (
+            yearSemester.year.toString() +
+            " " +
+            semesterToString(yearSemester.semester) +
+            " " +
+            t(`main.schedule.contents.${contentKey}`)
+        )
+    }
+
+    if (!dueDate) return null
 
     return (
         <Widget
@@ -64,7 +117,7 @@ const ScheduleSection: React.FC<ScheduleSectionProps> = (props) => {
                             <Typography type="BiggerBold" color="Text.dark">
                                 <Trans
                                     i18nKey="main.schedule.title"
-                                    values={{ content: props.content }}
+                                    values={{ content: getContentString() }}
                                 />
                             </Typography>
                         </FlexWrapper>
@@ -76,9 +129,9 @@ const ScheduleSection: React.FC<ScheduleSectionProps> = (props) => {
                     </FlexWrapper>
                     <FlexWrapper direction="column" gap={0}>
                         <Typography type="Normal" color="Text.placeholder">
-                            {props.content} {props.dueDate.getFullYear()}.
-                            {String(props.dueDate.getMonth() + 1).padStart(2, "0")}.
-                            {String(props.dueDate.getDate()).padStart(2, "0")}
+                            {getContentString()} {dueDate.getFullYear()}.
+                            {String(dueDate.getMonth() + 1).padStart(2, "0")}.
+                            {String(dueDate.getDate()).padStart(2, "0")}
                         </Typography>
                     </FlexWrapper>
                 </FlexWrapper>

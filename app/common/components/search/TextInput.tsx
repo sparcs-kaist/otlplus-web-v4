@@ -31,7 +31,7 @@ const Input = styled.input<{
     border-radius: 4px;
     font-size: 16px;
     line-height: 20px;
-    color: rgba(51, 51, 51, 1);
+    color: ${({ theme }) => theme.colors.Text.default};
     border: 0;
     padding: 8px;
     background-color: ${({ theme }) => theme.colors.Background.Section.default};

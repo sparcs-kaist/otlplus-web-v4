@@ -5,13 +5,13 @@ import CloseIcon from "@mui/icons-material/Close"
 import SearchIcon from "@mui/icons-material/Search"
 import { useTranslation } from "react-i18next"
 
-import { Departments, DepartmentsEN } from "@/api/example/Departments"
 import StyledDivider from "@/common/components/StyledDivider"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import type { Department } from "@/common/schemas/department"
 import { media } from "@/styles/themes/media"
+import { useAPI } from "@/utils/api/useAPI"
 
 const DepartmentSearchAreaInner = styled(FlexWrapper)`
     width: 100%;
@@ -92,7 +92,9 @@ const DepartmentSearchArea: React.FC<DepartmentSearchAreaProps> = ({
     currentDepartment,
     setCurrentDepartment,
 }) => {
-    const { t, i18n } = useTranslation()
+    const { t } = useTranslation()
+
+    const { query } = useAPI("GET", "/department-options")
 
     const [inputValue, setInputValue] = useState("")
     const [searchResult, setSearchResult] = useState<Department[]>([])
@@ -100,8 +102,7 @@ const DepartmentSearchArea: React.FC<DepartmentSearchAreaProps> = ({
     const searchInput = useRef<HTMLInputElement | null>(null)
 
     function findDepartmentNameById(id: number): string | undefined {
-        const DepartmentList = i18n.language === "en" ? DepartmentsEN : Departments
-        const department = DepartmentList.find((dept) => dept.id === id)
+        const department = query.data?.departments?.find((dept) => dept.id === id)
         return department ? department.name : undefined
     }
 
@@ -129,16 +130,18 @@ const DepartmentSearchArea: React.FC<DepartmentSearchAreaProps> = ({
     }
 
     useEffect(() => {
-        const DepartmentList = i18n.language === "en" ? DepartmentsEN : Departments
-        const filtered = (DepartmentList as Department[]).filter((dept) => {
+        if (!query.data?.departments) return
+        const filtered = (query.data.departments as Department[]).filter((dept) => {
             const isNotSelected = !currentDepartment
                 .map((dept) => dept.id)
                 .includes(dept.id)
-            if (!dept.name) return false
+            if (!dept.name || !dept.code) return false
             const matchesSearch =
                 inputValue.trim() === ""
                     ? true
-                    : dept.name?.toLowerCase().includes(inputValue.toLowerCase())
+                    : (dept.name + " (" + dept.code + ")")
+                          .toLowerCase()
+                          .includes(inputValue.toLowerCase())
             return isNotSelected && matchesSearch
         })
         setSearchResult(filtered)

@@ -37,6 +37,8 @@ jobs:
         run: pnpm build
         env:
           VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN_DEV }}
+          VITE_APP_API_URL: https://otl.dev.sparcs.org/api
+          VITE_APP_LOG_LEVEL: info
           VITE_DEV_MODE: true
 
       - name: Configure AWS credentials
@@ -85,6 +87,8 @@ jobs:
         run: pnpm build
         env:
           VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN_PROD }}
+          VITE_APP_API_URL: https://otl.sparcs.org/api
+          VITE_APP_LOG_LEVEL: info
           VITE_DEV_MODE: false
 
       - name: Configure AWS credentials

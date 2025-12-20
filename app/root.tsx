@@ -1,6 +1,7 @@
 import React from "react"
 
 import styled from "@emotion/styled"
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import {
     Links,
     Meta,
@@ -75,6 +76,7 @@ export default function App() {
             <OutletWrapper direction="column" gap={0} align="stretch">
                 <Outlet />
             </OutletWrapper>
+            <ReactQueryDevtools initialIsOpen={false} />
         </AppWrapper>
     )
 }
