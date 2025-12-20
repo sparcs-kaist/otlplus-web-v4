@@ -46,8 +46,8 @@ const OptionCard = styled.div<{ disabled: boolean }>`
     }
 `
 
-const DropdownWrapper = styled.div<{ isExpand: boolean }>`
-    width: 100%;
+const DropdownWrapper = styled.div<{ isExpand: boolean; width: number }>`
+    width: ${({ width }) => `${width}px`};
     display: flex;
     flex-direction: column;
     border-radius: 6px;
@@ -114,6 +114,34 @@ const ScrollableDropdown: React.FC<ScrollableDropdownProps> = ({
         width: 0,
     })
 
+    const [maxWidth, setMaxWidth] = useState<number>(0);
+
+    useEffect(() => {
+        if (options.length > 0) {
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            if (!ctx) return;
+            ctx.font = "14px Pretendard, sans-serif";
+
+            const longestWidth = Math.max(
+                ...options.map((opt) => ctx.measureText(opt).width)
+            );
+
+            setMaxWidth(longestWidth + 50);
+        }
+    }, [options]);
+
+    useEffect(() => {
+        if (selectedWrapperRef.current) {
+            const rect = selectedWrapperRef.current.getBoundingClientRect();
+            setPosition({
+                top: rect.top,
+                left: rect.left,
+                width: Math.max(rect.width, maxWidth),
+            });
+        }
+    }, [isExpand, maxWidth]);
+
     const optionScrollRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
@@ -153,7 +181,7 @@ const ScrollableDropdown: React.FC<ScrollableDropdownProps> = ({
     }, [selectedOption, isExpand, options])
 
     return (
-        <DropdownWrapper isExpand={isExpand}>
+        <DropdownWrapper isExpand={isExpand} width={maxWidth}>
             <SelectedWrapper
                 ref={selectedWrapperRef}
                 onClick={() => {

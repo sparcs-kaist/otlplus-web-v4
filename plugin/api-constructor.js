@@ -1,6 +1,7 @@
 import fg from "fast-glob"
 import fs from "node:fs/promises"
 import path from "node:path"
+import process from "node:process"
 
 const HTTP_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"]
 

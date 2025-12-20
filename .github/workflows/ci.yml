@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, rc]
   pull_request:
-    branches: [main]
+    branches: [main, rc]
 
 env:
   NODE_VERSION: 20
@@ -63,7 +63,7 @@ jobs:
         run: pnpm build
         env:
           VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN_DEV }}
-          VITE_APP_API_URL: https://otl.dev.sparcs.org/api
+          VITE_APP_API_URL: https://api.otl.dev.sparcs.org
           VITE_APP_LOG_LEVEL: info
           VITE_DEV_MODE: true
 

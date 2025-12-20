@@ -31,4 +31,4 @@ export const type = {
     etcShort: "ETC",
     totalCredit: "Credit",
     totalAu: "AU",
-};
+}

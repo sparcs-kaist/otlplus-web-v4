@@ -4,8 +4,9 @@ export const search = {
     level: "Grade",
     department: "Department",
     term: "Term",
+    time: "Time",
     all: "All",
     type: "Groups",
     placeholder: "Enter keywords",
     empty: "Please select at least one search filter",
-};
+}
