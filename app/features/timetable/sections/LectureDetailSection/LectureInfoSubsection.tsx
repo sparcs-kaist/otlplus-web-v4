@@ -1,16 +1,17 @@
-import React from "react"
+import React, { useEffect } from "react"
 
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
 
 import type { GETCourseDetailResponse } from "@/api/courses/$courseId"
+import exampleCourse from "@/api/example/Course"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
-import exampleCourse from "@/api/example/Course"
 import type { Lecture } from "@/common/schemas/lecture"
+
 import formatProfessorName from "../LectureListSection/formatProfessorName"
-import formatRoomName from "./formatRoomName"
 import formatExamTime from "./formatExamTime"
+import formatRoomName from "./formatRoomName"
 
 const LectureInfo = styled(FlexWrapper)`
     width: 100%;
@@ -33,10 +34,17 @@ interface LectureInfoSubsectionProps {
     selectedLecture: Lecture | null
 }
 
-const LectureInfoSubsection: React.FC<LectureInfoSubsectionProps> = ({ selectedLecture }) => {
+const LectureInfoSubsection: React.FC<LectureInfoSubsectionProps> = ({
+    selectedLecture,
+}) => {
     const { t } = useTranslation()
     // /courses/{courseId} 호출 => lecture.
-    const [courseDetail, setCourseDetail] = React.useState<GETCourseDetailResponse | null>(exampleCourse)
+    const [courseDetail, setCourseDetail] =
+        React.useState<GETCourseDetailResponse | null>(exampleCourse)
+
+    useEffect(() => {
+        console.log(selectedLecture)
+    }, [selectedLecture])
 
     return (
         <>

@@ -31,8 +31,7 @@ const InfoArea = styled.div`
 
 const MapImage = styled.div`
     width: 100%;
-    height: 150px;
-    background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 50%, #b1dfbb 100%);
+    height: 220px;
     border-radius: 8px;
     display: flex;
     align-items: center;
@@ -45,7 +44,7 @@ const MapImage = styled.div`
         position: absolute;
         width: 100%;
         height: 100%;
-        background-image: url("/ad.png");
+        background-image: url("/campus_map.png");
         background-size: cover;
         background-position: center;
         opacity: 0.8;

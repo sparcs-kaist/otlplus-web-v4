@@ -6,8 +6,8 @@ import { TimeBlockSchema } from "@/common/schemas/timeblock"
 
 const ClassTimeSchema = TimeBlockSchema.extend({
     buildingCode: z.string(),
-    placeName: z.string(),
-    placeNameShort: z.string().optional(),
+    buildingName: z.string(),
+    roomName: z.string(),
 })
 
 const ExamTimeSchema = TimeBlockSchema.extend({

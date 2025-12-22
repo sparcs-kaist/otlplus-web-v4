@@ -131,7 +131,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                                 setCurrentTimetableId(timetable.id)
                             }}
                         >
-                            {timetable.name}
+                            {timetable.name ? timetable.name : "No Title"}
                         </TabButton>
                     )
                 })}

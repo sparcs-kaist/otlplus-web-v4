@@ -7,17 +7,20 @@ import FavoriteIcon from "@mui/icons-material/Favorite"
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder"
 import { useTranslation } from "react-i18next"
 
-import exampleLectureSearchResults from "@/api/example/LectureSearchResults"
 import exampleUserWishlistResults from "@/api/example/UserWishList"
 import type { GETLecturesResponse } from "@/api/lectures"
 import ScrollableDropdown from "@/common/components/ScrollableDropdown"
 import SearchArea, { type SearchParamsType } from "@/common/components/search/SearchArea"
+import type { SemesterEnum } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
+import type { Lecture } from "@/common/schemas/lecture"
 import type { TimeBlock } from "@/common/schemas/timeblock"
 import { clientEnv } from "@/env"
 import { axiosClientWithAuth } from "@/libs/axios"
+import { useAPI } from "@/utils/api/useAPI"
+import checkEmpty from "@/utils/search/checkEmpty"
 import useUserStore from "@/utils/zustand/useUserStore"
 
 import formatProfessorName from "./formatProfessorName"
@@ -129,17 +132,27 @@ const Chip = styled.div<{ isSelected: boolean }>`
 `
 
 interface LectureListSectionProps {
-    selectedLectureId: number | null
-    setSelectedLectureId: React.Dispatch<React.SetStateAction<number | null>>
+    year: number
+    semester: SemesterEnum
+    hoveredLecture: Lecture | null
+    setHoveredLecture: React.Dispatch<React.SetStateAction<Lecture | null>>
+    selectedLecture: Lecture | null
+    setSelectedLecture: React.Dispatch<React.SetStateAction<Lecture | null>>
     timeFilter: TimeBlock | null
     setTimeFilter: React.Dispatch<React.SetStateAction<TimeBlock | null>>
     currentTimetableId: number | null
     onLectureAdded?: () => void
 }
 
+const SEARCH_LIMIT = 100
+
 const LectureListSection: React.FC<LectureListSectionProps> = ({
-    selectedLectureId,
-    setSelectedLectureId,
+    year,
+    semester,
+    hoveredLecture,
+    setHoveredLecture,
+    selectedLecture,
+    setSelectedLecture,
     timeFilter,
     setTimeFilter,
     currentTimetableId,
@@ -149,18 +162,50 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     const theme = useTheme()
     const { user, status } = useUserStore()
 
-    const [searchResult, setSearchResult] = useState<GETLecturesResponse>(
-        exampleLectureSearchResults,
-    )
+    const [enabled, setEnabled] = useState(false)
+
+    const { query, setParams } = useAPI("GET", "/lectures", { enabled: enabled })
+
+    const [searchResult, setSearchResult] = useState<GETLecturesResponse>({ courses: [] })
     const [isInWish, setIsInWish] = useState<number[]>([])
     const [isLoading, setIsLoading] = useState<boolean>(false)
 
     const [sortOption, setSortOption] = useState<number>(0)
-    const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null)
     const wrapperRef = useRef<HTMLDivElement>(null)
     const outerRef = useRef<HTMLDivElement>(null)
 
     const [isWishlist, setIsWishlist] = useState<boolean>(false)
+
+    const handleSearch = (param: SearchParamsType) => {
+        if (checkEmpty(param)) {
+            alert(t("common.search.empty"))
+            return
+        }
+        setSearchResult({ courses: [] })
+        const fullParam = {
+            year: year,
+            semester: semester,
+            ...param,
+            order: (["code", "popular", "studentCount"] as const)[sortOption] ?? "code",
+            offset: 0,
+            limit: SEARCH_LIMIT,
+        }
+        setParams(fullParam)
+        setEnabled(true)
+    }
+
+    useEffect(() => {
+        if (query.data !== undefined) {
+            setSearchResult((prevState) => {
+                return {
+                    courses: [...prevState.courses, ...query.data.courses],
+                }
+            })
+            if (query.data.courses.length < SEARCH_LIMIT) {
+                setEnabled(false)
+            }
+        }
+    }, [query.data])
 
     // Fetch user wishlist to know which lectures are favorited
     const fetchWishlist = useCallback(async () => {
@@ -191,16 +236,10 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     }, [fetchWishlist])
 
     useEffect(() => {
-        if (selectedLectureId === null) {
-            setSelectedCourseId(null)
-        }
-    }, [selectedLectureId])
-
-    useEffect(() => {
         if (isWishlist) {
             setSearchResult(exampleUserWishlistResults)
         } else {
-            setSearchResult(exampleLectureSearchResults)
+            setSearchResult({ courses: [] })
         }
     }, [isWishlist])
 
@@ -212,8 +251,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                 outerRef.current &&
                 outerRef.current.contains(event.target as Node)
             ) {
-                setSelectedLectureId(null)
-                setSelectedCourseId(null)
+                setSelectedLecture(null)
             }
         }
         document.addEventListener("mousedown", handleClickOutside)
@@ -288,10 +326,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                     options={["type", "department", "level", "term", "time"]}
                     timeFilter={timeFilter}
                     setTimeFilter={setTimeFilter}
-                    onSearch={(params: SearchParamsType) => {
-                        console.log("Search params:", params)
-                        // TODO: Implement actual search API call
-                    }}
+                    onSearch={handleSearch}
                 />
             </SearchSubSection>
             <FlexWrapper
@@ -330,12 +365,13 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                     {searchResult.courses.map((course, idx) => {
                         const courseId = course.lectures[0]?.courseId ?? -1
                         const opacity =
-                            selectedCourseId != null && selectedCourseId !== courseId
+                            selectedLecture != null &&
+                            selectedLecture.courseId !== courseId
                                 ? 0.3
                                 : 1
                         return (
                             <CourseItemWrapper
-                                isSelected={selectedCourseId === courseId}
+                                isSelected={selectedLecture?.courseId === courseId}
                                 key={idx}
                                 style={{ opacity: opacity }}
                             >
@@ -380,19 +416,24 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                                     return (
                                         <>
                                             <LectureItemWrapper
+                                                onMouseEnter={() => {
+                                                    setHoveredLecture(lecture)
+                                                }}
+                                                onMouseLeave={() => {
+                                                    setHoveredLecture(null)
+                                                }}
                                                 onClick={() => {
                                                     if (
-                                                        lecture.id === selectedLectureId
+                                                        lecture.id === selectedLecture?.id
                                                     ) {
-                                                        setSelectedLectureId(null)
-                                                        setSelectedCourseId(null)
+                                                        setSelectedLecture(null)
                                                         return
                                                     }
-                                                    setSelectedLectureId(lecture.id)
-                                                    setSelectedCourseId(courseId)
+                                                    setSelectedLecture(lecture)
                                                 }}
                                                 isHighlighted={
-                                                    selectedLectureId === lecture.id
+                                                    selectedLecture?.id === lecture.id ||
+                                                    hoveredLecture?.id === lecture.id
                                                 }
                                                 key={idx}
                                             >

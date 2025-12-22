@@ -1,8 +1,7 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import styled from "@emotion/styled"
 
-import exampleLectures from "@/api/example/Lectures"
 import StyledDivider from "@/common/components/StyledDivider"
 import TabButtonRow from "@/common/components/timetable/TabButtonRow"
 import { type SemesterEnum } from "@/common/enum/semesterEnum"
@@ -86,11 +85,6 @@ export default function Timetable() {
     const contentsAreaRef = useRef<HTMLDivElement>(null)
     const outerRef = useRef<HTMLDivElement>(null)
 
-    // Search/Detail panel states
-    const [searchedId, setSearchedId] = useState<number | null>(null)
-    const [lectureId, setLectureId] = useState<number | null>(null)
-
-    // Timetable grid states
     const [hover, setHover] = useState<Lecture | null>(null)
     const [selected, setSelected] = useState<Lecture | null>(null)
 
@@ -117,27 +111,6 @@ export default function Timetable() {
         }
     }, [semester.data])
 
-    useEffect(() => {
-        if (searchedId !== null) {
-            setLectureId(searchedId)
-        }
-    }, [searchedId])
-
-    // Sync timetable grid selection with detail view
-    useEffect(() => {
-        if (selected !== null) {
-            setLectureId(selected.id)
-            setSearchedId(null)
-        }
-    }, [selected])
-
-    // Sync timetable grid hover with detail view
-    useEffect(() => {
-        if (selected === null && hover !== null) {
-            setLectureId(hover.id)
-        }
-    }, [hover, selected])
-
     // 양 쪽의 높이를 일정하게 맞추기 위함 - 스크롤이 들어가는 경우도 있어서 css 스타일만으로 구현 불가,,?
     useEffect(() => {
         function matchHeight() {
@@ -161,7 +134,7 @@ export default function Timetable() {
                 outerRef.current &&
                 outerRef.current.contains(event.target as Node)
             ) {
-                setSearchedId(null)
+                setSelected(null)
             }
         }
         document.addEventListener("mousedown", handleClickOutside)
@@ -174,8 +147,12 @@ export default function Timetable() {
                 {/*과목 목록 영역*/}
                 <LectureListArea>
                     <LectureListSection
-                        selectedLectureId={searchedId}
-                        setSelectedLectureId={setSearchedId}
+                        year={year}
+                        semester={semesterEnum}
+                        hoveredLecture={hover}
+                        selectedLecture={selected}
+                        setSelectedLecture={setSelected}
+                        setHoveredLecture={setHover}
                         timeFilter={timeFilter}
                         setTimeFilter={setTimeFilter}
                         currentTimetableId={currentTimetableId}
@@ -185,7 +162,7 @@ export default function Timetable() {
                 <StyledDivider direction="column" />
                 {/*과목 정보 영역*/}
                 <LectureInfoArea>
-                    <LectureDetailSection selectedLectureId={lectureId} />
+                    <LectureDetailSection selectedLecture={selected ? selected : hover} />
                 </LectureInfoArea>
             </SearchAreaWrapper>
             <ContentsAreaWrapper ref={contentsAreaRef}>
@@ -203,7 +180,9 @@ export default function Timetable() {
                     <TimetableGridArea>
                         <CustomTimeTableGrid
                             cellWidth={100}
-                            lectureSummary={timetable.data?.lectures || []}
+                            lectureSummary={(timetable.data?.lectures ?? [])
+                                .concat(selected ? [selected] : [])
+                                .concat(hover && hover !== selected ? [hover] : [])}
                             setTimeFilter={setTimeFilter}
                             hover={hover}
                             setHover={setHover}
