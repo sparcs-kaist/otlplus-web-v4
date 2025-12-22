@@ -19,6 +19,7 @@ export default function License() {
             direction="column"
             gap={0}
             align="center"
+            padding="20px"
             style={{ minHeight: "calc(100vh - 60px)" }}
         >
             <StyledWidget direction="column" gap={20}>
