@@ -105,7 +105,6 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
     }, [query.data])
     useEffect(() => {
         setSelectedProfessorId(null)
-        setWritableReviewProps([])
     }, [selectedCourseId])
     useEffect(() => {
         if (selectedProfessorId !== null && !reviewSubsectionRef.current?.isLoading) {
