@@ -195,6 +195,9 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     }
 
     useEffect(() => {
+        setSearchResult({ courses: [] })
+    }, [year, semester])
+    useEffect(() => {
         if (query.data !== undefined) {
             setSearchResult((prevState) => {
                 return {
