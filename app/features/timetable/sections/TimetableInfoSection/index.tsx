@@ -242,9 +242,7 @@ export default function TimetableInfoSection({
         }
 
         timetableLectures.forEach((lec) => {
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-expect-error
-            ;[lec.examTime as unknown as ExamTime].forEach((exam) => {
+            lec.examTimes.forEach((exam) => {
                 if (exam == null) return
                 const day = exam.day as WeekdayEnum
                 if (examsByDay[day]) {
