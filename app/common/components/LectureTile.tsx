@@ -3,6 +3,7 @@ import type { CSSProperties } from "react"
 import styled from "@emotion/styled"
 
 import type { ClassTime, Lecture } from "@/common/schemas/lecture"
+import useThemeStore from "@/utils/zustand/useThemeStore"
 
 // tile Color를 mapping 해주는 부분
 export const colorMap: Array<CSSProperties["color"]> = [
@@ -48,6 +49,7 @@ const TileWrapper = styled.div<{
     isSelected: boolean
     isHighlighted: boolean
     cellHeight: number
+    isDarkMode: boolean
 }>`
     display: flex;
     flex-direction: column;
@@ -57,8 +59,12 @@ const TileWrapper = styled.div<{
     margin-bottom: 2px;
     margin-top: 2px;
     justify-content: center;
-    background-color: ${({ theme, course_id, isHighlighted }) =>
-        isHighlighted ? theme.colors.Highlight.default : colorMap[course_id % 15]};
+    background-color: ${({ theme, course_id, isHighlighted, isDarkMode }) =>
+        isHighlighted
+            ? theme.colors.Highlight.default
+            : isDarkMode
+              ? darkColorMap[course_id % 15]
+              : colorMap[course_id % 15]};
     border-radius: 2px;
     overflow: hidden;
     overflow-wrap: break-word;
@@ -108,6 +114,8 @@ const LectureTile: React.FC<{
     isSelected = false,
     isHovered = false,
 }) => {
+    const { displayedTheme } = useThemeStore()
+
     const isHighlighted = isSelected || isHovered
 
     return (
@@ -118,6 +126,7 @@ const LectureTile: React.FC<{
             isSelected={isSelected}
             isHighlighted={isHighlighted}
             cellHeight={cellHeight}
+            isDarkMode={displayedTheme === "dark"}
         >
             <TitleWrapper isHighlighted={isHighlighted}>{lecture.name}</TitleWrapper>
             <DescWrapper isHighlighted={isHighlighted}>

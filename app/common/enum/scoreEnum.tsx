@@ -7,10 +7,7 @@ export enum ScoreEnum {
     A,
 }
 
-export const getAverageScoreLabel = (
-    score: number | undefined,
-    reviewNum: number | undefined,
-) => {
+export const getAverageScoreLabel = (score: number | undefined, reviewNum?: number) => {
     if (reviewNum === 0 || reviewNum === undefined || score === undefined) {
         return "?"
     }

@@ -1,19 +1,19 @@
-import type { ClassTime } from "@/common/schemas/lecture";
+import type { ClassTime } from "@/common/schemas/lecture"
 
 export default function formatRoomName(classes: ClassTime[]): string {
-    let res: Record<string, string> = {};
+    let res: Record<string, string> = {}
     classes.forEach((classTime) => {
-        const building = classTime.buildingCode;
-        const place = classTime.placeName;
+        const building = classTime.buildingCode
+        const room = classTime.roomName
         if (!(building in res)) {
-            res[building] = place;
+            res[building] = room
         } else {
-            if (!res[building].includes(place)) {
-                res[building] = res[building].concat(`, ${place}`);
+            if (!res[building].includes(room)) {
+                res[building] = res[building].concat(`, ${room}`)
             }
         }
-    });
+    })
     return Object.entries(res)
-        .map(([building, place]) => `(${building}) ${place}`)
-        .join(" / ");
+        .map(([building, room]) => `(${building}) ${room}`)
+        .join(" / ")
 }

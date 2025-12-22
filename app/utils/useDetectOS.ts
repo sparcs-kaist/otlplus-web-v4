@@ -8,7 +8,7 @@ const getOS = (): OS => {
         if (/mac/.test(userAgent)) return "mac"
         else return "PC"
     }
-    if (/android/.test(userAgent)) return "android"
+    if (/android/.test(userAgent) || /linux/.test(userAgent)) return "android"
     else return "ios"
 }
 
