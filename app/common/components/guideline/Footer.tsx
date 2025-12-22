@@ -210,12 +210,12 @@ function Footer() {
                                 Resources
                             </Typography>
                             <FlexWrapper direction="column" gap={10}>
-                                <StyledReactLink to="">
+                                <StyledReactLink to="/privacy-policy">
                                     <Typography type="SmallBold" color="Text.default">
                                         {t("credits.privacyPolicy")}
                                     </Typography>
                                 </StyledReactLink>
-                                <StyledReactLink to="">
+                                <StyledReactLink to="/license">
                                     <Typography type="SmallBold" color="Text.default">
                                         {t("credits.license")}
                                     </Typography>

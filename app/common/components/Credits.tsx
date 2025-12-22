@@ -18,7 +18,7 @@ const Credits: React.FC = () => {
                 OTL PLUS
             </Typography>
             <FlexWrapper direction="row" gap={12} justify={"space-between"}>
-                <StyledLink to={"/makers"}>
+                <StyledLink to="/makers">
                     <Typography color={"Text.placeholder"} type={"Big"}>
                         {t("credits.credits")}
                     </Typography>
@@ -26,15 +26,19 @@ const Credits: React.FC = () => {
                 <Typography color={"Text.placeholder"} type={"Big"}>
                     |
                 </Typography>
-                <Typography color={"Text.placeholder"} type={"Big"}>
-                    {t("credits.license")}
-                </Typography>
+                <StyledLink to="/license">
+                    <Typography color={"Text.placeholder"} type={"Big"}>
+                        {t("credits.license")}
+                    </Typography>
+                </StyledLink>
                 <Typography color={"Text.placeholder"} type={"Big"}>
                     |
                 </Typography>
-                <Typography color={"Text.placeholder"} type={"Big"}>
-                    {t("credits.privacyPolicy")}
-                </Typography>
+                <StyledLink to="/privacy-policy">
+                    <Typography color={"Text.placeholder"} type={"Big"}>
+                        {t("credits.privacyPolicy")}
+                    </Typography>
+                </StyledLink>
             </FlexWrapper>
             <Typography color={"Text.placeholder"} type={"Big"}>
                 otlplus@sparcs.org
