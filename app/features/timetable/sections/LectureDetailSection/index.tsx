@@ -129,7 +129,10 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                         direction="column"
                         gap={10}
                     >
-                        <LectureReviewSubsection selectedLectureId={selectedLecture.id} />
+                        <LectureReviewSubsection
+                            selectedCourseId={selectedLecture.courseId}
+                            selectedProfessorId={selectedLecture.professors[0]?.id ?? -1}
+                        />
                     </LectureDetailWrapper>
                 </>
             ) : (

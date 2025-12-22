@@ -1,14 +1,17 @@
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
+import { useInView } from "react-intersection-observer"
 
 import exampleReviews from "@/api/example/Reviews"
 import type { GETReviewsResponse } from "@/api/reviews"
+import LoadingCircle from "@/common/components/LoadingCircle"
 import ReviewBlock from "@/common/components/reviews/ReviewBlock"
 import { getAverageScoreLabel } from "@/common/enum/scoreEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
+import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
 
 const NumberWrapper = styled(FlexWrapper)`
     width: 300px;
@@ -17,7 +20,7 @@ const NumberWrapper = styled(FlexWrapper)`
 
 const NumberContent = styled(FlexWrapper)`
     flex: 1 0 0;
-`;
+`
 
 const Divider = styled.div`
     width: 100%;
@@ -26,16 +29,41 @@ const Divider = styled.div`
 `
 
 interface LectureReviewSubsectionProps {
-    selectedLectureId: number | null
+    selectedCourseId: number | null
+    selectedProfessorId: number | null
 }
 
 const LectureReviewSubsection: React.FC<LectureReviewSubsectionProps> = ({
-    selectedLectureId,
+    selectedCourseId,
+    selectedProfessorId,
 }) => {
     const { t } = useTranslation()
 
-    const [reviews, setReviews] = useState<GETReviewsResponse | null>(exampleReviews)
-    const [reviewLanguage, setReviewLanguage] = useState("all")
+    const { query, setParams, data } = useInfiniteAPI("GET", "/reviews", {
+        gcTime: 0,
+        infinites: ["reviews"],
+        limit: 20,
+    })
+
+    const { ref, inView } = useInView({ threshold: 0 })
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            setParams({
+                mode: "default",
+                courseId: selectedCourseId ?? undefined,
+                professorId: selectedProfessorId ?? undefined,
+            })
+        }, 1000)
+
+        return () => clearTimeout(timer)
+    }, [selectedCourseId, selectedProfessorId])
+
+    useEffect(() => {
+        if (inView && query.hasNextPage && !query.isFetchingNextPage) {
+            query.fetchNextPage()
+        }
+    }, [inView, query])
 
     return (
         <>
@@ -55,22 +83,19 @@ const LectureReviewSubsection: React.FC<LectureReviewSubsectionProps> = ({
                     {[
                         [
                             getAverageScoreLabel(
-                                reviews?.averageGrade,
-                                reviews?.reviews.length,
+                                data?.averageGrade,
+                                data?.reviews.length,
                             ),
                             t("common.grade"),
                         ],
                         [
-                            getAverageScoreLabel(
-                                reviews?.averageLoad,
-                                reviews?.reviews.length,
-                            ),
+                            getAverageScoreLabel(data?.averageLoad, data?.reviews.length),
                             t("common.load"),
                         ],
                         [
                             getAverageScoreLabel(
-                                reviews?.averageSpeech,
-                                reviews?.reviews.length,
+                                data?.averageSpeech,
+                                data?.reviews.length,
                             ),
                             t("common.speech"),
                         ],
@@ -93,9 +118,10 @@ const LectureReviewSubsection: React.FC<LectureReviewSubsectionProps> = ({
             </FlexWrapper>
             <Divider />
 
-            {reviews?.reviews.map((review) => (
-                <ReviewBlock review={review} likeReview={() => {}} key={review.id} isDictionary={false}/>
+            {data?.reviews.map((review) => (
+                <ReviewBlock review={review} key={review.id} linkToDictionary={true} />
             ))}
+            {query.hasNextPage && <LoadingCircle ref={ref} />}
         </>
     )
 }
