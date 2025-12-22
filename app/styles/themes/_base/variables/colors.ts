@@ -17,7 +17,7 @@ export const colors = {
         },
         Section: {
             default: "#FFFFFF",
-            transparent: "#FFFFFFdd",
+            transparent: "rgba(220,220,220,0.87)",
         },
         Tab: {
             default: "#FFFFFF",

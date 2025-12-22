@@ -48,7 +48,7 @@ const OptionList = styled.div`
 `
 
 const SemesterHeader = styled(Typography)`
-    padding: 8px 12px;
+    padding: 4px 12px;
     background-color: ${({ theme }) => theme.colors.Background.Block.default};
     border-top: 1px solid ${({ theme }) => theme.colors.Line.default};
     border-bottom: 1px solid ${({ theme }) => theme.colors.Line.default};
