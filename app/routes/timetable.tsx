@@ -102,7 +102,9 @@ export default function Timetable() {
     const [year, setYear] = useState<number>(new Date().getFullYear())
     const [semesterEnum, setSemesterEnum] = useState<SemesterEnum>(1)
 
-    const { query: timetable } = useAPI("GET", `/timetables/${currentTimetableId}`)
+    const { query: timetable } = useAPI("GET", `/timetables/${currentTimetableId}`, {
+        enabled: currentTimetableId !== null,
+    })
 
     useEffect(() => {
         const semesters = semester.data?.semesters

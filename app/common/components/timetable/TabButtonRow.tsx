@@ -84,6 +84,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
         } else {
             setSemester(SemesterEnum.SPRING)
         }
+        setCurrentTimetableId(null)
     }
     const onClickNextSemester = () => {
         if (isLastSemester) return
@@ -93,6 +94,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
         } else {
             setSemester(SemesterEnum.FALL)
         }
+        setCurrentTimetableId(null)
     }
 
     return (

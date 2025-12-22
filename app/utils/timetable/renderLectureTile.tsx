@@ -31,13 +31,9 @@ const renderLectureTile = (
 
     for (let i = 0; i < lectureSummary.length; i++) {
         const lecture: Lecture = lectureSummary[i]
-        const course: Lecture | undefined = findItemById(
-            exampleLectures,
-            lecture.courseId,
-        )
         const timeBlocks: ClassTime[] = lecture.classes
-        const isSelected = selected == course
-        const isHovered = hover == course && selected == null
+        const isSelected = selected === lecture
+        const isHovered = hover === lecture && selected == null
 
         for (let j = 0; j < timeBlocks.length; j++) {
             const timeBlock = timeBlocks[j]
@@ -57,17 +53,17 @@ const renderLectureTile = (
                     key={`${i}-${j}`}
                     onClick={(event: React.MouseEvent) => {
                         event.stopPropagation()
-                        if (course == selected) {
+                        if (lecture === selected) {
                             setSelected(null)
                         } else {
-                            if (course != undefined) {
-                                setSelected(course)
+                            if (lecture !== undefined) {
+                                setSelected(lecture)
                             }
                         }
                     }}
                     onMouseEnter={() => {
-                        if (!dragging && course != undefined) {
-                            setHover(course)
+                        if (!dragging && lecture !== undefined) {
+                            setHover(lecture)
                         }
                         setHolding(true)
                     }}
