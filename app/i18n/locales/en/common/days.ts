@@ -6,4 +6,11 @@ export const days = {
     friday: "Fri",
     saturday: "Sat",
     sunday: "Sun",
+    mondayShort: "Mon",
+    tuesdayShort: "Tue",
+    wednesdayShort: "Wed",
+    thursdayShort: "Thu",
+    fridayShort: "Fri",
+    saturdayShort: "Sat",
+    sundayShort: "Sun",
 }

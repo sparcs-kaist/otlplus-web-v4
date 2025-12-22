@@ -1,5 +1,6 @@
 import { useMemo } from "react"
 
+import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth"
 import ImageIcon from "@mui/icons-material/Image"
@@ -12,8 +13,7 @@ import { WeekdayEnum, weekdayToString } from "@/common/enum/weekdayEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
-import type { Lecture } from "@/common/schemas/lecture"
-
+import type { ExamTime, Lecture } from "@/common/schemas/lecture"
 
 const InfoArea = styled.div`
     display: flex;
@@ -21,7 +21,6 @@ const InfoArea = styled.div`
     width: 264px;
     align-self: stretch;
     gap: 12px;
-    padding: 30px;
     overflow-y: auto;
 
     scrollbar-width: none;
@@ -85,7 +84,7 @@ const TotalRow = styled.div`
     flex-direction: row;
     justify-content: center;
     align-items: center;
-    gap: 24px;
+    gap: 48px;
 `
 
 const TotalItem = styled.div`
@@ -111,9 +110,9 @@ const TotalLabel = styled.span`
 const GradeRow = styled.div`
     display: flex;
     flex-direction: row;
-    justify-content: space-around;
+    justify-content: center;
     align-items: center;
-    gap: 8px;
+    gap: 48px;
 `
 
 const GradeItem = styled.div`
@@ -135,13 +134,6 @@ const GradeLabel = styled.span`
     color: ${({ theme }) => theme.colors.Text.dark};
 `
 
-const InfoGroup = styled.div`
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    width: 100%;
-`
-
 const ExamScheduleItem = styled.div`
     display: flex;
     flex-direction: row;
@@ -150,8 +142,8 @@ const ExamScheduleItem = styled.div`
 `
 
 const DayLabel = styled.span<{ color?: string }>`
-    font-size: 12px;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 400;
     color: ${({ color, theme }) => color || theme.colors.Text.default};
     min-width: 16px;
 `
@@ -189,6 +181,7 @@ export default function TimetableInfoSection({
     timetableLectures,
 }: TimetableInfoSectionProps) {
     const { t } = useTranslation()
+    const theme = useTheme()
 
     // Calculate timetable summary info
     const timetableInfo = useMemo(() => {
@@ -250,7 +243,10 @@ export default function TimetableInfoSection({
         }
 
         timetableLectures.forEach((lec) => {
-            lec.examTimes.forEach((exam) => {
+            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+            // @ts-expect-error
+            ;[lec.examTime as unknown as ExamTime].forEach((exam) => {
+                if (exam == null) return
                 const day = exam.day as WeekdayEnum
                 if (examsByDay[day]) {
                     examsByDay[day].push({
@@ -362,7 +358,7 @@ export default function TimetableInfoSection({
             <StyledDivider direction="row" />
 
             {/* 시험시간표 */}
-            <InfoGroup>
+            <FlexWrapper direction="column" gap={15} style={{ width: "100%" }}>
                 <Typography type="NormalBold" color="Text.default">
                     시험시간표
                 </Typography>
@@ -371,50 +367,57 @@ export default function TimetableInfoSection({
                     if (!exams || exams.length === 0) return null
                     return (
                         <ExamScheduleItem key={day}>
-                            <DayLabel color={color}>{weekdayToString(day)}</DayLabel>
+                            <DayLabel color={color}>
+                                {weekdayToString(day, true)}
+                            </DayLabel>
                             <FlexWrapper direction="column" gap={2}>
-                                {exams.map((exam, idx) => (
-                                    <FlexWrapper key={idx} direction="column" gap={0}>
-                                        <Typography
-                                            type="SmallerBold"
-                                            color="Text.default"
-                                        >
-                                            {exam.lectureName}
-                                        </Typography>
-                                        <Typography type="Smaller" color="Text.dark">
-                                            {exam.time}
-                                        </Typography>
-                                    </FlexWrapper>
-                                ))}
+                                {exams
+                                    .sort((a, b) => a.time.localeCompare(b.time))
+                                    .map((exam, idx) => (
+                                        <FlexWrapper key={idx} direction="column" gap={0}>
+                                            <Typography
+                                                type="NormalBold"
+                                                color="Text.default"
+                                            >
+                                                {exam.lectureName}
+                                            </Typography>
+                                            <Typography
+                                                type="Normal"
+                                                color="Text.default"
+                                            >
+                                                {exam.time}
+                                            </Typography>
+                                        </FlexWrapper>
+                                    ))}
                             </FlexWrapper>
                         </ExamScheduleItem>
                     )
                 })}
-            </InfoGroup>
+            </FlexWrapper>
 
             <StyledDivider direction="row" />
 
             {/* 내보내기 버튼들 */}
-            <InfoGroup>
+            <FlexWrapper direction="column" gap={8} style={{ width: "100%" }}>
                 <ExportButton onClick={() => console.log("이미지로 내보내기")}>
-                    <Icon size={16} color="#E54C65">
+                    <Icon size={16} color={theme.colors.Highlight.default}>
                         <ImageIcon />
                     </Icon>
                     <span>이미지로 내보내기</span>
                 </ExportButton>
                 <ExportButton onClick={() => console.log("캘린더로 내보내기")}>
-                    <Icon size={16} color="#E54C65">
+                    <Icon size={16} color={theme.colors.Highlight.default}>
                         <CalendarMonthIcon />
                     </Icon>
                     <span>캘린더로 내보내기</span>
                 </ExportButton>
                 <ExportButton onClick={() => console.log("실라버스 모아보기")}>
-                    <Icon size={16} color="#E54C65">
+                    <Icon size={16} color={theme.colors.Highlight.default}>
                         <MenuBookIcon />
                     </Icon>
                     <span>실라버스 모아보기</span>
                 </ExportButton>
-            </InfoGroup>
+            </FlexWrapper>
         </InfoArea>
     )
 }

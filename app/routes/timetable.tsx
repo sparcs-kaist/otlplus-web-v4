@@ -1,17 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 
 import styled from "@emotion/styled"
-import { useTranslation } from "react-i18next"
 
 import exampleLectures from "@/api/example/Lectures"
 import StyledDivider from "@/common/components/StyledDivider"
 import TabButtonRow from "@/common/components/timetable/TabButtonRow"
+import { type SemesterEnum } from "@/common/enum/semesterEnum"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimeBlock } from "@/common/schemas/timeblock"
 import CustomTimeTableGrid from "@/features/main/components/CustomTimeTableGrid"
 import LectureDetailSection from "@/features/timetable/sections/LectureDetailSection"
 import LectureListSection from "@/features/timetable/sections/LectureListSection"
 import TimetableInfoSection from "@/features/timetable/sections/TimetableInfoSection"
+import { useAPI } from "@/utils/api/useAPI"
 
 const TimetableWrapper = styled.div`
     display: flex;
@@ -79,21 +80,17 @@ const LectureListArea = styled.div`
 `
 
 export default function Timetable() {
-    const { t } = useTranslation()
+    const { query: semester } = useAPI("GET", "/semesters")
+
     const searchAreaRef = useRef<HTMLDivElement>(null)
     const contentsAreaRef = useRef<HTMLDivElement>(null)
     const outerRef = useRef<HTMLDivElement>(null)
-
-    const [index, setIndex] = useState<number>(0)
 
     // Search/Detail panel states
     const [searchedId, setSearchedId] = useState<number | null>(null)
     const [lectureId, setLectureId] = useState<number | null>(null)
 
     // Timetable grid states
-    const [timetableLectures, setTimetableLectures] = useState<Lecture[]>(
-        exampleLectures.slice(0, 3),
-    )
     const [hover, setHover] = useState<Lecture | null>(null)
     const [selected, setSelected] = useState<Lecture | null>(null)
 
@@ -101,14 +98,22 @@ export default function Timetable() {
     const [timeFilter, setTimeFilter] = useState<TimeBlock | null>(null)
 
     // Current timetable ID (placeholder - should come from timetable selection logic)
-    const [currentTimetableId, setCurrentTimetableId] = useState<number | null>(1)
+    const [currentTimetableId, setCurrentTimetableId] = useState<number | null>(null)
+    const [year, setYear] = useState<number>(new Date().getFullYear())
+    const [semesterEnum, setSemesterEnum] = useState<SemesterEnum>(1)
 
-    // Callback when a lecture is added to timetable
-    const handleLectureAdded = useCallback(() => {
-        // Refresh timetable data when a lecture is added
-        console.log("Lecture added to timetable")
-        // In real implementation, re-fetch timetable data here
-    }, [])
+    const { query: timetable } = useAPI("GET", `/timetables/${currentTimetableId}`)
+
+    useEffect(() => {
+        const semesters = semester.data?.semesters
+        if (semesters && semesters.length > 0) {
+            const lastSemester = semesters[semesters.length - 1]
+            if (lastSemester) {
+                setYear(lastSemester.year)
+                setSemesterEnum(lastSemester.semester)
+            }
+        }
+    }, [semester.data])
 
     useEffect(() => {
         if (searchedId !== null) {
@@ -172,7 +177,7 @@ export default function Timetable() {
                         timeFilter={timeFilter}
                         setTimeFilter={setTimeFilter}
                         currentTimetableId={currentTimetableId}
-                        onLectureAdded={handleLectureAdded}
+                        onLectureAdded={() => {}}
                     />
                 </LectureListArea>
                 <StyledDivider direction="column" />
@@ -183,13 +188,20 @@ export default function Timetable() {
             </SearchAreaWrapper>
             <ContentsAreaWrapper ref={contentsAreaRef}>
                 {/* 시간표 탭 */}
-                <TabButtonRow rowLength={3} index={index} setIndex={setIndex} />
+                <TabButtonRow
+                    currentTimetableId={currentTimetableId}
+                    setCurrentTimetableId={setCurrentTimetableId}
+                    year={year}
+                    semester={semesterEnum}
+                    setYear={setYear}
+                    setSemester={setSemesterEnum}
+                />
                 <Block>
                     {/* 시간표 그리드 */}
                     <TimetableGridArea>
                         <CustomTimeTableGrid
                             cellWidth={100}
-                            lectureSummary={timetableLectures}
+                            lectureSummary={timetable.data?.lectures || []}
                             setTimeFilter={setTimeFilter}
                             hover={hover}
                             setHover={setHover}
@@ -199,7 +211,9 @@ export default function Timetable() {
                     </TimetableGridArea>
                     <StyledDivider direction="column" />
                     {/*시간표 정보 영역*/}
-                    <TimetableInfoSection timetableLectures={timetableLectures} />
+                    <TimetableInfoSection
+                        timetableLectures={timetable.data?.lectures || []}
+                    />
                 </Block>
             </ContentsAreaWrapper>
         </TimetableWrapper>
