@@ -66,8 +66,6 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
         enabled: selectedCourseId !== null,
     })
 
-    const courseDetail: GETCourseDetailResponse | null = query.data ?? null
-
     const [selectedProfessorId, setSelectedProfessorId] = useState<number | null>(null)
     const [writableReviewProps, setWritableReviewProps] = useState<
         ReviewWritingBlockProps[]
@@ -85,28 +83,29 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
     }
 
     useEffect(() => {
-        if (courseDetail) {
+        if (query.data) {
             const writableReviews: ReviewWritingBlockProps[] = []
-            courseDetail.history.forEach((history) => {
-                // if (history.myLectureId !== 0) {
-                //     const professors =
-                //         history.classes.find(
-                //             (cls) => cls.lectureId === history.myLectureId,
-                //         )?.professors || []
-                //     writableReviews.push({
-                //         name: courseDetail.name,
-                //         lectureId: history.myLectureId,
-                //         professors: professors,
-                //         year: history.year,
-                //         semester: history.semester,
-                //     })
-                // }
+            query.data.history.forEach((history) => {
+                if (history.myLectureId !== null) {
+                    const professors =
+                        history.classes.find(
+                            (cls) => cls.lectureId === history.myLectureId,
+                        )?.professors || []
+                    writableReviews.push({
+                        name: query.data.name,
+                        lectureId: history.myLectureId,
+                        professors: professors,
+                        year: history.year,
+                        semester: history.semester,
+                    })
+                }
             })
             setWritableReviewProps(writableReviews)
         }
-    }, [courseDetail])
+    }, [query.data])
     useEffect(() => {
         setSelectedProfessorId(null)
+        setWritableReviewProps([])
     }, [selectedCourseId])
     useEffect(() => {
         if (selectedProfessorId !== null && !reviewSubsectionRef.current?.isLoading) {
@@ -142,7 +141,7 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
                             >
                                 {isMobileModal && <div style={{ width: 20 }}></div>}
                                 <Typography type={"Bigger"} color={"Text.default"}>
-                                    {courseDetail?.name}
+                                    {query.data?.name}
                                 </Typography>
                                 {isMobileModal && (
                                     <Icon
@@ -155,16 +154,16 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
                                 )}
                             </FlexWrapper>
                             <Typography type={"Big"} color={"Text.default"}>
-                                {courseDetail?.code}
+                                {query.data?.code}
                             </Typography>
                         </CourseTitle>
                         <CourseDetailWrapper direction="column" gap={10} align="center">
-                            <CourseInfoSubsection courseDetail={courseDetail} />
+                            <CourseInfoSubsection courseDetail={query.data} />
                         </CourseDetailWrapper>
                         <Divider />
                         <CourseDetailWrapper direction="column" gap={10}>
                             <CourseHistorySubsection
-                                courseDetail={courseDetail}
+                                courseDetail={query.data}
                                 selectedProfessorId={selectedProfessorId}
                                 setSelectedProfessorId={setSelectedProfessorId}
                             />

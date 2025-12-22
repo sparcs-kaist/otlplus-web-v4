@@ -55,23 +55,30 @@ const CourseBlock: React.FC<CourseBlockProps> = ({
             }}
             selected={isSelected}
         >
-            <FlexWrapper direction="row" gap={6} align={"center"}>
-                <Icon
-                    size={12}
-                    color={
-                        course.open
-                            ? theme.colors.Highlight.default
-                            : theme.colors.Text.disable
-                    }
-                >
-                    <CircleIcon />
-                </Icon>
-                <Typography type={"NormalBold"} color={"Text.default"}>
-                    {course.name}
-                </Typography>
-                <Typography type={"Normal"} color={"Text.placeholder"}>
-                    {course.code}
-                </Typography>
+            <FlexWrapper direction="row" gap={0} justify="space-between" align="center">
+                <FlexWrapper direction="row" gap={6} align={"center"}>
+                    <Icon
+                        size={12}
+                        color={
+                            course.open
+                                ? theme.colors.Highlight.default
+                                : theme.colors.Text.disable
+                        }
+                    >
+                        <CircleIcon />
+                    </Icon>
+                    <Typography type={"NormalBold"} color={"Text.default"}>
+                        {course.name}
+                    </Typography>
+                    <Typography type={"Normal"} color={"Text.placeholder"}>
+                        {course.code}
+                    </Typography>
+                </FlexWrapper>
+                {course.completed && (
+                    <Typography type="Normal" color="Text.lighter">
+                        {t("common.completedCourse")}
+                    </Typography>
+                )}
             </FlexWrapper>
             <Divider />
             <FlexWrapper direction="column" gap={4}>

@@ -25,7 +25,7 @@ const DetailHeaderText = styled(Typography)`
 `
 
 interface CourseInfoSubsectionProps {
-    courseDetail: GETCourseDetailResponse | null
+    courseDetail: GETCourseDetailResponse | undefined
 }
 
 const CourseInfoSubsection: React.FC<CourseInfoSubsectionProps> = ({ courseDetail }) => {
