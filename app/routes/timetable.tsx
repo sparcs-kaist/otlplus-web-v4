@@ -3,36 +3,26 @@ import { useEffect, useRef, useState } from "react"
 import styled from "@emotion/styled"
 
 import StyledDivider from "@/common/components/StyledDivider"
+import CustomTimeTableGrid from "@/common/components/timetable/CustomTimeTableGrid"
 import TabButtonRow from "@/common/components/timetable/TabButtonRow"
 import { type SemesterEnum } from "@/common/enum/semesterEnum"
+import FlexWrapper from "@/common/primitives/FlexWrapper"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimeBlock } from "@/common/schemas/timeblock"
-import CustomTimeTableGrid from "@/features/main/components/CustomTimeTableGrid"
 import LectureDetailSection from "@/features/timetable/sections/LectureDetailSection"
 import LectureListSection from "@/features/timetable/sections/LectureListSection"
 import TimetableInfoSection from "@/features/timetable/sections/TimetableInfoSection"
 import { useAPI } from "@/utils/api/useAPI"
 
-const TimetableWrapper = styled.div`
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: flex-start;
-    gap: 12px;
-    overflow: scroll;
-    height: calc(100vh - 75px);
-    margin-bottom: 15px;
-    width: 100%;
+const TimetableWrapper = styled(FlexWrapper)`
+    min-height: 0;
+    padding: 0 20px 12px 20px;
 `
 
-const SearchAreaWrapper = styled.div`
+const SearchAreaWrapper = styled(FlexWrapper)`
     background-color: ${({ theme }) => theme.colors.Background.Section.default};
     padding: 16px;
-    display: flex;
-    flex-direction: row;
     border-radius: 12px;
-    align-items: flex-start;
-    gap: 12px;
 `
 
 const ContentsAreaWrapper = styled.div`
@@ -142,8 +132,14 @@ export default function Timetable() {
     }, [])
 
     return (
-        <TimetableWrapper ref={outerRef}>
-            <SearchAreaWrapper ref={searchAreaRef}>
+        <TimetableWrapper
+            direction="row"
+            align="stretch"
+            justify="center"
+            gap={12}
+            flex="1 0 0"
+        >
+            <SearchAreaWrapper direction="row" align="flex-start" gap={12}>
                 {/*과목 목록 영역*/}
                 <LectureListArea>
                     <LectureListSection

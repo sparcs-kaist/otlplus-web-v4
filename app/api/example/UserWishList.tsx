@@ -1,5 +1,6 @@
-import { WeekdayEnum } from "@/common/enum/weekdayEnum";
-import type { GETWishlistResponse } from "../users/$userId/wishlist";
+import { WeekdayEnum } from "@/common/enum/weekdayEnum"
+
+import type { GETWishlistResponse } from "../users/$userId/wishlist"
 
 const exampleUserWishlistResults: GETWishlistResponse = {
     courses: [
@@ -12,7 +13,7 @@ const exampleUserWishlistResults: GETWishlistResponse = {
                 {
                     id: 100,
                     courseId: 745,
-                    classNo: 'A',
+                    classNo: "A",
                     name: "이산구조",
                     code: "CS.20004",
                     department: { id: 201, name: "전산학부" },
@@ -39,7 +40,7 @@ const exampleUserWishlistResults: GETWishlistResponse = {
                             begin: 480,
                             end: 570,
                             buildingCode: "E2",
-                            placeName: "산업경영학동 1225",
+                            buildingName: "산업경영학동 1225",
                         },
                         {
                             day: 2,
@@ -57,7 +58,7 @@ const exampleUserWishlistResults: GETWishlistResponse = {
                             str: "월 10:00~12:00",
                         },
                     ],
-                }
+                },
             ],
         },
         {
@@ -69,7 +70,7 @@ const exampleUserWishlistResults: GETWishlistResponse = {
                 {
                     id: 201,
                     courseId: 746,
-                    classNo: 'A',
+                    classNo: "A",
                     name: "데이타구조",
                     code: "CS.20006",
                     department: { id: 201, name: "전산학부" },
@@ -117,7 +118,7 @@ const exampleUserWishlistResults: GETWishlistResponse = {
                 },
             ],
         },
-    ]
+    ],
 }
 
-export default exampleUserWishlistResults;
+export default exampleUserWishlistResults

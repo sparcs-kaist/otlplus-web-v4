@@ -23,6 +23,7 @@ export const GETRequest = z.object({
 export const GETResponse = z.object({
     courses: z.array(
         z.object({
+            id: z.number().int(),
             name: z.string(),
             code: z.string(),
             type: z.string(),

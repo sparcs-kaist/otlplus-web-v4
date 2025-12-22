@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react"
+import React from "react"
 
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
@@ -6,9 +7,11 @@ import AddIcon from "@mui/icons-material/Add"
 import FavoriteIcon from "@mui/icons-material/Favorite"
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder"
 import { useTranslation } from "react-i18next"
+import { useInView } from "react-intersection-observer"
 
 import exampleUserWishlistResults from "@/api/example/UserWishList"
 import type { GETLecturesResponse } from "@/api/lectures"
+import LoadingCircle from "@/common/components/LoadingCircle"
 import ScrollableDropdown from "@/common/components/ScrollableDropdown"
 import SearchArea, { type SearchParamsType } from "@/common/components/search/SearchArea"
 import type { SemesterEnum } from "@/common/enum/semesterEnum"
@@ -19,7 +22,7 @@ import type { Lecture } from "@/common/schemas/lecture"
 import type { TimeBlock } from "@/common/schemas/timeblock"
 import { clientEnv } from "@/env"
 import { axiosClientWithAuth } from "@/libs/axios"
-import { useAPI } from "@/utils/api/useAPI"
+import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
 import checkEmpty from "@/utils/search/checkEmpty"
 import useUserStore from "@/utils/zustand/useUserStore"
 
@@ -105,6 +108,7 @@ const LectureItemWrapper = styled.div<{ isHighlighted: boolean }>`
         isHighlighted
             ? theme.colors.Background.Block.dark
             : theme.colors.Background.Block.default};
+    cursor: pointer;
 `
 
 const Divider = styled.div`
@@ -144,7 +148,7 @@ interface LectureListSectionProps {
     onLectureAdded?: () => void
 }
 
-const SEARCH_LIMIT = 100
+const SEARCH_LIMIT = 10
 
 const LectureListSection: React.FC<LectureListSectionProps> = ({
     year,
@@ -162,9 +166,61 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     const theme = useTheme()
     const { user, status } = useUserStore()
 
+    const { ref, inView } = useInView({ threshold: 0 })
+
     const [enabled, setEnabled] = useState(false)
 
-    const { query, setParams } = useAPI("GET", "/lectures", { enabled: enabled })
+    const mergeCoursesById = useCallback((response?: GETLecturesResponse) => {
+        if (!response) return response
+
+        const courseMap = new Map<number, GETLecturesResponse["courses"][number]>()
+
+        response.courses.forEach((course) => {
+            const existing = courseMap.get(course.id)
+
+            if (!existing) {
+                courseMap.set(course.id, {
+                    ...course,
+                    lectures: [...course.lectures],
+                })
+                return
+            }
+
+            const lectureIds = new Set(existing.lectures.map((lecture) => lecture.id))
+            const mergedLectures = [...existing.lectures]
+
+            course.lectures.forEach((lecture) => {
+                if (lectureIds.has(lecture.id)) return
+                lectureIds.add(lecture.id)
+                mergedLectures.push(lecture)
+            })
+
+            courseMap.set(course.id, {
+                ...existing,
+                lectures: mergedLectures,
+            })
+        })
+
+        return {
+            ...response,
+            courses: Array.from(courseMap.values()),
+        }
+    }, [])
+
+    const { query, setParams, data } = useInfiniteAPI("GET", "/lectures", {
+        infinites: ["courses"],
+        limit: SEARCH_LIMIT,
+        enabled: enabled,
+        gcTime: 0,
+        select: mergeCoursesById,
+        iterate: (data) => {
+            let n = 0
+            data.courses.forEach((course) => {
+                n += course.lectures.length
+            })
+            return n
+        },
+    })
 
     const [searchResult, setSearchResult] = useState<GETLecturesResponse>({ courses: [] })
     const [isInWish, setIsInWish] = useState<number[]>([])
@@ -197,18 +253,21 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     useEffect(() => {
         setSearchResult({ courses: [] })
     }, [year, semester])
+
     useEffect(() => {
-        if (query.data !== undefined) {
-            setSearchResult((prevState) => {
-                return {
-                    courses: [...prevState.courses, ...query.data.courses],
-                }
-            })
-            if (query.data.courses.length < SEARCH_LIMIT) {
-                setEnabled(false)
-            }
+        if (inView && query.hasNextPage && !query.isFetchingNextPage) {
+            query.fetchNextPage()
         }
-    }, [query.data])
+    }, [inView, query])
+
+    useEffect(() => {
+        if (data !== undefined) {
+            setSearchResult(data)
+        }
+        if (!query.hasNextPage) {
+            setEnabled(false)
+        }
+    }, [data, query.hasNextPage])
 
     // Fetch user wishlist to know which lectures are favorited
     const fetchWishlist = useCallback(async () => {
@@ -417,8 +476,9 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                                 {course.lectures.map((lecture, idx) => {
                                     const wish = isInWish.includes(lecture.id)
                                     return (
-                                        <>
+                                        <React.Fragment key={idx}>
                                             <LectureItemWrapper
+                                                key={idx}
                                                 onMouseEnter={() => {
                                                     setHoveredLecture(lecture)
                                                 }}
@@ -438,7 +498,6 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                                                     selectedLecture?.id === lecture.id ||
                                                     hoveredLecture?.id === lecture.id
                                                 }
-                                                key={idx}
                                             >
                                                 <FlexWrapper
                                                     direction="row"
@@ -524,13 +583,14 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                                             {idx !== course.lectures.length - 1 && (
                                                 <Divider />
                                             )}
-                                        </>
+                                        </React.Fragment>
                                     )
                                 })}
                             </CourseItemWrapper>
                         )
                     })}
-                    <div style={{ height: 4 }} />
+
+                    {query.hasNextPage && <LoadingCircle ref={ref} />}
                 </CourseBlockWrapper>
             ) : (
                 <NoResultText type={"Bigger"} color={"Text.placeholder"}>

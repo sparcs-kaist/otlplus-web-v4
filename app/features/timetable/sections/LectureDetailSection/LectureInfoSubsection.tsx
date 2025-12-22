@@ -42,10 +42,6 @@ const LectureInfoSubsection: React.FC<LectureInfoSubsectionProps> = ({
     const [courseDetail, setCourseDetail] =
         React.useState<GETCourseDetailResponse | null>(exampleCourse)
 
-    useEffect(() => {
-        console.log(selectedLecture)
-    }, [selectedLecture])
-
     return (
         <>
             <LectureInfo direction="column" gap={8}>
