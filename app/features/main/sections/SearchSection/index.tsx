@@ -7,6 +7,7 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import checkEmpty from "@/utils/search/checkEmpty"
 
 const SearchSectionInner = styled(FlexWrapper)`
+    flex: 0 1 auto;
     width: 645px;
     border: 2px solid ${({ theme }) => theme.colors.Highlight.default};
     border-radius: 32px;
