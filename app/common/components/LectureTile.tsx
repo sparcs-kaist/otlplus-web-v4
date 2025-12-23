@@ -1,7 +1,9 @@
 import type { CSSProperties } from "react"
 
 import styled from "@emotion/styled"
+import CloseIcon from "@mui/icons-material/Close"
 
+import Icon from "@/common/primitives/Icon"
 import type { ClassTime, Lecture } from "@/common/schemas/lecture"
 import useThemeStore from "@/utils/zustand/useThemeStore"
 
@@ -99,6 +101,13 @@ const DescWrapper = styled.span<{ isHighlighted: boolean }>`
     white-space: normal;
 `
 
+const RemoveButton = styled.div`
+    position: absolute;
+    top: 6px;
+    right: 4px;
+    cursor: pointer;
+`
+
 const LectureTile: React.FC<{
     lecture: Lecture
     timeBlock: ClassTime
@@ -106,6 +115,7 @@ const LectureTile: React.FC<{
     cellHeight: number
     isSelected?: boolean
     isHovered?: boolean
+    removeFunction?: (lectureId: number) => void
 }> = ({
     lecture,
     timeBlock,
@@ -113,6 +123,7 @@ const LectureTile: React.FC<{
     cellHeight,
     isSelected = false,
     isHovered = false,
+    removeFunction,
 }) => {
     const { displayedTheme } = useThemeStore()
 
@@ -128,12 +139,26 @@ const LectureTile: React.FC<{
             cellHeight={cellHeight}
             isDarkMode={displayedTheme === "dark"}
         >
+            {removeFunction !== undefined && isSelected && (
+                <RemoveButton>
+                    <Icon
+                        size={13}
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            removeFunction(lecture.id)
+                        }}
+                        color="rgba(255, 255, 255, 0.6)"
+                    >
+                        <CloseIcon />
+                    </Icon>
+                </RemoveButton>
+            )}
             <TitleWrapper isHighlighted={isHighlighted}>{lecture.name}</TitleWrapper>
             <DescWrapper isHighlighted={isHighlighted}>
                 {lecture.professors.map((prof) => prof.name).join(", ")}
             </DescWrapper>
             <DescWrapper isHighlighted={isHighlighted}>
-                ({timeBlock.buildingCode}) {timeBlock.placeName}
+                ({timeBlock.buildingCode}) {timeBlock.roomName}
             </DescWrapper>
         </TileWrapper>
     )

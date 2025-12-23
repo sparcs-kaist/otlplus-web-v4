@@ -13,7 +13,7 @@ export type GETTimetableByIdResponse = z.infer<typeof GETResponse>
 // PATCH /api/timetables/:timetableId
 export const PATCHRequest = z.object({
     lectureId: z.number().int(),
-    action: z.enum(["add", "remove"]),
+    action: z.enum(["add", "delete"]),
 })
 
 export const PATCHResponse = LectureSchema

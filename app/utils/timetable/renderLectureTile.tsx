@@ -21,6 +21,7 @@ const renderLectureTile = (
     holding: boolean,
     setHolding: React.Dispatch<React.SetStateAction<boolean>>,
     dragging: boolean,
+    removeFunction?: (lectureId: number) => void,
 ) => {
     const gridRef = useRef<HTMLDivElement>(null)
     const rectangles: JSX.Element[] = []
@@ -78,6 +79,7 @@ const renderLectureTile = (
                         isSelected={isSelected}
                         isHovered={isHovered}
                         cellHeight={cellHeight}
+                        removeFunction={removeFunction}
                     />
                 </div>,
             )

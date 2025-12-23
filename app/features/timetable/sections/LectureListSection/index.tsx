@@ -6,6 +6,7 @@ import styled from "@emotion/styled"
 import AddIcon from "@mui/icons-material/Add"
 import FavoriteIcon from "@mui/icons-material/Favorite"
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder"
+import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { useInView } from "react-intersection-observer"
 
@@ -22,6 +23,7 @@ import type { Lecture } from "@/common/schemas/lecture"
 import type { TimeBlock } from "@/common/schemas/timeblock"
 import { clientEnv } from "@/env"
 import { axiosClientWithAuth } from "@/libs/axios"
+import { useAPI } from "@/utils/api/useAPI"
 import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
 import checkEmpty from "@/utils/search/checkEmpty"
 import useUserStore from "@/utils/zustand/useUserStore"
@@ -145,7 +147,6 @@ interface LectureListSectionProps {
     timeFilter: TimeBlock | null
     setTimeFilter: React.Dispatch<React.SetStateAction<TimeBlock | null>>
     currentTimetableId: number | null
-    onLectureAdded?: () => void
 }
 
 const SEARCH_LIMIT = 10
@@ -160,11 +161,11 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     timeFilter,
     setTimeFilter,
     currentTimetableId,
-    onLectureAdded,
 }) => {
     const { t } = useTranslation()
     const theme = useTheme()
     const { user, status } = useUserStore()
+    const queryClient = useQueryClient()
 
     const { ref, inView } = useInView({ threshold: 0 })
 
@@ -222,9 +223,20 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
         },
     })
 
+    const { mutation: addTimetable, requestFunction: addTimetableFunction } = useAPI(
+        "PATCH",
+        `/timetables/${currentTimetableId}`,
+        {
+            onSuccess: () => {
+                queryClient.invalidateQueries({
+                    queryKey: [`/timetables/${currentTimetableId}`],
+                })
+            },
+        },
+    )
+
     const [searchResult, setSearchResult] = useState<GETLecturesResponse>({ courses: [] })
     const [isInWish, setIsInWish] = useState<number[]>([])
-    const [isLoading, setIsLoading] = useState<boolean>(false)
 
     const [sortOption, setSortOption] = useState<number>(0)
     const wrapperRef = useRef<HTMLDivElement>(null)
@@ -358,21 +370,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
             return
         }
 
-        setIsLoading(true)
-        try {
-            await axiosClientWithAuth.patch(
-                `${clientEnv.VITE_APP_API_URL}/api/timetables/${currentTimetableId}`,
-                {
-                    lectureId: lectureId,
-                    action: "add",
-                },
-            )
-            onLectureAdded?.()
-        } catch (error) {
-            console.error("Failed to add lecture to timetable:", error)
-        } finally {
-            setIsLoading(false)
-        }
+        addTimetableFunction({ action: "add", lectureId: lectureId })
     }
 
     return (
@@ -562,7 +560,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                                                     )}
                                                     <span
                                                         style={{
-                                                            cursor: isLoading
+                                                            cursor: addTimetable.isPending
                                                                 ? "wait"
                                                                 : "pointer",
                                                         }}

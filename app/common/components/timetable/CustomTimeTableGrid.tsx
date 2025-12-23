@@ -20,6 +20,7 @@ interface GridProps {
     setHover: React.Dispatch<React.SetStateAction<Lecture | null>>
     selected: Lecture | null
     setSelected: React.Dispatch<React.SetStateAction<Lecture | null>>
+    removeFunction?: (lectureId: number) => void
 }
 
 const SectionWrapper = styled.div`
@@ -59,6 +60,7 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
     setHover,
     selected,
     setSelected,
+    removeFunction,
 }) => {
     const { t } = useTranslation()
 
@@ -188,6 +190,7 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
                         holding,
                         setHolding,
                         dragging,
+                        removeFunction,
                     )}
                 </div>
             </FlexWrapper>

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 
 import styled from "@emotion/styled"
+import { useQueryClient } from "@tanstack/react-query"
 
 import StyledDivider from "@/common/components/StyledDivider"
 import CustomTimeTableGrid from "@/common/components/timetable/CustomTimeTableGrid"
@@ -69,6 +70,8 @@ const LectureListArea = styled.div`
 `
 
 export default function Timetable() {
+    const queryClient = useQueryClient()
+
     const { query: semester } = useAPI("GET", "/semesters")
 
     const searchAreaRef = useRef<HTMLDivElement>(null)
@@ -89,6 +92,18 @@ export default function Timetable() {
     const { query: timetable } = useAPI("GET", `/timetables/${currentTimetableId}`, {
         enabled: currentTimetableId !== null,
     })
+
+    const { requestFunction: removeLectureFunction } = useAPI(
+        "PATCH",
+        `/timetables/${currentTimetableId}`,
+        {
+            onSuccess: () => {
+                queryClient.invalidateQueries({
+                    queryKey: [`/timetables/${currentTimetableId}`],
+                })
+            },
+        },
+    )
 
     useEffect(() => {
         const semesters = semester.data?.semesters
@@ -152,7 +167,6 @@ export default function Timetable() {
                         timeFilter={timeFilter}
                         setTimeFilter={setTimeFilter}
                         currentTimetableId={currentTimetableId}
-                        onLectureAdded={() => {}}
                     />
                 </LectureListArea>
                 <StyledDivider direction="column" />
@@ -184,6 +198,13 @@ export default function Timetable() {
                             setHover={setHover}
                             selected={selected}
                             setSelected={setSelected}
+                            removeFunction={(lectureId: number) => {
+                                setSelected(null)
+                                removeLectureFunction({
+                                    action: "delete",
+                                    lectureId: lectureId,
+                                })
+                            }}
                         />
                     </TimetableGridArea>
                     <StyledDivider direction="column" />
