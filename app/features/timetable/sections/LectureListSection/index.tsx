@@ -257,6 +257,9 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
             order: (["code", "popular", "studentCount"] as const)[sortOption] ?? "code",
             offset: 0,
             limit: SEARCH_LIMIT,
+            day: param.time?.day ?? undefined,
+            begin: param.time?.begin ?? undefined,
+            end: param.time?.end ?? undefined,
         }
         setParams(fullParam)
         setEnabled(true)

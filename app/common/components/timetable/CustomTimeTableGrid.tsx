@@ -8,6 +8,7 @@ import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimeBlock } from "@/common/schemas/timeblock"
 import { checkAnyOver24 } from "@/utils/timetable/checkAnyOver24"
+import getColumnIndex from "@/utils/timetable/getColumnIndex"
 import renderGrid from "@/utils/timetable/renderGrid"
 import renderLectureTile from "@/utils/timetable/renderLectureTile"
 import renderTargetArea from "@/utils/timetable/renderTargetArea"
@@ -105,6 +106,61 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
         ),
     )
 
+    const handleMouseDown = (event: React.MouseEvent) => {
+        if (gridRef.current && hover == null && selected == null) {
+            const gridRect = gridRef.current.getBoundingClientRect()
+            const mouseX = event.clientX - gridRect.left
+            const mouseY = event.clientY - gridRect.top
+            const row = Math.floor(mouseY / cellHeight)
+            const col = getColumnIndex(mouseX, m, [], 0, cellWidth, colPadding, 0)
+            if (row >= 0 && row < n && col >= 0 && col < m) {
+                setDragging(true)
+                setStartRow(row)
+                setLastRow(row)
+                setCol(col)
+                setSelected(null)
+            }
+        }
+    }
+
+    const handleMouseMove = (event: React.MouseEvent) => {
+        if (dragging && gridRef.current) {
+            const gridRect = gridRef.current.getBoundingClientRect()
+            const mouseY = event.clientY - gridRect.top
+            const row = Math.floor(mouseY / cellHeight)
+            if (row >= 0 && row < n && col! >= 0 && col! < m) {
+                if (row !== lastRow) {
+                    setLastRow(row)
+                }
+            }
+        }
+    }
+
+    const handleMouseUp = () => {
+        setDraggingArea(
+            new Map(
+                Array.from({ length: m }, (_, rowIndex) => [
+                    rowIndex,
+                    Array(n).fill(null),
+                ]),
+            ),
+        )
+        if (startRow != null && lastRow != null && col != null) {
+            const beginRow = Math.min(startRow, lastRow)
+            const endRow = Math.max(startRow, lastRow)
+            const timeBlock: TimeBlock = {
+                day: col,
+                begin: beginRow * 30 + 8 * 60,
+                end: (endRow + 1) * 30 + 8 * 60,
+            }
+            setTimeFilter(timeBlock)
+        }
+        setStartRow(null)
+        setLastRow(null)
+        setDragging(false)
+        setHolding(false)
+    }
+
     const getArea = (
         startRow: number,
         endRow: number,
@@ -164,6 +220,9 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
                     onClick={() => {
                         setSelected(null)
                     }}
+                    onMouseDown={handleMouseDown}
+                    onMouseMove={handleMouseMove}
+                    onMouseUp={handleMouseUp}
                 >
                     {renderGrid(n, m, cellWidth, cellHeight, colPadding, [], 10, 0)}
                     {renderTargetArea(
