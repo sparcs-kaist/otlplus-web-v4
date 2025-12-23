@@ -8,7 +8,7 @@ export enum ScoreEnum {
 }
 
 export const getAverageScoreLabel = (score: number | undefined, reviewNum?: number) => {
-    if (reviewNum === 0 || reviewNum === undefined || score === undefined) {
+    if (reviewNum === 0 || score === undefined || score === 0) {
         return "?"
     }
     return [
@@ -30,5 +30,5 @@ export const getAverageScoreLabel = (score: number | undefined, reviewNum?: numb
         "A+",
         "A+",
         "A+",
-    ][Math.floor(score)]
+    ][Math.floor(score * 3)]
 }

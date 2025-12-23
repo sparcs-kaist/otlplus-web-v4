@@ -78,7 +78,7 @@ export default function Timetable() {
     const contentsAreaRef = useRef<HTMLDivElement>(null)
     const outerRef = useRef<HTMLDivElement>(null)
 
-    const [hover, setHover] = useState<Lecture | null>(null)
+    const [hover, setHover] = useState<Lecture[] | null>(null)
     const [selected, setSelected] = useState<Lecture | null>(null)
 
     // Time filter state for search area
@@ -98,9 +98,14 @@ export default function Timetable() {
         `/timetables/${currentTimetableId}`,
         {
             onSuccess: () => {
-                queryClient.invalidateQueries({
-                    queryKey: [`/timetables/${currentTimetableId}`],
-                })
+                queryClient
+                    .invalidateQueries({
+                        queryKey: [`/timetables/${currentTimetableId}`],
+                    })
+                    .then(() => {
+                        setSelected(null)
+                        setHover(null)
+                    })
             },
         },
     )
@@ -172,7 +177,11 @@ export default function Timetable() {
                 <StyledDivider direction="column" />
                 {/*과목 정보 영역*/}
                 <LectureInfoArea>
-                    <LectureDetailSection selectedLecture={selected ? selected : hover} />
+                    <LectureDetailSection
+                        selectedLecture={
+                            selected ? selected : hover?.length == 1 ? hover[0] : null
+                        }
+                    />
                 </LectureInfoArea>
             </SearchAreaWrapper>
             <ContentsAreaWrapper ref={contentsAreaRef}>
@@ -192,14 +201,21 @@ export default function Timetable() {
                             cellWidth={100}
                             lectureSummary={(timetable.data?.lectures ?? [])
                                 .concat(selected ? [selected] : [])
-                                .concat(hover && hover !== selected ? [hover] : [])}
+                                .concat(
+                                    hover
+                                        ? selected
+                                            ? hover.filter(
+                                                  (lec) => lec.id !== selected.id,
+                                              )
+                                            : hover
+                                        : [],
+                                )}
                             setTimeFilter={setTimeFilter}
                             hover={hover}
                             setHover={setHover}
                             selected={selected}
                             setSelected={setSelected}
                             removeFunction={(lectureId: number) => {
-                                setSelected(null)
                                 removeLectureFunction({
                                     action: "delete",
                                     lectureId: lectureId,
@@ -211,6 +227,8 @@ export default function Timetable() {
                     {/*시간표 정보 영역*/}
                     <TimetableInfoSection
                         timetableLectures={timetable.data?.lectures || []}
+                        hover={hover}
+                        setHover={setHover}
                     />
                 </Block>
             </ContentsAreaWrapper>

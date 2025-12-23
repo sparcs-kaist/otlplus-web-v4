@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react"
+import { type CSSProperties, useEffect } from "react"
 
 import styled from "@emotion/styled"
 import CloseIcon from "@mui/icons-material/Close"
@@ -48,8 +48,8 @@ const TileWrapper = styled.div<{
     course_id: number
     duration: number
     cellWidth: number
-    isSelected: boolean
     isHighlighted: boolean
+    isOverlapped: boolean
     cellHeight: number
     isDarkMode: boolean
 }>`
@@ -61,12 +61,20 @@ const TileWrapper = styled.div<{
     margin-bottom: 2px;
     margin-top: 2px;
     justify-content: center;
-    background-color: ${({ theme, course_id, isHighlighted, isDarkMode }) =>
-        isHighlighted
-            ? theme.colors.Highlight.default
-            : isDarkMode
-              ? darkColorMap[course_id % 15]
-              : colorMap[course_id % 15]};
+    background-color: ${({
+        theme,
+        course_id,
+        isHighlighted,
+        isOverlapped,
+        isDarkMode,
+    }) =>
+        isOverlapped
+            ? theme.colors.Text.default
+            : isHighlighted
+              ? theme.colors.Highlight.default
+              : isDarkMode
+                ? darkColorMap[course_id % 15]
+                : colorMap[course_id % 15]};
     border-radius: 2px;
     overflow: hidden;
     overflow-wrap: break-word;
@@ -75,26 +83,28 @@ const TileWrapper = styled.div<{
     cursor: pointer;
 `
 
-const TitleWrapper = styled.span<{ isHighlighted: boolean }>`
+const TitleWrapper = styled.span<{ isHighlighted: boolean; isOverlapped: boolean }>`
     width: 100%;
     font-size: ${({ theme }) => theme.fonts.Small.fontSize}px;
     line-height: ${({ theme }) => `${theme.fonts.Small.lineHeight}px`};
     font-weight: ${({ theme }) => theme.fonts.Small.fontWeight};
-    color: ${({ theme, isHighlighted }) =>
-        isHighlighted ? "white" : theme.colors.Text.default};
+    color: ${({ theme, isHighlighted, isOverlapped }) =>
+        isHighlighted || isOverlapped ? "white" : theme.colors.Text.default};
     display: inline-block;
     word-wrap: break-word;
     word-break: keep-all;
     white-space: normal;
 `
 
-const DescWrapper = styled.span<{ isHighlighted: boolean }>`
+const DescWrapper = styled.span<{ isHighlighted: boolean; isOverlapped: boolean }>`
     width: 100%;
     font-size: ${({ theme }) => theme.fonts.Small.fontSize}px;
     line-height: ${({ theme }) => `${theme.fonts.Small.lineHeight}px`};
     font-weight: ${({ theme }) => theme.fonts.Small.fontWeight};
-    color: ${({ isHighlighted }) =>
-        isHighlighted ? "rgba(255, 255, 255, 0.6)" : "rgba(102, 102, 102, 0.6)"};
+    color: ${({ isHighlighted, isOverlapped }) =>
+        isHighlighted || isOverlapped
+            ? "rgba(255, 255, 255, 0.6)"
+            : "rgba(102, 102, 102, 0.6)"};
     word-wrap: break-word;
     display: inline-block;
     word-break: break-word;
@@ -113,8 +123,9 @@ const LectureTile: React.FC<{
     timeBlock: ClassTime
     cellWidth: number
     cellHeight: number
-    isSelected?: boolean
-    isHovered?: boolean
+    isSelected: boolean | null
+    isHovered: boolean | null
+    isOverlapped?: boolean
     removeFunction?: (lectureId: number) => void
 }> = ({
     lecture,
@@ -123,41 +134,46 @@ const LectureTile: React.FC<{
     cellHeight,
     isSelected = false,
     isHovered = false,
+    isOverlapped = false,
     removeFunction,
 }) => {
     const { displayedTheme } = useThemeStore()
 
-    const isHighlighted = isSelected || isHovered
+    const isHighlighted = isSelected || isHovered || false
 
     return (
         <TileWrapper
             course_id={lecture.courseId}
             duration={(timeBlock.end - timeBlock.begin) / 30}
             cellWidth={cellWidth}
-            isSelected={isSelected}
             isHighlighted={isHighlighted}
+            isOverlapped={isOverlapped}
             cellHeight={cellHeight}
             isDarkMode={displayedTheme === "dark"}
         >
-            {removeFunction !== undefined && isSelected && (
-                <RemoveButton>
-                    <Icon
-                        size={13}
-                        onClick={(e) => {
-                            e.stopPropagation()
-                            removeFunction(lecture.id)
-                        }}
-                        color="rgba(255, 255, 255, 0.6)"
-                    >
-                        <CloseIcon />
-                    </Icon>
-                </RemoveButton>
-            )}
-            <TitleWrapper isHighlighted={isHighlighted}>{lecture.name}</TitleWrapper>
-            <DescWrapper isHighlighted={isHighlighted}>
+            {removeFunction !== undefined &&
+                !isOverlapped &&
+                (isSelected || isHovered) && (
+                    <RemoveButton>
+                        <Icon
+                            size={13}
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                removeFunction(lecture.id)
+                            }}
+                            color="rgba(255, 255, 255, 0.6)"
+                        >
+                            <CloseIcon />
+                        </Icon>
+                    </RemoveButton>
+                )}
+            <TitleWrapper isHighlighted={isHighlighted} isOverlapped={isOverlapped}>
+                {lecture.name}
+            </TitleWrapper>
+            <DescWrapper isHighlighted={isHighlighted} isOverlapped={isOverlapped}>
                 {lecture.professors.map((prof) => prof.name).join(", ")}
             </DescWrapper>
-            <DescWrapper isHighlighted={isHighlighted}>
+            <DescWrapper isHighlighted={isHighlighted} isOverlapped={isOverlapped}>
                 ({timeBlock.buildingCode}) {timeBlock.roomName}
             </DescWrapper>
         </TileWrapper>

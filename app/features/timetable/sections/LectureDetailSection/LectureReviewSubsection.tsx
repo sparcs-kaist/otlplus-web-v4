@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react"
 
 import styled from "@emotion/styled"
+import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { useInView } from "react-intersection-observer"
 
@@ -38,6 +39,9 @@ const LectureReviewSubsection: React.FC<LectureReviewSubsectionProps> = ({
     selectedProfessorId,
 }) => {
     const { t } = useTranslation()
+    const queryClient = useQueryClient()
+
+    const [paramsFixed, setParamsFixed] = useState(false)
 
     const { query, setParams, data } = useInfiniteAPI("GET", "/reviews", {
         gcTime: 0,
@@ -48,12 +52,14 @@ const LectureReviewSubsection: React.FC<LectureReviewSubsectionProps> = ({
     const { ref, inView } = useInView({ threshold: 0 })
 
     useEffect(() => {
+        setParamsFixed(false)
         const timer = setTimeout(() => {
             setParams({
                 mode: "default",
                 courseId: selectedCourseId ?? undefined,
                 professorId: selectedProfessorId ?? undefined,
             })
+            setParamsFixed(true)
         }, 1000)
 
         return () => clearTimeout(timer)
@@ -64,6 +70,10 @@ const LectureReviewSubsection: React.FC<LectureReviewSubsectionProps> = ({
             query.fetchNextPage()
         }
     }, [inView, query])
+
+    if (!data || !paramsFixed) {
+        return <LoadingCircle />
+    }
 
     return (
         <>

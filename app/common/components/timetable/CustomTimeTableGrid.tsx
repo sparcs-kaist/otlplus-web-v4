@@ -16,8 +16,8 @@ interface GridProps {
     cellWidth?: number
     lectureSummary: Lecture[]
     setTimeFilter: React.Dispatch<React.SetStateAction<TimeBlock | null>>
-    hover: Lecture | null
-    setHover: React.Dispatch<React.SetStateAction<Lecture | null>>
+    hover: Lecture[] | null
+    setHover: React.Dispatch<React.SetStateAction<Lecture[] | null>>
     selected: Lecture | null
     setSelected: React.Dispatch<React.SetStateAction<Lecture | null>>
     removeFunction?: (lectureId: number) => void

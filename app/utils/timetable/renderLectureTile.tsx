@@ -1,13 +1,10 @@
-// TODO: 타입 수정 필요
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
 import type { JSX } from "react"
 import { useRef } from "react"
 
-import exampleLectures from "@/api/example/Lectures"
 import LectureTile from "@/common/components/LectureTile"
 import { WeekdayEnum } from "@/common/enum/weekdayEnum"
 import type { ClassTime, Lecture } from "@/common/schemas/lecture"
+import checkOverlap from "@/utils/timetable/checkOverlap"
 
 const renderLectureTile = (
     lectureSummary: Lecture[],
@@ -16,8 +13,8 @@ const renderLectureTile = (
     colPadding: number,
     selected: Lecture | null,
     setSelected: React.Dispatch<React.SetStateAction<Lecture | null>>,
-    hover: Lecture | null,
-    setHover: React.Dispatch<React.SetStateAction<Lecture | null>>,
+    hover: Lecture[] | null,
+    setHover: React.Dispatch<React.SetStateAction<Lecture[] | null>>,
     holding: boolean,
     setHolding: React.Dispatch<React.SetStateAction<boolean>>,
     dragging: boolean,
@@ -26,18 +23,18 @@ const renderLectureTile = (
     const gridRef = useRef<HTMLDivElement>(null)
     const rectangles: JSX.Element[] = []
 
-    const findItemById = (arr: Lecture[], id: number): Lecture | undefined => {
-        return arr.find((item) => item.id === id)
-    }
-
     for (let i = 0; i < lectureSummary.length; i++) {
-        const lecture: Lecture = lectureSummary[i]
+        const lecture: Lecture = lectureSummary[i] as Lecture
         const timeBlocks: ClassTime[] = lecture.classes
         const isSelected = selected === lecture
-        const isHovered = hover === lecture && selected == null
+        const isHovered = hover !== null && hover.some((lec) => lec.id === lecture.id)
+        const isOverlapped = lectureSummary.some((lec) => {
+            return lec.id !== lecture.id && checkOverlap(lec.classes, lecture.classes)
+        })
 
         for (let j = 0; j < timeBlocks.length; j++) {
             const timeBlock = timeBlocks[j]
+            if (!timeBlock) continue
             const weekDay = timeBlock.day as unknown as WeekdayEnum
             const left = weekDay * (cellWidth + colPadding)
             const startIndex = Math.floor(timeBlock.begin / 30) - 16 // 8시부터 시작
@@ -64,7 +61,7 @@ const renderLectureTile = (
                     }}
                     onMouseEnter={() => {
                         if (!dragging && lecture !== undefined) {
-                            setHover(lecture)
+                            setHover([lecture])
                         }
                         setHolding(true)
                     }}
@@ -78,6 +75,7 @@ const renderLectureTile = (
                         cellWidth={cellWidth}
                         isSelected={isSelected}
                         isHovered={isHovered}
+                        isOverlapped={isOverlapped}
                         cellHeight={cellHeight}
                         removeFunction={removeFunction}
                     />

@@ -45,7 +45,7 @@ const LectureTitle = styled(FlexWrapper)`
 `
 
 interface LectureDetailSectionProps {
-    selectedLecture: Lecture | null
+    selectedLecture: Lecture | undefined | null
     isMobileModal?: boolean
     onMobileModalClose?: () => void
 }

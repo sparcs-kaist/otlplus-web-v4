@@ -115,7 +115,7 @@ const LectureItemWrapper = styled.div<{ isHighlighted: boolean }>`
 
 const Divider = styled.div`
     width: 95%;
-    height: 0.5px;
+    height: 1px;
     background-color: ${({ theme }) => theme.colors.Line.dark};
     align-self: center;
 `
@@ -140,8 +140,8 @@ const Chip = styled.div<{ isSelected: boolean }>`
 interface LectureListSectionProps {
     year: number
     semester: SemesterEnum
-    hoveredLecture: Lecture | null
-    setHoveredLecture: React.Dispatch<React.SetStateAction<Lecture | null>>
+    hoveredLecture: Lecture[] | null
+    setHoveredLecture: React.Dispatch<React.SetStateAction<Lecture[] | null>>
     selectedLecture: Lecture | null
     setSelectedLecture: React.Dispatch<React.SetStateAction<Lecture | null>>
     timeFilter: TimeBlock | null
@@ -478,7 +478,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                                             <LectureItemWrapper
                                                 key={idx}
                                                 onMouseEnter={() => {
-                                                    setHoveredLecture(lecture)
+                                                    setHoveredLecture([lecture])
                                                 }}
                                                 onMouseLeave={() => {
                                                     setHoveredLecture(null)
@@ -494,7 +494,9 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                                                 }}
                                                 isHighlighted={
                                                     selectedLecture?.id === lecture.id ||
-                                                    hoveredLecture?.id === lecture.id
+                                                    hoveredLecture?.some(
+                                                        (lec) => lec.id === lecture.id,
+                                                    ) === true
                                                 }
                                             >
                                                 <FlexWrapper

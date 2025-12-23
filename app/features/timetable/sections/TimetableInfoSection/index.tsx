@@ -13,7 +13,8 @@ import { WeekdayEnum, weekdayToString } from "@/common/enum/weekdayEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
-import type { ExamTime, Lecture } from "@/common/schemas/lecture"
+import type { Lecture } from "@/common/schemas/lecture"
+import CreditGridSubSection from "@/features/timetable/sections/TimetableInfoSection/CreditGridSubSection"
 
 const InfoArea = styled.div`
     display: flex;
@@ -51,33 +52,6 @@ const MapImage = styled.div`
     }
 `
 
-const CreditGrid = styled.div`
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 4px 16px;
-`
-
-const CreditRow = styled.div`
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: flex-start;
-    padding-left: 16px;
-`
-
-const CreditTypeLabel = styled.span`
-    font-size: 14px;
-    font-weight: 700;
-    color: ${({ theme }) => theme.colors.Text.default};
-`
-
-const CreditNumber = styled.span`
-    font-size: 14px;
-    font-weight: 400;
-    padding-left: 8px;
-    color: ${({ theme }) => theme.colors.Text.default};
-`
-
 const TotalRow = styled.div`
     display: flex;
     flex-direction: row;
@@ -91,19 +65,21 @@ const TotalItem = styled.div`
     flex-direction: column;
     align-items: center;
     gap: 2px;
+    color: ${({ theme }) => theme.colors.Text.default};
+
+    &:hover {
+        color: ${({ theme }) => theme.colors.Highlight.default};
+    }
 `
 
-const TotalNumber = styled.span<{ highlight?: boolean }>`
+const TotalNumber = styled.span`
     font-size: 20px;
     font-weight: 300;
-    color: ${({ highlight, theme }) =>
-        highlight ? theme.colors.Highlight.default : theme.colors.Text.default};
 `
 
 const TotalLabel = styled.span`
     font-size: 10px;
     font-weight: 400;
-    color: ${({ theme }) => theme.colors.Text.dark};
 `
 
 const GradeRow = styled.div`
@@ -147,6 +123,15 @@ const DayLabel = styled.span<{ color?: string }>`
     min-width: 16px;
 `
 
+const LectureTextWrapper = styled(FlexWrapper)<{ highlighted?: boolean }>`
+    color: ${({ highlighted, theme }) =>
+        highlighted ? theme.colors.Highlight.default : theme.colors.Text.default};
+
+    &:hover {
+        color: ${({ theme }) => theme.colors.Highlight.default};
+    }
+`
+
 const ExportButton = styled.button`
     display: flex;
     flex-direction: row;
@@ -174,10 +159,14 @@ const dayLabels = [
 
 interface TimetableInfoSectionProps {
     timetableLectures: Lecture[]
+    hover: Lecture[] | null
+    setHover: React.Dispatch<React.SetStateAction<Lecture[] | null>>
 }
 
 export default function TimetableInfoSection({
     timetableLectures,
+    hover,
+    setHover,
 }: TimetableInfoSectionProps) {
     const { t } = useTranslation()
     const theme = useTheme()
@@ -188,7 +177,7 @@ export default function TimetableInfoSection({
         const totalAU = timetableLectures.reduce((sum, lec) => sum + lec.creditAU, 0)
 
         // Credit breakdown by type
-        const creditByType = {
+        const creditsByType = {
             basicRequired: 0, // 기필
             basicElective: 0, // 기선
             majorRequired: 0, // 전필
@@ -197,42 +186,21 @@ export default function TimetableInfoSection({
             etc: 0, // 기타
         }
 
-        timetableLectures.forEach((lec) => {
-            if (lec.type.includes("기초필수") || lec.type.includes("기필")) {
-                creditByType.basicRequired += lec.credit
-            } else if (lec.type.includes("기초선택") || lec.type.includes("기선")) {
-                creditByType.basicElective += lec.credit
-            } else if (lec.type.includes("전공필수") || lec.type.includes("전필")) {
-                creditByType.majorRequired += lec.credit
-            } else if (lec.type.includes("전공선택") || lec.type.includes("전선")) {
-                creditByType.majorElective += lec.credit
-            } else if (lec.type.includes("인문") || lec.type.includes("인선")) {
-                creditByType.humanitiesSocial += lec.credit
-            } else {
-                creditByType.etc += lec.credit
-            }
-        })
+        const lecturesByType = {
+            basicRequired: [] as Lecture[],
+            basicElective: [] as Lecture[],
+            majorRequired: [] as Lecture[],
+            majorElective: [] as Lecture[],
+            humanitiesSocial: [] as Lecture[],
+            etc: [] as Lecture[],
+        }
 
-        // Average grades
-        const avgGrade =
-            timetableLectures.length > 0
-                ? timetableLectures.reduce((sum, lec) => sum + lec.averageGrade, 0) /
-                  timetableLectures.length
-                : 0
-        const avgLoad =
-            timetableLectures.length > 0
-                ? timetableLectures.reduce((sum, lec) => sum + lec.averageLoad, 0) /
-                  timetableLectures.length
-                : 0
-        const avgSpeech =
-            timetableLectures.length > 0
-                ? timetableLectures.reduce((sum, lec) => sum + lec.averageSpeech, 0) /
-                  timetableLectures.length
-                : 0
+        let avgGrade = 0
+        let avgLoad = 0
+        let avgSpeech = 0
 
-        // Exam times grouped by day
         const examsByDay: {
-            [key: number]: { lectureName: string; classNo: string; time: string }[]
+            [key: number]: { lectureName: string; lectureId: number; time: string }[]
         } = {
             [WeekdayEnum.Mon]: [],
             [WeekdayEnum.Tue]: [],
@@ -242,23 +210,52 @@ export default function TimetableInfoSection({
         }
 
         timetableLectures.forEach((lec) => {
+            if (lec.type.includes("기초필수")) {
+                creditsByType.basicRequired += lec.credit
+                lecturesByType.basicRequired.push(lec)
+            } else if (lec.type.includes("기초선택")) {
+                creditsByType.basicElective += lec.credit
+                lecturesByType.basicElective.push(lec)
+            } else if (lec.type.includes("전공필수")) {
+                creditsByType.majorRequired += lec.credit
+                lecturesByType.majorRequired.push(lec)
+            } else if (lec.type.includes("전공선택")) {
+                creditsByType.majorElective += lec.credit
+                lecturesByType.majorElective.push(lec)
+            } else if (lec.type.includes("인문")) {
+                creditsByType.humanitiesSocial += lec.credit
+                lecturesByType.humanitiesSocial.push(lec)
+            } else {
+                creditsByType.etc += lec.credit
+                creditsByType.etc += lec.creditAU
+                lecturesByType.etc.push(lec)
+            }
+            avgGrade += lec.averageGrade
+            avgLoad += lec.averageLoad
+            avgSpeech += lec.averageSpeech
             lec.examTimes.forEach((exam) => {
                 if (exam == null) return
                 const day = exam.day as WeekdayEnum
                 if (examsByDay[day]) {
                     examsByDay[day].push({
                         lectureName: lec.name,
-                        classNo: lec.classNo,
+                        lectureId: lec.id,
                         time: exam.str.split(" ").slice(1).join(" "), // Remove day prefix
                     })
                 }
             })
         })
 
+        // Average grades
+        avgGrade = avgGrade / timetableLectures.length
+        avgLoad = avgLoad / timetableLectures.length
+        avgSpeech = avgSpeech / timetableLectures.length
+
         return {
             totalCredits,
             totalAU,
-            creditByType,
+            creditsByType,
+            lecturesByType,
             avgGrade,
             avgLoad,
             avgSpeech,
@@ -271,60 +268,28 @@ export default function TimetableInfoSection({
             {/* 캠퍼스 맵 */}
             <MapImage />
             {/* 학점 분류별 */}
-            <CreditGrid>
-                <CreditRow>
-                    <CreditTypeLabel>
-                        {t("common.type.basicRequiredShort")}
-                    </CreditTypeLabel>
-                    <CreditNumber>
-                        {timetableInfo.creditByType.basicRequired}
-                    </CreditNumber>
-                </CreditRow>
-                <CreditRow>
-                    <CreditTypeLabel>
-                        {t("common.type.basicElectiveShort")}
-                    </CreditTypeLabel>
-                    <CreditNumber>
-                        {timetableInfo.creditByType.basicElective}
-                    </CreditNumber>
-                </CreditRow>
-                <CreditRow>
-                    <CreditTypeLabel>
-                        {t("common.type.majorRequiredShort")}
-                    </CreditTypeLabel>
-                    <CreditNumber>
-                        {timetableInfo.creditByType.majorRequired}
-                    </CreditNumber>
-                </CreditRow>
-                <CreditRow>
-                    <CreditTypeLabel>
-                        {t("common.type.majorElectiveShort")}
-                    </CreditTypeLabel>
-                    <CreditNumber>
-                        {timetableInfo.creditByType.majorElective}
-                    </CreditNumber>
-                </CreditRow>
-                <CreditRow>
-                    <CreditTypeLabel>
-                        {t("common.type.humanitiesSocialElectiveShort")}
-                    </CreditTypeLabel>
-                    <CreditNumber>
-                        {timetableInfo.creditByType.humanitiesSocial}
-                    </CreditNumber>
-                </CreditRow>
-                <CreditRow>
-                    <CreditTypeLabel>{t("common.type.etcShort")}</CreditTypeLabel>
-                    <CreditNumber>{timetableInfo.creditByType.etc}</CreditNumber>
-                </CreditRow>
-            </CreditGrid>
-
+            <CreditGridSubSection
+                setHover={setHover}
+                lecturesByType={timetableInfo.lecturesByType}
+                creditsByType={timetableInfo.creditsByType}
+            />
             {/* 총 학점/AU */}
             <TotalRow>
-                <TotalItem>
-                    <TotalNumber highlight>{timetableInfo.totalCredits}</TotalNumber>
+                <TotalItem
+                    onMouseEnter={() =>
+                        setHover(timetableLectures.filter((lec) => lec.credit > 0))
+                    }
+                    onMouseLeave={() => setHover(null)}
+                >
+                    <TotalNumber>{timetableInfo.totalCredits}</TotalNumber>
                     <TotalLabel>{t("common.credit")}</TotalLabel>
                 </TotalItem>
-                <TotalItem>
+                <TotalItem
+                    onMouseEnter={() =>
+                        setHover(timetableLectures.filter((lec) => lec.creditAU > 0))
+                    }
+                    onMouseLeave={() => setHover(null)}
+                >
                     <TotalNumber>{timetableInfo.totalAU}</TotalNumber>
                     <TotalLabel>AU</TotalLabel>
                 </TotalItem>
@@ -334,19 +299,19 @@ export default function TimetableInfoSection({
             <GradeRow>
                 <GradeItem>
                     <GradeLetter>
-                        {getAverageScoreLabel(timetableInfo.avgGrade)}
+                        {getAverageScoreLabel(timetableInfo.avgGrade / 3)}
                     </GradeLetter>
                     <GradeLabel>{t("common.grade")}</GradeLabel>
                 </GradeItem>
                 <GradeItem>
                     <GradeLetter>
-                        {getAverageScoreLabel(timetableInfo.avgLoad)}
+                        {getAverageScoreLabel(timetableInfo.avgLoad / 3)}
                     </GradeLetter>
                     <GradeLabel>{t("common.load")}</GradeLabel>
                 </GradeItem>
                 <GradeItem>
                     <GradeLetter>
-                        {getAverageScoreLabel(timetableInfo.avgSpeech)}
+                        {getAverageScoreLabel(timetableInfo.avgSpeech / 3)}
                     </GradeLetter>
                     <GradeLabel>{t("common.speech")}</GradeLabel>
                 </GradeItem>
@@ -364,27 +329,49 @@ export default function TimetableInfoSection({
                     if (!exams || exams.length === 0) return null
                     return (
                         <ExamScheduleItem key={day}>
-                            <DayLabel color={color}>
+                            <DayLabel
+                                color={color}
+                                onMouseEnter={() => {
+                                    setHover(
+                                        timetableLectures.filter((lec) =>
+                                            lec.examTimes.some(
+                                                (exam) => exam?.day === day,
+                                            ),
+                                        ),
+                                    )
+                                }}
+                                onMouseLeave={() => setHover(null)}
+                            >
                                 {weekdayToString(day, true)}
                             </DayLabel>
                             <FlexWrapper direction="column" gap={2}>
                                 {exams
                                     .sort((a, b) => a.time.localeCompare(b.time))
                                     .map((exam, idx) => (
-                                        <FlexWrapper key={idx} direction="column" gap={0}>
-                                            <Typography
-                                                type="NormalBold"
-                                                color="Text.default"
-                                            >
+                                        <LectureTextWrapper
+                                            key={idx}
+                                            direction="column"
+                                            gap={0}
+                                            highlighted={hover?.some(
+                                                (lec) => lec.id === exam.lectureId,
+                                            )}
+                                            onMouseEnter={() =>
+                                                setHover(
+                                                    timetableLectures.filter(
+                                                        (lec) =>
+                                                            lec.id === exam.lectureId,
+                                                    ),
+                                                )
+                                            }
+                                            onMouseLeave={() => setHover(null)}
+                                        >
+                                            <Typography type="NormalBold">
                                                 {exam.lectureName}
                                             </Typography>
-                                            <Typography
-                                                type="Normal"
-                                                color="Text.default"
-                                            >
+                                            <Typography type="Normal">
                                                 {exam.time}
                                             </Typography>
-                                        </FlexWrapper>
+                                        </LectureTextWrapper>
                                     ))}
                             </FlexWrapper>
                         </ExamScheduleItem>
