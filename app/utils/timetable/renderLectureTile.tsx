@@ -15,8 +15,6 @@ const renderLectureTile = (
     setSelected: React.Dispatch<React.SetStateAction<Lecture | null>>,
     hover: Lecture[] | null,
     setHover: React.Dispatch<React.SetStateAction<Lecture[] | null>>,
-    holding: boolean,
-    setHolding: React.Dispatch<React.SetStateAction<boolean>>,
     dragging: boolean,
     removeFunction?: (lectureId: number) => void,
 ) => {
@@ -73,7 +71,6 @@ const renderLectureTile = (
                         if (!dragging && lecture !== undefined) {
                             setHover([lecture])
                         }
-                        setHolding(true)
                     }}
                     onMouseLeave={() => {
                         setHover(null)

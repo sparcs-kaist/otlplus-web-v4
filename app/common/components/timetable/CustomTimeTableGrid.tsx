@@ -98,7 +98,6 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
     const [startRow, setStartRow] = useState<number | null>(null)
     const [lastRow, setLastRow] = useState<number | null>(null)
     const [col, setCol] = useState<number | null>(null)
-    const [holding, setHolding] = useState<boolean>(false)
 
     const [draggingArea, setDraggingArea] = useState<Map<number, boolean[]>>(
         new Map(
@@ -158,7 +157,6 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
         setStartRow(null)
         setLastRow(null)
         setDragging(false)
-        setHolding(false)
     }
 
     const getArea = (
@@ -177,7 +175,7 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
     }
 
     useLayoutEffect(() => {
-        if (gridRef.current && dragging && !holding) {
+        if (gridRef.current && dragging) {
             const _startRow = Math.min(startRow!, lastRow!)
             const _endRow = Math.max(startRow!, lastRow!)
             const targetArea = getArea(_startRow, _endRow, col!)
@@ -246,8 +244,6 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
                         setSelected,
                         hover,
                         setHover,
-                        holding,
-                        setHolding,
                         dragging,
                         removeFunction,
                     )}
