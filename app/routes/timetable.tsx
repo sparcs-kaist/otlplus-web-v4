@@ -199,17 +199,7 @@ export default function Timetable() {
                     <TimetableGridArea>
                         <CustomTimeTableGrid
                             cellWidth={100}
-                            lectureSummary={(timetable.data?.lectures ?? [])
-                                .concat(selected ? [selected] : [])
-                                .concat(
-                                    hover
-                                        ? selected
-                                            ? hover.filter(
-                                                  (lec) => lec.id !== selected.id,
-                                              )
-                                            : hover
-                                        : [],
-                                )}
+                            lectureSummary={timetable.data?.lectures ?? []}
                             setTimeFilter={setTimeFilter}
                             hover={hover}
                             setHover={setHover}

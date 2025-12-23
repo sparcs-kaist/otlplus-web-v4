@@ -7,7 +7,7 @@ import type { ClassTime, Lecture } from "@/common/schemas/lecture"
 import checkOverlap from "@/utils/timetable/checkOverlap"
 
 const renderLectureTile = (
-    lectureSummary: Lecture[],
+    timetableLectures: Lecture[],
     cellWidth: number,
     cellHeight: number,
     colPadding: number,
@@ -22,6 +22,16 @@ const renderLectureTile = (
 ) => {
     const gridRef = useRef<HTMLDivElement>(null)
     const rectangles: JSX.Element[] = []
+
+    const lectureSummary = timetableLectures
+        .concat(selected ? [selected] : [])
+        .concat(
+            hover
+                ? selected
+                    ? hover.filter((lec) => lec.id !== selected.id)
+                    : hover
+                : [],
+        )
 
     for (let i = 0; i < lectureSummary.length; i++) {
         const lecture: Lecture = lectureSummary[i] as Lecture
@@ -77,7 +87,11 @@ const renderLectureTile = (
                         isHovered={isHovered}
                         isOverlapped={isOverlapped}
                         cellHeight={cellHeight}
-                        removeFunction={removeFunction}
+                        removeFunction={
+                            timetableLectures.includes(lecture)
+                                ? removeFunction
+                                : undefined
+                        }
                     />
                 </div>,
             )

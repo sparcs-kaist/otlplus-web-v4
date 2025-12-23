@@ -151,22 +151,20 @@ const LectureTile: React.FC<{
             cellHeight={cellHeight}
             isDarkMode={displayedTheme === "dark"}
         >
-            {removeFunction !== undefined &&
-                !isOverlapped &&
-                (isSelected || isHovered) && (
-                    <RemoveButton>
-                        <Icon
-                            size={13}
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                removeFunction(lecture.id)
-                            }}
-                            color="rgba(255, 255, 255, 0.6)"
-                        >
-                            <CloseIcon />
-                        </Icon>
-                    </RemoveButton>
-                )}
+            {removeFunction !== undefined && (isSelected || isHovered) && (
+                <RemoveButton>
+                    <Icon
+                        size={13}
+                        onClick={(e) => {
+                            e.stopPropagation()
+                            removeFunction(lecture.id)
+                        }}
+                        color="rgba(255, 255, 255, 0.6)"
+                    >
+                        <CloseIcon />
+                    </Icon>
+                </RemoveButton>
+            )}
             <TitleWrapper isHighlighted={isHighlighted} isOverlapped={isOverlapped}>
                 {lecture.name}
             </TitleWrapper>
