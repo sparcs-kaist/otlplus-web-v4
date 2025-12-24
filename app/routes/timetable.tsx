@@ -88,6 +88,7 @@ export default function Timetable() {
     const [currentTimetableId, setCurrentTimetableId] = useState<number | null>(null)
     const [year, setYear] = useState<number>(new Date().getFullYear())
     const [semesterEnum, setSemesterEnum] = useState<SemesterEnum>(1)
+    const [contentsAreaHeight, setContentsAreaHeight] = useState<number>(834)
 
     const { query: timetable } = useAPI("GET", `/timetables/${currentTimetableId}`, {
         enabled: currentTimetableId !== null,
@@ -124,6 +125,9 @@ export default function Timetable() {
     // 양 쪽의 높이를 일정하게 맞추기 위함 - 스크롤이 들어가는 경우도 있어서 css 스타일만으로 구현 불가,,?
     useEffect(() => {
         function matchHeight() {
+            if (contentsAreaRef.current) {
+                setContentsAreaHeight(contentsAreaRef.current.offsetHeight)
+            }
             if (searchAreaRef.current && contentsAreaRef.current) {
                 searchAreaRef.current.style.height = `${contentsAreaRef.current.offsetHeight}px`
             }
@@ -199,6 +203,7 @@ export default function Timetable() {
                     <TimetableGridArea>
                         <CustomTimeTableGrid
                             cellWidth={100}
+                            fullHeight={contentsAreaHeight - 100}
                             lectureSummary={timetable.data?.lectures ?? []}
                             setTimeFilter={setTimeFilter}
                             hover={hover}

@@ -15,6 +15,7 @@ import renderTargetArea from "@/utils/timetable/renderTargetArea"
 
 interface GridProps {
     cellWidth?: number
+    fullHeight?: number
     lectureSummary: Lecture[]
     setTimeFilter: React.Dispatch<React.SetStateAction<TimeBlock | null>>
     hover: Lecture[] | null
@@ -55,6 +56,7 @@ const DateWrapper = styled.div<{ width: number }>`
 
 const CustomTimeTableGrid: React.FC<GridProps> = ({
     cellWidth = 120,
+    fullHeight = 800.5,
     lectureSummary,
     setTimeFilter,
     hover,
@@ -84,7 +86,6 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
     // 전체 셀 크기를 반응형으로 조정하는 부분
     useEffect(() => {
         const handleResize = () => {
-            const fullHeight = 800.5
             setCellHeight(fullHeight / 32)
         }
 
@@ -92,7 +93,7 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
         handleResize()
 
         return () => window.removeEventListener("resize", handleResize)
-    }, [])
+    }, [fullHeight])
 
     const [dragging, setDragging] = useState<boolean>(false)
     const [startRow, setStartRow] = useState<number | null>(null)
