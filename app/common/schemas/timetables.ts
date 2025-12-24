@@ -8,7 +8,6 @@ export const TimetablesSchema = z.object({
     year: z.number().int(),
     semester: z.enum(SemesterEnum),
     timetableOrder: z.number().int(),
-    userId: z.number().int(),
 })
 
 export type Timetables = z.infer<typeof TimetablesSchema>

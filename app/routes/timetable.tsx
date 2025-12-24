@@ -199,6 +199,7 @@ export default function Timetable() {
             <ContentsAreaWrapper ref={contentsAreaRef}>
                 {/* 시간표 탭 */}
                 <TabButtonRow
+                    timeTableLectures={timetable.data?.lectures ?? []}
                     currentTimetableId={currentTimetableId}
                     setCurrentTimetableId={setCurrentTimetableId}
                     year={year}

@@ -1,7 +1,6 @@
 import { z } from "zod"
 
 import { SemesterEnum } from "@/common/enum/semesterEnum"
-import { LectureSchema } from "@/common/schemas/lecture"
 import { TimetablesSchema } from "@/common/schemas/timetables"
 
 // GET /api/timetables
@@ -25,7 +24,7 @@ export const POSTRequest = z.object({
 })
 
 export const POSTResponse = z.object({
-    lectures: z.array(LectureSchema),
+    id: z.number().int(),
 })
 
 export type POSTTimetableBody = z.infer<typeof POSTRequest>
