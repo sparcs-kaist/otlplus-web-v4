@@ -219,6 +219,8 @@ export default function Timetable() {
                         timetableLectures={timetable.data?.lectures || []}
                         hover={hover}
                         setHover={setHover}
+                        year={year}
+                        semester={semesterEnum}
                     />
                 </Block>
             </ContentsAreaWrapper>
