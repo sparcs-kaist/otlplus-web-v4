@@ -72,8 +72,6 @@ const LectureListArea = styled.div`
 export default function Timetable() {
     const queryClient = useQueryClient()
 
-    const { query: semester } = useAPI("GET", "/semesters")
-
     const searchAreaRef = useRef<HTMLDivElement>(null)
     const contentsAreaRef = useRef<HTMLDivElement>(null)
     const outerRef = useRef<HTMLDivElement>(null)
@@ -111,17 +109,6 @@ export default function Timetable() {
         },
     )
 
-    useEffect(() => {
-        const semesters = semester.data?.semesters
-        if (semesters && semesters.length > 0) {
-            const lastSemester = semesters[semesters.length - 1]
-            if (lastSemester) {
-                setYear(lastSemester.year)
-                setSemesterEnum(lastSemester.semester)
-            }
-        }
-    }, [semester.data])
-
     // 양 쪽의 높이를 일정하게 맞추기 위함 - 스크롤이 들어가는 경우도 있어서 css 스타일만으로 구현 불가,,?
     useEffect(() => {
         function matchHeight() {
@@ -154,6 +141,11 @@ export default function Timetable() {
         document.addEventListener("mousedown", handleClickOutside)
         return () => document.removeEventListener("mousedown", handleClickOutside)
     }, [])
+
+    useEffect(() => {
+        setSelected(null)
+        setHover(null)
+    }, [year, semesterEnum])
 
     return (
         <TimetableWrapper

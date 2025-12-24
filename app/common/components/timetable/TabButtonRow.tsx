@@ -47,7 +47,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
     const theme = useTheme()
 
     const { query: timetables, setParams } = useAPI("GET", "/timetables")
-    const { query: semesters } = useAPI("GET", "/semesters")
+    const { query: semestersRequest } = useAPI("GET", "/semesters")
     const { user, status } = useUserStore()
 
     useEffect(() => {
@@ -56,11 +56,22 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
         }
     }, [status])
 
+    useEffect(() => {
+        const semesters = semestersRequest.data?.semesters
+        if (semesters && semesters.length > 0) {
+            const lastSemester = semesters[semesters.length - 1]
+            if (lastSemester) {
+                setYear(lastSemester.year)
+                setSemester(lastSemester.semester)
+            }
+        }
+    }, [semestersRequest.data])
+
     const { isFirstSemester, isLastSemester } = useMemo(() => {
-        if (!semesters.data) {
+        if (!semestersRequest.data) {
             return { isFirstSemester: false, isLastSemester: false }
         }
-        const semestersList = semesters.data.semesters
+        const semestersList = semestersRequest.data.semesters
         const firstSemester = semestersList[0]
         const lastSemester = semestersList[semestersList.length - 1]
 
@@ -74,7 +85,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
             isLastSemester:
                 year === lastSemester.year && semester === lastSemester.semester,
         }
-    }, [semesters.data, year, semester])
+    }, [semestersRequest.data, year, semester])
 
     const onClickPreviousSemester = () => {
         if (isFirstSemester) return
