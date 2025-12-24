@@ -96,9 +96,10 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
 
         if (value != undefined) {
             if (key == "time") result = `${formatTimeAreaToString(value as TimeBlock)}`
-
-            if (isSingleSelectOption(key)) result = t((value as [any, string])[1])
-            else result = (value as [any, string]).map((x) => t(x[1])).join(", ")
+            else {
+                if (isSingleSelectOption(key)) result = t((value as [any, string])[1])
+                else result = (value as [any, string]).map((x) => t(x[1])).join(", ")
+            }
         }
 
         return result
