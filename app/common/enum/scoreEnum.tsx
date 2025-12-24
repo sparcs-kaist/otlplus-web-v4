@@ -8,7 +8,7 @@ export enum ScoreEnum {
 }
 
 export const getAverageScoreLabel = (score: number | undefined, reviewNum?: number) => {
-    if (reviewNum === 0 || score === undefined || score === 0) {
+    if (reviewNum === 0 || score === undefined || score === 0 || isNaN(score)) {
         return "?"
     }
     return [

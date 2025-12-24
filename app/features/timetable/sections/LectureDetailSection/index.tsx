@@ -1,17 +1,13 @@
-import React, { useEffect, useRef, useState } from "react"
+import React, { useRef } from "react"
 
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import CloseIcon from "@mui/icons-material/Close"
 import { useTranslation } from "react-i18next"
+import { Link } from "react-router"
 
-import type { GETCourseDetailResponse } from "@/api/courses/$courseId"
-import exampleCourse from "@/api/example/Course"
-import exampleLectures from "@/api/example/Lectures"
-import exampleReviews from "@/api/example/Reviews"
-import type { GETReviewsResponse } from "@/api/reviews"
 import Credits from "@/common/components/Credits"
-import { type ReviewWritingBlockProps } from "@/common/components/reviews/ReviewWritingBlock"
+import type { SemesterEnum } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
@@ -44,21 +40,44 @@ const LectureTitle = styled(FlexWrapper)`
     padding-bottom: 10px;
 `
 
+const StyledLink = styled(Link)`
+    text-decoration: none;
+`
+
+const StyledAnchor = styled.a`
+    text-decoration: none;
+`
+
 interface LectureDetailSectionProps {
     selectedLecture: Lecture | undefined | null
     isMobileModal?: boolean
     onMobileModalClose?: () => void
+    year: number
+    semester: SemesterEnum
 }
 
 const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
     selectedLecture,
     isMobileModal = false,
     onMobileModalClose,
+    year,
+    semester,
 }) => {
     const theme = useTheme()
     const { t } = useTranslation()
 
     const reviewSectionRef = useRef<HTMLDivElement>(null)
+
+    const getSyllabusUrl = (lecture: Lecture) => {
+        const payload = {
+            syy: String(year),
+            smtDivCd: String(semester),
+            subjtCd: lecture.code,
+            syllabusOpenYn: "1",
+        }
+        const encodedLecture = btoa(JSON.stringify(payload))
+        return `https://erp.kaist.ac.kr/com/lgin/SsoCtr/initExtPageWork.do?link=estblSubjt&params=${encodedLecture}`
+    }
 
     return (
         <LectureDetailSectionInner
@@ -106,20 +125,29 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                         justify="flex-end"
                         style={{ width: "100%" }}
                     >
-                        <Typography
-                            type={"Normal"}
-                            color={"Highlight.default"}
-                            style={{ cursor: "pointer" }}
+                        <StyledLink
+                            to={`/dictionary?courseId=${selectedLecture.courseId}`}
                         >
-                            {t("header.dictionary")}
-                        </Typography>
-                        <Typography
-                            type={"Normal"}
-                            color={"Highlight.default"}
-                            style={{ cursor: "pointer" }}
+                            <Typography
+                                type={"Normal"}
+                                color={"Highlight.default"}
+                                style={{ cursor: "pointer" }}
+                            >
+                                {t("header.dictionary")}
+                            </Typography>
+                        </StyledLink>
+                        <StyledAnchor
+                            href={getSyllabusUrl(selectedLecture)}
+                            target="_blank"
                         >
-                            {t("header.syllabus")}
-                        </Typography>
+                            <Typography
+                                type={"Normal"}
+                                color={"Highlight.default"}
+                                style={{ cursor: "pointer" }}
+                            >
+                                {t("header.syllabus")}
+                            </Typography>
+                        </StyledAnchor>
                     </FlexWrapper>
                     <LectureDetailWrapper direction="column" gap={10} align="center">
                         <LectureInfoSubsection selectedLecture={selectedLecture} />

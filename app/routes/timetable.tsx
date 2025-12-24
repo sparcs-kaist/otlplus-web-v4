@@ -185,6 +185,8 @@ export default function Timetable() {
                         selectedLecture={
                             selected ? selected : hover?.length == 1 ? hover[0] : null
                         }
+                        year={year}
+                        semester={semesterEnum}
                     />
                 </LectureInfoArea>
             </SearchAreaWrapper>

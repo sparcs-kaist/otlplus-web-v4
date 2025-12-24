@@ -12,7 +12,7 @@ export const type = {
     majorRequired: "전공필수",
     majorElective: "전공선택",
     generalRequired: "교양필수",
-    humanitiesSocialElective: "인문사회선택",
+    humanitiesSocial: "인문사회선택",
     humanities: "인문사회선택",
     thesisStudy: "졸업연구",
     individualStudy: "개별연구",
