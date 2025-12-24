@@ -45,6 +45,7 @@ const MapImage = styled.div`
 `
 
 interface TimetableInfoSectionProps {
+    timetableName: string
     timetableLectures: Lecture[]
     hover: Lecture[] | null
     setHover: React.Dispatch<React.SetStateAction<Lecture[] | null>>
@@ -53,6 +54,7 @@ interface TimetableInfoSectionProps {
 }
 
 export default function TimetableInfoSection({
+    timetableName,
     timetableLectures,
     hover,
     setHover,
@@ -87,6 +89,7 @@ export default function TimetableInfoSection({
 
             {/* 내보내기 버튼들 */}
             <UtilButtonsSubSection
+                timetableName={timetableName}
                 timetableLectures={timetableLectures}
                 year={year}
                 semester={semester}

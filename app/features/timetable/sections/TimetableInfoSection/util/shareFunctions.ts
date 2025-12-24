@@ -39,10 +39,10 @@ interface DrawTileOptions {
 }
 
 interface DrawTimetableDatas {
+    timetableName: string
     lectures: Lecture[]
     timetableType: string
     semesterName: string
-    isEnglish: boolean
     semesterFontSize: number
     tileFontSize: number
 }
@@ -147,10 +147,10 @@ function drawTile(options: DrawTileOptions) {
 
 async function timeTableImage(drawTimetableData: DrawTimetableDatas) {
     const {
+        timetableName,
         lectures,
         timetableType,
         semesterName,
-        isEnglish,
         semesterFontSize,
         tileFontSize,
     } = drawTimetableData
@@ -192,7 +192,7 @@ async function timeTableImage(drawTimetableData: DrawTimetableDatas) {
         ctx,
         x: timetableType === "5days" ? 952 : 1302,
         y: 78,
-        text: semesterName,
+        text: semesterName + " " + timetableName,
         font: "NotoSansKR",
         fontSize: semesterFontSize,
         color: "#CCCCCC",
@@ -244,7 +244,7 @@ export async function downloadTimetableImage(drawTimetableData: DrawTimetableDat
     const dataUrl = canvas.toDataURL("image/png")
     const a = document.createElement("a")
     a.href = dataUrl
-    a.download = `timetable.png`
+    a.download = `${drawTimetableData.timetableName}.png`
     a.click()
     URL.revokeObjectURL(dataUrl)
 }
@@ -273,9 +273,8 @@ export function downloadTimetableCalendar(timetableIcalData: {
     name: string
     lectures: Lecture[]
     semesterObject: Semester
-    isEnglish: boolean
 }) {
-    const { name, lectures, semesterObject, isEnglish } = timetableIcalData
+    const { name, lectures, semesterObject } = timetableIcalData
 
     const calendar = ical({
         name,
@@ -309,7 +308,7 @@ export function downloadTimetableCalendar(timetableIcalData: {
             const event = calendar.createEvent({
                 start: eventStart,
                 end: eventEnd,
-                summary: isEnglish ? lecture.name : lecture.name, // Assuming title_en is not available in Lecture type based on previous errors, or just use name. The original code used title_en but Lecture schema showed name.
+                summary: lecture.name,
                 location: classroomShortStr,
                 repeating: {
                     freq: ICalEventRepeatingFreq.WEEKLY,

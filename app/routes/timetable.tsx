@@ -4,14 +4,14 @@ import styled from "@emotion/styled"
 import { useQueryClient } from "@tanstack/react-query"
 
 import StyledDivider from "@/common/components/StyledDivider"
-import CustomTimeTableGrid from "@/common/components/timetable/CustomTimeTableGrid"
-import TabButtonRow from "@/common/components/timetable/TabButtonRow"
 import { type SemesterEnum } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimeBlock } from "@/common/schemas/timeblock"
+import CustomTimeTableGrid from "@/features/timetable/components/CustomTimeTableGrid"
 import LectureDetailSection from "@/features/timetable/sections/LectureDetailSection"
 import LectureListSection from "@/features/timetable/sections/LectureListSection"
+import TabButtonRow from "@/features/timetable/sections/TabsRowSubSection/TabButtonRow"
 import TimetableInfoSection from "@/features/timetable/sections/TimetableInfoSection"
 import { useAPI } from "@/utils/api/useAPI"
 
@@ -84,6 +84,7 @@ export default function Timetable() {
 
     // Current timetable ID (placeholder - should come from timetable selection logic)
     const [currentTimetableId, setCurrentTimetableId] = useState<number | null>(null)
+    const [currentTimetableName, setCurrentTimetableName] = useState<string>("")
     const [year, setYear] = useState<number>(-1)
     const [semesterEnum, setSemesterEnum] = useState<SemesterEnum>(1)
     const [contentsAreaHeight, setContentsAreaHeight] = useState<number>(834)
@@ -199,9 +200,14 @@ export default function Timetable() {
             <ContentsAreaWrapper ref={contentsAreaRef}>
                 {/* 시간표 탭 */}
                 <TabButtonRow
-                    timeTableLectures={timetable.data?.lectures ?? []}
+                    timeTableLectures={
+                        currentTimetableId === null
+                            ? (myTimetable.data?.lectures ?? [])
+                            : (timetable.data?.lectures ?? [])
+                    }
                     currentTimetableId={currentTimetableId}
                     setCurrentTimetableId={setCurrentTimetableId}
+                    setCurrentTimetableName={setCurrentTimetableName}
                     year={year}
                     semester={semesterEnum}
                     setYear={setYear}
@@ -223,17 +229,22 @@ export default function Timetable() {
                             setHover={setHover}
                             selected={selected}
                             setSelected={setSelected}
-                            removeFunction={(lectureId: number) => {
-                                removeLectureFunction({
-                                    action: "delete",
-                                    lectureId: lectureId,
-                                })
-                            }}
+                            removeFunction={
+                                currentTimetableId === null
+                                    ? undefined
+                                    : (lectureId: number) => {
+                                          removeLectureFunction({
+                                              action: "delete",
+                                              lectureId: lectureId,
+                                          })
+                                      }
+                            }
                         />
                     </TimetableGridArea>
                     <StyledDivider direction="column" />
                     {/*시간표 정보 영역*/}
                     <TimetableInfoSection
+                        timetableName={currentTimetableName}
                         timetableLectures={
                             currentTimetableId === null
                                 ? (myTimetable.data?.lectures ?? [])

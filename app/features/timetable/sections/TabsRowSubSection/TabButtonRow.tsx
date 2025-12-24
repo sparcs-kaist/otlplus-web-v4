@@ -48,6 +48,7 @@ interface TabButtonRowProps {
     timeTableLectures: Lecture[]
     currentTimetableId: number | null
     setCurrentTimetableId: React.Dispatch<React.SetStateAction<number | null>>
+    setCurrentTimetableName: React.Dispatch<React.SetStateAction<string>>
     year: number
     semester: SemesterEnum
     setYear: React.Dispatch<React.SetStateAction<number>>
@@ -58,6 +59,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
     timeTableLectures,
     currentTimetableId,
     setCurrentTimetableId,
+    setCurrentTimetableName,
     year,
     semester,
     setYear,
@@ -95,7 +97,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
         let list = timetables.data?.timetables ?? []
         list = list.filter((t) => t.year === year && t.semester === semester)
         setLocalTimetables(
-            list.slice().sort((a, b) => a.timetableOrder - b.timetableOrder),
+            list.slice().sort((a, b) => a.timeTableOrder - b.timeTableOrder),
         )
     }, [timetables.data, year, semester])
 
@@ -125,6 +127,14 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
             })
         }
     }, [year, semester])
+
+    useEffect(() => {
+        setCurrentTimetableName(
+            currentTimetableId == null
+                ? t("timetable.myTimetable")
+                : localTimetables.find((t) => t.id === currentTimetableId)?.name || "",
+        )
+    }, [currentTimetableId])
 
     const { isFirstSemester, isLastSemester } = useMemo(() => {
         if (!semestersRequest.data) {

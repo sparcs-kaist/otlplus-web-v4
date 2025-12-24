@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react"
-import React from "react"
+import React, { useCallback, useEffect, useRef, useState } from "react"
 
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
@@ -245,24 +244,32 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
 
     const [isWishlist, setIsWishlist] = useState<boolean>(false)
 
-    const { query: wishListQuery } = useAPI("GET", `/users/${user?.id}/wishlist`, {
-        enabled: status === "success",
-    })
+    const { query: wishListQuery, setParams: setWishListQuery } = useAPI(
+        "GET",
+        `/users/${user?.id}/wishlist`,
+        {
+            enabled: status === "success",
+        },
+    )
 
-    const { mutation: patchUserWishlist, requestFunction: patchUserWishlistFunction } =
-        useAPI("PATCH", `/users/${user?.id}/wishlist`, {
+    const { requestFunction: patchUserWishlistFunction } = useAPI(
+        "PATCH",
+        `/users/${user?.id}/wishlist`,
+        {
             onSuccess: () => {
                 queryClient.invalidateQueries({
                     queryKey: [`/users/${user?.id}/wishlist`],
                 })
             },
-        })
+        },
+    )
 
     const handleSearch = (param: SearchParamsType) => {
         if (checkEmpty(param)) {
             alert(t("common.search.empty"))
             return
         }
+        setIsWishlist(false)
         const fullParam = {
             year: year,
             semester: semester,
@@ -280,6 +287,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
 
     useEffect(() => {
         setSearchResult({ courses: [] })
+        setWishListQuery({ year: year, semester: semester })
     }, [year, semester])
 
     useEffect(() => {
@@ -305,6 +313,20 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
             setSearchResult(wishListQuery.data)
         } else setSearchResult(data ?? { courses: [] })
     }, [isWishlist])
+
+    useEffect(() => {
+        if (wishListQuery.data === undefined) return
+
+        setIsInWish(
+            wishListQuery.data.courses
+                .flatMap((course) => course.lectures)
+                .map((lecture) => lecture.id),
+        )
+
+        if (isWishlist) {
+            setSearchResult(wishListQuery.data)
+        }
+    }, [wishListQuery.data])
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -509,11 +531,6 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                                                 <FlexWrapper
                                                     direction="row"
                                                     gap={6}
-                                                    style={{
-                                                        opacity: course.completed
-                                                            ? 0.3
-                                                            : 1,
-                                                    }}
                                                     onClick={(e) => e.stopPropagation()}
                                                 >
                                                     {/* TODO: 클릭 시 이벤트 추가하기 */}
@@ -545,6 +562,10 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                                                     )}
                                                     <span
                                                         style={{
+                                                            opacity:
+                                                                currentTimetableId == null
+                                                                    ? 0.3
+                                                                    : 1,
                                                             cursor: addTimetable.isPending
                                                                 ? "wait"
                                                                 : "pointer",

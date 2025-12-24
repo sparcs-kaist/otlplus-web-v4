@@ -1,9 +1,13 @@
 import { z } from "zod"
 
+import { SemesterEnum } from "@/common/enum/semesterEnum"
 import { LectureSchema } from "@/common/schemas/lecture"
 
 // GET /api/users/:userId/wishlist
-export const GETRequest = z.object({})
+export const GETRequest = z.object({
+    year: z.number().int(),
+    semester: z.enum(SemesterEnum),
+})
 
 export const GETResponse = z.object({
     courses: z.array(

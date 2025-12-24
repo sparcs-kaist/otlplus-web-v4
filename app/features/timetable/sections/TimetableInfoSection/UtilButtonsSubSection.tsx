@@ -6,7 +6,6 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth"
 import ContentCopyIcon from "@mui/icons-material/ContentCopy"
 import ImageIcon from "@mui/icons-material/Image"
 import MenuBookIcon from "@mui/icons-material/MenuBook"
-import { useTranslation } from "react-i18next"
 
 import StyledDivider from "@/common/components/StyledDivider"
 import { SemesterEnum, semesterToString } from "@/common/enum/semesterEnum"
@@ -38,16 +37,17 @@ const ExportButton = styled.button`
 `
 
 export default function UtilButtonsSubSection({
+    timetableName,
     timetableLectures,
     year,
     semester,
 }: {
+    timetableName: string
     timetableLectures: Lecture[]
     year: number
     semester: SemesterEnum
 }) {
     const theme = useTheme()
-    const { i18n } = useTranslation()
 
     const { query } = useAPI("GET", "/semesters")
 
@@ -64,10 +64,10 @@ export default function UtilButtonsSubSection({
             <ExportButton
                 onClick={() =>
                     copyTimetableImageToClipboard({
+                        timetableName: timetableName,
                         lectures: timetableLectures,
                         timetableType: "5days",
                         semesterName: year + " " + semesterToString(semester),
-                        isEnglish: i18n.resolvedLanguage === "en",
                         semesterFontSize: 30,
                         tileFontSize: 20,
                     })
@@ -81,10 +81,10 @@ export default function UtilButtonsSubSection({
             <ExportButton
                 onClick={() =>
                     downloadTimetableImage({
+                        timetableName: timetableName,
                         lectures: timetableLectures,
                         timetableType: "5days",
                         semesterName: year + " " + semesterToString(semester),
-                        isEnglish: i18n.resolvedLanguage === "en",
                         semesterFontSize: 30,
                         tileFontSize: 20,
                     })
@@ -99,13 +99,12 @@ export default function UtilButtonsSubSection({
                 onClick={() => {
                     if (!currentSemester) return
                     downloadTimetableCalendar({
-                        name: "Timetable",
+                        name: timetableName,
                         lectures: timetableLectures,
                         semesterObject: {
                             beginning: new Date(currentSemester.beginning),
                             end: new Date(currentSemester.end),
                         },
-                        isEnglish: i18n.resolvedLanguage === "en",
                     })
                 }}
             >
