@@ -3,7 +3,6 @@ import React, { useEffect, useImperativeHandle, useState } from "react"
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
 
-import exampleReviews from "@/api/example/Reviews"
 import { type GETReviewsResponse } from "@/api/reviews"
 import LoadingCircle from "@/common/components/LoadingCircle"
 import ReviewBlock from "@/common/components/reviews/ReviewBlock"
@@ -183,10 +182,9 @@ const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
                             ))}
                         </NumberWrapper>
                     </FlexWrapper>
-                    {exampleReviews.reviews.length > 0 &&
-                        writableReviewProps.map((props) => (
-                            <ReviewWritingBlock {...props} />
-                        ))}
+                    {writableReviewProps.map((props) => (
+                        <ReviewWritingBlock {...props} />
+                    ))}
                     {reviews?.reviews.map((review) => {
                         if (
                             reviewLanguage === "english" &&

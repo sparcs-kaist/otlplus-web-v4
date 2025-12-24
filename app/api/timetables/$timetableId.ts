@@ -1,12 +1,13 @@
 import { z } from "zod"
 
 import { LectureSchema } from "@/common/schemas/lecture"
-import { TimetableSchema } from "@/common/schemas/timetable"
 
 //GET /api/timetables/:timetableId
 export const GETRequest = z.object({})
 
-export const GETResponse = TimetableSchema
+export const GETResponse = z.object({
+    lectures: z.array(LectureSchema),
+})
 
 export type GETTimetableByIdResponse = z.infer<typeof GETResponse>
 

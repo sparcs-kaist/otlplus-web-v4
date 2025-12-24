@@ -84,13 +84,20 @@ export default function Timetable() {
 
     // Current timetable ID (placeholder - should come from timetable selection logic)
     const [currentTimetableId, setCurrentTimetableId] = useState<number | null>(null)
-    const [year, setYear] = useState<number>(new Date().getFullYear())
+    const [year, setYear] = useState<number>(-1)
     const [semesterEnum, setSemesterEnum] = useState<SemesterEnum>(1)
     const [contentsAreaHeight, setContentsAreaHeight] = useState<number>(834)
 
     const { query: timetable } = useAPI("GET", `/timetables/${currentTimetableId}`, {
         enabled: currentTimetableId !== null,
     })
+    const { query: myTimetable, setParams: setMyTimetableParams } = useAPI(
+        "GET",
+        "/timetables/my-timetable",
+        {
+            enabled: currentTimetableId === null,
+        },
+    )
 
     const { requestFunction: removeLectureFunction } = useAPI(
         "PATCH",
@@ -109,7 +116,6 @@ export default function Timetable() {
         },
     )
 
-    // 양 쪽의 높이를 일정하게 맞추기 위함 - 스크롤이 들어가는 경우도 있어서 css 스타일만으로 구현 불가,,?
     useEffect(() => {
         function matchHeight() {
             if (contentsAreaRef.current) {
@@ -145,7 +151,15 @@ export default function Timetable() {
     useEffect(() => {
         setSelected(null)
         setHover(null)
+        if (year !== -1) {
+            setMyTimetableParams({ year: year, semester: semesterEnum })
+        }
     }, [year, semesterEnum])
+
+    useEffect(() => {
+        setSelected(null)
+        setHover(null)
+    }, [currentTimetableId])
 
     return (
         <TimetableWrapper
@@ -198,7 +212,11 @@ export default function Timetable() {
                         <CustomTimeTableGrid
                             cellWidth={100}
                             fullHeight={contentsAreaHeight - 100}
-                            lectureSummary={timetable.data?.lectures ?? []}
+                            lectureSummary={
+                                currentTimetableId === null
+                                    ? (myTimetable.data?.lectures ?? [])
+                                    : (timetable.data?.lectures ?? [])
+                            }
                             setTimeFilter={setTimeFilter}
                             hover={hover}
                             setHover={setHover}
@@ -215,7 +233,11 @@ export default function Timetable() {
                     <StyledDivider direction="column" />
                     {/*시간표 정보 영역*/}
                     <TimetableInfoSection
-                        timetableLectures={timetable.data?.lectures || []}
+                        timetableLectures={
+                            currentTimetableId === null
+                                ? (myTimetable.data?.lectures ?? [])
+                                : (timetable.data?.lectures ?? [])
+                        }
                         hover={hover}
                         setHover={setHover}
                         year={year}

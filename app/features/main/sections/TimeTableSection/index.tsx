@@ -1,13 +1,12 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import styled from "@emotion/styled"
 import { Trans, useTranslation } from "react-i18next"
 
-import exampleLectures from "@/api/example/Lectures"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
-import type { TimeBlock } from "@/common/schemas/timeblock"
+import { useAPI } from "@/utils/api/useAPI"
 import useUserStore from "@/utils/zustand/useUserStore"
 
 import Widget from "../../../../common/primitives/Widget"
@@ -23,13 +22,26 @@ const TimeTableSection = () => {
 
     const [selected, setSelected] = useState<Lecture | null>(null)
     const [hover, setHover] = useState<Lecture | null>(null)
-    const [timeFilter, setTimeFilter] = useState<TimeBlock | null>(null)
 
-    const [selectedOption, setSelectedOption] = useState<number>(0)
-
-    const [lectureSummary, setLectureSummary] = useState<Lecture[]>(exampleLectures)
+    const { query: myTimetable, setParams: setMyTimetableParams } = useAPI(
+        "GET",
+        "/timetables/my-timetable",
+    )
+    const { query: semesters } = useAPI("GET", "/semesters")
 
     const { t } = useTranslation()
+
+    useEffect(() => {
+        if (semesters.data && semesters.data.semesters.length > 0) {
+            const latestSemester =
+                semesters.data.semesters[semesters.data.semesters.length - 1]
+            if (!latestSemester) return
+            setMyTimetableParams({
+                year: latestSemester.year,
+                semester: latestSemester.semester,
+            })
+        }
+    }, [semesters.data])
 
     return (
         <Widget width={856} direction="column" gap={0} padding="30px" flex="1 1 auto">
@@ -71,8 +83,7 @@ const TimeTableSection = () => {
                     </FlexWrapper>
                     <CustomTimeTableGrid
                         cellWidth={150}
-                        lectureSummary={lectureSummary || []}
-                        setTimeFilter={setTimeFilter}
+                        lectureSummary={myTimetable.data?.lectures ?? []}
                         hover={hover}
                         setHover={setHover}
                         selected={selected}

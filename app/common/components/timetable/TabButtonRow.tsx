@@ -48,13 +48,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
 
     const { query: timetables, setParams } = useAPI("GET", "/timetables")
     const { query: semestersRequest } = useAPI("GET", "/semesters")
-    const { user, status } = useUserStore()
-
-    useEffect(() => {
-        if (status === "success") {
-            setParams({ userId: user?.id ?? -1 })
-        }
-    }, [status])
+    const { status } = useUserStore()
 
     useEffect(() => {
         const semesters = semestersRequest.data?.semesters
@@ -63,9 +57,16 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
             if (lastSemester) {
                 setYear(lastSemester.year)
                 setSemester(lastSemester.semester)
+
+                if (status === "success") {
+                    setParams({
+                        year: lastSemester.year,
+                        semester: lastSemester.semester,
+                    })
+                }
             }
         }
-    }, [semestersRequest.data])
+    }, [semestersRequest.data, status])
 
     const { isFirstSemester, isLastSemester } = useMemo(() => {
         if (!semestersRequest.data) {

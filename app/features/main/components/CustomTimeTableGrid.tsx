@@ -5,7 +5,6 @@ import { useTranslation } from "react-i18next"
 
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import type { Lecture } from "@/common/schemas/lecture"
-import type { TimeBlock } from "@/common/schemas/timeblock"
 import { checkAnyOver24 } from "@/utils/timetable/checkAnyOver24"
 import renderGrid from "@/utils/timetable/renderGrid"
 import renderLectureTile from "@/utils/timetable/renderLectureTile"
@@ -14,7 +13,6 @@ import renderTargetArea from "@/utils/timetable/renderTargetArea"
 interface GridProps {
     cellWidth?: number
     lectureSummary: Lecture[]
-    setTimeFilter: React.Dispatch<React.SetStateAction<TimeBlock | null>>
     hover: Lecture | null
     setHover: React.Dispatch<React.SetStateAction<Lecture | null>>
     selected: Lecture | null
@@ -53,7 +51,6 @@ const DateWrapper = styled.div<{ width: number }>`
 const CustomTimeTableGrid: React.FC<GridProps> = ({
     cellWidth = 120,
     lectureSummary,
-    setTimeFilter,
     hover,
     setHover,
     selected,

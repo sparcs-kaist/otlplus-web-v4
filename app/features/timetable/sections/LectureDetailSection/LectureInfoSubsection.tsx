@@ -3,12 +3,9 @@ import React from "react"
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
 
-import type { GETCourseDetailResponse } from "@/api/courses/$courseId"
-import exampleCourse from "@/api/example/Course"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
-import type { getAPIResponseType } from "@/utils/api/getAPIType"
 
 import formatProfessorName from "../LectureListSection/formatProfessorName"
 import formatExamTime from "./formatExamTime"

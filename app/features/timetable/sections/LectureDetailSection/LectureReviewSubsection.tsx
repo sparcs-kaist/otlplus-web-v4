@@ -5,8 +5,6 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { useInView } from "react-intersection-observer"
 
-import exampleReviews from "@/api/example/Reviews"
-import type { GETReviewsResponse } from "@/api/reviews"
 import LoadingCircle from "@/common/components/LoadingCircle"
 import ReviewBlock from "@/common/components/reviews/ReviewBlock"
 import { getAverageScoreLabel } from "@/common/enum/scoreEnum"
