@@ -1,4 +1,4 @@
-import { CanvasRenderingContext2D, createCanvas, loadImage, registerFont } from "canvas"
+import { CanvasRenderingContext2D, createCanvas, loadImage } from "canvas"
 import ical, { ICalAlarmType, ICalEventRepeatingFreq } from "ical-generator"
 
 import type { Lecture } from "@/common/schemas/lecture"
