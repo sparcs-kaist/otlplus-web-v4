@@ -8,6 +8,7 @@ export const GETRequest = z.object({})
 export const GETResponse = z.object({
     courses: z.array(
         z.object({
+            id: z.number().int(),
             name: z.string(),
             code: z.string(),
             type: z.string(),
@@ -22,7 +23,7 @@ export type GETWishlistResponse = z.infer<typeof GETResponse>
 // PATCH /api/users/:userId/wishlist
 export const PATCHRequest = z.object({
     lectureId: z.number().int(),
-    action: z.enum(["add", "remove"]),
+    mode: z.enum(["add", "delete"]),
 })
 
 export const PATCHResponse = z.object({})

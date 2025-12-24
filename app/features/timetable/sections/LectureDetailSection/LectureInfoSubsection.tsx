@@ -8,6 +8,7 @@ import exampleCourse from "@/api/example/Course"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
+import type { getAPIResponseType } from "@/utils/api/getAPIType"
 
 import formatProfessorName from "../LectureListSection/formatProfessorName"
 import formatExamTime from "./formatExamTime"
@@ -39,8 +40,10 @@ const LectureInfoSubsection: React.FC<LectureInfoSubsectionProps> = ({
 }) => {
     const { t } = useTranslation()
     // /courses/{courseId} 호출 => lecture.
-    const [courseDetail, setCourseDetail] =
-        React.useState<GETCourseDetailResponse | null>(exampleCourse)
+    const [courseDetail, setCourseDetail] = React.useState<getAPIResponseType<
+        "GET",
+        "/courses/:courseId"
+    > | null>(null)
 
     return (
         <>

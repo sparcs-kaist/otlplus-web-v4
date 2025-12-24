@@ -10,7 +10,6 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { useInView } from "react-intersection-observer"
 
-import exampleUserWishlistResults from "@/api/example/UserWishList"
 import type { GETLecturesResponse } from "@/api/lectures"
 import LoadingCircle from "@/common/components/LoadingCircle"
 import ScrollableDropdown from "@/common/components/ScrollableDropdown"
@@ -21,8 +20,7 @@ import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimeBlock } from "@/common/schemas/timeblock"
-import { clientEnv } from "@/env"
-import { axiosClientWithAuth } from "@/libs/axios"
+import type { getAPIResponseType } from "@/utils/api/getAPIType"
 import { useAPI } from "@/utils/api/useAPI"
 import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
 import checkEmpty from "@/utils/search/checkEmpty"
@@ -149,7 +147,7 @@ interface LectureListSectionProps {
     currentTimetableId: number | null
 }
 
-const SEARCH_LIMIT = 10
+const SEARCH_LIMIT = 50
 
 const LectureListSection: React.FC<LectureListSectionProps> = ({
     year,
@@ -219,6 +217,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
             data.courses.forEach((course) => {
                 n += course.lectures.length
             })
+            if (n < SEARCH_LIMIT) return 0
             return n
         },
     })
@@ -235,7 +234,9 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
         },
     )
 
-    const [searchResult, setSearchResult] = useState<GETLecturesResponse>({ courses: [] })
+    const [searchResult, setSearchResult] = useState<
+        getAPIResponseType<"GET", "/lectures">
+    >({ courses: [] })
     const [isInWish, setIsInWish] = useState<number[]>([])
 
     const [sortOption, setSortOption] = useState<number>(0)
@@ -244,12 +245,24 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
 
     const [isWishlist, setIsWishlist] = useState<boolean>(false)
 
+    const { query: wishListQuery } = useAPI("GET", `/users/${user?.id}/wishlist`, {
+        enabled: status === "success",
+    })
+
+    const { mutation: patchUserWishlist, requestFunction: patchUserWishlistFunction } =
+        useAPI("PATCH", `/users/${user?.id}/wishlist`, {
+            onSuccess: () => {
+                queryClient.invalidateQueries({
+                    queryKey: [`/users/${user?.id}/wishlist`],
+                })
+            },
+        })
+
     const handleSearch = (param: SearchParamsType) => {
         if (checkEmpty(param)) {
             alert(t("common.search.empty"))
             return
         }
-        setSearchResult({ courses: [] })
         const fullParam = {
             year: year,
             semester: semester,
@@ -267,54 +280,28 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     }, [year, semester])
 
     useEffect(() => {
+        console.log(inView)
         if (inView && query.hasNextPage && !query.isFetchingNextPage) {
             query.fetchNextPage()
         }
-    }, [inView, query])
+    }, [inView])
 
     useEffect(() => {
         if (data !== undefined) {
             setSearchResult(data)
+            setIsWishlist(false)
         }
         if (!query.hasNextPage) {
             setEnabled(false)
         }
-    }, [data, query.hasNextPage])
-
-    // Fetch user wishlist to know which lectures are favorited
-    const fetchWishlist = useCallback(async () => {
-        if (status === "idle") return
-
-        try {
-            const response = await axiosClientWithAuth.get(
-                `${clientEnv.VITE_APP_API_URL}/api/users/${user?.id}/wishlist`,
-            )
-            const wishlistLectureIds = response.data.courses.flatMap(
-                (course: { lectures: { id: number }[] }) =>
-                    course.lectures.map((lec) => lec.id),
-            )
-            setIsInWish(wishlistLectureIds)
-        } catch (error) {
-            console.error("Failed to fetch wishlist:", error)
-            // Fallback to example data in case of error (e.g., mock mode)
-            setIsInWish(
-                exampleUserWishlistResults.courses.flatMap((course) =>
-                    course.lectures.map((lec) => lec.id),
-                ),
-            )
-        }
-    }, [status])
+    }, [data])
 
     useEffect(() => {
-        fetchWishlist()
-    }, [fetchWishlist])
+        if (wishListQuery.data === undefined) return
 
-    useEffect(() => {
         if (isWishlist) {
-            setSearchResult(exampleUserWishlistResults)
-        } else {
-            setSearchResult({ courses: [] })
-        }
+            setSearchResult(wishListQuery.data)
+        } else setSearchResult(data ?? { courses: [] })
     }, [isWishlist])
 
     useEffect(() => {
@@ -333,10 +320,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     }, [])
 
     const handleLikeClick = async (wish: boolean, lectureId: number) => {
-        if (status === "idle") {
-            console.warn("User not logged in")
-            return
-        }
+        if (status === "idle") return
 
         // Optimistic update
         if (wish) {
@@ -346,13 +330,10 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
         }
 
         try {
-            await axiosClientWithAuth.patch(
-                `${clientEnv.VITE_APP_API_URL}/api/v2/users/${user?.id}/wishlist`,
-                {
-                    lectureId: lectureId,
-                    action: wish ? "remove" : "add",
-                },
-            )
+            patchUserWishlistFunction({
+                lectureId: lectureId,
+                mode: wish ? "delete" : "add",
+            })
         } catch (error) {
             console.error("Failed to update wishlist:", error)
             // Revert optimistic update on error
@@ -398,7 +379,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                 <Chip
                     isSelected={isWishlist}
                     onClick={() => {
-                        setIsWishlist(!isWishlist)
+                        setIsWishlist((prev) => !prev)
                     }}
                 >
                     <Icon size={15} color={theme.colors.Highlight.default}>
@@ -534,7 +515,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                                                     onClick={(e) => e.stopPropagation()}
                                                 >
                                                     {/* TODO: 클릭 시 이벤트 추가하기 */}
-                                                    {wish ? (
+                                                    {wish || isWishlist ? (
                                                         <Icon
                                                             size={15}
                                                             color="#E54C65"
@@ -590,7 +571,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                         )
                     })}
 
-                    {query.hasNextPage && <LoadingCircle ref={ref} />}
+                    {!isWishlist && query.hasNextPage && <LoadingCircle ref={ref} />}
                 </CourseBlockWrapper>
             ) : (
                 <NoResultText type={"Bigger"} color={"Text.placeholder"}>
