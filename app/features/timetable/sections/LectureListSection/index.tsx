@@ -283,7 +283,6 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     }, [year, semester])
 
     useEffect(() => {
-        console.log(inView)
         if (inView && query.hasNextPage && !query.isFetchingNextPage) {
             query.fetchNextPage()
         }

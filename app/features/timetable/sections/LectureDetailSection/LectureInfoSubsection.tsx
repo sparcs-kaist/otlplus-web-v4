@@ -39,11 +39,6 @@ const LectureInfoSubsection: React.FC<LectureInfoSubsectionProps> = ({
     selectedLecture,
 }) => {
     const { t } = useTranslation()
-    // /courses/{courseId} 호출 => lecture.
-    const [courseDetail, setCourseDetail] = React.useState<getAPIResponseType<
-        "GET",
-        "/courses/:courseId"
-    > | null>(null)
 
     return (
         <>
@@ -104,9 +99,11 @@ const LectureInfoSubsection: React.FC<LectureInfoSubsectionProps> = ({
                 align={"center"}
             >
                 {[
-                    [courseDetail?.classDuration, t("common.numClasses")],
-                    [courseDetail?.expDuration, t("common.numLabs")],
-                    [courseDetail?.credit, t("common.credit")],
+                    [selectedLecture?.classDuration, t("common.numClasses")],
+                    [selectedLecture?.expDuration, t("common.numLabs")],
+                    selectedLecture?.creditAU
+                        ? [selectedLecture?.creditAU, "AU"]
+                        : [selectedLecture?.credit, t("common.credit")],
                 ].map(([value, label], index) => (
                     <NumberContent
                         key={index}

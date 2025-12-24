@@ -60,7 +60,9 @@ const CourseInfoSubsection: React.FC<CourseInfoSubsectionProps> = ({ courseDetai
                 {[
                     [courseDetail?.classDuration, t("common.numClasses")],
                     [courseDetail?.expDuration, t("common.numLabs")],
-                    [courseDetail?.credit, t("common.credit")],
+                    courseDetail?.creditAU
+                        ? [courseDetail?.creditAU, "AU"]
+                        : [courseDetail?.credit, t("common.credit")],
                 ].map(([value, label], index) => (
                     <NumberContent
                         key={index}
