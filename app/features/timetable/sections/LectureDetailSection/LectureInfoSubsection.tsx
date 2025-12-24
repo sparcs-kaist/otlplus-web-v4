@@ -1,4 +1,4 @@
-import React, { useEffect } from "react"
+import React from "react"
 
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
@@ -58,7 +58,7 @@ const LectureInfoSubsection: React.FC<LectureInfoSubsectionProps> = ({
                         {t("common.search.department")}
                     </DetailHeaderText>
                     <Typography type={"Normal"} color={"Text.default"}>
-                        {selectedLecture?.department.name}
+                        {selectedLecture?.department.map((dept) => dept.name).join(", ")}
                     </Typography>
                 </FlexWrapper>
                 <FlexWrapper direction="row" gap={6}>
