@@ -20,7 +20,7 @@ export const LectureSchema = z.object({
     classNo: z.string(),
     name: z.string(),
     code: z.string(),
-    department: z.array(DepartmentSchema),
+    department: DepartmentSchema,
     type: z.string(),
     limitPeople: z.number().int(),
     numPeople: z.number().int(),

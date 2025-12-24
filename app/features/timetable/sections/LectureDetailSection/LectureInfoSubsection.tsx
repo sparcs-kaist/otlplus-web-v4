@@ -58,7 +58,7 @@ const LectureInfoSubsection: React.FC<LectureInfoSubsectionProps> = ({
                         {t("common.search.department")}
                     </DetailHeaderText>
                     <Typography type={"Normal"} color={"Text.default"}>
-                        {selectedLecture?.department.map((dept) => dept.name).join(", ")}
+                        {selectedLecture?.department.name}
                     </Typography>
                 </FlexWrapper>
                 <FlexWrapper direction="row" gap={6}>
