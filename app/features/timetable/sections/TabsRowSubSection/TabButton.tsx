@@ -1,5 +1,3 @@
-"use client"
-
 import React, { type HTMLAttributes } from "react"
 
 import styled from "@emotion/styled"

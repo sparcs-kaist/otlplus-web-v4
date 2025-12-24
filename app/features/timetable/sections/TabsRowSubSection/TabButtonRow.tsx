@@ -1,20 +1,17 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 
-import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import AddIcon from "@mui/icons-material/Add"
 import CloseIcon from "@mui/icons-material/Close"
 import ContentCopyIcon from "@mui/icons-material/ContentCopy"
-import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore"
-import NavigateNextIcon from "@mui/icons-material/NavigateNext"
 import { useTranslation } from "react-i18next"
 
-import { SemesterEnum, semesterToString } from "@/common/enum/semesterEnum"
+import { SemesterEnum } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
-import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { Timetables } from "@/common/schemas/timetables"
+import SemesterButton from "@/features/timetable/sections/TabsRowSubSection/SemesterButton"
 import { useAPI } from "@/utils/api/useAPI"
 import useUserStore from "@/utils/zustand/useUserStore"
 
@@ -33,15 +30,6 @@ const TabRow = styled(FlexWrapper)`
 const TimetableName = styled.span`
     outline: none;
     user-select: none;
-`
-
-const SemesterButton = styled(FlexWrapper)`
-    width: 136px;
-    height: 32px;
-    background-color: ${({ theme }) => theme.colors.Background.Section.default};
-    border-radius: 6px;
-    padding: 8px 10px;
-    flex-shrink: 0;
 `
 
 interface TabButtonRowProps {
@@ -66,11 +54,9 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
     setSemester,
 }) => {
     const { t } = useTranslation()
-    const theme = useTheme()
     const { status } = useUserStore()
 
     const { query: timetables, setParams } = useAPI("GET", "/timetables")
-    const { query: semestersRequest } = useAPI("GET", "/semesters")
     const { requestFunction: addTimetable } = useAPI("POST", "/timetables", {
         onSuccess: (data) => {
             timetables.refetch()
@@ -102,25 +88,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
     }, [timetables.data, year, semester])
 
     useEffect(() => {
-        const semesters = semestersRequest.data?.semesters
-        if (semesters && semesters.length > 0) {
-            const lastSemester = semesters[semesters.length - 1]
-            if (lastSemester) {
-                setYear(lastSemester.year)
-                setSemester(lastSemester.semester)
-
-                if (status === "success") {
-                    setParams({
-                        year: lastSemester.year,
-                        semester: lastSemester.semester,
-                    })
-                }
-            }
-        }
-    }, [semestersRequest.data, status])
-
-    useEffect(() => {
-        if (status === "success") {
+        if (status === "success" && year !== -1) {
             setParams({
                 year: year,
                 semester: semester,
@@ -135,47 +103,6 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                 : localTimetables.find((t) => t.id === currentTimetableId)?.name || "",
         )
     }, [currentTimetableId])
-
-    const { isFirstSemester, isLastSemester } = useMemo(() => {
-        if (!semestersRequest.data) {
-            return { isFirstSemester: false, isLastSemester: false }
-        }
-        const semestersList = semestersRequest.data.semesters
-        const firstSemester = semestersList[0]
-        const lastSemester = semestersList[semestersList.length - 1]
-
-        if (!firstSemester || !lastSemester) {
-            return { isFirstSemester: true, isLastSemester: true }
-        }
-
-        return {
-            isFirstSemester:
-                year === firstSemester.year && semester === firstSemester.semester,
-            isLastSemester:
-                year === lastSemester.year && semester === lastSemester.semester,
-        }
-    }, [semestersRequest.data, year, semester])
-
-    const onClickPreviousSemester = () => {
-        if (isFirstSemester) return
-        if (semester === SemesterEnum.SPRING) {
-            setSemester(SemesterEnum.FALL)
-            setYear(year - 1)
-        } else {
-            setSemester(SemesterEnum.SPRING)
-        }
-        setCurrentTimetableId(null)
-    }
-    const onClickNextSemester = () => {
-        if (isLastSemester) return
-        if (semester === SemesterEnum.FALL) {
-            setSemester(SemesterEnum.SPRING)
-            setYear(year + 1)
-        } else {
-            setSemester(SemesterEnum.FALL)
-        }
-        setCurrentTimetableId(null)
-    }
 
     const onWheel = (e: React.WheelEvent<HTMLDivElement>) => {
         if (e.deltaY === 0) return
@@ -312,38 +239,12 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                 </TabRow>
             </FlexWrapper>
             <SemesterButton
-                direction={"row"}
-                gap={0}
-                justify="space-between"
-                align="center"
-            >
-                <Icon
-                    size={20}
-                    color={
-                        isFirstSemester
-                            ? theme.colors.Text.disable
-                            : theme.colors.Highlight.default
-                    }
-                    onClick={onClickPreviousSemester}
-                >
-                    <NavigateBeforeIcon />
-                </Icon>
-                <Typography color="Highlight.default">{year}</Typography>
-                <Typography color="Highlight.default">
-                    {semesterToString(semester)}
-                </Typography>
-                <Icon
-                    size={20}
-                    color={
-                        isLastSemester
-                            ? theme.colors.Text.disable
-                            : theme.colors.Highlight.default
-                    }
-                    onClick={onClickNextSemester}
-                >
-                    <NavigateNextIcon />
-                </Icon>
-            </SemesterButton>
+                year={year}
+                semester={semester}
+                setYear={setYear}
+                setSemester={setSemester}
+                setCurrentTimetableId={setCurrentTimetableId}
+            />
         </FlexWrapper>
     )
 }
