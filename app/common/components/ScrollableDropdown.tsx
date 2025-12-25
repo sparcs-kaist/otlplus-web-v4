@@ -114,33 +114,33 @@ const ScrollableDropdown: React.FC<ScrollableDropdownProps> = ({
         width: 0,
     })
 
-    const [maxWidth, setMaxWidth] = useState<number>(0);
+    const [maxWidth, setMaxWidth] = useState<number>(0)
 
     useEffect(() => {
         if (options.length > 0) {
-            const canvas = document.createElement("canvas");
-            const ctx = canvas.getContext("2d");
-            if (!ctx) return;
-            ctx.font = "14px Pretendard, sans-serif";
+            const canvas = document.createElement("canvas")
+            const ctx = canvas.getContext("2d")
+            if (!ctx) return
+            ctx.font = "14px Pretendard, sans-serif"
 
             const longestWidth = Math.max(
-                ...options.map((opt) => ctx.measureText(opt).width)
-            );
+                ...options.map((opt) => ctx.measureText(opt).width),
+            )
 
-            setMaxWidth(longestWidth + 50);
+            setMaxWidth(longestWidth + 50)
         }
-    }, [options]);
+    }, [options])
 
     useEffect(() => {
         if (selectedWrapperRef.current) {
-            const rect = selectedWrapperRef.current.getBoundingClientRect();
+            const rect = selectedWrapperRef.current.getBoundingClientRect()
             setPosition({
                 top: rect.top,
                 left: rect.left,
                 width: Math.max(rect.width, maxWidth),
-            });
+            })
         }
-    }, [isExpand, maxWidth]);
+    }, [isExpand, maxWidth])
 
     const optionScrollRef = useRef<HTMLDivElement>(null)
 
