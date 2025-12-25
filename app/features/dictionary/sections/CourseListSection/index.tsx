@@ -6,7 +6,6 @@ import CircleIcon from "@mui/icons-material/Circle"
 import { Trans, useTranslation } from "react-i18next"
 import { useSearchParams } from "react-router"
 
-import { type GETCoursesResponse } from "@/api/courses"
 import LoadingCircle from "@/common/components/LoadingCircle"
 import ScrollableDropdown from "@/common/components/ScrollableDropdown"
 import SearchArea, { type SearchParamsType } from "@/common/components/search/SearchArea"
@@ -16,7 +15,6 @@ import Typography from "@/common/primitives/Typography"
 import CourseBlock from "@/features/dictionary/components/CourseBlock"
 import type { getAPIResponseType } from "@/utils/api/getAPIType"
 import { useAPI } from "@/utils/api/useAPI"
-import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
 import checkEmpty from "@/utils/search/checkEmpty"
 
 const CourseListSectionInner = styled(FlexWrapper)`
@@ -126,6 +124,19 @@ function CourseListSection({
             }
         }
     }, [query.data])
+
+    useEffect(() => {
+        setSearchResult({ courses: [], totalCount: 0 })
+        setParams((prevState) => {
+            return {
+                ...prevState,
+                order:
+                    (["code", "popular", "studentCount"] as const)[sortOption] ?? "code",
+                offset: 0,
+            }
+        })
+        setEnabled(true)
+    }, [sortOption])
 
     const handleSearch = (param: SearchParamsType) => {
         if (checkEmpty(param)) {

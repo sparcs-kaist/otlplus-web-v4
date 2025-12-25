@@ -286,6 +286,16 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     }
 
     useEffect(() => {
+        setIsWishlist(false)
+        setParams((prev) => ({
+            ...prev,
+            order: (["code", "popular", "studentCount"] as const)[sortOption] ?? "code",
+            offset: 0,
+        }))
+        setEnabled(true)
+    }, [sortOption])
+
+    useEffect(() => {
         setSearchResult({ courses: [] })
         setWishListQuery({ year: year, semester: semester })
     }, [year, semester])
