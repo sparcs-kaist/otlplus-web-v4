@@ -51,12 +51,15 @@ function HallOfFameFeedSubSection() {
     useEffect(() => {
         setParams({
             mode: "hall-of-fame",
-            year: 2025,
-            semester: SemesterEnum.SPRING,
         })
     }, [])
     useEffect(() => {
-        if (selectedOption === 0) return
+        if (selectedOption === 0) {
+            setParams({
+                mode: "hall-of-fame",
+            })
+            return
+        }
         setParams({
             mode: "hall-of-fame",
             year: serverSemesters.data?.semesters[selectedOption - 1]?.year ?? 2025,
@@ -66,22 +69,8 @@ function HallOfFameFeedSubSection() {
         })
     }, [selectedOption])
 
-    // TODO: 작동 안됨
-    const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-        const el = e.currentTarget
-        const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 48
-        if (nearBottom) {
-            const newOffset = offset + LIMIT
-            setOffset(newOffset)
-            setParams((prevstate) => ({
-                ...prevstate,
-                offset: newOffset,
-            }))
-        }
-    }
-
     return (
-        <FlexWrapper direction="column" align="stretch" gap={12} onScroll={handleScroll}>
+        <FlexWrapper direction="column" align="stretch" gap={12}>
             <FlexWrapper direction="row" align="center" gap={8}>
                 <Typography type="NormalBold" color="Text.default">
                     {t("common.year")}

@@ -83,8 +83,7 @@ export default function CreditScoreSubSection({
 
         if (hover && hover.length == 1) {
             const hoveredLecture = hover[0] as Lecture
-            if (timetableLectures.some((lec) => lec.id === hoveredLecture.id)) {
-            } else {
+            if (!timetableLectures.some((lec) => lec.id === hoveredLecture.id)) {
                 totalCredits += hoveredLecture.credit
                 totalAU += hoveredLecture.creditAU
             }

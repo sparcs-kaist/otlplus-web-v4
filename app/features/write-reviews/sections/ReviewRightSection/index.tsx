@@ -6,6 +6,8 @@ import { type TabType } from "@/common/interface/ReviewWriteTabs"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Widget from "@/common/primitives/Widget"
 import type { WriteReviewsSelectedLectureType } from "@/routes/write-reviews"
+import { media } from "@/styles/themes/media"
+import useIsDevice from "@/utils/useIsDevice"
 import useUserStore from "@/utils/zustand/useUserStore"
 
 import HallOfFameFeedSubSection from "./HallOfFameFeedSubSection"
@@ -22,6 +24,13 @@ interface ReviewRightSectionProps {
 const StyledWidget = styled(Widget)`
     background: transparent;
     overflow: auto;
+    width: 1300px;
+    flex: 0 1 auto;
+
+    ${media.mobile} {
+        width: 100%;
+        flex-grow: 1;
+    }
 
     &::-webkit-scrollbar {
         display: none;
@@ -57,13 +66,7 @@ function ReviewRightSection({
     }, [selectedLecture])
 
     return (
-        <StyledWidget
-            width={1248}
-            direction="column"
-            align="stretch"
-            justify="stretch"
-            gap={0}
-        >
+        <StyledWidget direction="column" align="stretch" justify="stretch" gap={0}>
             <TabsSubSection tab={tab} setTab={setTab} />
             <ReviewRightSubSection
                 direction="column"

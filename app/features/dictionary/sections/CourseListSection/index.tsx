@@ -115,15 +115,13 @@ function CourseListSection({
 
     useEffect(() => {
         if (query.data !== undefined) {
-            const data: GETCoursesResponse["courses"] =
-                query.data as unknown as GETCoursesResponse["courses"]
             setSearchResult((prevState) => {
                 return {
-                    courses: [...prevState.courses, ...data],
+                    courses: [...prevState.courses, ...query.data.courses],
                     totalCount: 0,
                 }
             })
-            if (data.length < LIMIT) {
+            if (query.data.courses.length < LIMIT) {
                 setEnabled(false)
             }
         }
@@ -183,7 +181,7 @@ function CourseListSection({
                         <HeaderText color={"Text.default"}>
                             <Trans
                                 i18nKey="dictionary.courseCountInfo"
-                                count={searchResult.courses.length}
+                                count={query.data?.totalCount}
                                 components={{
                                     bold: (
                                         <Typography

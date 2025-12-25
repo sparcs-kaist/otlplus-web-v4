@@ -17,6 +17,7 @@ const renderLectureTile = (
     setHover: React.Dispatch<React.SetStateAction<Lecture[] | null>>,
     dragging: boolean,
     removeFunction?: (lectureId: number) => void,
+    hoverSelectBanned: boolean = false,
 ) => {
     const gridRef = useRef<HTMLDivElement>(null)
     const rectangles: JSX.Element[] = []
@@ -80,8 +81,8 @@ const renderLectureTile = (
                         lecture={lecture}
                         timeBlock={timeBlock}
                         cellWidth={cellWidth}
-                        isSelected={isSelected}
-                        isHovered={isHovered}
+                        isSelected={!hoverSelectBanned && isSelected}
+                        isHovered={!hoverSelectBanned && isHovered}
                         isOverlapped={isOverlapped}
                         cellHeight={cellHeight}
                         removeFunction={

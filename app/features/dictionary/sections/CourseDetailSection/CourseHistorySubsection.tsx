@@ -60,7 +60,7 @@ const NoHistoryText = styled(Typography)`
 `
 
 interface CourseHistorySubsectionProps {
-    courseDetail: GETCourseDetailResponse | null
+    courseDetail: GETCourseDetailResponse | undefined
     selectedProfessorId: number | null
     setSelectedProfessorId: React.Dispatch<React.SetStateAction<number | null>>
 }
@@ -117,7 +117,7 @@ const CourseHistorySubsection: React.FC<CourseHistorySubsectionProps> = ({
                 animate={{ height: isHistoryFolded ? 0 : "auto" }}
                 transition={{ duration: 0.2, ease: "easeInOut" }}
             >
-                {courseDetail?.history.map((history, index) => (
+                {[...(courseDetail?.history || [])].reverse().map((history, index) => (
                     <CourseHistoryBlock
                         key={index}
                         direction="column"
