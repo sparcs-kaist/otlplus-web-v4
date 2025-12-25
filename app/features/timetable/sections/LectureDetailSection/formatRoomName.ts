@@ -8,7 +8,7 @@ export default function formatRoomName(classes: ClassTime[]): string {
         if (!(building in res)) {
             res[building] = room
         } else {
-            if (!res[building].includes(room)) {
+            if (res[building] && !res[building].includes(room)) {
                 res[building] = res[building].concat(`, ${room}`)
             }
         }
