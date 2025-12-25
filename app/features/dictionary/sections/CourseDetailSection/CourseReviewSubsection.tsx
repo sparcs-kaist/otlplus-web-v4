@@ -79,10 +79,14 @@ const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
     useEffect(() => {
         setReviews(null)
         setParams((prevState) => {
-            if (selectedProfessorId === null || selectedCourseId === null) {
-                return { ...prevState, offset: 0 }
-            } else {
-                return { ...prevState, offset: 0, professorId: selectedProfessorId }
+            const base = prevState ?? {}
+            return {
+                ...base,
+                ...(selectedCourseId !== null ? { courseId: selectedCourseId } : {}),
+                ...(selectedProfessorId !== null
+                    ? { professorId: selectedProfessorId }
+                    : {}),
+                offset: 0,
             }
         })
         setEnabled(selectedCourseId !== null)

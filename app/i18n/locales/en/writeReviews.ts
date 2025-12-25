@@ -3,6 +3,7 @@ export const writeReviews = {
         title: "Taken Lectures",
         written: "My Reviews",
         likes: "likes",
+        selectPlaceholder: "Please select a lecture",
     },
     write: {
         title: "Write Reviews - {{lectureName}}",

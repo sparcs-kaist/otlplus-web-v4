@@ -13,14 +13,7 @@ function ScheduleFeedSection() {
     const { query } = useAPI("GET", "/schedules")
 
     return (
-        <Widget
-            direction="column"
-            width={418}
-            gap={20}
-            align="stretch"
-            padding="30px"
-            flex="1 1 0"
-        >
+        <Widget direction="column" gap={20} align="stretch" padding="30px" flex="1 1 0">
             <FlexWrapper direction="row" gap={0}>
                 <Typography type="BiggerBold" color="Text.default">
                     {t("main.scheduleFeed.title")}
