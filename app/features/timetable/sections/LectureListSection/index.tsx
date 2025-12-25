@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useRef, useState } from "react"
 
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
-import AddIcon from "@mui/icons-material/Add"
 import FavoriteIcon from "@mui/icons-material/Favorite"
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder"
 import { useQueryClient } from "@tanstack/react-query"
@@ -26,7 +25,7 @@ import checkEmpty from "@/utils/search/checkEmpty"
 import checkOverlap from "@/utils/timetable/checkOverlap"
 import useUserStore from "@/utils/zustand/useUserStore"
 
-import formatProfessorName from "./formatProfessorName"
+import LectureListBlock from "./LectureListBlock"
 
 const LectureListSectionInner = styled(FlexWrapper)`
     width: 100%;
@@ -72,50 +71,6 @@ const CourseBlockWrapper = styled(FlexWrapper)`
     &::-webkit-scrollbar {
         display: none;
     }
-`
-
-const CourseItemWrapper = styled.div<{ isSelected: boolean }>`
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    border-radius: 8px;
-    background-color: ${({ theme }) => theme.colors.Background.Block.default};
-    transition: all 0.2s ease;
-    transform: ${({ isSelected }) => (isSelected ? "translateY(-2px)" : "none")};
-    box-shadow: ${({ isSelected }) =>
-        isSelected ? "0 4px 8px rgba(0, 0, 0, 0.15)" : "none"};
-    overflow: hidden;
-    flex-shrink: 0;
-`
-
-const CourseTitleWrapper = styled.div`
-    width: 100%;
-    display: flex;
-    align-items: center;
-    padding: 8px 12px;
-    flex-direction: row;
-    justify-content: space-between;
-`
-
-const LectureItemWrapper = styled.div<{ isHighlighted: boolean }>`
-    width: 100%;
-    display: flex;
-    align-items: center;
-    padding: 8px 12px 8px 18px;
-    flex-direction: row;
-    justify-content: space-between;
-    background-color: ${({ isHighlighted, theme }) =>
-        isHighlighted
-            ? theme.colors.Background.Block.dark
-            : theme.colors.Background.Block.default};
-    cursor: pointer;
-`
-
-const Divider = styled.div`
-    width: 95%;
-    height: 1px;
-    background-color: ${({ theme }) => theme.colors.Line.dark};
-    align-self: center;
 `
 
 const Chip = styled.div<{ isSelected: boolean }>`
@@ -445,180 +400,24 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
             </FlexWrapper>
             {searchResult.courses.length !== 0 ? (
                 <CourseBlockWrapper direction="column" gap={12} ref={wrapperRef}>
-                    {searchResult.courses.map((course, idx) => {
-                        const courseId = course.lectures[0]?.courseId ?? -1
-                        const opacity =
-                            selectedLecture != null &&
-                            selectedLecture.courseId !== courseId
-                                ? 0.3
-                                : 1
-                        return (
-                            <CourseItemWrapper
-                                isSelected={selectedLecture?.courseId === courseId}
-                                key={idx}
-                                style={{ opacity: opacity }}
-                            >
-                                <CourseTitleWrapper>
-                                    <FlexWrapper
-                                        direction="row"
-                                        gap={6}
-                                        style={{ opacity: course.completed ? 0.3 : 1 }}
-                                    >
-                                        <Typography
-                                            type={"NormalBold"}
-                                            color={"Text.default"}
-                                        >
-                                            {course.name}
-                                        </Typography>
-                                        <Typography
-                                            type={"Normal"}
-                                            color={"Text.default"}
-                                        >
-                                            {course.code}
-                                        </Typography>
-                                    </FlexWrapper>
-                                    {course.completed ? (
-                                        <Typography
-                                            type={"Normal"}
-                                            color={"Text.default"}
-                                        >
-                                            {t("common.completedCourse")}
-                                        </Typography>
-                                    ) : (
-                                        <Typography
-                                            type={"Normal"}
-                                            color={"Highlight.default"}
-                                        >
-                                            {course.type}
-                                        </Typography>
-                                    )}
-                                </CourseTitleWrapper>
-                                <Divider />
-                                {course.lectures.map((lecture, idx) => {
-                                    const wish = isInWish.includes(lecture.id)
-                                    return (
-                                        <React.Fragment key={idx}>
-                                            <LectureItemWrapper
-                                                key={idx}
-                                                onMouseEnter={() => {
-                                                    setHoveredLecture([lecture])
-                                                }}
-                                                onMouseLeave={() => {
-                                                    setHoveredLecture(null)
-                                                }}
-                                                onClick={() => {
-                                                    if (
-                                                        lecture.id === selectedLecture?.id
-                                                    ) {
-                                                        setSelectedLecture(null)
-                                                        return
-                                                    }
-                                                    setSelectedLecture(lecture)
-                                                }}
-                                                isHighlighted={
-                                                    selectedLecture?.id === lecture.id ||
-                                                    hoveredLecture?.some(
-                                                        (lec) => lec.id === lecture.id,
-                                                    ) === true
-                                                }
-                                            >
-                                                <FlexWrapper
-                                                    direction="row"
-                                                    gap={6}
-                                                    style={{
-                                                        opacity: course.completed
-                                                            ? 0.3
-                                                            : 1,
-                                                    }}
-                                                >
-                                                    <Typography
-                                                        type={"NormalBold"}
-                                                        color={"Text.default"}
-                                                    >
-                                                        {lecture.classNo}
-                                                    </Typography>
-                                                    <Typography
-                                                        type={"Normal"}
-                                                        color={"Text.default"}
-                                                    >
-                                                        {formatProfessorName(
-                                                            lecture.professors,
-                                                        )}
-                                                    </Typography>
-                                                </FlexWrapper>
-                                                <FlexWrapper
-                                                    direction="row"
-                                                    gap={6}
-                                                    onClick={(e) => e.stopPropagation()}
-                                                >
-                                                    {/* TODO: 클릭 시 이벤트 추가하기 */}
-                                                    {wish || isWishlist ? (
-                                                        <Icon
-                                                            size={15}
-                                                            color="#E54C65"
-                                                            onClick={() =>
-                                                                handleLikeClick(
-                                                                    wish,
-                                                                    lecture.id,
-                                                                )
-                                                            }
-                                                        >
-                                                            <FavoriteIcon />
-                                                        </Icon>
-                                                    ) : (
-                                                        <Icon
-                                                            size={15}
-                                                            onClick={() =>
-                                                                handleLikeClick(
-                                                                    wish,
-                                                                    lecture.id,
-                                                                )
-                                                            }
-                                                        >
-                                                            <FavoriteBorderIcon />
-                                                        </Icon>
-                                                    )}
-                                                    <span
-                                                        style={{
-                                                            opacity:
-                                                                currentTimetableId ==
-                                                                    null ||
-                                                                timetableLectures.some(
-                                                                    (lec) =>
-                                                                        checkOverlap(
-                                                                            lec.classes,
-                                                                            lecture.classes,
-                                                                        ),
-                                                                )
-                                                                    ? 0.3
-                                                                    : 1,
-                                                            cursor: addTimetable.isPending
-                                                                ? "wait"
-                                                                : "pointer",
-                                                        }}
-                                                    >
-                                                        <Icon
-                                                            size={15}
-                                                            onClick={() =>
-                                                                handleAddToTimetable(
-                                                                    lecture,
-                                                                )
-                                                            }
-                                                        >
-                                                            <AddIcon />
-                                                        </Icon>
-                                                    </span>
-                                                </FlexWrapper>
-                                            </LectureItemWrapper>
-                                            {idx !== course.lectures.length - 1 && (
-                                                <Divider />
-                                            )}
-                                        </React.Fragment>
-                                    )
-                                })}
-                            </CourseItemWrapper>
-                        )
-                    })}
+                    {searchResult.courses.map((course) => (
+                        <LectureListBlock
+                            key={course.id}
+                            course={course}
+                            selectedLecture={selectedLecture}
+                            hoveredLecture={hoveredLecture}
+                            isInWish={isInWish}
+                            isWishlist={isWishlist}
+                            currentTimetableId={currentTimetableId}
+                            timetableLectures={timetableLectures}
+                            isAddTimetablePending={addTimetable.isPending}
+                            setHoveredLecture={setHoveredLecture}
+                            setSelectedLecture={setSelectedLecture}
+                            handleLikeClick={handleLikeClick}
+                            handleAddToTimetable={handleAddToTimetable}
+                            t={t}
+                        />
+                    ))}
 
                     {!isWishlist && query.hasNextPage && <LoadingCircle ref={ref} />}
                 </CourseBlockWrapper>

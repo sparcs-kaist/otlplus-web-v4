@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 import styled from "@emotion/styled"
 import { useQueryClient } from "@tanstack/react-query"
@@ -98,6 +98,16 @@ export default function Timetable() {
                     })
             },
         },
+    )
+
+    const handleRemoveLecture = useCallback(
+        (lectureId: number) => {
+            removeLectureFunction({
+                action: "delete",
+                lectureId: lectureId,
+            })
+        },
+        [removeLectureFunction],
     )
 
     useEffect(() => {
@@ -231,12 +241,7 @@ export default function Timetable() {
                             removeFunction={
                                 currentTimetableId === null
                                     ? undefined
-                                    : (lectureId: number) => {
-                                          removeLectureFunction({
-                                              action: "delete",
-                                              lectureId: lectureId,
-                                          })
-                                      }
+                                    : handleRemoveLecture
                             }
                         />
                     </FlexWrapper>

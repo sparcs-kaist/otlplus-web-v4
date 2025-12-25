@@ -254,4 +254,4 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
     )
 }
 
-export default CustomTimeTableGrid
+export default React.memo(CustomTimeTableGrid)
