@@ -116,7 +116,7 @@ const TimeTableSection = () => {
                         </FlexWrapper>
                     </FlexWrapper>
                     <CustomTimeTableGrid
-                        cellWidth={150}
+                        cellWidth={(width - 30) / 5}
                         lectureSummary={myTimetable.data?.lectures ?? []}
                         hover={hover}
                         setHover={setHover}
