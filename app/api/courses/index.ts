@@ -26,7 +26,7 @@ export const GETResponse = z.object({
             professors: z.array(ProfessorSchema),
             summary: z.string(),
             open: z.boolean(),
-            myCourse: z.number().int().optional(),
+            completed: z.boolean(),
         }),
     ),
     totalCount: z.number().int(),
