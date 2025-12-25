@@ -131,6 +131,8 @@ function CourseListSection({
     }, [data])
 
     useEffect(() => {
+        if (sortOption == 0 && enabled == false) return
+
         setSearchResult({ courses: [], totalCount: 0 })
         setParams((prevState) => {
             return {

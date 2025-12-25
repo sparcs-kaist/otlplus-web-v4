@@ -46,8 +46,8 @@ const CourseHistoryBlock = styled(FlexWrapper)`
     height: 100%;
 `
 
-const FoldButton = styled(KeyboardArrowDownIcon)<{ isFolded: boolean }>`
-    transform: ${(props) => (props.isFolded ? "rotate(0deg)" : "rotate(180deg)")};
+const FoldButton = styled(KeyboardArrowDownIcon)<{ isfolded: boolean }>`
+    transform: ${(props) => (props.isfolded ? "rotate(0deg)" : "rotate(180deg)")};
     transition: transform 0.2s ease-in-out;
 `
 
@@ -108,7 +108,7 @@ const CourseHistorySubsection: React.FC<CourseHistorySubsectionProps> = ({
                     {t("dictionary.courseHistory")}
                 </Typography>
                 <Icon size={20} color={theme.colors.Text.default}>
-                    <FoldButton isFolded={isHistoryFolded} />
+                    <FoldButton isfolded={isHistoryFolded} />
                 </Icon>
             </FlexWrapper>
             <CourseHistory

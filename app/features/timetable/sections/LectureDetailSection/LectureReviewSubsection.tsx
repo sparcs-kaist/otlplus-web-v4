@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react"
 
 import styled from "@emotion/styled"
-import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { useInView } from "react-intersection-observer"
 
@@ -37,7 +36,6 @@ const LectureReviewSubsection: React.FC<LectureReviewSubsectionProps> = ({
     selectedProfessorId,
 }) => {
     const { t } = useTranslation()
-    const queryClient = useQueryClient()
 
     const [paramsFixed, setParamsFixed] = useState(false)
 
