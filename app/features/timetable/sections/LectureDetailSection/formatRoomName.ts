@@ -1,7 +1,7 @@
 import type { ClassTime } from "@/common/schemas/lecture"
 
 export default function formatRoomName(classes: ClassTime[]): string {
-    let res: Record<string, string> = {}
+    const res: Record<string, string> = {}
     classes.forEach((classTime) => {
         const building = classTime.buildingCode
         const room = classTime.roomName
