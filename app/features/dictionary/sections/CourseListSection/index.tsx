@@ -4,6 +4,7 @@ import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import CircleIcon from "@mui/icons-material/Circle"
 import { Trans, useTranslation } from "react-i18next"
+import { useInView } from "react-intersection-observer"
 import { useSearchParams } from "react-router"
 
 import LoadingCircle from "@/common/components/LoadingCircle"
@@ -14,7 +15,7 @@ import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import CourseBlock from "@/features/dictionary/components/CourseBlock"
 import type { getAPIResponseType } from "@/utils/api/getAPIType"
-import { useAPI } from "@/utils/api/useAPI"
+import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
 import checkEmpty from "@/utils/search/checkEmpty"
 
 const CourseListSectionInner = styled(FlexWrapper)`
@@ -90,9 +91,21 @@ function CourseListSection({
         totalCount: 0,
     })
 
-    const { query, setParams } = useAPI("GET", "/courses", {
+    const { query, setParams, data } = useInfiniteAPI("GET", "/courses", {
+        infinites: ["courses"],
+        limit: LIMIT,
         enabled: enabled,
     })
+
+    const { inView, ref } = useInView({
+        threshold: 0,
+    })
+
+    useEffect(() => {
+        if (inView && query.hasNextPage && !query.isFetchingNextPage) {
+            query.fetchNextPage()
+        }
+    }, [inView])
 
     useEffect(() => {
         const term = searchParams.get("term")
@@ -112,18 +125,10 @@ function CourseListSection({
     }, [])
 
     useEffect(() => {
-        if (query.data !== undefined) {
-            setSearchResult((prevState) => {
-                return {
-                    courses: [...prevState.courses, ...query.data.courses],
-                    totalCount: 0,
-                }
-            })
-            if (query.data.courses.length < LIMIT) {
-                setEnabled(false)
-            }
-        }
-    }, [query.data])
+        if (data === undefined) return
+
+        setSearchResult(data)
+    }, [data])
 
     useEffect(() => {
         setSearchResult({ courses: [], totalCount: 0 })
@@ -143,7 +148,6 @@ function CourseListSection({
             alert(t("common.search.empty"))
             return
         }
-        setSearchResult({ courses: [], totalCount: 0 })
         const fullParam = {
             ...param,
             order: (["code", "popular", "studentCount"] as const)[sortOption] ?? "code",
@@ -152,20 +156,6 @@ function CourseListSection({
         }
         setParams(fullParam)
         setEnabled(true)
-    }
-
-    const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-        if (!enabled) return
-        if (query.isLoading) return
-        const target = e.target as HTMLDivElement
-        if (target.scrollHeight - target.scrollTop - target.clientHeight < 48) {
-            setParams((prevState) => {
-                return {
-                    ...prevState,
-                    offset: prevState.offset + LIMIT,
-                }
-            })
-        }
     }
 
     return (
@@ -192,7 +182,7 @@ function CourseListSection({
                         <HeaderText color={"Text.default"}>
                             <Trans
                                 i18nKey="dictionary.courseCountInfo"
-                                count={query.data?.totalCount}
+                                count={data?.totalCount}
                                 components={{
                                     bold: (
                                         <Typography
@@ -229,19 +219,16 @@ function CourseListSection({
                             </DropDownWrapper>
                         </SortWrapper>
                     </FlexWrapper>
-                    <CourseBlockWrapper
-                        direction="column"
-                        gap={12}
-                        onScroll={handleScroll}
-                    >
-                        {searchResult.courses.map((course) => (
+                    <CourseBlockWrapper direction="column" gap={12}>
+                        {searchResult.courses.map((course, idx) => (
                             <CourseBlock
-                                key={course.id}
+                                key={idx}
                                 course={course}
                                 isSelected={selectedCourseId == course.id}
                                 selectCourseId={setSelectedCourseId}
                             />
                         ))}
+                        {query.hasNextPage && <LoadingCircle ref={ref} />}
                     </CourseBlockWrapper>
                 </>
             ) : query.isLoading ? (

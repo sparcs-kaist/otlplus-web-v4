@@ -19,8 +19,6 @@ function HallOfFameFeedSection() {
             mode: "hall-of-fame",
             offset: 0,
             limit: 3,
-            year: 2024,
-            semester: 3,
         })
     }, [])
 

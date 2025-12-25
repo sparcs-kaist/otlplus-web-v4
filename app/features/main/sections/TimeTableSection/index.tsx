@@ -39,6 +39,9 @@ const TimeTableSection = () => {
     const { query: myTimetable, setParams: setMyTimetableParams } = useAPI(
         "GET",
         "/timetables/my-timetable",
+        {
+            enabled: status === "success",
+        },
     )
     const { query: semesters } = useAPI("GET", "/semesters")
 

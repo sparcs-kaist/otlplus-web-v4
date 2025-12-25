@@ -56,6 +56,7 @@ export default function DictionaryPage() {
     const [mobileModal, setMobileModal] = useState(false)
 
     const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null)
+
     useEffect(() => {
         const courseId = searchParams.get("courseId")
         if (courseId) {

@@ -76,6 +76,12 @@ function buildOriginalPathRegex(path: Path): RegExp {
 
 export function getOriginalPathValue<P extends DynamicPath>(path: P): GetOriginalPath<P> {
     for (const originalPath of originalPaths) {
+        if (originalPath === path) {
+            return originalPath as GetOriginalPath<P>
+        }
+    }
+
+    for (const originalPath of originalPaths) {
         if (buildOriginalPathRegex(originalPath).test(path)) {
             return originalPath as GetOriginalPath<P>
         }

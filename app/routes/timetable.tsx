@@ -143,10 +143,6 @@ export default function Timetable() {
         setHover(null)
     }, [currentTimetableId])
 
-    useEffect(() => {
-        console.log(contentsAreaHeight)
-    }, [contentsAreaHeight])
-
     return (
         <TimetableWrapper
             direction="row"
