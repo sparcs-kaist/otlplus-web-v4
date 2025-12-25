@@ -1,14 +1,13 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import styled from "@emotion/styled"
-import { Trans, useTranslation } from "react-i18next"
+import { Trans } from "react-i18next"
 
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
-import { useAPI } from "@/utils/api/useAPI"
-import type { TimeBlock } from "@/common/schemas/timeblock"
 import { media } from "@/styles/themes/media"
+import { useAPI } from "@/utils/api/useAPI"
 import useUserStore from "@/utils/zustand/useUserStore"
 
 import Widget from "../../../../common/primitives/Widget"
