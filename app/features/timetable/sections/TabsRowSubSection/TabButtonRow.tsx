@@ -1,5 +1,22 @@
 import { useEffect, useState } from "react"
 
+import {
+    DndContext,
+    type DragEndEvent,
+    type DragStartEvent,
+    PointerSensor,
+    TouchSensor,
+    closestCenter,
+    useSensor,
+    useSensors,
+} from "@dnd-kit/core"
+import { restrictToHorizontalAxis, restrictToParentElement } from "@dnd-kit/modifiers"
+import {
+    SortableContext,
+    arrayMove,
+    horizontalListSortingStrategy,
+    useSortable,
+} from "@dnd-kit/sortable"
 import styled from "@emotion/styled"
 import AddIcon from "@mui/icons-material/Add"
 import CloseIcon from "@mui/icons-material/Close"
@@ -31,6 +48,84 @@ const TimetableName = styled.span`
     outline: none;
     user-select: none;
 `
+
+interface SortableTimetableTabProps {
+    timetable: Timetables
+    isSelected: boolean
+    onClick: () => void
+    onCopy: (e: React.MouseEvent) => void
+    onDelete: (e: React.MouseEvent) => void
+    onNameChange: (id: number, newName: string) => void
+    isDragging?: boolean
+}
+
+const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
+    timetable,
+    isSelected,
+    onClick,
+    onCopy,
+    onDelete,
+    onNameChange,
+    isDragging,
+}) => {
+    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
+        id: timetable.id,
+    })
+
+    const getTransformString = (
+        transform: { x: number; y: number; scaleX?: number; scaleY?: number } | null,
+    ): string => {
+        if (!transform) return ""
+        const { x, y, scaleX = 1, scaleY = 1 } = transform
+        return `translate3d(${x}px, ${y}px, 0) scaleX(${scaleX}) scaleY(${scaleY})`
+    }
+
+    const style = {
+        transform: getTransformString(transform),
+        transition,
+        touchAction: "none" as const,
+        opacity: isDragging ? 0.5 : 1,
+    }
+
+    return (
+        <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+            <TabButton type={isSelected ? "selected" : "default"} onClick={onClick}>
+                <TimetableName
+                    onClick={(e) => {
+                        if (isSelected) {
+                            e.stopPropagation()
+                            e.currentTarget.contentEditable = "true"
+                            e.currentTarget.focus()
+                        }
+                    }}
+                    onBlur={(e) => {
+                        const newName = e.currentTarget.textContent || ""
+                        e.currentTarget.contentEditable = "false"
+                        onNameChange(timetable.id, newName)
+                    }}
+                    onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                            e.preventDefault()
+                            e.currentTarget.blur()
+                        }
+                    }}
+                    contentEditable={false}
+                    suppressContentEditableWarning={true}
+                >
+                    {timetable.name ? timetable.name : "No Title"}
+                </TimetableName>
+                {isSelected && (
+                    <Icon size={15} onClick={onCopy}>
+                        <ContentCopyIcon />
+                    </Icon>
+                )}
+                <Icon size={17.5} onClick={onDelete}>
+                    <CloseIcon />
+                </Icon>
+            </TabButton>
+        </div>
+    )
+}
 
 interface TabButtonRowProps {
     timeTableLectures: Lecture[]
@@ -64,10 +159,12 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
         },
     })
     const { requestFunction: deleteTimetable } = useAPI("DELETE", "/timetables", {
-        onSuccess: (data, variables) => {
+        onMutate: (variables) => {
             if (currentTimetableId === variables.id) {
                 setCurrentTimetableId(null)
             }
+        },
+        onSuccess: () => {
             timetables.refetch()
         },
     })
@@ -78,6 +175,21 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
     })
 
     const [localTimetables, setLocalTimetables] = useState<Timetables[]>([])
+    const [activeId, setActiveId] = useState<number | null>(null)
+
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8, // 8px 이동해야 드래그 시작 (클릭과 구분)
+            },
+        }),
+        useSensor(TouchSensor, {
+            activationConstraint: {
+                delay: 500, // 500ms 롱터치
+                tolerance: 5, // 5px 이내 움직임 허용
+            },
+        }),
+    )
 
     useEffect(() => {
         let list = timetables.data?.timetables ?? []
@@ -94,7 +206,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                 semester: semester,
             })
         }
-    }, [year, semester])
+    }, [year, semester, status])
 
     useEffect(() => {
         setCurrentTimetableName(
@@ -103,6 +215,29 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                 : localTimetables.find((t) => t.id === currentTimetableId)?.name || "",
         )
     }, [currentTimetableId])
+
+    const handleDragStart = (event: DragStartEvent) => {
+        setActiveId(event.active.id as number)
+    }
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event
+        setActiveId(null)
+
+        if (over && active.id !== over.id) {
+            const oldIndex = localTimetables.findIndex((item) => item.id === active.id)
+            const newIndex = localTimetables.findIndex((item) => item.id === over.id)
+
+            const newItems = arrayMove(localTimetables, oldIndex, newIndex)
+            setLocalTimetables(newItems)
+
+            const movedTimetableId = active.id as number
+            changeTimetableMetaData({
+                id: movedTimetableId,
+                order: newIndex,
+            })
+        }
+    }
 
     const onWheel = (e: React.WheelEvent<HTMLDivElement>) => {
         if (e.deltaY === 0) return
@@ -144,60 +279,27 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                     )}
                 </TabButton>
                 <TabRow direction="row" gap={3} flex="1 1 auto" onWheel={onWheel}>
-                    {localTimetables.map((timetable) => (
-                        <TabButton
-                            key={timetable.id}
-                            type={
-                                currentTimetableId == timetable.id
-                                    ? "selected"
-                                    : "default"
-                            }
-                            onClick={() => {
-                                setCurrentTimetableId(timetable.id)
-                            }}
-                            style={{ touchAction: "none" }}
+                    <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragStart={handleDragStart}
+                        onDragEnd={handleDragEnd}
+                        modifiers={[restrictToHorizontalAxis, restrictToParentElement]}
+                    >
+                        <SortableContext
+                            items={localTimetables.map((t) => t.id)}
+                            strategy={horizontalListSortingStrategy}
                         >
-                            <TimetableName
-                                onClick={(e) => {
-                                    if (currentTimetableId === timetable.id) {
-                                        e.stopPropagation()
-                                        e.currentTarget.contentEditable = "true"
-                                        e.currentTarget.focus()
-                                    }
-                                }}
-                                onBlur={(e) => {
-                                    const newName = e.currentTarget.textContent || ""
-                                    setLocalTimetables((prev) =>
-                                        prev.map((t) =>
-                                            t.id === timetable.id
-                                                ? {
-                                                      ...t,
-                                                      name: newName,
-                                                  }
-                                                : t,
-                                        ),
-                                    )
-                                    e.currentTarget.contentEditable = "false"
-                                    changeTimetableMetaData({
-                                        id: timetable.id,
-                                        name: newName,
-                                    })
-                                }}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter") {
-                                        e.preventDefault()
-                                        e.currentTarget.blur()
-                                    }
-                                }}
-                                contentEditable={false}
-                                suppressContentEditableWarning={true}
-                            >
-                                {timetable.name ? timetable.name : "No Title"}
-                            </TimetableName>
-                            {currentTimetableId === timetable.id && (
-                                <Icon
-                                    size={15}
-                                    onClick={(e) => {
+                            {localTimetables.map((timetable) => (
+                                <SortableTimetableTab
+                                    key={timetable.id}
+                                    timetable={timetable}
+                                    isSelected={currentTimetableId === timetable.id}
+                                    isDragging={activeId === timetable.id}
+                                    onClick={() => {
+                                        setCurrentTimetableId(timetable.id)
+                                    }}
+                                    onCopy={(e) => {
                                         e.stopPropagation()
                                         addTimetable({
                                             year: year,
@@ -207,32 +309,40 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                                             ),
                                         })
                                     }}
-                                >
-                                    <ContentCopyIcon />
-                                </Icon>
-                            )}
-                            <Icon
-                                size={17.5}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    deleteTimetable({ id: timetable.id })
-                                }}
-                            >
-                                <CloseIcon />
-                            </Icon>
-                        </TabButton>
-                    ))}
-                    <TabButton>
-                        <Icon
-                            size={17.5}
-                            onClick={() =>
-                                addTimetable({
-                                    year: year,
-                                    semester: semester,
-                                    lectureIds: [],
-                                })
-                            }
-                        >
+                                    onDelete={(e) => {
+                                        e.stopPropagation()
+                                        deleteTimetable({ id: timetable.id })
+                                    }}
+                                    onNameChange={(id, newName) => {
+                                        setLocalTimetables((prev) =>
+                                            prev.map((t) =>
+                                                t.id === id
+                                                    ? {
+                                                          ...t,
+                                                          name: newName,
+                                                      }
+                                                    : t,
+                                            ),
+                                        )
+                                        changeTimetableMetaData({
+                                            id: id,
+                                            name: newName,
+                                        })
+                                    }}
+                                />
+                            ))}
+                        </SortableContext>
+                    </DndContext>
+                    <TabButton
+                        onClick={() => {
+                            addTimetable({
+                                year: year,
+                                semester: semester,
+                                lectureIds: [],
+                            })
+                        }}
+                    >
+                        <Icon size={17.5}>
                             <AddIcon />
                         </Icon>
                     </TabButton>
