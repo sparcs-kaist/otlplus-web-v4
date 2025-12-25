@@ -1,4 +1,4 @@
-import { type CSSProperties, useEffect } from "react"
+import { type CSSProperties } from "react"
 
 import styled from "@emotion/styled"
 import CloseIcon from "@mui/icons-material/Close"
@@ -52,6 +52,7 @@ const TileWrapper = styled.div<{
     isOverlapped: boolean
     cellHeight: number
     isDarkMode: boolean
+    hoverSelectBanned: boolean
 }>`
     display: flex;
     flex-direction: column;
@@ -80,7 +81,7 @@ const TileWrapper = styled.div<{
     overflow-wrap: break-word;
     gap: 1px;
     transition: box-shadow 0.1s ease-in-out;
-    cursor: pointer;
+    cursor: ${({ hoverSelectBanned }) => (hoverSelectBanned ? "default" : "pointer")};
 `
 
 const TitleWrapper = styled.span<{ isHighlighted: boolean; isOverlapped: boolean }>`
@@ -125,6 +126,7 @@ const LectureTile: React.FC<{
     cellHeight: number
     isSelected: boolean | null
     isHovered: boolean | null
+    hoverSelectBanned: boolean
     isOverlapped?: boolean
     removeFunction?: (lectureId: number) => void
 }> = ({
@@ -134,6 +136,7 @@ const LectureTile: React.FC<{
     cellHeight,
     isSelected = false,
     isHovered = false,
+    hoverSelectBanned,
     isOverlapped = false,
     removeFunction,
 }) => {
@@ -150,6 +153,7 @@ const LectureTile: React.FC<{
             isOverlapped={isOverlapped}
             cellHeight={cellHeight}
             isDarkMode={displayedTheme === "dark"}
+            hoverSelectBanned={hoverSelectBanned}
         >
             {removeFunction !== undefined && (isSelected || isHovered) && (
                 <RemoveButton>

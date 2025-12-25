@@ -83,6 +83,7 @@ const renderLectureTile = (
                         cellWidth={cellWidth}
                         isSelected={!hoverSelectBanned && isSelected}
                         isHovered={!hoverSelectBanned && isHovered}
+                        hoverSelectBanned={hoverSelectBanned}
                         isOverlapped={isOverlapped}
                         cellHeight={cellHeight}
                         removeFunction={
