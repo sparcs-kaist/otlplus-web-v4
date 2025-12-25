@@ -40,7 +40,7 @@ const Credits: React.FC = () => {
                 otlplus@sparcs.org
             </Typography>
             <Typography color={"Text.placeholder"} type={"Big"}>
-                Ⓒ 2016, SPARCS OTL TEAM
+                Ⓒ 2026, SPARCS OTL TEAM
             </Typography>
         </FlexWrapper>
     )
