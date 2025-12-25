@@ -21,7 +21,7 @@ const TimeTableSection = () => {
     const { user, status } = useUserStore()
 
     const [selected, setSelected] = useState<Lecture | null>(null)
-    const [hover, setHover] = useState<Lecture | null>(null)
+    const [hover, setHover] = useState<Lecture[] | null>(null)
 
     const { query: myTimetable, setParams: setMyTimetableParams } = useAPI(
         "GET",
