@@ -81,7 +81,7 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
     const isAnyOver24 = checkAnyOver24(lectureSummary)
     const n = isAnyOver24 ? 38 : 32
     const end = isAnyOver24 ? 27 : 24
-    const [cellHeight, setCellHeight] = useState(isAnyOver24 ? 22 : 24.8)
+    const [cellHeight, setCellHeight] = useState(0)
 
     // 전체 셀 크기를 반응형으로 조정하는 부분
     useEffect(() => {

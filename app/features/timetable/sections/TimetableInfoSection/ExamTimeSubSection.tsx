@@ -7,6 +7,11 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 
+const ExamTimeSubSectionWrapper = styled(FlexWrapper)`
+    overflow-y: auto;
+    min-height: 0;
+`
+
 const ExamScheduleItem = styled.div`
     display: flex;
     flex-direction: row;
@@ -95,7 +100,12 @@ export default function ExamTimeSubSection({
     }, [timetableLectures, hover])
 
     return (
-        <FlexWrapper direction="column" gap={15} style={{ width: "100%" }} flex="1 1 0">
+        <ExamTimeSubSectionWrapper
+            direction="column"
+            gap={15}
+            style={{ width: "100%" }}
+            flex="1 1 0"
+        >
             <Typography type="NormalBold" color="Text.default">
                 시험시간표
             </Typography>
@@ -147,6 +157,6 @@ export default function ExamTimeSubSection({
                     </ExamScheduleItem>
                 )
             })}
-        </FlexWrapper>
+        </ExamTimeSubSectionWrapper>
     )
 }

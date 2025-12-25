@@ -2,6 +2,7 @@ import styled from "@emotion/styled"
 
 import StyledDivider from "@/common/components/StyledDivider"
 import { type SemesterEnum } from "@/common/enum/semesterEnum"
+import FlexWrapper from "@/common/primitives/FlexWrapper"
 import type { Lecture } from "@/common/schemas/lecture"
 import CreditGridSubSection from "@/features/timetable/sections/TimetableInfoSection/CreditGridSubSection"
 import CreditScoreSubSection from "@/features/timetable/sections/TimetableInfoSection/CreditScoreSubSection"

@@ -251,7 +251,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
             justify="space-between"
             align="center"
             gap={0}
-            style={{ maxWidth: "890px", width: "100%", overflow: "hidden" }}
+            style={{ maxWidth: "890px", width: "100%" }}
         >
             <FlexWrapper direction="row" gap={3} flex="1 1 auto" style={{ minWidth: 0 }}>
                 <TabButton

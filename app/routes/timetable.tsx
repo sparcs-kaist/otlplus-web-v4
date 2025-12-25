@@ -26,35 +26,16 @@ const SearchAreaWrapper = styled(FlexWrapper)`
     border-radius: 12px;
 `
 
-const ContentsAreaWrapper = styled.div`
-    display: flex;
-    flex-direction: column;
+const ContentsAreaWrapper = styled(FlexWrapper)`
     border-radius: 12px;
     width: fit-content;
-    min-height: 100%;
-    align-items: flex-start;
 `
 
-const Block = styled.div`
-    display: flex;
-    flex-grow: 1;
-    //height: fit-content;
-    height: 100%;
+const Block = styled(FlexWrapper)`
     background-color: ${({ theme }) => theme.colors.Background.Section.default};
-    align-items: center;
-    justify-content: flex-start;
     border-top-right-radius: 12px;
     border-bottom-left-radius: 12px;
     border-bottom-right-radius: 12px;
-    padding: 16px;
-    flex-direction: row;
-    gap: 30px;
-`
-
-const TimetableGridArea = styled.div`
-    display: flex;
-    align-items: center;
-    justify-content: center;
 `
 
 const LectureInfoArea = styled.div`
@@ -87,7 +68,7 @@ export default function Timetable() {
     const [currentTimetableName, setCurrentTimetableName] = useState<string>("")
     const [year, setYear] = useState<number>(-1)
     const [semesterEnum, setSemesterEnum] = useState<SemesterEnum>(1)
-    const [contentsAreaHeight, setContentsAreaHeight] = useState<number>(834)
+    const [contentsAreaHeight, setContentsAreaHeight] = useState<number>(0)
 
     const { query: timetable } = useAPI("GET", `/timetables/${currentTimetableId}`, {
         enabled: currentTimetableId !== null,
@@ -162,6 +143,10 @@ export default function Timetable() {
         setHover(null)
     }, [currentTimetableId])
 
+    useEffect(() => {
+        console.log(contentsAreaHeight)
+    }, [contentsAreaHeight])
+
     return (
         <TimetableWrapper
             direction="row"
@@ -197,7 +182,7 @@ export default function Timetable() {
                     />
                 </LectureInfoArea>
             </SearchAreaWrapper>
-            <ContentsAreaWrapper ref={contentsAreaRef}>
+            <ContentsAreaWrapper direction="column" gap={0} align="stretch">
                 {/* 시간표 탭 */}
                 <TabButtonRow
                     timeTableLectures={
@@ -213,12 +198,23 @@ export default function Timetable() {
                     setYear={setYear}
                     setSemester={setSemesterEnum}
                 />
-                <Block>
-                    {/* 시간표 그리드 */}
-                    <TimetableGridArea>
+                <Block
+                    direction="row"
+                    gap={30}
+                    align="stretch"
+                    justify="flex-start"
+                    padding="16px"
+                    flex="1 0 0"
+                >
+                    <FlexWrapper
+                        direction="column"
+                        gap={0}
+                        align="stretch"
+                        ref={contentsAreaRef}
+                    >
                         <CustomTimeTableGrid
                             cellWidth={100}
-                            fullHeight={contentsAreaHeight - 100}
+                            fullHeight={contentsAreaHeight - 36}
                             lectureSummary={
                                 currentTimetableId === null
                                     ? (myTimetable.data?.lectures ?? [])
@@ -240,7 +236,7 @@ export default function Timetable() {
                                       }
                             }
                         />
-                    </TimetableGridArea>
+                    </FlexWrapper>
                     <StyledDivider direction="column" />
                     {/*시간표 정보 영역*/}
                     <TimetableInfoSection
