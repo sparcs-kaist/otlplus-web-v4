@@ -23,6 +23,7 @@ import type { getAPIResponseType } from "@/utils/api/getAPIType"
 import { useAPI } from "@/utils/api/useAPI"
 import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
 import checkEmpty from "@/utils/search/checkEmpty"
+import checkOverlap from "@/utils/timetable/checkOverlap"
 import useUserStore from "@/utils/zustand/useUserStore"
 
 import formatProfessorName from "./formatProfessorName"
@@ -135,6 +136,7 @@ const Chip = styled.div<{ isSelected: boolean }>`
 `
 
 interface LectureListSectionProps {
+    timetableLectures: Lecture[]
     year: number
     semester: SemesterEnum
     hoveredLecture: Lecture[] | null
@@ -149,6 +151,7 @@ interface LectureListSectionProps {
 const SEARCH_LIMIT = 50
 
 const LectureListSection: React.FC<LectureListSectionProps> = ({
+    timetableLectures,
     year,
     semester,
     hoveredLecture,
@@ -379,13 +382,18 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
         }
     }
 
-    const handleAddToTimetable = async (lectureId: number) => {
+    const handleAddToTimetable = async (lecture: Lecture) => {
         if (!currentTimetableId) {
             console.warn("No timetable selected")
             return
+        } else if (
+            timetableLectures.some((lec) => checkOverlap(lec.classes, lecture.classes))
+        ) {
+            alert(t("timetable.addLectureConflict"))
+            return
         }
 
-        addTimetableFunction({ action: "add", lectureId: lectureId })
+        addTimetableFunction({ action: "add", lectureId: lecture.id })
     }
 
     return (
@@ -573,7 +581,15 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                                                     <span
                                                         style={{
                                                             opacity:
-                                                                currentTimetableId == null
+                                                                currentTimetableId ==
+                                                                    null ||
+                                                                timetableLectures.some(
+                                                                    (lec) =>
+                                                                        checkOverlap(
+                                                                            lec.classes,
+                                                                            lecture.classes,
+                                                                        ),
+                                                                )
                                                                     ? 0.3
                                                                     : 1,
                                                             cursor: addTimetable.isPending
@@ -585,7 +601,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                                                             size={15}
                                                             onClick={() =>
                                                                 handleAddToTimetable(
-                                                                    lecture.id,
+                                                                    lecture,
                                                                 )
                                                             }
                                                         >

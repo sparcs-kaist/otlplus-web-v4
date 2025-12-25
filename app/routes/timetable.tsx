@@ -155,6 +155,11 @@ export default function Timetable() {
                 {/*과목 목록 영역*/}
                 <LectureListArea>
                     <LectureListSection
+                        timetableLectures={
+                            currentTimetableId === null
+                                ? (myTimetable.data?.lectures ?? [])
+                                : (timetable.data?.lectures ?? [])
+                        }
                         year={year}
                         semester={semesterEnum}
                         hoveredLecture={hover}
