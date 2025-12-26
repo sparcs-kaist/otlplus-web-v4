@@ -31,6 +31,10 @@ const SelectedWrapper = styled.div`
     height: 36px;
     align-items: center;
     justify-content: space-between;
+    cursor: pointer;
+    &:hover {
+        background-color: ${({ theme }) => theme.colors.Background.Button.highlight};
+    }
 `
 
 const OptionCard = styled.div<{ disabled: boolean }>`
@@ -195,7 +199,11 @@ const ScrollableDropdown: React.FC<ScrollableDropdownProps> = ({
                     }}
                     styles={{ padding: 0 }}
                 >
-                    <Icon size={24} color={theme.colors.Highlight.default}>
+                    <Icon
+                        size={24}
+                        color={theme.colors.Highlight.default}
+                        onClick={() => {}}
+                    >
                         {isExpand ? <ExpandLessIcon /> : <ExpandMoreIcon />}
                     </Icon>
                 </IconButton>

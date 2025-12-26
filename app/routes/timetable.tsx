@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react"
 
 import styled from "@emotion/styled"
 import { useQueryClient } from "@tanstack/react-query"
+import { set } from "zod"
 
 import StyledDivider from "@/common/components/StyledDivider"
 import { type SemesterEnum } from "@/common/enum/semesterEnum"
@@ -73,6 +74,7 @@ export default function Timetable() {
     const { query: timetable } = useAPI("GET", `/timetables/${currentTimetableId}`, {
         enabled: currentTimetableId !== null,
     })
+
     const { query: myTimetable, setParams: setMyTimetableParams } = useAPI(
         "GET",
         "/timetables/my-timetable",

@@ -21,6 +21,7 @@ import styled from "@emotion/styled"
 import AddIcon from "@mui/icons-material/Add"
 import CloseIcon from "@mui/icons-material/Close"
 import ContentCopyIcon from "@mui/icons-material/ContentCopy"
+import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 
 import { SemesterEnum } from "@/common/enum/semesterEnum"
@@ -150,8 +151,21 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
 }) => {
     const { t } = useTranslation()
     const { status } = useUserStore()
+    const queryClient = useQueryClient()
 
-    const { query: timetables, setParams } = useAPI("GET", "/timetables")
+    const { query: timetables, setParams } = useAPI("GET", "/timetables", {
+        select: (data) => {
+            if (currentTimetableId != null) {
+                data.timetables.forEach((timetable) => {
+                    if (timetable.id === currentTimetableId) {
+                        setCurrentTimetableName(timetable.name)
+                    }
+                })
+            }
+
+            return data
+        },
+    })
     const { requestFunction: addTimetable } = useAPI("POST", "/timetables", {
         onSuccess: (data) => {
             timetables.refetch()

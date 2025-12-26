@@ -1,7 +1,8 @@
-import { useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
+import { Check } from "@mui/icons-material"
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth"
 import ContentCopyIcon from "@mui/icons-material/ContentCopy"
 import ImageIcon from "@mui/icons-material/Image"
@@ -51,6 +52,10 @@ export default function UtilButtonsSubSection({
 
     const { query } = useAPI("GET", "/semesters")
 
+    const [process, setProcess] = useState<
+        "idle" | "successCopyImage" | "successDownloadImage" | "successDownloadCalendar"
+    >("idle")
+
     const currentSemester = useMemo(() => {
         if (!query) return null
         return query.data?.semesters.find(
@@ -59,63 +64,85 @@ export default function UtilButtonsSubSection({
         )
     }, [query.data, year, semester])
 
+    useEffect(() => {
+        if (process.startsWith("success")) {
+            const timer = setTimeout(() => {
+                setProcess("idle")
+            }, 500)
+            return () => clearTimeout(timer)
+        }
+    }, [process])
+
     return (
         <FlexWrapper direction="column" gap={8} style={{ width: "100%" }}>
             <ExportButton
-                onClick={() =>
-                    copyTimetableImageToClipboard({
-                        timetableName: timetableName,
-                        lectures: timetableLectures,
-                        timetableType: "5days",
-                        semesterName: year + " " + semesterToString(semester),
-                        semesterFontSize: 30,
-                        tileFontSize: 20,
-                    })
-                }
+                onClick={() => {
+                    if (process === "idle") {
+                        copyTimetableImageToClipboard({
+                            timetableName: timetableName,
+                            lectures: timetableLectures,
+                            timetableType: "5days",
+                            semesterName: year + " " + semesterToString(semester),
+                            semesterFontSize: 30,
+                            tileFontSize: 20,
+                        })
+                        setProcess("successCopyImage")
+                    }
+                }}
             >
-                <Icon size={16} color={theme.colors.Highlight.default}>
-                    <ContentCopyIcon />
+                <Icon size={16} color={theme.colors.Highlight.default} onClick={() => {}}>
+                    {process == "successCopyImage" ? <Check /> : <ContentCopyIcon />}
                 </Icon>
                 <span>이미지로 복사하기</span>
             </ExportButton>
             <ExportButton
-                onClick={() =>
-                    downloadTimetableImage({
-                        timetableName: timetableName,
-                        lectures: timetableLectures,
-                        timetableType: "5days",
-                        semesterName: year + " " + semesterToString(semester),
-                        semesterFontSize: 30,
-                        tileFontSize: 20,
-                    })
-                }
+                onClick={() => {
+                    if (process === "idle") {
+                        downloadTimetableImage({
+                            timetableName: timetableName,
+                            lectures: timetableLectures,
+                            timetableType: "5days",
+                            semesterName: year + " " + semesterToString(semester),
+                            semesterFontSize: 30,
+                            tileFontSize: 20,
+                        })
+                        setProcess("successDownloadImage")
+                    }
+                }}
             >
-                <Icon size={16} color={theme.colors.Highlight.default}>
-                    <ImageIcon />
+                <Icon size={16} color={theme.colors.Highlight.default} onClick={() => {}}>
+                    {process == "successDownloadImage" ? <Check /> : <ImageIcon />}
                 </Icon>
                 <span>이미지로 내보내기</span>
             </ExportButton>
             <ExportButton
                 onClick={() => {
-                    if (!currentSemester) return
-                    downloadTimetableCalendar({
-                        name: timetableName,
-                        lectures: timetableLectures,
-                        semesterObject: {
-                            beginning: new Date(currentSemester.beginning),
-                            end: new Date(currentSemester.end),
-                        },
-                    })
+                    if (process === "idle") {
+                        if (!currentSemester) return
+                        downloadTimetableCalendar({
+                            name: timetableName,
+                            lectures: timetableLectures,
+                            semesterObject: {
+                                beginning: new Date(currentSemester.beginning),
+                                end: new Date(currentSemester.end),
+                            },
+                        })
+                        setProcess("successDownloadCalendar")
+                    }
                 }}
             >
                 <Icon size={16} color={theme.colors.Highlight.default}>
-                    <CalendarMonthIcon />
+                    {process == "successDownloadCalendar" ? (
+                        <Check />
+                    ) : (
+                        <CalendarMonthIcon />
+                    )}
                 </Icon>
                 <span>캘린더로 내보내기</span>
             </ExportButton>
             <StyledDivider />
             <ExportButton onClick={() => console.log("실라버스 모아보기")}>
-                <Icon size={16} color={theme.colors.Highlight.default}>
+                <Icon size={16} color={theme.colors.Highlight.default} onClick={() => {}}>
                     <MenuBookIcon />
                 </Icon>
                 <span>실라버스 모아보기</span>
