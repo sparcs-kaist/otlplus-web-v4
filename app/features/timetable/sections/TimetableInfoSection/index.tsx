@@ -2,24 +2,32 @@ import styled from "@emotion/styled"
 
 import StyledDivider from "@/common/components/StyledDivider"
 import { type SemesterEnum } from "@/common/enum/semesterEnum"
-import FlexWrapper from "@/common/primitives/FlexWrapper"
 import type { Lecture } from "@/common/schemas/lecture"
 import CreditGridSubSection from "@/features/timetable/sections/TimetableInfoSection/CreditGridSubSection"
 import CreditScoreSubSection from "@/features/timetable/sections/TimetableInfoSection/CreditScoreSubSection"
 import ExamTimeSubSection from "@/features/timetable/sections/TimetableInfoSection/ExamTimeSubSection"
 import UtilButtonsSubSection from "@/features/timetable/sections/TimetableInfoSection/UtilButtonsSubSection"
+import { media } from "@/styles/themes/media"
+import useIsDevice from "@/utils/useIsDevice"
 
 const InfoArea = styled.div`
     display: flex;
     flex-direction: column;
     width: 264px;
-    align-self: stretch;
+    height: 100%;
     gap: 12px;
     overflow-y: auto;
 
     scrollbar-width: none;
     &::-webkit-scrollbar {
         display: none;
+    }
+
+    ${media.laptop} {
+        flex-direction: row;
+        justify-content: space-around;
+        align-items: center;
+        width: 100%;
     }
 `
 
@@ -62,39 +70,50 @@ export default function TimetableInfoSection({
     year,
     semester,
 }: TimetableInfoSectionProps) {
+    const isLaptop = useIsDevice("laptop")
+
     return (
         <InfoArea>
             {/* 캠퍼스 맵 */}
-            <MapImage />
+            {!isLaptop && <MapImage />}
             {/* 학점 분류별 */}
             <CreditGridSubSection
                 hover={hover}
                 setHover={setHover}
                 timetableLectures={timetableLectures}
             />
-            <StyledDivider direction="row" />
+
+            {!isLaptop && <StyledDivider direction="row" />}
+
             {/* 총 학점/AU */}
             <CreditScoreSubSection
                 timetableLectures={timetableLectures}
                 hover={hover}
                 setHover={setHover}
             />
-            <StyledDivider direction="row" />
+
+            {!isLaptop && <StyledDivider direction="row" />}
+
             {/* 시험시간표 */}
-            <ExamTimeSubSection
-                timetableLectures={timetableLectures}
-                hover={hover}
-                setHover={setHover}
-            />
-            <StyledDivider direction="row" />
+            {!isLaptop && (
+                <ExamTimeSubSection
+                    timetableLectures={timetableLectures}
+                    hover={hover}
+                    setHover={setHover}
+                />
+            )}
+
+            {!isLaptop && <StyledDivider direction="row" />}
 
             {/* 내보내기 버튼들 */}
-            <UtilButtonsSubSection
-                timetableName={timetableName}
-                timetableLectures={timetableLectures}
-                year={year}
-                semester={semester}
-            />
+            {!isLaptop && (
+                <UtilButtonsSubSection
+                    timetableName={timetableName}
+                    timetableLectures={timetableLectures}
+                    year={year}
+                    semester={semester}
+                />
+            )}
         </InfoArea>
     )
 }

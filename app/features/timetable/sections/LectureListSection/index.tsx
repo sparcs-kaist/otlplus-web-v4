@@ -47,18 +47,6 @@ const NoResultText = styled(Typography)`
     justify-content: center;
 `
 
-const HeaderText = styled(Typography)`
-    display: flex;
-    align-items: center;
-    gap: 1px;
-    font-size: ${({ theme }) => theme.fonts.Normal.fontSize}px;
-    flex-wrap: wrap;
-`
-
-const SortWrapper = styled(FlexWrapper)`
-    white-space: nowrap;
-`
-
 const DropDownWrapper = styled(FlexWrapper)`
     height: 36px;
 `

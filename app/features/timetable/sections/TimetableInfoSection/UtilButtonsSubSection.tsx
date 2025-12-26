@@ -18,7 +18,19 @@ import {
     downloadTimetableCalendar,
     downloadTimetableImage,
 } from "@/features/timetable/sections/TimetableInfoSection/util/shareFunctions"
+import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
+import useIsDevice from "@/utils/useIsDevice"
+
+const UtilButtonsWrapper = styled(FlexWrapper)`
+    width: 100%;
+
+    ${media.laptop} {
+        height: 56px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+`
 
 const ExportButton = styled.button`
     display: flex;
@@ -49,6 +61,7 @@ export default function UtilButtonsSubSection({
     semester: SemesterEnum
 }) {
     const theme = useTheme()
+    const isLaptop = useIsDevice("laptop")
 
     const { query } = useAPI("GET", "/semesters")
 
@@ -74,7 +87,7 @@ export default function UtilButtonsSubSection({
     }, [process])
 
     return (
-        <FlexWrapper direction="column" gap={8} style={{ width: "100%" }}>
+        <UtilButtonsWrapper direction="column" gap={8}>
             <ExportButton
                 onClick={() => {
                     if (process === "idle") {
@@ -140,13 +153,13 @@ export default function UtilButtonsSubSection({
                 </Icon>
                 <span>캘린더로 내보내기</span>
             </ExportButton>
-            <StyledDivider />
+            {!isLaptop && <StyledDivider />}
             <ExportButton onClick={() => console.log("실라버스 모아보기")}>
                 <Icon size={16} color={theme.colors.Highlight.default} onClick={() => {}}>
                     <MenuBookIcon />
                 </Icon>
                 <span>실라버스 모아보기</span>
             </ExportButton>
-        </FlexWrapper>
+        </UtilButtonsWrapper>
     )
 }

@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "react"
 
 import styled from "@emotion/styled"
 import { useQueryClient } from "@tanstack/react-query"
-import { set } from "zod"
 
 import StyledDivider from "@/common/components/StyledDivider"
 import { type SemesterEnum } from "@/common/enum/semesterEnum"
@@ -14,7 +13,10 @@ import LectureDetailSection from "@/features/timetable/sections/LectureDetailSec
 import LectureListSection from "@/features/timetable/sections/LectureListSection"
 import TabButtonRow from "@/features/timetable/sections/TabsRowSubSection/TabButtonRow"
 import TimetableInfoSection from "@/features/timetable/sections/TimetableInfoSection"
+import UtilButtonsSubSection from "@/features/timetable/sections/TimetableInfoSection/UtilButtonsSubSection"
+import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
+import useIsDevice from "@/utils/useIsDevice"
 
 const TimetableWrapper = styled(FlexWrapper)`
     min-height: 0;
@@ -25,11 +27,23 @@ const SearchAreaWrapper = styled(FlexWrapper)`
     background-color: ${({ theme }) => theme.colors.Background.Section.default};
     padding: 16px;
     border-radius: 12px;
+    align-self: stretch; /* 부모 Flex의 align-items: stretch에 맞춰 세로 길이 맞춤 */
+
+    ${media.desktop} {
+        background-color: transparent;
+        padding: 0;
+        border-radius: 0;
+    }
 `
 
 const ContentsAreaWrapper = styled(FlexWrapper)`
     border-radius: 12px;
     width: fit-content;
+    align-self: stretch; /* 부모 Flex의 align-items: stretch에 맞춰 세로 길이 맞춤 */
+
+    ${media.laptop} {
+        max-width: 584px;
+    }
 `
 
 const Block = styled(FlexWrapper)`
@@ -37,22 +51,85 @@ const Block = styled(FlexWrapper)`
     border-top-right-radius: 12px;
     border-bottom-left-radius: 12px;
     border-bottom-right-radius: 12px;
+    padding: 16px;
+    flex: 1;
+    min-height: 0;
+
+    ${media.laptop} {
+        background-color: transparent;
+        padding: 0;
+        border-radius: 0;
+    }
 `
 
 const LectureInfoArea = styled.div`
     width: 380px;
     height: 100%;
     display: flex;
+
+    ${media.desktop} {
+        background-color: ${({ theme }) => theme.colors.Background.Section.default};
+        padding: 16px;
+        border-radius: 12px;
+    }
+
+    ${media.laptop} {
+        width: 300px;
+    }
 `
 
 const LectureListArea = styled.div`
     width: 300px;
     height: 100%;
     display: flex;
+
+    ${media.desktop} {
+        width: 380px;
+        background-color: ${({ theme }) => theme.colors.Background.Section.default};
+        padding: 16px;
+        border-radius: 12px;
+    }
+
+    ${media.laptop} {
+        width: 300px;
+    }
+`
+
+const UtilButtonsArea = styled.div`
+    ${media.laptop} {
+        height: 100px;
+        background-color: ${({ theme }) => theme.colors.Background.Section.default};
+        padding: 22px;
+        border-radius: 12px;
+        width: 100%;
+    }
+`
+
+const TimetableArea = styled(FlexWrapper)`
+    flex: 1;
+    min-height: 0;
+
+    ${media.laptop} {
+        background-color: ${({ theme }) => theme.colors.Background.Section.default};
+        padding: 16px;
+        border-radius: 0 12px 12px 12px;
+    }
+`
+
+const TimetableInfoArea = styled.div`
+    ${media.laptop} {
+        height: 100px;
+        background-color: ${({ theme }) => theme.colors.Background.Section.default};
+        padding: 16px;
+        border-radius: 12px;
+    }
 `
 
 export default function Timetable() {
     const queryClient = useQueryClient()
+
+    const isLaptop = useIsDevice("laptop")
+    const isDesktop = useIsDevice("desktop")
 
     const searchAreaRef = useRef<HTMLDivElement>(null)
     const contentsAreaRef = useRef<HTMLDivElement>(null)
@@ -115,9 +192,6 @@ export default function Timetable() {
             if (contentsAreaRef.current) {
                 setContentsAreaHeight(contentsAreaRef.current.offsetHeight)
             }
-            if (searchAreaRef.current && contentsAreaRef.current) {
-                searchAreaRef.current.style.height = `${contentsAreaRef.current.offsetHeight}px`
-            }
         }
 
         matchHeight()
@@ -162,8 +236,28 @@ export default function Timetable() {
             justify="center"
             gap={12}
             flex="1 0 0"
+            ref={outerRef}
         >
-            <SearchAreaWrapper direction="row" align="flex-start" gap={12}>
+            <SearchAreaWrapper
+                direction={isDesktop ? "column-reverse" : "row"}
+                align="flex-start"
+                gap={12}
+                ref={searchAreaRef}
+            >
+                {isLaptop && (
+                    <UtilButtonsArea>
+                        <UtilButtonsSubSection
+                            timetableName={currentTimetableName}
+                            timetableLectures={
+                                currentTimetableId === null
+                                    ? (myTimetable.data?.lectures ?? [])
+                                    : (timetable.data?.lectures ?? [])
+                            }
+                            year={year}
+                            semester={semesterEnum}
+                        />
+                    </UtilButtonsArea>
+                )}
                 {/*과목 목록 영역*/}
                 <LectureListArea>
                     <LectureListSection
@@ -183,7 +277,7 @@ export default function Timetable() {
                         currentTimetableId={currentTimetableId}
                     />
                 </LectureListArea>
-                <StyledDivider direction="column" />
+                {!isDesktop && <StyledDivider direction="column" />}
                 {/*과목 정보 영역*/}
                 <LectureInfoArea>
                     <LectureDetailSection
@@ -195,7 +289,12 @@ export default function Timetable() {
                     />
                 </LectureInfoArea>
             </SearchAreaWrapper>
-            <ContentsAreaWrapper direction="column" gap={0} align="stretch">
+            <ContentsAreaWrapper
+                direction="column"
+                gap={0}
+                align="stretch"
+                justify="stretch"
+            >
                 {/* 시간표 탭 */}
                 <TabButtonRow
                     timeTableLectures={
@@ -212,22 +311,20 @@ export default function Timetable() {
                     setSemester={setSemesterEnum}
                 />
                 <Block
-                    direction="row"
-                    gap={30}
+                    direction={isLaptop ? "column" : "row"}
+                    gap={isLaptop ? 12 : 30}
                     align="stretch"
                     justify="flex-start"
-                    padding="16px"
                     flex="1 0 0"
                 >
-                    <FlexWrapper
-                        direction="column"
-                        gap={0}
-                        align="stretch"
-                        ref={contentsAreaRef}
-                    >
+                    <TimetableArea direction="column" gap={0} ref={contentsAreaRef}>
                         <CustomTimeTableGrid
                             cellWidth={100}
-                            fullHeight={contentsAreaHeight - 36}
+                            fullHeight={
+                                isLaptop
+                                    ? contentsAreaHeight - 60
+                                    : contentsAreaHeight - 36
+                            }
                             lectureSummary={
                                 currentTimetableId === null
                                     ? (myTimetable.data?.lectures ?? [])
@@ -244,21 +341,23 @@ export default function Timetable() {
                                     : handleRemoveLecture
                             }
                         />
-                    </FlexWrapper>
-                    <StyledDivider direction="column" />
+                    </TimetableArea>
+                    {!isLaptop && <StyledDivider direction="column" />}
                     {/*시간표 정보 영역*/}
-                    <TimetableInfoSection
-                        timetableName={currentTimetableName}
-                        timetableLectures={
-                            currentTimetableId === null
-                                ? (myTimetable.data?.lectures ?? [])
-                                : (timetable.data?.lectures ?? [])
-                        }
-                        hover={hover}
-                        setHover={setHover}
-                        year={year}
-                        semester={semesterEnum}
-                    />
+                    <TimetableInfoArea>
+                        <TimetableInfoSection
+                            timetableName={currentTimetableName}
+                            timetableLectures={
+                                currentTimetableId === null
+                                    ? (myTimetable.data?.lectures ?? [])
+                                    : (timetable.data?.lectures ?? [])
+                            }
+                            hover={hover}
+                            setHover={setHover}
+                            year={year}
+                            semester={semesterEnum}
+                        />
+                    </TimetableInfoArea>
                 </Block>
             </ContentsAreaWrapper>
         </TimetableWrapper>
