@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react"
-import { memo } from "react"
+import { memo, useMemo } from "react"
 
 import styled from "@emotion/styled"
 import CloseIcon from "@mui/icons-material/Close"
@@ -29,18 +29,15 @@ const flattenTimeTableColors = (timeTable: any): Array<CSSProperties["color"]> =
 
 const TileWrapper = styled.div<{
     course_id: number
-    duration: number
-    cellWidth: number
     isHighlighted: boolean
     isOverlapped: boolean
-    cellHeight: number
     hoverSelectBanned: boolean
 }>`
     display: flex;
     flex-direction: column;
     padding: 4px 6px;
-    width: ${({ cellWidth }) => `${cellWidth}px`};
-    height: ${({ duration, cellHeight }) => `${duration * cellHeight - 4}px`};
+    width: var(--tile-width);
+    height: var(--tile-height);
     margin-bottom: 2px;
     margin-top: 2px;
     justify-content: center;
@@ -120,15 +117,23 @@ const LectureTile: React.FC<{
     removeFunction,
 }) => {
     const isHighlighted = isSelected || isHovered || false
+    const duration = (timeBlock.end - timeBlock.begin) / 30
+
+    const cssVariables = useMemo(
+        () =>
+            ({
+                "--tile-width": `${cellWidth}px`,
+                "--tile-height": `${duration * cellHeight - 4}px`,
+            }) as CSSProperties,
+        [cellWidth, cellHeight, duration],
+    )
 
     return (
         <TileWrapper
+            style={cssVariables}
             course_id={lecture.courseId}
-            duration={(timeBlock.end - timeBlock.begin) / 30}
-            cellWidth={cellWidth}
             isHighlighted={isHighlighted}
             isOverlapped={isOverlapped}
-            cellHeight={cellHeight}
             hoverSelectBanned={hoverSelectBanned}
         >
             {removeFunction !== undefined && (isSelected || isHovered) && (
@@ -158,15 +163,12 @@ const LectureTile: React.FC<{
     )
 }
 
-// Props type for the comparison function
 type LectureTileMemoProps = React.ComponentProps<typeof LectureTile>
 
-// Custom comparison function for React.memo to handle object props
 const arePropsEqual = (
     prevProps: Readonly<LectureTileMemoProps>,
     nextProps: Readonly<LectureTileMemoProps>,
 ) => {
-    // Compare primitive props
     if (
         prevProps.cellWidth !== nextProps.cellWidth ||
         prevProps.cellHeight !== nextProps.cellHeight ||
@@ -179,7 +181,6 @@ const arePropsEqual = (
         return false
     }
 
-    // Compare lecture object properties that are used in rendering
     if (
         prevProps.lecture.courseId !== nextProps.lecture.courseId ||
         prevProps.lecture.name !== nextProps.lecture.name
@@ -187,7 +188,6 @@ const arePropsEqual = (
         return false
     }
 
-    // Compare professors array
     if (prevProps.lecture.professors.length !== nextProps.lecture.professors.length) {
         return false
     }
@@ -199,7 +199,6 @@ const arePropsEqual = (
         return false
     }
 
-    // Compare timeBlock object properties that are used in rendering
     if (
         prevProps.timeBlock.begin !== nextProps.timeBlock.begin ||
         prevProps.timeBlock.end !== nextProps.timeBlock.end ||
