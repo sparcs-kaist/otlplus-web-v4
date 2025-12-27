@@ -18,6 +18,7 @@ jobs:
       contents: read
     steps:
       - name: Notify Slack - Deploy Started
+        id: slack-start
         uses: slackapi/slack-github-action@v2.1.0
         with:
           method: chat.postMessage
@@ -96,22 +97,19 @@ jobs:
           token: ${{ secrets.SLACK_BOT_TOKEN }}
           payload: |
             channel: ${{ secrets.SLACK_CHANNEL_ID }}
+            thread_ts: "${{ fromJson(steps.slack-start.outputs.response).ts }}"
             text: "✅ *OTL+ Dev 배포 완료*"
             blocks:
               - type: section
                 text:
                   type: mrkdwn
-                  text: "✅ *OTL+ Dev 배포 완료*"
+                  text: "✅ *배포 완료* - 성공 🎉"
               - type: section
                 fields:
                   - type: mrkdwn
-                    text: "*Environment:*\nDev"
-                  - type: mrkdwn
-                    text: "*Status:*\n성공 🎉"
-                  - type: mrkdwn
                     text: "*Commit:*\n`${{ github.sha }}`"
                   - type: mrkdwn
-                    text: "*Author:*\n${{ github.actor }}"
+                    text: "*Duration:*\n${{ github.run_id }}"
               - type: context
                 elements:
                   - type: mrkdwn
@@ -125,18 +123,15 @@ jobs:
           token: ${{ secrets.SLACK_BOT_TOKEN }}
           payload: |
             channel: ${{ secrets.SLACK_CHANNEL_ID }}
+            thread_ts: "${{ fromJson(steps.slack-start.outputs.response).ts }}"
             text: "❌ *OTL+ Dev 배포 실패*"
             blocks:
               - type: section
                 text:
                   type: mrkdwn
-                  text: "❌ *OTL+ Dev 배포 실패*"
+                  text: "❌ *배포 실패* - 실패 ⚠️"
               - type: section
                 fields:
-                  - type: mrkdwn
-                    text: "*Environment:*\nDev"
-                  - type: mrkdwn
-                    text: "*Status:*\n실패 ⚠️"
                   - type: mrkdwn
                     text: "*Commit:*\n`${{ github.sha }}`"
                   - type: mrkdwn
@@ -154,6 +149,7 @@ jobs:
       contents: write
     steps:
       - name: Notify Slack - Deploy Started
+        id: slack-start
         uses: slackapi/slack-github-action@v2.1.0
         with:
           method: chat.postMessage
@@ -239,18 +235,15 @@ jobs:
           token: ${{ secrets.SLACK_BOT_TOKEN }}
           payload: |
             channel: ${{ secrets.SLACK_CHANNEL_ID }}
+            thread_ts: "${{ fromJson(steps.slack-start.outputs.response).ts }}"
             text: "✅ *OTL+ Production 배포 완료*"
             blocks:
               - type: section
                 text:
                   type: mrkdwn
-                  text: "✅ *OTL+ Production 배포 완료*"
+                  text: "✅ *배포 완료* - 성공 🎉"
               - type: section
                 fields:
-                  - type: mrkdwn
-                    text: "*Environment:*\nProduction"
-                  - type: mrkdwn
-                    text: "*Status:*\n성공 🎉"
                   - type: mrkdwn
                     text: "*Release:*\n`${{ github.event.release.tag_name }}`"
                   - type: mrkdwn
@@ -268,18 +261,15 @@ jobs:
           token: ${{ secrets.SLACK_BOT_TOKEN }}
           payload: |
             channel: ${{ secrets.SLACK_CHANNEL_ID }}
+            thread_ts: "${{ fromJson(steps.slack-start.outputs.response).ts }}"
             text: "❌ *OTL+ Production 배포 실패*"
             blocks:
               - type: section
                 text:
                   type: mrkdwn
-                  text: "❌ *OTL+ Production 배포 실패*"
+                  text: "❌ *배포 실패* - 실패 ⚠️"
               - type: section
                 fields:
-                  - type: mrkdwn
-                    text: "*Environment:*\nProduction"
-                  - type: mrkdwn
-                    text: "*Status:*\n실패 ⚠️"
                   - type: mrkdwn
                     text: "*Release:*\n`${{ github.event.release.tag_name }}`"
                   - type: mrkdwn

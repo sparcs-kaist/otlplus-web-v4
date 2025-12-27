@@ -31,6 +31,7 @@ jobs:
     
     steps:
       - name: Notify Slack - Deploy Started
+        id: slack-start
         uses: slackapi/slack-github-action@v2.1.0
         with:
           method: chat.postMessage
@@ -207,22 +208,19 @@ jobs:
           token: ${{ secrets.SLACK_BOT_TOKEN }}
           payload: |
             channel: ${{ secrets.SLACK_CHANNEL_ID }}
+            thread_ts: "${{ fromJson(steps.slack-start.outputs.response).ts }}"
             text: "✅ *OTL+ CloudFront 배포 완료*"
             blocks:
               - type: section
                 text:
                   type: mrkdwn
-                  text: "✅ *OTL+ CloudFront 배포 완료*"
+                  text: "✅ *배포 완료* - 성공 🎉"
               - type: section
                 fields:
                   - type: mrkdwn
-                    text: "*Environment:*\n${{ inputs.environment }}"
-                  - type: mrkdwn
-                    text: "*Status:*\n성공 🎉"
-                  - type: mrkdwn
                     text: "*Tag:*\n`${{ inputs.tag_name }}`"
                   - type: mrkdwn
-                    text: "*Triggered by:*\n${{ github.actor }}"
+                    text: "*Environment:*\n${{ inputs.environment }}"
               - type: context
                 elements:
                   - type: mrkdwn
@@ -236,22 +234,19 @@ jobs:
           token: ${{ secrets.SLACK_BOT_TOKEN }}
           payload: |
             channel: ${{ secrets.SLACK_CHANNEL_ID }}
+            thread_ts: "${{ fromJson(steps.slack-start.outputs.response).ts }}"
             text: "❌ *OTL+ CloudFront 배포 실패*"
             blocks:
               - type: section
                 text:
                   type: mrkdwn
-                  text: "❌ *OTL+ CloudFront 배포 실패*"
+                  text: "❌ *배포 실패* - 실패 ⚠️"
               - type: section
                 fields:
                   - type: mrkdwn
-                    text: "*Environment:*\n${{ inputs.environment }}"
-                  - type: mrkdwn
-                    text: "*Status:*\n실패 ⚠️"
-                  - type: mrkdwn
                     text: "*Tag:*\n`${{ inputs.tag_name }}`"
                   - type: mrkdwn
-                    text: "*Triggered by:*\n${{ github.actor }}"
+                    text: "*Environment:*\n${{ inputs.environment }}"
               - type: context
                 elements:
                   - type: mrkdwn
