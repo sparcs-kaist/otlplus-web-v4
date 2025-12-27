@@ -89,6 +89,7 @@ function ReviewWritingBlock({
     })
 
     useEffect(() => {
+        console.log(lectureId)
         if (userReviewsQuery.data) {
             const existingReview = userReviewsQuery.data.reviews.find(
                 (review) => review.lectureId === lectureId,
@@ -124,6 +125,8 @@ function ReviewWritingBlock({
             setReviewGrade(myReview.grade)
             setReviewLoad(myReview.load)
             setReviewSpeech(myReview.speech)
+        } else {
+            resetReviewStates()
         }
     }, [myReview])
 
