@@ -1,36 +1,30 @@
-import { lazy, Suspense } from "react"
+import { Suspense, lazy } from "react"
 
 import styled from "@emotion/styled"
 
-import Footer from "@/common/components/guideline/Footer"
 import LoadingCircle from "@/common/components/LoadingCircle"
+import Footer from "@/common/components/guideline/Footer"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import SearchSection from "@/features/main/sections/SearchSection"
 import { media } from "@/styles/themes/media"
 import useIsDevice from "@/utils/useIsDevice"
 
 const HallOfFameFeedSection = lazy(
-    () => import("@/features/main/sections/HallOfFameFeedSection")
+    () => import("@/features/main/sections/HallOfFameFeedSection"),
 )
 const LikedMajorFeedSection = lazy(
-    () => import("@/features/main/sections/LikedMajorFeedSection")
+    () => import("@/features/main/sections/LikedMajorFeedSection"),
 )
 const MobileReviewSlideSection = lazy(
-    () => import("@/features/main/sections/MobileReviewSlideSection")
+    () => import("@/features/main/sections/MobileReviewSlideSection"),
 )
-const RecentFeedSection = lazy(
-    () => import("@/features/main/sections/RecentFeedSection")
-)
+const RecentFeedSection = lazy(() => import("@/features/main/sections/RecentFeedSection"))
 const ReviewSection = lazy(() => import("@/features/main/sections/ReviewSection"))
 const ScheduleFeedSection = lazy(
-    () => import("@/features/main/sections/ScheduleFeedSection")
+    () => import("@/features/main/sections/ScheduleFeedSection"),
 )
-const ScheduleSection = lazy(
-    () => import("@/features/main/sections/ScheduleSection")
-)
-const TimeTableSection = lazy(
-    () => import("@/features/main/sections/TimeTableSection")
-)
+const ScheduleSection = lazy(() => import("@/features/main/sections/ScheduleSection"))
+const TimeTableSection = lazy(() => import("@/features/main/sections/TimeTableSection"))
 
 const MainWrapper = styled(FlexWrapper)`
     margin-top: 60px;

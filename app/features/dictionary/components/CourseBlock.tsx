@@ -55,10 +55,7 @@ const CourseBlock: React.FC<CourseBlockProps> = ({
     }, [isSelected, course.id, selectCourseId])
 
     return (
-        <CourseBlockInner
-            onClick={handleClick}
-            selected={isSelected}
-        >
+        <CourseBlockInner onClick={handleClick} selected={isSelected}>
             <FlexWrapper direction="row" gap={0} justify="space-between" align="center">
                 <FlexWrapper direction="row" gap={6} align={"center"}>
                     <Icon
