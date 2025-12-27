@@ -57,11 +57,11 @@ const Chip = ({ selected = false, chipText = "", ...divProps }: ChipProps) => {
         <ChipContentWrapper>
             {chipText}
             {selected ? (
-                <Icon size={13}>
+                <Icon size={13} onClick={() => {}}>
                     <CheckIcon />
                 </Icon>
             ) : (
-                <Icon size={13}>
+                <Icon size={13} onClick={() => {}}>
                     <AddIcon />
                 </Icon>
             )}

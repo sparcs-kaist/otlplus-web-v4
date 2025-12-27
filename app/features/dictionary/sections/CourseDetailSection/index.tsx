@@ -15,9 +15,7 @@ import { useAPI } from "@/utils/api/useAPI"
 
 import CourseHistorySubsection from "./CourseHistorySubsection"
 import CourseInfoSubsection from "./CourseInfoSubsection"
-import CourseReviewSubsection, {
-    type CourseReviewSubsectionHandle,
-} from "./CourseReviewSubsection"
+import CourseReviewSubsection from "./CourseReviewSubsection"
 
 const CourseDetailSectionInner = styled(FlexWrapper)`
     width: 100%;
@@ -71,17 +69,6 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
         ReviewWritingBlockProps[]
     >([])
 
-    const reviewSectionRef = useRef<HTMLDivElement>(null)
-    const reviewSubsectionRef = useRef<CourseReviewSubsectionHandle>(null)
-
-    const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-        const el = e.currentTarget
-        const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 48
-        if (nearBottom) {
-            reviewSubsectionRef.current?.loadMoreReviews()
-        }
-    }
-
     useEffect(() => {
         if (query.data) {
             const writableReviews: ReviewWritingBlockProps[] = []
@@ -103,14 +90,10 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
             setWritableReviewProps(writableReviews)
         }
     }, [query.data])
+
     useEffect(() => {
         setSelectedProfessorId(null)
     }, [selectedCourseId])
-    useEffect(() => {
-        if (selectedProfessorId !== null && !reviewSubsectionRef.current?.isLoading) {
-            reviewSectionRef.current?.scrollIntoView({ behavior: "smooth" })
-        }
-    }, [selectedProfessorId, query.isLoading])
 
     return (
         <CourseDetailSectionInner
@@ -118,7 +101,6 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
             gap={12}
             align={"center"}
             justify={selectedCourseId ? "start" : "center"}
-            onScroll={handleScroll}
         >
             {selectedCourseId ? (
                 query.isLoading ? (
@@ -168,17 +150,11 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
                             />
                         </CourseDetailWrapper>
                         <Divider />
-                        <CourseDetailWrapper
-                            ref={reviewSectionRef}
-                            direction="column"
-                            gap={10}
-                            flex="1 1 auto"
-                        >
+                        <CourseDetailWrapper direction="column" gap={10} flex="1 1 auto">
                             <CourseReviewSubsection
                                 selectedCourseId={selectedCourseId}
                                 selectedProfessorId={selectedProfessorId}
                                 writableReviewProps={writableReviewProps}
-                                ref={reviewSubsectionRef}
                             />
                         </CourseDetailWrapper>
                     </>

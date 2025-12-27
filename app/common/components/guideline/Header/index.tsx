@@ -92,6 +92,7 @@ const Header: React.FC = () => {
         }
         setEnabled(true)
     }, [])
+
     useEffect(() => {
         if (query.isLoading || !enabled) return
         if (query.data) {
@@ -100,8 +101,10 @@ const Header: React.FC = () => {
         } else {
             setUserInfo(null)
             clearUser()
+            setEnabled(false)
         }
     }, [query.data, query.isLoading, enabled])
+
     useEffect(() => {
         if (!isMobile) setMobileSidebarOpen(false)
     }, [isMobile])

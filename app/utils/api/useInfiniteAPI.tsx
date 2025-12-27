@@ -1,4 +1,4 @@
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react"
+import { type Dispatch, type SetStateAction, useEffect, useRef, useState } from "react"
 
 import {
     type InfiniteData,
@@ -18,7 +18,6 @@ import {
     type getAPIResponseType,
     getOriginalPathValue,
     getZodSchemaRequest,
-    getZodSchemaResponse,
 } from "./getAPIType"
 
 type ArrayKeys<T> = {
@@ -27,7 +26,11 @@ type ArrayKeys<T> = {
 
 type NestedRes<Res> = ArrayKeys<Res>
 
-type UseAPIQueryOptions<M extends Method<GetOriginalPath<P>>, P extends DynamicPath> = {
+type UseAPIQueryOptions<
+    M extends Method<GetOriginalPath<P>>,
+    P extends DynamicPath,
+    Res,
+> = {
     infinites: ReadonlyArray<NestedRes<getAPIResponseType<M, P>>>
     limit: number
     initialOffset?: number
@@ -35,6 +38,8 @@ type UseAPIQueryOptions<M extends Method<GetOriginalPath<P>>, P extends DynamicP
     enabled?: boolean
     staleTime?: number
     gcTime?: number
+    select?: (data: Res | undefined) => Res | undefined
+    iterate?: (data: Res) => number
 }
 
 type NoLimitOffset<T> = Omit<T, "limit" | "offset">
@@ -48,7 +53,7 @@ export function useInfiniteAPI<
 >(
     method: M,
     path: P,
-    ops: UseAPIQueryOptions<M, P>,
+    ops: UseAPIQueryOptions<M, P, Res>,
 ): {
     query: UseInfiniteQueryResult<InfiniteData<Res, unknown>, Error>
     setParams: Dispatch<SetStateAction<FReq>>
@@ -63,9 +68,22 @@ export function useInfiniteAPI<
         gcTime = 5 * 60 * 1000,
         initialOffset = 0,
         limit,
+        select = (data) => data,
+        iterate = () => -1,
     } = ops
     const [flattenData, setFlattenData] = useState<Res | undefined>(undefined)
     const [params, setParams] = useState<FReq>(null as unknown as FReq)
+
+    const selectRef = useRef(select)
+    const infinitesRef = useRef(infinites)
+
+    useEffect(() => {
+        selectRef.current = select
+    }, [select])
+
+    useEffect(() => {
+        infinitesRef.current = infinites
+    }, [infinites])
 
     const requestSchema = getZodSchemaRequest<M, GetOriginalPath<P>>(
         method,
@@ -88,15 +106,19 @@ export function useInfiniteAPI<
         },
         initialPageParam: 0,
         getNextPageParam: (lastPage, allPages) => {
-            let flag = true
+            const iteratedCount = iterate(lastPage)
+            if (iteratedCount !== -1) {
+                return iteratedCount > 0 ? allPages.length : undefined
+            }
 
-            infinites.forEach((key) => {
+            for (const key of infinitesRef.current) {
                 const lastPageLength = (lastPage[key] as any[]).length
-                if (lastPageLength < limit) flag = false
-            })
+                if (lastPageLength < limit) {
+                    return undefined
+                }
+            }
 
-            if (flag) return allPages.length
-            return undefined
+            return infinitesRef.current.length > 0 ? allPages.length : undefined
         },
         retry: 1,
         staleTime,
@@ -109,24 +131,27 @@ export function useInfiniteAPI<
     })
 
     useEffect(() => {
-        if (!query.data?.pages) return
+        const pages = query.data?.pages
+        if (!pages || pages.length === 0) {
+            setFlattenData(undefined)
+            return
+        }
 
-        setFlattenData((prev) => {
-            if (prev === undefined) {
-                return query.data.pages[0] as Res
-            } else {
-                const lastPage = query.data.pages[query.data.pages.length - 1]
+        if (infinitesRef.current.length === 0) {
+            const latestPage = pages[pages.length - 1] as Res
+            setFlattenData(selectRef.current(latestPage))
+            return
+        }
 
-                prev = { ...prev, ...(lastPage as object) }
+        const latestPage = pages[pages.length - 1]
+        const merged = { ...(latestPage as object) } as Res
 
-                infinites.forEach((key) => {
-                    const mergedArray = query.data!.pages.flatMap((page) => page[key])
-                    if (prev) (prev[key] as any[]) = mergedArray
-                })
-
-                return prev
-            }
+        infinitesRef.current.forEach((key) => {
+            const aggregated = pages.flatMap((page) => page[key] as any[])
+            ;(merged[key] as any[]) = aggregated
         })
+
+        setFlattenData(selectRef.current(merged))
     }, [query.data])
 
     useEffect(() => {

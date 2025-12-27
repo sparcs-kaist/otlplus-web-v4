@@ -1,10 +1,9 @@
-import React, { useEffect, useImperativeHandle, useState } from "react"
+import React, { use, useEffect, useState } from "react"
 
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
+import { useInView } from "react-intersection-observer"
 
-import exampleReviews from "@/api/example/Reviews"
-import { type GETReviewsResponse } from "@/api/reviews"
 import LoadingCircle from "@/common/components/LoadingCircle"
 import ReviewBlock from "@/common/components/reviews/ReviewBlock"
 import ReviewWritingBlock, {
@@ -14,7 +13,7 @@ import { getAverageScoreLabel } from "@/common/enum/scoreEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import CourseReviewLanguageChip from "@/features/dictionary/components/CourseReviewLanguageChip"
-import { useAPI } from "@/utils/api/useAPI"
+import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
 
 const NumberWrapper = styled(FlexWrapper)`
     width: 300px;
@@ -29,56 +28,37 @@ interface CourseReviewSubsectionProps {
     selectedCourseId: number | null
     selectedProfessorId: number | null
     writableReviewProps: ReviewWritingBlockProps[]
-    ref?: React.Ref<CourseReviewSubsectionHandle>
 }
 
-export type CourseReviewSubsectionHandle = {
-    loadMoreReviews: () => void
-    isLoading: boolean
-}
-
-const LIMIT = 100
+const LIMIT = 20
 
 const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
     selectedCourseId,
     selectedProfessorId,
     writableReviewProps,
-    ref,
 }) => {
     const { t } = useTranslation()
 
-    const [reviews, setReviews] = useState<GETReviewsResponse | null>(null)
     const [reviewLanguage, setReviewLanguage] = useState("all")
     const [enabled, setEnabled] = useState(false)
 
-    const { query, setParams } = useAPI("GET", "/reviews", {
+    const { query, setParams, data } = useInfiniteAPI("GET", "/reviews", {
+        infinites: ["reviews"],
+        limit: LIMIT,
         enabled: enabled,
-        gcTime: 0,
     })
 
-    const loadMoreReviews = () => {
-        if (!enabled) return
-        if (query.isLoading) return
-        setParams((prevState) => ({
-            ...prevState,
-            offset: prevState.offset + LIMIT,
-        }))
-    }
-
-    useImperativeHandle(ref, () => ({ loadMoreReviews, isLoading: query.isLoading }))
+    const { ref, inView } = useInView()
 
     useEffect(() => {
         setParams({
             mode: "default",
             courseId: selectedCourseId || undefined,
             professorId: selectedProfessorId || undefined,
-            limit: LIMIT,
-            offset: 0,
         })
     }, [])
 
     useEffect(() => {
-        setReviews(null)
         setParams((prevState) => {
             const base = prevState ?? {}
             return {
@@ -87,29 +67,16 @@ const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
                 ...(selectedProfessorId !== null
                     ? { professorId: selectedProfessorId }
                     : {}),
-                offset: 0,
             }
         })
         setEnabled(selectedCourseId !== null)
     }, [selectedProfessorId, selectedCourseId])
 
     useEffect(() => {
-        if (query.data !== undefined) {
-            setReviews((prevState) => {
-                if (prevState == null) return query.data
-                return {
-                    averageGrade: query.data.averageGrade,
-                    averageLoad: query.data.averageLoad,
-                    averageSpeech: query.data.averageSpeech,
-                    myReviewId: [],
-                    reviews: [...prevState.reviews, ...query.data.reviews],
-                }
-            })
-            if (query.data.reviews.length < LIMIT) {
-                setEnabled(false)
-            }
+        if (inView && query.hasNextPage && !query.isFetchingNextPage) {
+            query.fetchNextPage()
         }
-    }, [query.data])
+    }, [inView])
 
     return (
         <>
@@ -131,7 +98,7 @@ const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
                     ))}
                 </FlexWrapper>
             </FlexWrapper>
-            {reviews === null && query.isLoading ? (
+            {data === null && query.isLoading ? (
                 <LoadingCircle />
             ) : (
                 <>
@@ -151,22 +118,22 @@ const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
                             {[
                                 [
                                     getAverageScoreLabel(
-                                        reviews?.averageGrade,
-                                        reviews?.reviews.length,
+                                        data?.averageGrade,
+                                        data?.reviews.length,
                                     ),
                                     t("common.grade"),
                                 ],
                                 [
                                     getAverageScoreLabel(
-                                        reviews?.averageLoad,
-                                        reviews?.reviews.length,
+                                        data?.averageLoad,
+                                        data?.reviews.length,
                                     ),
                                     t("common.load"),
                                 ],
                                 [
                                     getAverageScoreLabel(
-                                        reviews?.averageSpeech,
-                                        reviews?.reviews.length,
+                                        data?.averageSpeech,
+                                        data?.reviews.length,
                                     ),
                                     t("common.speech"),
                                 ],
@@ -187,11 +154,10 @@ const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
                             ))}
                         </NumberWrapper>
                     </FlexWrapper>
-                    {exampleReviews.reviews.length > 0 &&
-                        writableReviewProps.map((props) => (
-                            <ReviewWritingBlock {...props} />
-                        ))}
-                    {reviews?.reviews.map((review) => {
+                    {writableReviewProps.map((props, index) => (
+                        <ReviewWritingBlock {...props} key={index} />
+                    ))}
+                    {data?.reviews.map((review) => {
                         if (
                             reviewLanguage === "english" &&
                             !/^[A-Za-z0-9\s\p{P}\p{S}]+$/u.test(review.content)
@@ -207,6 +173,7 @@ const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
                             )
                         }
                     })}
+                    {query.hasNextPage && <LoadingCircle ref={ref} />}
                 </>
             )}
         </>

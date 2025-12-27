@@ -1,11 +1,10 @@
-import React, { useEffect, useLayoutEffect, useRef, useState } from "react"
+import React, { useEffect, useRef, useState } from "react"
 
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
 
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import type { Lecture } from "@/common/schemas/lecture"
-import type { TimeBlock } from "@/common/schemas/timeblock"
 import { checkAnyOver24 } from "@/utils/timetable/checkAnyOver24"
 import renderGrid from "@/utils/timetable/renderGrid"
 import renderLectureTile from "@/utils/timetable/renderLectureTile"
@@ -14,9 +13,8 @@ import renderTargetArea from "@/utils/timetable/renderTargetArea"
 interface GridProps {
     cellWidth?: number
     lectureSummary: Lecture[]
-    setTimeFilter: React.Dispatch<React.SetStateAction<TimeBlock | null>>
-    hover: Lecture | null
-    setHover: React.Dispatch<React.SetStateAction<Lecture | null>>
+    hover: Lecture[] | null
+    setHover: React.Dispatch<React.SetStateAction<Lecture[] | null>>
     selected: Lecture | null
     setSelected: React.Dispatch<React.SetStateAction<Lecture | null>>
 }
@@ -39,6 +37,7 @@ const TimeWrapper = styled.div<{ cellHeight: number }>`
     gap: ${({ cellHeight }) => `${cellHeight * 2 - 11}px`};
     font-size: 8px;
     line-height: 11px;
+    color: ${({ theme }) => theme.colors.Text.default};
 `
 
 const DateWrapper = styled.div<{ width: number }>`
@@ -48,12 +47,12 @@ const DateWrapper = styled.div<{ width: number }>`
     line-height: 15px;
     padding-bottom: 5px;
     text-align: center;
+    color: ${({ theme }) => theme.colors.Text.default};
 `
 
 const CustomTimeTableGrid: React.FC<GridProps> = ({
     cellWidth = 120,
     lectureSummary,
-    setTimeFilter,
     hover,
     setHover,
     selected,
@@ -90,41 +89,11 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
         return () => window.removeEventListener("resize", handleResize)
     }, [])
 
-    const [dragging, setDragging] = useState<boolean>(false)
-    const [startRow, setStartRow] = useState<number | null>(null)
-    const [lastRow, setLastRow] = useState<number | null>(null)
-    const [col, setCol] = useState<number | null>(null)
-    const [holding, setHolding] = useState<boolean>(false)
-
     const [draggingArea, setDraggingArea] = useState<Map<number, boolean[]>>(
         new Map(
             Array.from({ length: m }, (_, rowIndex) => [rowIndex, Array(n).fill(null)]),
         ),
     )
-
-    const getArea = (
-        startRow: number,
-        endRow: number,
-        col: number,
-    ): Map<number, boolean[]> => {
-        const result = new Map(
-            Array.from({ length: m }, (_, rowIndex) => [rowIndex, Array(n).fill(null)]),
-        )
-        for (let j = startRow; j < endRow + 1; j++) {
-            result.get(col)![j] = true
-        }
-
-        return result
-    }
-
-    useLayoutEffect(() => {
-        if (gridRef.current && dragging && !holding) {
-            const _startRow = Math.min(startRow!, lastRow!)
-            const _endRow = Math.max(startRow!, lastRow!)
-            const targetArea = getArea(_startRow, _endRow, col!)
-            setDraggingArea(targetArea)
-        }
-    }, [lastRow, startRow])
 
     return (
         <SectionWrapper>
@@ -182,9 +151,9 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
                         setSelected,
                         hover,
                         setHover,
-                        holding,
-                        setHolding,
-                        dragging,
+                        false,
+                        undefined,
+                        true,
                     )}
                 </div>
             </FlexWrapper>

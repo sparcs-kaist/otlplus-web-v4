@@ -7,7 +7,7 @@ const theme = createTheme()
 interface IconButtonProps {
     children?: ReactNode | null
     styles?: React.CSSProperties | null
-    onClick?: () => void | null
+    onClick?: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void | null
 }
 
 export const IconButton = (props: IconButtonProps) => {

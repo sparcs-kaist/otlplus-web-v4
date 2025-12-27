@@ -22,7 +22,9 @@ const useIsDevice = (type: DeviceType): boolean => {
                 case "laptop":
                     return innerWidth < theme.breakpoints.laptop
                 case "desktop":
-                    return innerWidth >= theme.breakpoints.laptop
+                    return innerWidth < theme.breakpoints.desktop
+                case "wide":
+                    return innerWidth >= theme.breakpoints.desktop
                 default:
                     return false
             }

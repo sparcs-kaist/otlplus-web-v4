@@ -1,16 +1,25 @@
 import { z } from "zod"
 
+import { SemesterEnum } from "@/common/enum/semesterEnum"
 import { LectureSchema } from "@/common/schemas/lecture"
 
 // GET /api/users/:userId/wishlist
-export const GETRequest = z.object({})
+export const GETRequest = z.object({
+    year: z.number().int(),
+    semester: z.enum(SemesterEnum),
+})
 
 export const GETResponse = z.object({
-    name: z.string(),
-    code: z.string(),
-    type: z.string(),
-    completedLecture: z.boolean(),
-    lectures: z.array(LectureSchema),
+    courses: z.array(
+        z.object({
+            id: z.number().int(),
+            name: z.string(),
+            code: z.string(),
+            type: z.string(),
+            completed: z.boolean(),
+            lectures: z.array(LectureSchema),
+        }),
+    ),
 })
 
 export type GETWishlistResponse = z.infer<typeof GETResponse>
@@ -18,7 +27,7 @@ export type GETWishlistResponse = z.infer<typeof GETResponse>
 // PATCH /api/users/:userId/wishlist
 export const PATCHRequest = z.object({
     lectureId: z.number().int(),
-    action: z.enum(["add", "remove"]),
+    mode: z.enum(["add", "delete"]),
 })
 
 export const PATCHResponse = z.object({})

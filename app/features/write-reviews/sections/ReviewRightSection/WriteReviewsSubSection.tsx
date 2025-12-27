@@ -80,9 +80,6 @@ function WriteReviewsSubSection({ selectedLecture }: WriteReviewsSubSectionType)
                     professors={selectedLecture.professors}
                     year={selectedLecture.year}
                     semester={selectedLecture.semester}
-                    myReview={data?.reviews.find((review) =>
-                        data.myReviewId.includes(review.id),
-                    )}
                 />
             </FlexWrapper>
             <Line height={1} color="Line.default" />
@@ -95,13 +92,9 @@ function WriteReviewsSubSection({ selectedLecture }: WriteReviewsSubSectionType)
                         />
                     </Typography>
                 </FlexWrapper>
-                {data?.reviews
-                    .filter((review) => {
-                        return !data.myReviewId.includes(review.id)
-                    })
-                    .map((review) => (
-                        <ReviewBlock review={review} key={review.id} />
-                    ))}
+                {data?.reviews.map((review) => (
+                    <ReviewBlock review={review} key={review.id} />
+                ))}
 
                 {query.hasNextPage && <LoadingCircle ref={ref} />}
             </FlexWrapper>

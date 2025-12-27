@@ -4,6 +4,7 @@ import { credits } from "./credits"
 import { dictionary } from "./dictionary"
 import { header } from "./header"
 import { main } from "./main"
+import { timetable } from "./timetable"
 import { writeReviews } from "./writeReviews"
 
 export const i18nEn = {
@@ -14,4 +15,5 @@ export const i18nEn = {
     header,
     main,
     writeReviews,
+    timetable,
 }

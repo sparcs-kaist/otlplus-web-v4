@@ -1,10 +1,12 @@
 import { type Dispatch, type SetStateAction, useState } from "react"
 
-import { type UseMutationOptions, useMutation, useQuery } from "@tanstack/react-query"
 import {
     type UseMutateFunction,
+    type UseMutationOptions,
     type UseMutationResult,
     type UseQueryResult,
+    useMutation,
+    useQuery,
 } from "@tanstack/react-query"
 import { type AxiosHeaders } from "axios"
 import { useTranslation } from "react-i18next"
@@ -106,8 +108,9 @@ export function useAPI<
                 const { data } = await axiosClient.request<Res>({
                     method: method,
                     url: "/api/v2" + path,
-                    data: ["POST", "PUT", "PATCH"].includes(method) ? params : undefined,
-                    params: ["DELETE"].includes(method) ? params : undefined,
+                    data: ["POST", "PUT", "PATCH", "DELETE"].includes(method)
+                        ? params
+                        : undefined,
                     headers: headers || {},
                 })
                 return data

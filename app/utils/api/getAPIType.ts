@@ -75,12 +75,48 @@ function buildOriginalPathRegex(path: Path): RegExp {
 }
 
 export function getOriginalPathValue<P extends DynamicPath>(path: P): GetOriginalPath<P> {
-    for (const originalPath of originalPaths) {
-        if (buildOriginalPathRegex(originalPath).test(path)) {
-            return originalPath as GetOriginalPath<P>
+    const blocks = path.split("/")
+    const originalBlocks = originalPaths.map((originalPath) => originalPath.split("/"))
+    const scores = new Map<(typeof originalPaths)[number], number>()
+
+    originalBlocks.forEach((originalBlock, index) => {
+        originalBlock.forEach((segment, segmentIndex) => {
+            if (originalBlocks[index] === undefined) return
+            if (segment.startsWith(":")) originalBlocks[index][segmentIndex] = ""
+
+            if (originalPaths[index] === undefined) return
+            scores.set(originalPaths[index], 0)
+        })
+    })
+
+    originalBlocks.forEach((originalBlock, index) => {
+        if (originalBlock.length === blocks.length) {
+            const originalPath = originalPaths[index]
+            if (originalPath === undefined) return
+
+            let isMatch = true
+
+            originalBlock.forEach((segment, segmentIndex) => {
+                if (segment === blocks[segmentIndex])
+                    scores.set(originalPath, (scores.get(originalPath) || 0) + 1)
+                else if (segment === "")
+                    scores.set(originalPath, (scores.get(originalPath) || 0) + 0.5)
+                else isMatch = false
+            })
+
+            if (!isMatch) {
+                scores.set(originalPath, 0)
+            }
         }
-    }
-    throw new Error(`Unknown API path: ${path}`)
+    })
+
+    const sortedScores = Array.from(scores.entries()).sort((a, b) => b[1] - a[1])
+    const bestMatch = sortedScores[0]
+
+    if (bestMatch === undefined || bestMatch[1] === 0)
+        throw new Error(`No matching API path found for ${path}`)
+
+    return bestMatch[0] as GetOriginalPath<P>
 }
 
 // TODO: 나중에 방법 알아내면 타입 좁힐 예정
