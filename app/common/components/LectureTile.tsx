@@ -142,10 +142,7 @@ type LectureTileProps = {
 }
 
 // Custom comparison function for React.memo to handle object props
-const arePropsEqual = (
-    prevProps: LectureTileProps,
-    nextProps: LectureTileProps,
-) => {
+const arePropsEqual = (prevProps: LectureTileProps, nextProps: LectureTileProps) => {
     // Compare primitive props
     if (
         prevProps.cellWidth !== nextProps.cellWidth ||

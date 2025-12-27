@@ -4,10 +4,8 @@ import type { ChangeEvent, InputHTMLAttributes } from "react"
 import { css } from "@emotion/css"
 import styled from "@emotion/styled"
 
-export interface TextInputProps extends Omit<
-    InputHTMLAttributes<HTMLInputElement>,
-    "onChange"
-> {
+export interface TextInputProps
+    extends Omit<InputHTMLAttributes<HTMLInputElement>, "onChange"> {
     label?: string
     errorMessage?: string
     handleChange?: (value: string) => void
