@@ -1,6 +1,7 @@
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 
 import { useQueryClient } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 
 import { axiosClient } from "@/libs/axios"
@@ -9,13 +10,18 @@ import { clearQueryCache } from "@/libs/offline"
 export default function LoginSuccessPage() {
     const navigate = useNavigate()
     const qc = useQueryClient()
+    const { i18n } = useTranslation()
+    const isMounted = useRef(true)
 
     useEffect(() => {
+        isMounted.current = true
+
         const handleLoginSuccess = async () => {
             const hash = window.location.hash.substring(1)
             const params = new URLSearchParams(hash)
             const accessToken = params.get("accessToken")
             const refreshToken = params.get("refreshToken")
+            const lang = i18n.resolvedLanguage || "ko"
 
             if (accessToken && refreshToken) {
                 if (navigator.userAgent.includes("otl-app")) {
@@ -29,7 +35,7 @@ export default function LoginSuccessPage() {
                 qc.removeQueries({ queryKey: ["/timetables"] })
 
                 await qc.prefetchQuery({
-                    queryKey: ["/users/info", null, "ko"],
+                    queryKey: ["/users/info", null, lang],
                     queryFn: async () => {
                         const { data } = await axiosClient.get("/api/v2/users/info")
                         return data
@@ -50,7 +56,7 @@ export default function LoginSuccessPage() {
                                         year: latestSemester.year,
                                         semester: latestSemester.semester,
                                     },
-                                    "ko",
+                                    lang,
                                 ],
                                 queryFn: async () => {
                                     const { data } = await axiosClient.get(
@@ -67,16 +73,24 @@ export default function LoginSuccessPage() {
                             })
                         }
                     }
-                } catch {}
+                } catch (error) {
+                    console.error("Failed to prefetch timetable:", error)
+                }
 
-                navigate("/", { replace: true })
-            } else {
+                if (isMounted.current) {
+                    navigate("/", { replace: true })
+                }
+            } else if (isMounted.current) {
                 navigate("/", { replace: true })
             }
         }
 
         handleLoginSuccess()
-    }, [navigate, qc])
+
+        return () => {
+            isMounted.current = false
+        }
+    }, [navigate, qc, i18n.resolvedLanguage])
 
     return null
 }
