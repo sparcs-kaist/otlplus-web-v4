@@ -97,12 +97,7 @@ function Footer() {
                 gap={0}
                 padding="0px 20px 55px 20px"
             >
-                <FlexWrapper
-                    direction="row"
-                    justify="center"
-                    align="center"
-                    gap={127}
-                >
+                <FlexWrapper direction="row" justify="center" align="center" gap={127}>
                     <StyledImg src="/headerIcon.png" />
                     <FlexWrapper
                         direction="row"
