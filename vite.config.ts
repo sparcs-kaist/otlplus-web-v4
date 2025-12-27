@@ -6,6 +6,7 @@ import tsconfigPaths from "vite-tsconfig-paths"
 import { APIConstructor } from "./plugin/api-constructor"
 
 export default defineConfig({
+    base: process.env.VITE_BASE_PATH || "/",
     plugins: [
         reactRouter(),
         tsconfigPaths(),
