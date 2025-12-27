@@ -1,3 +1,5 @@
+import { memo } from "react"
+
 import styled from "@emotion/styled"
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline"
 import { ThemeProvider, createTheme } from "@mui/material"
@@ -58,4 +60,4 @@ const Icon: React.FC<IconProps> = ({
     )
 }
 
-export default Icon
+export default memo(Icon)

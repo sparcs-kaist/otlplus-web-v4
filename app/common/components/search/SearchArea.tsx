@@ -212,7 +212,7 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
                                 $paddingTop={9}
                                 onClick={handleReset}
                             >
-                                <Typography>취소</Typography>
+                                <Typography>{t("common.search.cancel")}</Typography>
                             </Button>
                             <Button
                                 $paddingLeft={24}
@@ -222,7 +222,7 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
                                     handleSubmit(chipsOptions, value)
                                 }}
                             >
-                                <Typography>검색</Typography>
+                                <Typography>{t("common.search.submit")}</Typography>
                             </Button>
                         </FlexWrapper>
                     </FlexWrapper>

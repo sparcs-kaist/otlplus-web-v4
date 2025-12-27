@@ -1,0 +1,80 @@
+name: PR Preview Deploy
+
+on:
+    pull_request:
+        branches: [main, rc]
+        types: [opened, synchronize, reopened]
+
+env:
+    NODE_VERSION: 20
+
+jobs:
+    deploy-preview:
+        name: Deploy PR Preview
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+            pull-requests: write
+
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: 10.7.1
+
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: pnpm
+
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+
+            - name: Build
+              run: pnpm build
+              env:
+                  VITE_BASE_PATH: /otlplus-web-v4/pr-${{ github.event.pull_request.number }}/
+                  VITE_SENTRY_DSN: ${{ vars.SENTRY_DSN_DEV }}
+                  VITE_APP_API_URL: https://api.otl.dev.sparcs.org
+                  VITE_APP_LOG_LEVEL: info
+                  VITE_DEV_MODE: true
+                  VITE_CHANNELTALK_PLUGIN_KEY: ${{ vars.CHANNELTALK_PLUGIN_KEY }}
+
+            - name: Copy index.html to 404.html for SPA routing
+              run: cp build/client/index.html build/client/404.html
+
+            - name: Deploy to GitHub Pages
+              uses: peaceiris/actions-gh-pages@v4
+              with:
+                  github_token: ${{ secrets.GITHUB_TOKEN }}
+                  publish_dir: ./build/client
+                  destination_dir: pr-${{ github.event.pull_request.number }}
+                  keep_files: true
+
+            - name: Find existing comment
+              uses: peter-evans/find-comment@v3
+              id: find-comment
+              with:
+                  issue-number: ${{ github.event.pull_request.number }}
+                  comment-author: "github-actions[bot]"
+                  body-includes: "PR Preview"
+
+            - name: Create or update comment
+              uses: peter-evans/create-or-update-comment@v4
+              with:
+                  issue-number: ${{ github.event.pull_request.number }}
+                  comment-id: ${{ steps.find-comment.outputs.comment-id }}
+                  edit-mode: replace
+                  body: |
+                      ## PR Preview
+
+                      | Name | Link |
+                      |------|------|
+                      | Preview | https://sparcs-kaist.github.io/otlplus-web-v4/pr-${{ github.event.pull_request.number }}/ |
+                      | Commit | `${{ github.event.pull_request.head.sha }}` |
+
+                      > 배포 후 GitHub Pages 반영까지 1-2분 소요될 수 있습니다.

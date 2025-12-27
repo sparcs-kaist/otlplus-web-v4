@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react"
+import { memo, useEffect, useRef } from "react"
 
 import styled from "@emotion/styled"
 import CloseIcon from "@mui/icons-material/Close"
@@ -117,4 +117,4 @@ const Modal: React.FC<ModalProps> = ({
     )
 }
 
-export default Modal
+export default memo(Modal)

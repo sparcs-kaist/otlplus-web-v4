@@ -1,4 +1,4 @@
-import React from "react"
+import React, { memo } from "react"
 
 import type { Theme } from "@emotion/react"
 import styled from "@emotion/styled"
@@ -82,4 +82,4 @@ const Typography: React.FC<TypographyProps> = ({ children, ...rest }) => (
     <TypographyInner {...rest}>{children}</TypographyInner>
 )
 
-export default Typography
+export default memo(Typography)

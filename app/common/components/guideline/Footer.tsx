@@ -1,3 +1,4 @@
+import * as ChannelService from "@channel.io/channel-web-sdk-loader"
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router"
@@ -17,6 +18,11 @@ const StyledLink = styled.a`
 `
 
 const StyledReactLink = styled(Link)`
+    text-decoration: none;
+`
+
+const StyledTypographyLink = styled(Typography)`
+    cursor: pointer;
     text-decoration: none;
 `
 
@@ -43,6 +49,10 @@ const MobileOnlyWrapper = styled.div`
     }
 `
 
+const FooterSection = styled(FlexWrapper)`
+    width: 118px;
+`
+
 function Footer() {
     const { t } = useTranslation()
     const os = useDetectOS()
@@ -57,16 +67,22 @@ function Footer() {
         const araIOSLink = "https://apps.apple.com/kr/app/ara-for-kaist/id6457209147"
         const araAndroidLink =
             "https://play.google.com/store/apps/details?id=org.sparcs.newara"
+        const buddyIOSLink = "https://apps.apple.com/kr/app/kaist-buddy/id6502600498"
+        const buddyAndroidLink =
+            "https://play.google.com/store/apps/details?id=org.sparcs.buddy"
         switch (service) {
             case "taxi":
-                if (os == "ios" || os == "mac") return taxiIOSLink
+                if (os === "ios" || os === "mac") return taxiIOSLink
                 else return taxiAndroidLink
             case "otl":
-                if (os == "ios" || os == "mac") return otlIOSLink
+                if (os === "ios" || os === "mac") return otlIOSLink
                 else return otlAndroidLink
             case "ara":
-                if (os == "ios" || os == "mac") return araIOSLink
+                if (os === "ios" || os === "mac") return araIOSLink
                 else return araAndroidLink
+            case "buddy":
+                if (os === "ios" || os === "mac") return buddyIOSLink
+                else return buddyAndroidLink
             default:
                 return ""
         }
@@ -79,38 +95,32 @@ function Footer() {
                 justify="center"
                 align="stretch"
                 gap={0}
-                padding="0px 0px 55px 0px"
+                padding="0px 20px 55px 20px"
             >
-                <FlexWrapper
-                    direction="row"
-                    justify="center"
-                    align="flex-start"
-                    gap={100}
-                >
-                    <StyledImg src="/headerIcon.png" />
+                <FlexWrapper direction="row" justify="center" align="center" gap={127}>
+                    <StyledImg src={`${import.meta.env.BASE_URL}headerIcon.png`} />
                     <FlexWrapper
                         direction="row"
                         justify="flex-start"
                         align="flex-start"
-                        gap={100}
-                        padding="12.5px 0"
+                        gap={47}
                     >
                         <MobileDisabledWrapper>
-                            <FlexWrapper
+                            <FooterSection
                                 direction="column"
                                 justify="flex-start"
                                 align="flex-start"
-                                gap={30}
+                                gap={40}
                             >
-                                <Typography type="BigBold" color="Highlight.default">
+                                <Typography type="BiggerBold" color="Highlight.default">
                                     SPARCS
                                 </Typography>
-                                <FlexWrapper direction="column" gap={10}>
+                                <FlexWrapper direction="column" gap={20}>
                                     <StyledLink
                                         href="https://www.sparcs.org/"
                                         target="_blank"
                                     >
-                                        <Typography type="SmallBold" color="Text.default">
+                                        <Typography type="Big" color="Text.dark">
                                             About SPARCS
                                         </Typography>
                                     </StyledLink>
@@ -118,29 +128,29 @@ function Footer() {
                                         href="https://www.instagram.com/sparcs.kaist"
                                         target="_blank"
                                     >
-                                        <Typography type="SmallBold" color="Text.default">
+                                        <Typography type="Big" color="Text.dark">
                                             Instagram
                                         </Typography>
                                     </StyledLink>
                                 </FlexWrapper>
-                            </FlexWrapper>
+                            </FooterSection>
                         </MobileDisabledWrapper>
                         <MobileDisabledWrapper>
-                            <FlexWrapper
+                            <FooterSection
                                 direction="column"
                                 justify="flex-start"
                                 align="flex-start"
-                                gap={30}
+                                gap={40}
                             >
-                                <Typography type="BigBold" color="Highlight.default">
+                                <Typography type="BiggerBold" color="Highlight.default">
                                     Services
                                 </Typography>
-                                <FlexWrapper direction="column" gap={10}>
+                                <FlexWrapper direction="column" gap={20}>
                                     <StyledLink
                                         href="https://newara.sparcs.org/"
                                         target="_blank"
                                     >
-                                        <Typography type="SmallBold" color="Text.default">
+                                        <Typography type="Big" color="Text.dark">
                                             Ara
                                         </Typography>
                                     </StyledLink>
@@ -148,7 +158,7 @@ function Footer() {
                                         href="https://taxi.sparcs.org/"
                                         target="_blank"
                                     >
-                                        <Typography type="SmallBold" color="Text.default">
+                                        <Typography type="Big" color="Text.dark">
                                             Taxi
                                         </Typography>
                                     </StyledLink>
@@ -156,72 +166,70 @@ function Footer() {
                                         href="https://clubs.sparcs.org/"
                                         target="_blank"
                                     >
-                                        <Typography type="SmallBold" color="Text.default">
+                                        <Typography type="Big" color="Text.dark">
                                             Clubs
                                         </Typography>
                                     </StyledLink>
-                                    <Typography type="SmallBold" color="Text.default">
+                                    <Typography type="Big" color="Text.dark">
                                         Students
                                     </Typography>
                                 </FlexWrapper>
-                            </FlexWrapper>
+                            </FooterSection>
                         </MobileDisabledWrapper>
-                        <FlexWrapper
+                        <FooterSection
                             direction="column"
                             justify="flex-start"
                             align="flex-start"
-                            gap={30}
+                            gap={40}
                         >
-                            <Typography type="BigBold" color="Highlight.default">
+                            <Typography type="BiggerBold" color="Highlight.default">
                                 Apps
                             </Typography>
-                            <FlexWrapper direction="column" gap={10}>
-                                {/*{useDetectOS() == "ios" && (*/}
-                                {/*    <StyledLink href="">*/}
-                                {/*        <Typography type="SmallBold" color="Text.default">*/}
-                                {/*            Buddy app*/}
-                                {/*        </Typography>*/}
-                                {/*    </StyledLink>*/}
-                                {/*)}*/}
+                            <FlexWrapper direction="column" gap={20}>
+                                <StyledLink href={serviceLink("buddy")} target="_blank">
+                                    <Typography type="Big" color="Text.dark">
+                                        Buddy app
+                                    </Typography>
+                                </StyledLink>
                                 <StyledLink href={serviceLink("otl")} target="_blank">
-                                    <Typography type="SmallBold" color="Text.default">
+                                    <Typography type="Big" color="Text.dark">
                                         OTL app
                                     </Typography>
                                 </StyledLink>
                                 <StyledLink href={serviceLink("taxi")} target="_blank">
-                                    <Typography type="SmallBold" color="Text.default">
+                                    <Typography type="Big" color="Text.dark">
                                         Taxi
                                     </Typography>
                                 </StyledLink>
                                 <StyledLink href={serviceLink("ara")} target="_blank">
-                                    <Typography type="SmallBold" color="Text.default">
+                                    <Typography type="Big" color="Text.dark">
                                         Ara
                                     </Typography>
                                 </StyledLink>
                             </FlexWrapper>
-                        </FlexWrapper>
-                        <FlexWrapper
+                        </FooterSection>
+                        <FooterSection
                             direction="column"
                             justify="flex-start"
                             align="flex-start"
-                            gap={30}
+                            gap={40}
                         >
-                            <Typography type="BigBold" color="Highlight.default">
+                            <Typography type="BiggerBold" color="Highlight.default">
                                 Resources
                             </Typography>
-                            <FlexWrapper direction="column" gap={10}>
+                            <FlexWrapper direction="column" gap={20}>
                                 <StyledReactLink to="/privacy-policy">
-                                    <Typography type="SmallBold" color="Text.default">
+                                    <Typography type="Big" color="Text.dark">
                                         {t("credits.privacyPolicy")}
                                     </Typography>
                                 </StyledReactLink>
                                 <StyledReactLink to="/license">
-                                    <Typography type="SmallBold" color="Text.default">
+                                    <Typography type="Big" color="Text.dark">
                                         {t("credits.license")}
                                     </Typography>
                                 </StyledReactLink>
                                 <StyledReactLink to="/makers">
-                                    <Typography type="SmallBold" color="Text.default">
+                                    <Typography type="Big" color="Text.dark">
                                         {t("credits.credits")}
                                     </Typography>
                                 </StyledReactLink>
@@ -230,18 +238,24 @@ function Footer() {
                                         href="https://www.instagram.com/sparcs.kaist"
                                         target="_blank"
                                     >
-                                        <Typography type="SmallBold" color="Text.default">
+                                        <Typography type="Big" color="Text.dark">
                                             Instagram
                                         </Typography>
                                     </StyledLink>
                                 </MobileOnlyWrapper>
-                                <StyledReactLink to="">
-                                    <Typography type="SmallBold" color="Text.default">
+                                <StyledTypographyLink>
+                                    <Typography
+                                        type="Big"
+                                        color="Text.dark"
+                                        onClick={() => {
+                                            ChannelService.showMessenger()
+                                        }}
+                                    >
                                         {t("credits.contact")}
                                     </Typography>
-                                </StyledReactLink>
+                                </StyledTypographyLink>
                             </FlexWrapper>
-                        </FlexWrapper>
+                        </FooterSection>
                     </FlexWrapper>
                 </FlexWrapper>
             </FlexWrapper>
