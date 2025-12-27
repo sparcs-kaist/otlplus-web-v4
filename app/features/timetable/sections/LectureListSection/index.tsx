@@ -18,6 +18,7 @@ import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimeBlock } from "@/common/schemas/timeblock"
+import { media } from "@/styles/themes/media"
 import type { getAPIResponseType } from "@/utils/api/getAPIType"
 import { useAPI } from "@/utils/api/useAPI"
 import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
@@ -52,14 +53,78 @@ const DropDownWrapper = styled(FlexWrapper)`
     height: 36px;
 `
 
-const CourseBlockWrapper = styled(FlexWrapper)`
+const CourseFadeOverlayWrapper = styled(FlexWrapper)`
     height: fit-content;
     overflow-y: auto;
+    position: relative;
 
     scrollbar-width: none;
+
     &::-webkit-scrollbar {
         display: none;
     }
+
+    /* 상단/하단 페이드 오버레이: 자식 배경에 가려지지 않도록 컨테이너 위에 표시 */
+    ${media.tablet} {
+        &::before,
+        &::after {
+            width: 100%;
+            content: "";
+            position: sticky;
+            left: 0;
+            right: 0;
+            min-height: 40%;
+            pointer-events: none; /* 클릭을 막지 않도록 */
+            z-index: 1;
+        }
+        &::before {
+            top: 0;
+            /* 현재 배경색 기준으로 페이드 */
+            background: linear-gradient(
+                to bottom,
+                ${({ theme }) => theme.colors.Background.Section.default} 0%,
+                rgba(0, 0, 0, 0) 100%
+            );
+        }
+        &::after {
+            bottom: 0;
+            background: linear-gradient(
+                to top,
+                ${({ theme }) => theme.colors.Background.Section.default} 0%,
+                rgba(0, 0, 0, 0) 100%
+            );
+        }
+    }
+`
+
+const CourseResultWrapper = styled(FlexWrapper)`
+    width: 100%;
+`
+
+const CourseBlockWrapper = styled(FlexWrapper)`
+    height: 100%;
+    flex-grow: 1;
+
+    ${media.tablet} {
+        padding-right: 4px;
+    }
+`
+
+const MobileEmptyDiv = styled.div`
+    flex: 1 0 0;
+    width: 100%;
+`
+
+const MobileLectureSelector = styled.div`
+    width: 0;
+    height: 0;
+    border-top: 7px solid transparent;
+    border-bottom: 7px solid transparent;
+    border-right: 10px solid ${({ theme }) => theme.colors.Text.default};
+    top: 50%;
+    right: 0;
+    position: sticky;
+    transform: translateY(-50%);
 `
 
 const Chip = styled.div<{ isSelected: boolean }>`
@@ -116,8 +181,6 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     const [enabled, setEnabled] = useState(false)
 
     const isTablet = useIsDevice("tablet")
-    const isLaptop = useIsDevice("laptop")
-    const isDesktop = useIsDevice("desktop")
 
     const mergeCoursesById = useCallback((response?: GETLecturesResponse) => {
         if (!response) return response
@@ -192,6 +255,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     const [sortOption, setSortOption] = useState<number>(0)
     const wrapperRef = useRef<HTMLDivElement>(null)
     const outerRef = useRef<HTMLDivElement>(null)
+    const courseResultRef = useRef<HTMLDivElement>(null)
 
     const [isWishlist, setIsWishlist] = useState<boolean>(false)
 
@@ -304,6 +368,69 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
         return () => document.removeEventListener("mousedown", handleClickOutside)
     }, [])
 
+    // 모든 lectures를 flat 배열로 만들어 인덱스로 접근
+    const allLectures = React.useMemo(() => {
+        return searchResult.courses.flatMap((course) => course.lectures)
+    }, [searchResult.courses])
+
+    // 태블릿에서 스크롤 시 MobileLectureSelector 위치의 lecture를 hoveredLecture로 설정
+    const handleMobileScroll = useCallback(() => {
+        if (!isTablet || !courseResultRef.current) return
+
+        const container = courseResultRef.current
+        const containerRect = container.getBoundingClientRect()
+        const selectorY = containerRect.top + containerRect.height / 2
+
+        // MobileLectureSelector 위치에서 왼쪽으로 조금 이동한 지점에서 요소 찾기
+        const element = document.elementFromPoint(containerRect.left + 50, selectorY)
+
+        if (!element) return
+
+        // data-lecture-id 속성을 가진 가장 가까운 부모 요소 찾기
+        const lectureElement = element.closest("[data-lecture-id]")
+        if (lectureElement) {
+            const lectureId = parseInt(
+                lectureElement.getAttribute("data-lecture-id") || "",
+                10,
+            )
+            const lecture = allLectures.find((lec) => lec.id === lectureId)
+            if (lecture) {
+                setHoveredLecture([lecture])
+            }
+        }
+    }, [isTablet, allLectures, setHoveredLecture, setSelectedLecture])
+
+    useEffect(() => {
+        if (!isTablet || !courseResultRef.current) return
+
+        const container = courseResultRef.current
+        container.addEventListener("scroll", handleMobileScroll)
+
+        return () => {
+            container.removeEventListener("scroll", handleMobileScroll)
+        }
+    }, [isTablet, handleMobileScroll])
+
+    // 검색 결과가 로드되면 초기 감지 실행
+    useEffect(() => {
+        if (!isTablet || searchResult.courses.length === 0) return
+
+        // DOM이 렌더링된 후 실행되도록 requestAnimationFrame 두 번 사용
+        let rafId1: number
+        let rafId2: number
+
+        rafId1 = requestAnimationFrame(() => {
+            rafId2 = requestAnimationFrame(() => {
+                handleMobileScroll()
+            })
+        })
+
+        return () => {
+            cancelAnimationFrame(rafId1)
+            cancelAnimationFrame(rafId2)
+        }
+    }, [isTablet, searchResult.courses, handleMobileScroll])
+
     const handleLikeClick = async (wish: boolean, lectureId: number) => {
         if (status === "idle") return
 
@@ -395,33 +522,39 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                 )}
             </FlexWrapper>
             {searchResult.courses.length !== 0 ? (
-                <CourseBlockWrapper
+                <CourseFadeOverlayWrapper
                     direction="column"
-                    gap={12}
-                    ref={wrapperRef}
-                    style={isTablet ? { flex: "0 0 auto" } : {}}
+                    gap={0}
+                    ref={courseResultRef}
                 >
-                    {searchResult.courses.map((course) => (
-                        <LectureListBlock
-                            key={course.id}
-                            course={course}
-                            selectedLecture={selectedLecture}
-                            hoveredLecture={hoveredLecture}
-                            isInWish={isInWish}
-                            isWishlist={isWishlist}
-                            currentTimetableId={currentTimetableId}
-                            timetableLectures={timetableLectures}
-                            isAddTimetablePending={addTimetable.isPending}
-                            setHoveredLecture={setHoveredLecture}
-                            setSelectedLecture={setSelectedLecture}
-                            handleLikeClick={handleLikeClick}
-                            handleAddToTimetable={handleAddToTimetable}
-                            t={t}
-                        />
-                    ))}
+                    <CourseResultWrapper direction="row" gap={0}>
+                        <CourseBlockWrapper direction="column" gap={12} ref={wrapperRef}>
+                            {searchResult.courses.map((course) => (
+                                <LectureListBlock
+                                    key={course.id}
+                                    course={course}
+                                    selectedLecture={selectedLecture}
+                                    hoveredLecture={hoveredLecture}
+                                    isInWish={isInWish}
+                                    isWishlist={isWishlist}
+                                    currentTimetableId={currentTimetableId}
+                                    timetableLectures={timetableLectures}
+                                    isAddTimetablePending={addTimetable.isPending}
+                                    setHoveredLecture={setHoveredLecture}
+                                    setSelectedLecture={setSelectedLecture}
+                                    handleLikeClick={handleLikeClick}
+                                    handleAddToTimetable={handleAddToTimetable}
+                                    t={t}
+                                />
+                            ))}
 
-                    {!isWishlist && query.hasNextPage && <LoadingCircle ref={ref} />}
-                </CourseBlockWrapper>
+                            {!isWishlist && query.hasNextPage && (
+                                <LoadingCircle ref={ref} />
+                            )}
+                        </CourseBlockWrapper>
+                        {isTablet && <MobileLectureSelector />}
+                    </CourseResultWrapper>
+                </CourseFadeOverlayWrapper>
             ) : (
                 <NoResultText type={"Bigger"} color={"Text.placeholder"}>
                     {t("dictionary.noResults")}
