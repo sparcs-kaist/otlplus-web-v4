@@ -89,7 +89,6 @@ function ReviewWritingBlock({
     })
 
     useEffect(() => {
-        console.log(lectureId)
         if (userReviewsQuery.data) {
             const existingReview = userReviewsQuery.data.reviews.find(
                 (review) => review.lectureId === lectureId,

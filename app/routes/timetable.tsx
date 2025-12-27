@@ -5,6 +5,7 @@ import styled from "@emotion/styled"
 import SearchIcon from "@mui/icons-material/Search"
 import { useQueryClient } from "@tanstack/react-query"
 
+import Modal from "@/common/components/Modal"
 import StyledDivider from "@/common/components/StyledDivider"
 import { type SemesterEnum } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
@@ -431,6 +432,28 @@ export default function Timetable() {
                     </TimetableInfoArea>
                 </Block>
             </ContentsAreaWrapper>
+            {isTablet && selected && (
+                <Modal
+                    isOpen={isTablet && Boolean(selected)}
+                    onClose={() => {}}
+                    fullScreen={true}
+                    header={false}
+                >
+                    <LectureDetailSection
+                        selectedLecture={
+                            selected ? selected : hover?.length == 1 ? hover[0] : null
+                        }
+                        year={year}
+                        semester={semesterEnum}
+                        onMobileModalClose={() => {
+                            setHover(null)
+                            setSelected(null)
+                        }}
+                        currentTimetableId={currentTimetableId}
+                        timetableLectures={currentTimetableLectures}
+                    />
+                </Modal>
+            )}
         </TimetableWrapper>
     )
 }

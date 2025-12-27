@@ -373,11 +373,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                     }}
                     style={{ paddingBlock: 10 }}
                 >
-                    <Icon
-                        size={15}
-                        color={theme.colors.Highlight.default}
-                        onClick={() => {}}
-                    >
+                    <Icon size={15} color={theme.colors.Highlight.default}>
                         {isWishlist ? <FavoriteIcon /> : <FavoriteBorderIcon />}
                     </Icon>
                     <Typography type={"Normal"} color={"Highlight.default"}>
