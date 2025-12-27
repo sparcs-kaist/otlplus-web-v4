@@ -1,253 +1,256 @@
 name: Deploy to CloudFront
 
 on:
-  workflow_dispatch:
-    inputs:
-      tag_name:
-        description: '배포할 태그 이름 (예: v1.0.0)'
-        required: true
-        type: string
-      environment:
-        description: '배포 환경'
-        required: true
-        type: choice
-        options:
-          - production
-          - dev
-        default: production
+    workflow_dispatch:
+        inputs:
+            tag_name:
+                description: "배포할 태그 이름 (예: v1.0.0)"
+                required: true
+                type: string
+            environment:
+                description: "배포 환경"
+                required: true
+                type: choice
+                options:
+                    - production
+                    - dev
+                default: production
 
 env:
-  AWS_REGION: ap-northeast-2
-  S3_BUCKET_PROD: otl.sparcs.org-1
-  S3_BUCKET_DEV: otl-plus-dev
-  CLOUDFRONT_DIST_ID_PROD: E20OSZOEZVN51O
+    AWS_REGION: ap-northeast-2
+    S3_BUCKET_PROD: otl.sparcs.org-1
+    S3_BUCKET_DEV: otl-plus-dev
+    CLOUDFRONT_DIST_ID_PROD: E20OSZOEZVN51O
 
 jobs:
-  update-cloudfront:
-    name: Update CloudFront Origin Path
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    
-    steps:
-      - name: Notify Slack - Deploy Started
-        id: slack-start
-        uses: slackapi/slack-github-action@v2.1.0
-        with:
-          method: chat.postMessage
-          token: ${{ secrets.SLACK_BOT_TOKEN }}
-          payload: |
-            channel: ${{ secrets.SLACK_CHANNEL_ID }}
-            text: "🚀 *OTL+ CloudFront 배포 시작*"
-            blocks:
-              - type: section
-                text:
-                  type: mrkdwn
-                  text: "🚀 *OTL+ CloudFront 배포 시작*"
-              - type: section
-                fields:
-                  - type: mrkdwn
-                    text: "*Environment:*\n${{ inputs.environment }}"
-                  - type: mrkdwn
-                    text: "*Tag:*\n`${{ inputs.tag_name }}`"
-                  - type: mrkdwn
-                    text: "*Triggered by:*\n${{ github.actor }}"
-                  - type: mrkdwn
-                    text: "*Type:*\nManual Dispatch"
-              - type: context
-                elements:
-                  - type: mrkdwn
-                    text: "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Workflow>"
+    update-cloudfront:
+        name: Update CloudFront Origin Path
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
 
-      - name: Checkout repository
-        uses: actions/checkout@v4
+        steps:
+            - name: Notify Slack - Deploy Started
+              id: slack-start
+              continue-on-error: true
+              uses: slackapi/slack-github-action@v2.1.0
+              with:
+                  method: chat.postMessage
+                  token: ${{ secrets.SLACK_BOT_TOKEN }}
+                  payload: |
+                      channel: ${{ secrets.SLACK_CHANNEL_ID }}
+                      text: "🚀 *OTL+ CloudFront 배포 시작*"
+                      blocks:
+                        - type: section
+                          text:
+                            type: mrkdwn
+                            text: "🚀 *OTL+ CloudFront 배포 시작*"
+                        - type: section
+                          fields:
+                            - type: mrkdwn
+                              text: "*Environment:*\n${{ inputs.environment }}"
+                            - type: mrkdwn
+                              text: "*Tag:*\n`${{ inputs.tag_name }}`"
+                            - type: mrkdwn
+                              text: "*Triggered by:*\n${{ github.actor }}"
+                            - type: mrkdwn
+                              text: "*Type:*\nManual Dispatch"
+                        - type: context
+                          elements:
+                            - type: mrkdwn
+                              text: "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Workflow>"
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
+            - name: Checkout repository
+              uses: actions/checkout@v4
 
-      - name: Set environment variables
-        id: set-env
-        run: |
-          if [ "${{ inputs.environment }}" = "production" ]; then
-            echo "s3_bucket=${{ env.S3_BUCKET_PROD }}" >> $GITHUB_OUTPUT
-            echo "cloudfront_dist_id=${{ env.CLOUDFRONT_DIST_ID_PROD }}" >> $GITHUB_OUTPUT
-          else
-            echo "s3_bucket=${{ env.S3_BUCKET_DEV }}" >> $GITHUB_OUTPUT
-            echo "cloudfront_dist_id=${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_DEV }}" >> $GITHUB_OUTPUT
-          fi
+            - name: Configure AWS credentials
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  aws-region: ${{ env.AWS_REGION }}
 
-      - name: Verify S3 version exists
-        run: |
-          TAG_PATH="${{ inputs.tag_name }}"
-          S3_BUCKET="${{ steps.set-env.outputs.s3_bucket }}"
-          
-          echo "📦 S3 버킷에서 버전 확인 중: s3://$S3_BUCKET/$TAG_PATH/"
-          
-          # S3에 해당 경로가 존재하는지 확인
-          if aws s3 ls "s3://$S3_BUCKET/$TAG_PATH/" --recursive | head -n 1; then
-            echo "✅ 버전 $TAG_PATH 가 S3에 존재합니다."
-          else
-            echo "❌ 오류: 버전 $TAG_PATH 가 S3 버킷에 존재하지 않습니다!"
-            echo "배포 가능한 버전 목록:"
-            aws s3 ls "s3://$S3_BUCKET/" | grep "PRE" || echo "버전을 찾을 수 없습니다."
-            exit 1
-          fi
+            - name: Set environment variables
+              id: set-env
+              run: |
+                  if [ "${{ inputs.environment }}" = "production" ]; then
+                    echo "s3_bucket=${{ env.S3_BUCKET_PROD }}" >> $GITHUB_OUTPUT
+                    echo "cloudfront_dist_id=${{ env.CLOUDFRONT_DIST_ID_PROD }}" >> $GITHUB_OUTPUT
+                  else
+                    echo "s3_bucket=${{ env.S3_BUCKET_DEV }}" >> $GITHUB_OUTPUT
+                    echo "cloudfront_dist_id=${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_DEV }}" >> $GITHUB_OUTPUT
+                  fi
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+            - name: Verify S3 version exists
+              run: |
+                  TAG_PATH="${{ inputs.tag_name }}"
+                  S3_BUCKET="${{ steps.set-env.outputs.s3_bucket }}"
 
-      - name: Install boto3
-        run: pip install boto3
+                  echo "📦 S3 버킷에서 버전 확인 중: s3://$S3_BUCKET/$TAG_PATH/"
 
-      - name: Update CloudFront Origin Path
-        env:
-          CLOUDFRONT_DIST_ID: ${{ steps.set-env.outputs.cloudfront_dist_id }}
-          S3_BUCKET: ${{ steps.set-env.outputs.s3_bucket }}
-          TAG_NAME: ${{ inputs.tag_name }}
-        run: |
-          python - <<'EOF'
-          import boto3
-          import os
-          import json
-          import time
-          
-          cloudfront = boto3.client('cloudfront', region_name=os.environ['AWS_REGION'])
-          dist_id = os.environ['CLOUDFRONT_DIST_ID']
-          s3_bucket = os.environ['S3_BUCKET']
-          tag_name = os.environ['TAG_NAME']
-          new_origin_path = f"/{tag_name}"
-          
-          print(f"🔍 CloudFront Distribution {dist_id} 설정 가져오는 중...")
-          
-          # 현재 설정 가져오기
-          response = cloudfront.get_distribution_config(Id=dist_id)
-          config = response['DistributionConfig']
-          etag = response['ETag']
-          
-          # S3 Origin 찾기 및 업데이트
-          updated = False
-          for origin in config['Origins']['Items']:
-              if s3_bucket in origin.get('Id', '') or s3_bucket in origin.get('DomainName', ''):
-                  current_path = origin.get('OriginPath', '')
-                  print(f"📍 현재 Origin Path: {current_path}")
-                  print(f"🎯 새로운 Origin Path: {new_origin_path}")
-                  
-                  origin['OriginPath'] = new_origin_path
-                  updated = True
-                  target_origin_id = origin['Id']
-                  break
-          
-          if not updated:
-              print(f"❌ S3 버킷 '{s3_bucket}'에 해당하는 Origin을 찾을 수 없습니다.")
-              print("현재 설정된 Origins:")
-              for origin in config['Origins']['Items']:
-                  print(f"  - ID: {origin['Id']}, Domain: {origin['DomainName']}")
-              exit(1)
-          
-          # CloudFront 설정 업데이트
-          print(f"🚀 CloudFront Distribution 업데이트 중...")
-          update_response = cloudfront.update_distribution(
-              Id=dist_id,
-              DistributionConfig=config,
-              IfMatch=etag
-          )
-          
-          print(f"✅ CloudFront Origin Path가 성공적으로 업데이트되었습니다!")
-          print(f"   Origin ID: {target_origin_id}")
-          print(f"   New Path: {new_origin_path}")
-          print(f"   Status: {update_response['Distribution']['Status']}")
-          
-          EOF
+                  # S3에 해당 경로가 존재하는지 확인
+                  if aws s3 ls "s3://$S3_BUCKET/$TAG_PATH/" --recursive | head -n 1; then
+                    echo "✅ 버전 $TAG_PATH 가 S3에 존재합니다."
+                  else
+                    echo "❌ 오류: 버전 $TAG_PATH 가 S3 버킷에 존재하지 않습니다!"
+                    echo "배포 가능한 버전 목록:"
+                    aws s3 ls "s3://$S3_BUCKET/" | grep "PRE" || echo "버전을 찾을 수 없습니다."
+                    exit 1
+                  fi
 
-      - name: Invalidate CloudFront cache
-        env:
-          CLOUDFRONT_DIST_ID: ${{ steps.set-env.outputs.cloudfront_dist_id }}
-          TAG_NAME: ${{ inputs.tag_name }}
-        run: |
-          echo "🗑️ CloudFront 캐시 무효화 중..."
-          
-          INVALIDATION_ID=$(aws cloudfront create-invalidation \
-            --distribution-id $CLOUDFRONT_DIST_ID \
-            --paths "/*" \
-            --query 'Invalidation.Id' \
-            --output text)
-          
-          echo "✅ 캐시 무효화 요청 완료!"
-          echo "   Invalidation ID: $INVALIDATION_ID"
-          echo "   Distribution ID: $CLOUDFRONT_DIST_ID"
-          echo ""
-          echo "⏳ CloudFront 전파는 몇 분 정도 소요될 수 있습니다."
-          echo ""
-          echo "🔗 CloudFront 콘솔: https://console.aws.amazon.com/cloudfront/v3/home?region=us-east-1#/distributions/$CLOUDFRONT_DIST_ID"
+            - name: Setup Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: "3.11"
 
-      - name: Deployment Summary
-        run: |
-          echo "## 🎉 배포 완료!" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 배포 정보" >> $GITHUB_STEP_SUMMARY
-          echo "- **환경**: ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
-          echo "- **태그**: \`${{ inputs.tag_name }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **S3 버킷**: \`${{ steps.set-env.outputs.s3_bucket }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **CloudFront Distribution**: \`${{ steps.set-env.outputs.cloudfront_dist_id }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Origin Path**: \`/${{ inputs.tag_name }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### 다음 단계" >> $GITHUB_STEP_SUMMARY
-          echo "CloudFront 전파가 완료될 때까지 몇 분 기다려주세요. 배포 상태는 [CloudFront 콘솔](https://console.aws.amazon.com/cloudfront/v3/home?region=us-east-1#/distributions/${{ steps.set-env.outputs.cloudfront_dist_id }})에서 확인할 수 있습니다." >> $GITHUB_STEP_SUMMARY
+            - name: Install boto3
+              run: pip install boto3
 
-      - name: Notify Slack - Deploy Success
-        if: success()
-        uses: slackapi/slack-github-action@v2.1.0
-        with:
-          method: chat.postMessage
-          token: ${{ secrets.SLACK_BOT_TOKEN }}
-          payload: |
-            channel: ${{ secrets.SLACK_CHANNEL_ID }}
-            thread_ts: "${{ fromJson(steps.slack-start.outputs.response).ts }}"
-            text: "✅ *OTL+ CloudFront 배포 완료*"
-            blocks:
-              - type: section
-                text:
-                  type: mrkdwn
-                  text: "✅ *배포 완료* - 성공 🎉"
-              - type: section
-                fields:
-                  - type: mrkdwn
-                    text: "*Tag:*\n`${{ inputs.tag_name }}`"
-                  - type: mrkdwn
-                    text: "*Environment:*\n${{ inputs.environment }}"
-              - type: context
-                elements:
-                  - type: mrkdwn
-                    text: "<${{ inputs.environment == 'production' && 'https://otl.sparcs.org' || 'https://otl.dev.sparcs.org' }}|View Site> | <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Workflow>"
+            - name: Update CloudFront Origin Path
+              env:
+                  CLOUDFRONT_DIST_ID: ${{ steps.set-env.outputs.cloudfront_dist_id }}
+                  S3_BUCKET: ${{ steps.set-env.outputs.s3_bucket }}
+                  TAG_NAME: ${{ inputs.tag_name }}
+              run: |
+                  python - <<'EOF'
+                  import boto3
+                  import os
+                  import json
+                  import time
 
-      - name: Notify Slack - Deploy Failed
-        if: failure()
-        uses: slackapi/slack-github-action@v2.1.0
-        with:
-          method: chat.postMessage
-          token: ${{ secrets.SLACK_BOT_TOKEN }}
-          payload: |
-            channel: ${{ secrets.SLACK_CHANNEL_ID }}
-            thread_ts: "${{ fromJson(steps.slack-start.outputs.response).ts }}"
-            text: "❌ *OTL+ CloudFront 배포 실패*"
-            blocks:
-              - type: section
-                text:
-                  type: mrkdwn
-                  text: "❌ *배포 실패* - 실패 ⚠️"
-              - type: section
-                fields:
-                  - type: mrkdwn
-                    text: "*Tag:*\n`${{ inputs.tag_name }}`"
-                  - type: mrkdwn
-                    text: "*Environment:*\n${{ inputs.environment }}"
-              - type: context
-                elements:
-                  - type: mrkdwn
-                    text: "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Workflow Logs>"
+                  cloudfront = boto3.client('cloudfront', region_name=os.environ['AWS_REGION'])
+                  dist_id = os.environ['CLOUDFRONT_DIST_ID']
+                  s3_bucket = os.environ['S3_BUCKET']
+                  tag_name = os.environ['TAG_NAME']
+                  new_origin_path = f"/{tag_name}"
+
+                  print(f"🔍 CloudFront Distribution {dist_id} 설정 가져오는 중...")
+
+                  # 현재 설정 가져오기
+                  response = cloudfront.get_distribution_config(Id=dist_id)
+                  config = response['DistributionConfig']
+                  etag = response['ETag']
+
+                  # S3 Origin 찾기 및 업데이트
+                  updated = False
+                  for origin in config['Origins']['Items']:
+                      if s3_bucket in origin.get('Id', '') or s3_bucket in origin.get('DomainName', ''):
+                          current_path = origin.get('OriginPath', '')
+                          print(f"📍 현재 Origin Path: {current_path}")
+                          print(f"🎯 새로운 Origin Path: {new_origin_path}")
+                          
+                          origin['OriginPath'] = new_origin_path
+                          updated = True
+                          target_origin_id = origin['Id']
+                          break
+
+                  if not updated:
+                      print(f"❌ S3 버킷 '{s3_bucket}'에 해당하는 Origin을 찾을 수 없습니다.")
+                      print("현재 설정된 Origins:")
+                      for origin in config['Origins']['Items']:
+                          print(f"  - ID: {origin['Id']}, Domain: {origin['DomainName']}")
+                      exit(1)
+
+                  # CloudFront 설정 업데이트
+                  print(f"🚀 CloudFront Distribution 업데이트 중...")
+                  update_response = cloudfront.update_distribution(
+                      Id=dist_id,
+                      DistributionConfig=config,
+                      IfMatch=etag
+                  )
+
+                  print(f"✅ CloudFront Origin Path가 성공적으로 업데이트되었습니다!")
+                  print(f"   Origin ID: {target_origin_id}")
+                  print(f"   New Path: {new_origin_path}")
+                  print(f"   Status: {update_response['Distribution']['Status']}")
+
+                  EOF
+
+            - name: Invalidate CloudFront cache
+              env:
+                  CLOUDFRONT_DIST_ID: ${{ steps.set-env.outputs.cloudfront_dist_id }}
+                  TAG_NAME: ${{ inputs.tag_name }}
+              run: |
+                  echo "🗑️ CloudFront 캐시 무효화 중..."
+
+                  INVALIDATION_ID=$(aws cloudfront create-invalidation \
+                    --distribution-id $CLOUDFRONT_DIST_ID \
+                    --paths "/*" \
+                    --query 'Invalidation.Id' \
+                    --output text)
+
+                  echo "✅ 캐시 무효화 요청 완료!"
+                  echo "   Invalidation ID: $INVALIDATION_ID"
+                  echo "   Distribution ID: $CLOUDFRONT_DIST_ID"
+                  echo ""
+                  echo "⏳ CloudFront 전파는 몇 분 정도 소요될 수 있습니다."
+                  echo ""
+                  echo "🔗 CloudFront 콘솔: https://console.aws.amazon.com/cloudfront/v3/home?region=us-east-1#/distributions/$CLOUDFRONT_DIST_ID"
+
+            - name: Deployment Summary
+              run: |
+                  echo "## 🎉 배포 완료!" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "### 배포 정보" >> $GITHUB_STEP_SUMMARY
+                  echo "- **환경**: ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+                  echo "- **태그**: \`${{ inputs.tag_name }}\`" >> $GITHUB_STEP_SUMMARY
+                  echo "- **S3 버킷**: \`${{ steps.set-env.outputs.s3_bucket }}\`" >> $GITHUB_STEP_SUMMARY
+                  echo "- **CloudFront Distribution**: \`${{ steps.set-env.outputs.cloudfront_dist_id }}\`" >> $GITHUB_STEP_SUMMARY
+                  echo "- **Origin Path**: \`/${{ inputs.tag_name }}\`" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "### 다음 단계" >> $GITHUB_STEP_SUMMARY
+                  echo "CloudFront 전파가 완료될 때까지 몇 분 기다려주세요. 배포 상태는 [CloudFront 콘솔](https://console.aws.amazon.com/cloudfront/v3/home?region=us-east-1#/distributions/${{ steps.set-env.outputs.cloudfront_dist_id }})에서 확인할 수 있습니다." >> $GITHUB_STEP_SUMMARY
+
+            - name: Notify Slack - Deploy Success
+              if: success()
+              continue-on-error: true
+              uses: slackapi/slack-github-action@v2.1.0
+              with:
+                  method: chat.postMessage
+                  token: ${{ secrets.SLACK_BOT_TOKEN }}
+                  payload: |
+                      channel: ${{ secrets.SLACK_CHANNEL_ID }}
+                      thread_ts: "${{ fromJson(steps.slack-start.outputs.response).ts }}"
+                      text: "✅ *OTL+ CloudFront 배포 완료*"
+                      blocks:
+                        - type: section
+                          text:
+                            type: mrkdwn
+                            text: "✅ *배포 완료* - 성공 🎉"
+                        - type: section
+                          fields:
+                            - type: mrkdwn
+                              text: "*Tag:*\n`${{ inputs.tag_name }}`"
+                            - type: mrkdwn
+                              text: "*Environment:*\n${{ inputs.environment }}"
+                        - type: context
+                          elements:
+                            - type: mrkdwn
+                              text: "<${{ inputs.environment == 'production' && 'https://otl.sparcs.org' || 'https://otl.dev.sparcs.org' }}|View Site> | <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Workflow>"
+
+            - name: Notify Slack - Deploy Failed
+              if: failure()
+              continue-on-error: true
+              uses: slackapi/slack-github-action@v2.1.0
+              with:
+                  method: chat.postMessage
+                  token: ${{ secrets.SLACK_BOT_TOKEN }}
+                  payload: |
+                      channel: ${{ secrets.SLACK_CHANNEL_ID }}
+                      thread_ts: "${{ fromJson(steps.slack-start.outputs.response).ts }}"
+                      text: "❌ *OTL+ CloudFront 배포 실패*"
+                      blocks:
+                        - type: section
+                          text:
+                            type: mrkdwn
+                            text: "❌ *배포 실패* - 실패 ⚠️"
+                        - type: section
+                          fields:
+                            - type: mrkdwn
+                              text: "*Tag:*\n`${{ inputs.tag_name }}`"
+                            - type: mrkdwn
+                              text: "*Environment:*\n${{ inputs.environment }}"
+                        - type: context
+                          elements:
+                            - type: mrkdwn
+                              text: "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Workflow Logs>"
