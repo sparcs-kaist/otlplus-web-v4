@@ -1,18 +1,30 @@
+import { Suspense, lazy } from "react"
+
 import styled from "@emotion/styled"
 
+import LoadingCircle from "@/common/components/LoadingCircle"
 import Footer from "@/common/components/guideline/Footer"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
-import HallOfFameFeedSection from "@/features/main/sections/HallOfFameFeedSection"
-import LikedMajorFeedSection from "@/features/main/sections/LikedMajorFeedSection"
-import MobileReviewSlideSection from "@/features/main/sections/MobileReviewSlideSection"
-import RecentFeedSection from "@/features/main/sections/RecentFeedSection"
-import ReviewSection from "@/features/main/sections/ReviewSection"
-import ScheduleFeedSection from "@/features/main/sections/ScheduleFeedSection"
-import ScheduleSection from "@/features/main/sections/ScheduleSection"
 import SearchSection from "@/features/main/sections/SearchSection"
-import TimeTableSection from "@/features/main/sections/TimeTableSection"
 import { media } from "@/styles/themes/media"
 import useIsDevice from "@/utils/useIsDevice"
+
+const HallOfFameFeedSection = lazy(
+    () => import("@/features/main/sections/HallOfFameFeedSection"),
+)
+const LikedMajorFeedSection = lazy(
+    () => import("@/features/main/sections/LikedMajorFeedSection"),
+)
+const MobileReviewSlideSection = lazy(
+    () => import("@/features/main/sections/MobileReviewSlideSection"),
+)
+const RecentFeedSection = lazy(() => import("@/features/main/sections/RecentFeedSection"))
+const ReviewSection = lazy(() => import("@/features/main/sections/ReviewSection"))
+const ScheduleFeedSection = lazy(
+    () => import("@/features/main/sections/ScheduleFeedSection"),
+)
+const ScheduleSection = lazy(() => import("@/features/main/sections/ScheduleSection"))
+const TimeTableSection = lazy(() => import("@/features/main/sections/TimeTableSection"))
 
 const MainWrapper = styled(FlexWrapper)`
     margin-top: 60px;
@@ -36,6 +48,19 @@ const SearchSectionWrapper = styled(FlexWrapper)`
     height: 68px;
     z-index: 20;
 `
+
+const SectionFallback = styled(FlexWrapper)`
+    min-height: 200px;
+    width: 100%;
+`
+
+function SectionLoader() {
+    return (
+        <SectionFallback direction="column" align="center" justify="center" gap={0}>
+            <LoadingCircle />
+        </SectionFallback>
+    )
+}
 
 export default function Home() {
     const isMobile = useIsDevice("mobile")
@@ -67,7 +92,9 @@ export default function Home() {
                     >
                         {isLaptop ? (
                             <>
-                                <TimeTableSection />
+                                <Suspense fallback={<SectionLoader />}>
+                                    <TimeTableSection />
+                                </Suspense>
                                 <FlexWrapper
                                     direction={isMobile ? "column" : "row"}
                                     align="stretch"
@@ -80,17 +107,27 @@ export default function Home() {
                                         gap={24}
                                         flex="1 1 0"
                                     >
-                                        <ScheduleSection />
-                                        <ScheduleFeedSection />
-                                        <ReviewSection />
+                                        <Suspense fallback={<SectionLoader />}>
+                                            <ScheduleSection />
+                                        </Suspense>
+                                        <Suspense fallback={<SectionLoader />}>
+                                            <ScheduleFeedSection />
+                                        </Suspense>
+                                        <Suspense fallback={<SectionLoader />}>
+                                            <ReviewSection />
+                                        </Suspense>
                                     </FlexWrapper>
-                                    <MobileReviewSlideSection />
+                                    <Suspense fallback={<SectionLoader />}>
+                                        <MobileReviewSlideSection />
+                                    </Suspense>
                                 </FlexWrapper>
                             </>
                         ) : (
                             <FlexWrapper direction="row" align="stretch" gap={24}>
                                 <FlexWrapper direction="column" align="stretch" gap={0}>
-                                    <TimeTableSection />
+                                    <Suspense fallback={<SectionLoader />}>
+                                        <TimeTableSection />
+                                    </Suspense>
                                 </FlexWrapper>
                                 <FlexWrapper direction="column" align="stretch" gap={24}>
                                     <FlexWrapper
@@ -100,18 +137,30 @@ export default function Home() {
                                         flex="1 1 0"
                                         style={{ width: "418px" }}
                                     >
-                                        <ScheduleSection />
-                                        <ScheduleFeedSection />
-                                        <ReviewSection />
+                                        <Suspense fallback={<SectionLoader />}>
+                                            <ScheduleSection />
+                                        </Suspense>
+                                        <Suspense fallback={<SectionLoader />}>
+                                            <ScheduleFeedSection />
+                                        </Suspense>
+                                        <Suspense fallback={<SectionLoader />}>
+                                            <ReviewSection />
+                                        </Suspense>
                                     </FlexWrapper>
                                 </FlexWrapper>
                             </FlexWrapper>
                         )}
                         {!isLaptop && (
                             <FlexWrapper direction="row" align="stretch" gap={24}>
-                                <RecentFeedSection />
-                                <LikedMajorFeedSection />
-                                <HallOfFameFeedSection />
+                                <Suspense fallback={<SectionLoader />}>
+                                    <RecentFeedSection />
+                                </Suspense>
+                                <Suspense fallback={<SectionLoader />}>
+                                    <LikedMajorFeedSection />
+                                </Suspense>
+                                <Suspense fallback={<SectionLoader />}>
+                                    <HallOfFameFeedSection />
+                                </Suspense>
                             </FlexWrapper>
                         )}
                     </FlexWrapper>
