@@ -59,7 +59,11 @@ const TimeTableSection = () => {
 
     return (
         <StyledWidget direction="column" gap={0} padding="30px" flex="1 1 auto">
-            {status === "idle" ? (
+            {status === "loading" ? (
+                <Typography type="BiggerBold" color="Text.default">
+                    Loading...
+                </Typography>
+            ) : status === "idle" ? (
                 <Typography type="BiggerBold" color="Text.default">
                     로그인을 해주세요
                 </Typography>
