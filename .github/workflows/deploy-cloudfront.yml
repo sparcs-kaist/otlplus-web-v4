@@ -7,14 +7,6 @@ on:
                 description: "배포할 태그 이름 (예: v1.0.0)"
                 required: true
                 type: string
-            environment:
-                description: "배포 환경"
-                required: true
-                type: choice
-                options:
-                    - production
-                    - dev
-                default: production
 
 env:
     AWS_REGION: ap-northeast-2
@@ -23,6 +15,7 @@ jobs:
     update-cloudfront:
         name: Update CloudFront Origin Path
         runs-on: ubuntu-latest
+        environment: production
         permissions:
             contents: read
 
@@ -45,13 +38,11 @@ jobs:
                         - type: section
                           fields:
                             - type: mrkdwn
-                              text: "*Environment:*\n${{ inputs.environment }}"
+                              text: "*Environment:*\nProduction"
                             - type: mrkdwn
                               text: "*Tag:*\n`${{ inputs.tag_name }}`"
                             - type: mrkdwn
                               text: "*Triggered by:*\n${{ github.actor }}"
-                            - type: mrkdwn
-                              text: "*Type:*\nManual Dispatch"
                         - type: context
                           elements:
                             - type: mrkdwn
@@ -60,37 +51,17 @@ jobs:
             - name: Checkout repository
               uses: actions/checkout@v4
 
-            - name: Configure AWS credentials (Production)
-              if: inputs.environment == 'production'
+            - name: Configure AWS credentials
               uses: aws-actions/configure-aws-credentials@v4
               with:
                   aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
                   aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
                   aws-region: ${{ env.AWS_REGION }}
 
-            - name: Configure AWS credentials (Dev)
-              if: inputs.environment == 'dev'
-              uses: aws-actions/configure-aws-credentials@v4
-              with:
-                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV }}
-                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}
-                  aws-region: ${{ env.AWS_REGION }}
-
-            - name: Set environment variables
-              id: set-env
-              run: |
-                  if [ "${{ inputs.environment }}" = "production" ]; then
-                    echo "s3_bucket=${{ vars.S3_BUCKET_PROD }}" >> $GITHUB_OUTPUT
-                    echo "cloudfront_dist_id=${{ vars.CLOUDFRONT_DIST_ID_PROD }}" >> $GITHUB_OUTPUT
-                  else
-                    echo "s3_bucket=${{ vars.S3_BUCKET_DEV }}" >> $GITHUB_OUTPUT
-                    echo "cloudfront_dist_id=${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_DEV }}" >> $GITHUB_OUTPUT
-                  fi
-
             - name: Verify S3 version exists
               run: |
                   TAG_PATH="${{ inputs.tag_name }}"
-                  S3_BUCKET="${{ steps.set-env.outputs.s3_bucket }}"
+                  S3_BUCKET="${{ vars.S3_BUCKET_PROD }}"
 
                   echo "📦 S3 버킷에서 버전 확인 중: s3://$S3_BUCKET/$TAG_PATH/"
 
@@ -114,8 +85,8 @@ jobs:
 
             - name: Update CloudFront Origin Path
               env:
-                  CLOUDFRONT_DIST_ID: ${{ steps.set-env.outputs.cloudfront_dist_id }}
-                  S3_BUCKET: ${{ steps.set-env.outputs.s3_bucket }}
+                  CLOUDFRONT_DIST_ID: ${{ vars.CLOUDFRONT_DIST_ID_PROD }}
+                  S3_BUCKET: ${{ vars.S3_BUCKET_PROD }}
                   TAG_NAME: ${{ inputs.tag_name }}
               run: |
                   python - <<'EOF'
@@ -174,7 +145,7 @@ jobs:
 
             - name: Invalidate CloudFront cache
               env:
-                  CLOUDFRONT_DIST_ID: ${{ steps.set-env.outputs.cloudfront_dist_id }}
+                  CLOUDFRONT_DIST_ID: ${{ vars.CLOUDFRONT_DIST_ID_PROD }}
                   TAG_NAME: ${{ inputs.tag_name }}
               run: |
                   echo "🗑️ CloudFront 캐시 무효화 중..."
@@ -198,14 +169,14 @@ jobs:
                   echo "## 🎉 배포 완료!" >> $GITHUB_STEP_SUMMARY
                   echo "" >> $GITHUB_STEP_SUMMARY
                   echo "### 배포 정보" >> $GITHUB_STEP_SUMMARY
-                  echo "- **환경**: ${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+                  echo "- **환경**: Production" >> $GITHUB_STEP_SUMMARY
                   echo "- **태그**: \`${{ inputs.tag_name }}\`" >> $GITHUB_STEP_SUMMARY
-                  echo "- **S3 버킷**: \`${{ steps.set-env.outputs.s3_bucket }}\`" >> $GITHUB_STEP_SUMMARY
-                  echo "- **CloudFront Distribution**: \`${{ steps.set-env.outputs.cloudfront_dist_id }}\`" >> $GITHUB_STEP_SUMMARY
+                  echo "- **S3 버킷**: \`${{ vars.S3_BUCKET_PROD }}\`" >> $GITHUB_STEP_SUMMARY
+                  echo "- **CloudFront Distribution**: \`${{ vars.CLOUDFRONT_DIST_ID_PROD }}\`" >> $GITHUB_STEP_SUMMARY
                   echo "- **Origin Path**: \`/${{ inputs.tag_name }}\`" >> $GITHUB_STEP_SUMMARY
                   echo "" >> $GITHUB_STEP_SUMMARY
                   echo "### 다음 단계" >> $GITHUB_STEP_SUMMARY
-                  echo "CloudFront 전파가 완료될 때까지 몇 분 기다려주세요. 배포 상태는 [CloudFront 콘솔](https://console.aws.amazon.com/cloudfront/v3/home?region=us-east-1#/distributions/${{ steps.set-env.outputs.cloudfront_dist_id }})에서 확인할 수 있습니다." >> $GITHUB_STEP_SUMMARY
+                  echo "CloudFront 전파가 완료될 때까지 몇 분 기다려주세요. 배포 상태는 [CloudFront 콘솔](https://console.aws.amazon.com/cloudfront/v3/home?region=us-east-1#/distributions/${{ vars.CLOUDFRONT_DIST_ID_PROD }})에서 확인할 수 있습니다." >> $GITHUB_STEP_SUMMARY
 
             - name: Notify Slack - Deploy Success
               if: success()
@@ -228,11 +199,11 @@ jobs:
                             - type: mrkdwn
                               text: "*Tag:*\n`${{ inputs.tag_name }}`"
                             - type: mrkdwn
-                              text: "*Environment:*\n${{ inputs.environment }}"
+                              text: "*Environment:*\nProduction"
                         - type: context
                           elements:
                             - type: mrkdwn
-                              text: "<${{ inputs.environment == 'production' && 'https://otl.sparcs.org' || 'https://otl.dev.sparcs.org' }}|View Site> | <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Workflow>"
+                              text: "<https://otl.sparcs.org|View Site> | <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Workflow>"
 
             - name: Notify Slack - Deploy Failed
               if: failure()
@@ -255,7 +226,7 @@ jobs:
                             - type: mrkdwn
                               text: "*Tag:*\n`${{ inputs.tag_name }}`"
                             - type: mrkdwn
-                              text: "*Environment:*\n${{ inputs.environment }}"
+                              text: "*Environment:*\nProduction"
                         - type: context
                           elements:
                             - type: mrkdwn
