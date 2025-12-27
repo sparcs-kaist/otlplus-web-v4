@@ -68,7 +68,7 @@ jobs:
               env:
                   VITE_SENTRY_DSN: ${{ vars.SENTRY_DSN_DEV }}
                   SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-                  SENTRY_PROJECT: javascript-react
+                  SENTRY_PROJECT: otl-front-v4-dev
                   VITE_APP_API_URL: https://api.otl.dev.sparcs.org
                   VITE_APP_LOG_LEVEL: info
                   VITE_DEV_MODE: true
