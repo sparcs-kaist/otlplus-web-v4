@@ -24,4 +24,11 @@ export const general = {
     exam: "시험",
     completedCourse: "수강완료",
     wishlist: "찜목록",
+    offline: {
+        title: "서버 연결 실패",
+        description: "서버에 연결할 수 없습니다. 인터넷 연결을 확인해 주세요.",
+        goHome: "홈으로 돌아가기",
+        retry: "다시 시도",
+        banner: "오프라인 상태입니다. 시간표는 열람할 수 있습니다.",
+    },
 }
