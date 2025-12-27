@@ -1,0 +1,37 @@
+import{a as M,u as C,b as R,j as n}from"./emotion-react-jsx-runtime.browser.esm-B1jPEyiZ.js";import{r}from"./chunk-UIGDSWPH-C2ktfSeF.js";import{n as u,F as k}from"./FlexWrapper-BDdwpRDn.js";import{e as X,l as T}from"./useIsDevice-2DV0KhTm.js";import g from"./index-H1VbNH0j.js";import z from"./index-D7Yw_S0T.js";import v from"./index-f5jFY1HF.js";import"./env-kInlwooc.js";import"./StyledDivider-B37NlZR4.js";import"./ReviewBlock-c8GlxZub.js";import"./Typography-DRNB4_Lw.js";import"./Widget-Cls_3vn9.js";import"./Trans-f6hodeK5.js";const E=X(M.jsx("path",{d:"M15.41 7.41 14 6l-6 6 6 6 1.41-1.41L10.83 12z"})),F=X(M.jsx("path",{d:"M10 6 8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"})),$=u(k)`
+    flex: 1 1 0;
+    overflow: hidden;
+    position: relative;
+    width: 100%;
+    min-height: 500px;
+    touch-action: pan-y; /* Allow vertical scrolling, but handle horizontal swipes manually */
+`,L=u.div`
+    display: flex;
+    flex-direction: row;
+    width: 500%;
+    height: 100%;
+    transition: ${({transition:o})=>o};
+    transform: translateX(
+        calc(${({index:o})=>`-${o*20}%`} + ${({offset:o})=>`${o}px`})
+    );
+`,D=u.div`
+    display: flex;
+    width: 20%;
+    height: 100%;
+    flex-shrink: 0;
+    overflow-y: hidden;
+`,w=u.div`
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    ${({position:o})=>o==="left"?"left: 8px;":"right: 8px;"}
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+`;function _(){const o=C(),[l,a]=r.useState(1),[b,i]=r.useState("transform 0.3s ease-in-out"),[s,h]=r.useState(!1),[c,f]=r.useState(null),[m,d]=r.useState(null),[j,p]=r.useState(0),y=r.useRef(null),x=()=>{s||(h(!0),i("transform 0.3s ease-in-out"),a(t=>t-1))},S=()=>{s||(h(!0),i("transform 0.3s ease-in-out"),a(t=>t+1))};return r.useEffect(()=>{if(!s)return;const e=setTimeout(()=>{l===0?(i("none"),a(3)):l===4&&(i("none"),a(1)),h(!1)},300);return()=>clearTimeout(e)},[l,s]),R($,{direction:"column",gap:0,align:"stretch",ref:y,onTouchStart:t=>{if(s)return;const e=t.touches[0];e&&(f(e.clientX),d(e.clientX),i("none"))},onTouchMove:t=>{if(c===null)return;const e=t.touches[0];if(!e)return;d(e.clientX);const I=e.clientX-c;p(I)},onTouchEnd:()=>{if(c===null||m===null)return;const t=m-c,e=50;Math.abs(t)>e?t>0?x():S():i("transform 0.3s ease-in-out"),f(null),d(null),p(0),Math.abs(t)<=e&&i("transform 0.3s ease-in-out")},children:[n(L,{index:l,transition:b,offset:j,children:[n(g,{},"clone-last"),n(v,{},"recent"),n(z,{},"liked"),n(g,{},"hall"),n(v,{},"clone-first")].map((t,e)=>n(D,{children:t},e))}),n(w,{position:"left",onClick:x,children:n(T,{size:20,color:o.colors.Text.default,children:n(E,{})})}),n(w,{position:"right",onClick:S,children:n(T,{size:20,color:o.colors.Text.default,children:n(F,{})})})]})}export{_ as default};
+//# sourceMappingURL=index-CL-pMpV-.js.map
