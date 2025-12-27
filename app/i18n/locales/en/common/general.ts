@@ -24,4 +24,12 @@ export const general = {
     exam: "Exam",
     completedCourse: "Completed",
     wishlist: "Wishlist",
+    offline: {
+        title: "Connection Failed",
+        description:
+            "Unable to connect to server. Please check your internet connection.",
+        goHome: "Go Home",
+        retry: "Retry",
+        banner: "You are offline. Timetable is available for viewing.",
+    },
 }

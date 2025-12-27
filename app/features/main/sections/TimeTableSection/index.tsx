@@ -29,7 +29,6 @@ const TimeTableInner = styled(FlexWrapper)`
 const TimeTableSection = () => {
     const { user, status } = useUserStore()
 
-    // needs remove
     const totalRef = useRef<HTMLDivElement>(null)
     const [width, setWidth] = useState(0)
 
@@ -46,6 +45,18 @@ const TimeTableSection = () => {
     const { query: semesters } = useAPI("GET", "/semesters")
 
     useEffect(() => {
+        if (semesters.data && semesters.data.semesters.length > 0) {
+            const latestSemester =
+                semesters.data.semesters[semesters.data.semesters.length - 1]
+            if (!latestSemester) return
+            setMyTimetableParams({
+                year: latestSemester.year,
+                semester: latestSemester.semester,
+            } as never)
+        }
+    }, [semesters.data, setMyTimetableParams])
+
+    useEffect(() => {
         const handleResize = () => {
             if (totalRef.current) {
                 setWidth(totalRef.current.clientWidth)
@@ -60,17 +71,7 @@ const TimeTableSection = () => {
         }
     }, [])
 
-    useEffect(() => {
-        if (semesters.data && semesters.data.semesters.length > 0) {
-            const latestSemester =
-                semesters.data.semesters[semesters.data.semesters.length - 1]
-            if (!latestSemester) return
-            setMyTimetableParams({
-                year: latestSemester.year,
-                semester: latestSemester.semester,
-            })
-        }
-    }, [semesters.data])
+    const lectures = myTimetable.data?.lectures ?? []
 
     return (
         <StyledWidget direction="column" gap={0} padding="30px" flex="1 1 auto">
@@ -89,39 +90,32 @@ const TimeTableSection = () => {
                     gap={16}
                     ref={totalRef}
                 >
-                    <FlexWrapper
-                        direction="row"
-                        justify="space-between"
-                        align="center"
-                        gap={0}
-                    >
-                        <FlexWrapper direction="row" gap={0}>
-                            <Trans
-                                i18nKey="main.hisTimeTable"
-                                values={{ name: user?.name }}
-                                components={{
-                                    name: (
-                                        <Typography
-                                            type="BiggerBold"
-                                            color="Highlight.default"
-                                            children={undefined}
-                                        />
-                                    ),
-                                    normal: (
-                                        <Typography
-                                            type="BiggerBold"
-                                            color="Text.dark"
-                                            children={undefined}
-                                        />
-                                    ),
-                                    space: <>&nbsp;</>,
-                                }}
-                            />
-                        </FlexWrapper>
+                    <FlexWrapper direction="row" gap={0}>
+                        <Trans
+                            i18nKey="main.hisTimeTable"
+                            values={{ name: user?.name }}
+                            components={{
+                                name: (
+                                    <Typography
+                                        type="BiggerBold"
+                                        color="Highlight.default"
+                                        children={undefined}
+                                    />
+                                ),
+                                normal: (
+                                    <Typography
+                                        type="BiggerBold"
+                                        color="Text.dark"
+                                        children={undefined}
+                                    />
+                                ),
+                                space: <>&nbsp;</>,
+                            }}
+                        />
                     </FlexWrapper>
                     <CustomTimeTableGrid
                         cellWidth={(width - 30) / 5}
-                        lectureSummary={myTimetable.data?.lectures ?? []}
+                        lectureSummary={lectures}
                         hover={hover}
                         setHover={setHover}
                         selected={selected}

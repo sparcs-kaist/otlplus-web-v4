@@ -379,17 +379,23 @@ export default function Timetable() {
                 align="stretch"
                 justify="stretch"
             >
-                {/* 시간표 탭 */}
-                <TabButtonRow
-                    timeTableLectures={currentTimetableLectures}
-                    currentTimetableId={currentTimetableId}
-                    setCurrentTimetableId={setCurrentTimetableId}
-                    setCurrentTimetableName={setCurrentTimetableName}
-                    year={year}
-                    semester={semesterEnum}
-                    setYear={setYear}
-                    setSemester={setSemesterEnum}
-                />
+                <FlexWrapper
+                    direction="row"
+                    align="center"
+                    justify="space-between"
+                    gap={8}
+                >
+                    <TabButtonRow
+                        timeTableLectures={currentTimetableLectures}
+                        currentTimetableId={currentTimetableId}
+                        setCurrentTimetableId={setCurrentTimetableId}
+                        setCurrentTimetableName={setCurrentTimetableName}
+                        year={year}
+                        semester={semesterEnum}
+                        setYear={setYear}
+                        setSemester={setSemesterEnum}
+                    />
+                </FlexWrapper>
                 <Block
                     direction={isLaptop ? "column" : "row"}
                     gap={isLaptop ? 12 : 30}
