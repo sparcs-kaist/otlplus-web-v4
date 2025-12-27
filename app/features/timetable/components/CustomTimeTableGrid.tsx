@@ -104,7 +104,7 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
                 "--cell-width": `${cellWidth}px`,
                 "--col-padding": `${colPadding}px`,
             }) as React.CSSProperties,
-        [cellHeight, cellWidth],
+        [cellHeight, cellWidth, colPadding],
     )
 
     const [dragging, setDragging] = useState<boolean>(false)
@@ -153,7 +153,7 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
                 }
             }
         },
-        [hover, selected, cellHeight, n, cellWidth, setSelected],
+        [hover, selected, cellHeight, n, m, cellWidth, colPadding, setSelected],
     )
 
     const handleMouseMove = useCallback(
@@ -169,7 +169,7 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
                 }
             }
         },
-        [dragging, cellHeight, n, col, lastRow],
+        [dragging, cellHeight, n, m, col, lastRow],
     )
 
     const handleMouseUp = useCallback(() => {
@@ -197,7 +197,7 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
         setStartRow(null)
         setLastRow(null)
         setDragging(false)
-    }, [n, setTimeFilter])
+    }, [m, n, setTimeFilter])
 
     const handleTouchStart = useCallback(
         (event: React.TouchEvent) => {
@@ -226,7 +226,7 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
                 }
             }
         },
-        [hover, selected, cellHeight, n, cellWidth, setSelected],
+        [hover, selected, cellHeight, n, m, cellWidth, colPadding, setSelected],
     )
 
     const handleTouchMove = useCallback(
@@ -244,7 +244,7 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
                 }
             }
         },
-        [dragging, cellHeight, n, col, lastRow],
+        [dragging, cellHeight, n, m, col, lastRow],
     )
 
     const handleTouchEnd = useCallback(() => {
@@ -282,11 +282,11 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
             const targetArea = getArea(_startRow, _endRow, col!)
             setDraggingArea(targetArea)
         }
-    }, [lastRow, startRow, dragging, col])
+    }, [lastRow, startRow, dragging, col, m, n])
 
     const grid = useMemo(
         () => renderGrid(n, m, cellWidth, cellHeight, colPadding, [], 10, 0),
-        [n, cellWidth, cellHeight],
+        [n, m, cellWidth, cellHeight, colPadding],
     )
 
     const lectureTiles = useMemo(
@@ -307,6 +307,7 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
             lectureSummary,
             cellWidth,
             cellHeight,
+            colPadding,
             selected,
             setSelected,
             hover,

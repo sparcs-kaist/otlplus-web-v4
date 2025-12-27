@@ -92,7 +92,7 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
                 "--cell-width": `${cellWidth}px`,
                 "--col-padding": `${colPadding}px`,
             }) as React.CSSProperties,
-        [cellHeight, cellWidth],
+        [cellHeight, cellWidth, colPadding],
     )
 
     const [draggingArea] = useState<Map<number, boolean[]>>(
@@ -103,7 +103,7 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
 
     const grid = useMemo(
         () => renderGrid(n, m, cellWidth, cellHeight, colPadding, [], 10, 0),
-        [n, cellWidth, cellHeight],
+        [n, m, cellWidth, cellHeight, colPadding],
     )
 
     const lectureTiles = useMemo(
@@ -121,7 +121,16 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
                 undefined,
                 true,
             ),
-        [lectureSummary, cellWidth, cellHeight, selected, setSelected, hover, setHover],
+        [
+            lectureSummary,
+            cellWidth,
+            cellHeight,
+            colPadding,
+            selected,
+            setSelected,
+            hover,
+            setHover,
+        ],
     )
 
     const handleClick = useCallback(() => {
