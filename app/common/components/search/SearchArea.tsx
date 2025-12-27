@@ -10,7 +10,6 @@ import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import { type TimeBlock } from "@/common/schemas/timeblock"
 import { useAPI } from "@/utils/api/useAPI"
-import { formatTimeAreaToString } from "@/utils/timetable/formatTimeblockToString"
 
 import Button from "../Button"
 import SearchFilterArea, {
@@ -92,24 +91,6 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
         setChipsOptions({})
     }
 
-    function getOptionList(
-        chipsOptions: ExportDataType,
-        key: keyof typeof chipsOptions,
-    ): string {
-        let result: string = ""
-        const value = chipsOptions[key]
-
-        if (value != undefined) {
-            if (key == "time") result = `${formatTimeAreaToString(value as TimeBlock)}`
-            else {
-                if (isSingleSelectOption(key)) result = t((value as [any, string])[1])
-                else result = (value as [any, string]).map((x) => t(x[1])).join(", ")
-            }
-        }
-
-        return result
-    }
-
     function getSearchParams(
         chipsOptions: ExportDataType,
         textValue: string,
@@ -171,53 +152,32 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
             style={{ maxHeight: "100%" }}
         >
             <FlexWrapper
-                direction="column"
-                align="stretch"
+                direction="row"
+                justify="stretch"
+                align="center"
                 onClick={() => {
                     if (!open) setOpen(true)
                 }}
                 gap={0}
                 padding="4px 16px"
             >
-                <FlexWrapper direction="row" align="center" gap={0}>
-                    {SearchIcon == undefined ? (
-                        <Icon size={17.5} color="#E54C65" onClick={() => {}}>
-                            <Search />
-                        </Icon>
-                    ) : (
-                        SearchIcon
-                    )}
-                    <TextInput
-                        value={value}
-                        handleChange={(newValue) => {
-                            setValue(newValue)
-                        }}
-                        placeholder={t("common.search.placeholder")}
-                        onKeyDown={(e) => {
-                            handleKeyDown(e, chipsOptions, value)
-                        }}
-                    />
-                </FlexWrapper>
-                <FlexWrapper direction="row" gap={8} align="center">
-                    {Object.keys(chipsOptions).map((key) => (
-                        <FlexWrapper
-                            direction="row"
-                            gap={0}
-                            padding="8px 0px 0px 0px"
-                            key={key}
-                        >
-                            <Typography type="SmallerBold">
-                                {t(`common.search.${key}`)}:&nbsp;
-                            </Typography>
-                            <Typography type="Smaller">
-                                {getOptionList(
-                                    chipsOptions,
-                                    key as keyof typeof chipsOptions,
-                                )}
-                            </Typography>
-                        </FlexWrapper>
-                    ))}
-                </FlexWrapper>
+                {SearchIcon == undefined ? (
+                    <Icon size={17.5} color="#E54C65" onClick={() => {}}>
+                        <Search />
+                    </Icon>
+                ) : (
+                    SearchIcon
+                )}
+                <TextInput
+                    value={value}
+                    handleChange={(newValue) => {
+                        setValue(newValue)
+                    }}
+                    placeholder={t("common.search.placeholder")}
+                    onKeyDown={(e) => {
+                        handleKeyDown(e, chipsOptions, value)
+                    }}
+                />
             </FlexWrapper>
 
             <AnimatePresence>
