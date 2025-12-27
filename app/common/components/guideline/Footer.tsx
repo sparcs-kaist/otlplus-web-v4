@@ -72,16 +72,16 @@ function Footer() {
             "https://play.google.com/store/apps/details?id=org.sparcs.buddy"
         switch (service) {
             case "taxi":
-                if (os == "ios" || os == "mac") return taxiIOSLink
+                if (os === "ios" || os === "mac") return taxiIOSLink
                 else return taxiAndroidLink
             case "otl":
-                if (os == "ios" || os == "mac") return otlIOSLink
+                if (os === "ios" || os === "mac") return otlIOSLink
                 else return otlAndroidLink
             case "ara":
-                if (os == "ios" || os == "mac") return araIOSLink
+                if (os === "ios" || os === "mac") return araIOSLink
                 else return araAndroidLink
             case "buddy":
-                if (os == "ios" || os == "mac") return buddyIOSLink
+                if (os === "ios" || os === "mac") return buddyIOSLink
                 else return buddyAndroidLink
             default:
                 return ""
