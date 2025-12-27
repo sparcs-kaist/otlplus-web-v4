@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
@@ -89,11 +89,38 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
         return () => window.removeEventListener("resize", handleResize)
     }, [])
 
-    const [draggingArea, setDraggingArea] = useState<Map<number, boolean[]>>(
+    const [draggingArea] = useState<Map<number, boolean[]>>(
         new Map(
             Array.from({ length: m }, (_, rowIndex) => [rowIndex, Array(n).fill(null)]),
         ),
     )
+
+    const grid = useMemo(
+        () => renderGrid(n, m, cellWidth, cellHeight, colPadding, [], 10, 0),
+        [n, cellWidth, cellHeight],
+    )
+
+    const lectureTiles = useMemo(
+        () =>
+            renderLectureTile(
+                lectureSummary,
+                cellWidth,
+                cellHeight,
+                colPadding,
+                selected,
+                setSelected,
+                hover,
+                setHover,
+                false,
+                undefined,
+                true,
+            ),
+        [lectureSummary, cellWidth, cellHeight, selected, setSelected, hover, setHover],
+    )
+
+    const handleClick = useCallback(() => {
+        setSelected(null)
+    }, [setSelected])
 
     return (
         <SectionWrapper>
@@ -125,11 +152,9 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
                         position: "relative",
                         userSelect: "none",
                     }}
-                    onClick={() => {
-                        setSelected(null)
-                    }}
+                    onClick={handleClick}
                 >
-                    {renderGrid(n, m, cellWidth, cellHeight, colPadding, [], 10, 0)}
+                    {grid}
                     {renderTargetArea(
                         true,
                         draggingArea,
@@ -142,23 +167,11 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
                         0,
                         0,
                     )}
-                    {renderLectureTile(
-                        lectureSummary,
-                        cellWidth,
-                        cellHeight,
-                        colPadding,
-                        selected,
-                        setSelected,
-                        hover,
-                        setHover,
-                        false,
-                        undefined,
-                        true,
-                    )}
+                    {lectureTiles}
                 </div>
             </FlexWrapper>
         </SectionWrapper>
     )
 }
 
-export default CustomTimeTableGrid
+export default React.memo(CustomTimeTableGrid)
