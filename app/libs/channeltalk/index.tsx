@@ -10,12 +10,14 @@ const ChannelTalkProvider = () => {
     const pluginKey = clientEnv.VITE_CHANNELTALK_PLUGIN_KEY
 
     useEffect(() => {
+        console.log("ChannelTalkProvider")
         if (!pluginKey) return
 
         ChannelService.loadScript()
 
         const bootOptions: ChannelService.BootOption = {
             pluginKey,
+            hideChannelButtonOnBoot: true,
         }
 
         if (user) {

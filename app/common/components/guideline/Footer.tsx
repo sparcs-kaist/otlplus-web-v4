@@ -1,3 +1,4 @@
+import * as ChannelService from "@channel.io/channel-web-sdk-loader"
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router"
@@ -17,6 +18,11 @@ const StyledLink = styled.a`
 `
 
 const StyledReactLink = styled(Link)`
+    text-decoration: none;
+`
+
+const StyledTypographyLink = styled(Typography)`
+    cursor: pointer;
     text-decoration: none;
 `
 
@@ -235,11 +241,17 @@ function Footer() {
                                         </Typography>
                                     </StyledLink>
                                 </MobileOnlyWrapper>
-                                <StyledReactLink to="">
-                                    <Typography type="SmallBold" color="Text.default">
+                                <StyledTypographyLink>
+                                    <Typography
+                                        type="SmallBold"
+                                        color="Text.default"
+                                        onClick={() => {
+                                            ChannelService.showMessenger()
+                                        }}
+                                    >
                                         {t("credits.contact")}
                                     </Typography>
-                                </StyledReactLink>
+                                </StyledTypographyLink>
                             </FlexWrapper>
                         </FlexWrapper>
                     </FlexWrapper>
