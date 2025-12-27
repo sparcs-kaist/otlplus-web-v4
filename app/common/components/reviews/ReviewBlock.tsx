@@ -1,4 +1,4 @@
-import { memo, useCallback, useState } from "react"
+import { memo, useState } from "react"
 
 import styled from "@emotion/styled"
 import FavoriteIcon from "@mui/icons-material/Favorite"
