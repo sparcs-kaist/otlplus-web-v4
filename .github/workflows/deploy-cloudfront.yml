@@ -63,11 +63,20 @@ jobs:
             - name: Checkout repository
               uses: actions/checkout@v4
 
-            - name: Configure AWS credentials
+            - name: Configure AWS credentials (Production)
+              if: inputs.environment == 'production'
               uses: aws-actions/configure-aws-credentials@v4
               with:
-                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
+                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
+                  aws-region: ${{ env.AWS_REGION }}
+
+            - name: Configure AWS credentials (Dev)
+              if: inputs.environment == 'dev'
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV }}
+                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}
                   aws-region: ${{ env.AWS_REGION }}
 
             - name: Set environment variables
