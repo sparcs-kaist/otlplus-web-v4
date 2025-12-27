@@ -10,6 +10,10 @@ const StyledLink = styled(Link)`
     text-decoration: none;
 `
 
+const StyledAnchor = styled.a`
+    text-decoration: none;
+`
+
 const Credits: React.FC = () => {
     const { t } = useTranslation()
     const isLaptop = useIsDevice("laptop")
@@ -55,9 +59,11 @@ const Credits: React.FC = () => {
                     </Typography>
                 </StyledLink>
             </FlexWrapper>
-            <Typography color={"Text.placeholder"} type={"Big"}>
-                otlplus@sparcs.org
-            </Typography>
+            <StyledAnchor href="mailto:otlplus@sparcs.org">
+                <Typography color={"Text.placeholder"} type={"Big"}>
+                    otlplus@sparcs.org
+                </Typography>
+            </StyledAnchor>
             <Typography color={"Text.placeholder"} type={"Big"}>
                 Ⓒ 2026, SPARCS OTL TEAM
             </Typography>
