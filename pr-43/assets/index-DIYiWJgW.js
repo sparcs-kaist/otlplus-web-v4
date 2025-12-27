@@ -1,0 +1,11 @@
+import{j as s,a as e,F as l,n as S}from"./FlexWrapper-C0dsngQo.js";import{a}from"./chunk-UIGDSWPH-NakEPbl8.js";import{k as x,u as B,B as v}from"./useIsDevice-oiDNeeps.js";import{T as k,G}from"./TextInputArea-DV5eFKd5.js";import{T as d}from"./Typography-DTsae4U-.js";import{u as j}from"./useUserStore-Cs3WP2WQ.js";import{W}from"./Widget-D7VP5HFl.js";import{T as $}from"./Trans-C-nyTPEd.js";import"./jsx-runtime-u17CrQMm.js";const F=S(l)`
+    height: 173px;
+    border-radius: 4px;
+    background-color: ${({theme:p})=>p.colors.Background.Block.default};
+`,I=S.div`
+    display: grid;
+    grid-template-columns: max-content auto;
+    column-gap: 12px;
+    row-gap: 8px;
+    align-items: end;
+`;function K(){const{status:p}=j(),{query:r}=x("GET","/users/writable-review",{enabled:p==="success"}),{requestFunction:y}=x("POST","/reviews",{onSuccess:w}),[o,m]=a.useState(""),[i,h]=a.useState(0),[n,g]=a.useState(0),[c,f]=a.useState(0),{t}=B();function w(){r.refetch(),m(""),h(0),g(0),f(0)}function T(){r.data&&y({lectureId:r.data.lectureId,content:o,grade:i,load:n,speech:c})}return r.data?s(W,{direction:"column",gap:20,padding:"23px 30px",align:"stretch",children:[e(d,{type:"BiggerBold",color:"Text.default",children:e($,{i18nKey:"main.reviewSection.title",values:{lectureName:r.data?.name}})}),e(F,{direction:"column",align:"stretch",justify:"stretch",gap:0,children:e(k,{placeholder:t("main.reviewSection.placeholder"),type:"text",readOnly:!1,value:o,handleChange:m,area:!0})}),s(l,{direction:"column",gap:20,align:"stretch",children:[e(I,{children:[[t("common.grade"),i,h],[t("common.load"),n,g],[t("common.speech"),c,f]].map(([u,R,b])=>s(a.Fragment,{children:[e(d,{type:"Normal",color:"Text.light",children:u}),e(l,{direction:"row",align:"center",gap:10,children:e(G,{score:R,setScore:b})},u)]},u))}),s(l,{direction:"row",justify:"flex-end",gap:12,children:[e(v,{type:"default",$paddingLeft:8,$paddingTop:8,onClick:w,children:e(d,{type:"Normal",children:t("main.reviewSection.writeAnother")})}),e(v,{type:o&&i&&c&&n?"default":"disabled",$paddingLeft:8,$paddingTop:8,onClick:T,children:e(d,{type:"Normal",color:o&&i&&c&&n?"Highlight.default":"Text.disable",children:t("common.upload")})})]})]})]}):null}export{K as default};
