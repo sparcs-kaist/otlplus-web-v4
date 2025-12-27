@@ -1,5 +1,5 @@
-import { memo } from "react"
 import type { CSSProperties } from "react"
+import { memo } from "react"
 
 import styled from "@emotion/styled"
 import CloseIcon from "@mui/icons-material/Close"
@@ -159,23 +159,22 @@ const LectureTile: React.FC<{
 }
 
 // Props type for the comparison function
-type LectureTileProps = {
-    lecture: Lecture
-    timeBlock: ClassTime
-    cellWidth: number
-    cellHeight: number
-    isSelected?: boolean
-    isHovered?: boolean
-}
+type LectureTileMemoProps = React.ComponentProps<typeof LectureTile>
 
 // Custom comparison function for React.memo to handle object props
-const arePropsEqual = (prevProps: LectureTileProps, nextProps: LectureTileProps) => {
+const arePropsEqual = (
+    prevProps: Readonly<LectureTileMemoProps>,
+    nextProps: Readonly<LectureTileMemoProps>,
+) => {
     // Compare primitive props
     if (
         prevProps.cellWidth !== nextProps.cellWidth ||
         prevProps.cellHeight !== nextProps.cellHeight ||
         prevProps.isSelected !== nextProps.isSelected ||
-        prevProps.isHovered !== nextProps.isHovered
+        prevProps.isHovered !== nextProps.isHovered ||
+        prevProps.hoverSelectBanned !== nextProps.hoverSelectBanned ||
+        prevProps.isOverlapped !== nextProps.isOverlapped ||
+        prevProps.removeFunction !== nextProps.removeFunction
     ) {
         return false
     }
@@ -205,7 +204,7 @@ const arePropsEqual = (prevProps: LectureTileProps, nextProps: LectureTileProps)
         prevProps.timeBlock.begin !== nextProps.timeBlock.begin ||
         prevProps.timeBlock.end !== nextProps.timeBlock.end ||
         prevProps.timeBlock.buildingCode !== nextProps.timeBlock.buildingCode ||
-        prevProps.timeBlock.placeName !== nextProps.timeBlock.placeName
+        prevProps.timeBlock.roomName !== nextProps.timeBlock.roomName
     ) {
         return false
     }
