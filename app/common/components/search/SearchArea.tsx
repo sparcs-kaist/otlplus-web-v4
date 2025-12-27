@@ -73,7 +73,6 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
 
         if (event.key === "Enter") {
             handleSubmit(chipsOptions, textValue)
-            console.log("입력된 값:", value)
         }
     }
 
@@ -83,7 +82,6 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
     }
 
     function handleSubmit(chipsOptions: ExportDataType, textValue: string) {
-        console.log("필터 결과")
         setOpen(false)
         onSearch(getSearchParams(chipsOptions, textValue))
         setChipsOptions({})
@@ -246,7 +244,7 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
                                 $paddingTop={9}
                                 onClick={handleReset}
                             >
-                                <Typography>취소</Typography>
+                                <Typography>{t("common.search.cancel")}</Typography>
                             </Button>
                             <Button
                                 $paddingLeft={24}
@@ -256,7 +254,7 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
                                     handleSubmit(chipsOptions, value)
                                 }}
                             >
-                                <Typography>검색</Typography>
+                                <Typography>{t("common.search.submit")}</Typography>
                             </Button>
                         </FlexWrapper>
                     </motion.div>
