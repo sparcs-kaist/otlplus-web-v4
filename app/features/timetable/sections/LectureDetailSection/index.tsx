@@ -50,7 +50,7 @@ const LectureTitle = styled(FlexWrapper)`
 `
 
 const LectureActionsWrapper = styled(FlexWrapper)`
-    position: absolute;
+    position: sticky;
     bottom: 0;
     width: 100%;
     padding: 12px 0;
