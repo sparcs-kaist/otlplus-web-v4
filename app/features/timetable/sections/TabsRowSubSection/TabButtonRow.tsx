@@ -168,6 +168,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
 }) => {
     const { t } = useTranslation()
     const { status } = useUserStore()
+    const theme = useTheme()
 
     const { query: timetables, setParams } = useAPI("GET", "/timetables", {
         select: (data) => {
@@ -320,7 +321,11 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                             }}
                             styles={{ padding: 5 }}
                         >
-                            <Icon size={15} onClick={() => {}}>
+                            <Icon
+                                size={15}
+                                color={theme.colors.Text.default}
+                                onClick={() => {}}
+                            >
                                 <ContentCopyIcon />
                             </Icon>
                         </IconButton>
@@ -391,7 +396,11 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                         }}
                     >
                         <IconButton onClick={(e) => {}} styles={{ padding: 3.75 }}>
-                            <Icon size={17.5} onClick={() => {}}>
+                            <Icon
+                                size={17.5}
+                                color={theme.colors.Text.default}
+                                onClick={() => {}}
+                            >
                                 <AddIcon />
                             </Icon>
                         </IconButton>

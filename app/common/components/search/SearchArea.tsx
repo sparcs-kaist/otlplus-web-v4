@@ -1,4 +1,4 @@
-import { type ReactElement, useState } from "react"
+import { type ReactElement, useEffect, useState } from "react"
 
 import { Search } from "@mui/icons-material"
 import { AnimatePresence, motion } from "framer-motion"
@@ -63,6 +63,11 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
     const [value, setValue] = useState<string>("")
 
     const [chipsOptions, setChipsOptions] = useState<ExportDataType>({})
+
+    useEffect(() => {
+        if (!timeFilter) return
+        setOpen(true)
+    }, [timeFilter])
 
     const handleKeyDown = (
         event: React.KeyboardEvent<HTMLInputElement>,

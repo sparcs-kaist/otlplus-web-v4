@@ -21,6 +21,10 @@ import useIsDevice from "@/utils/useIsDevice"
 const TimetableWrapper = styled(FlexWrapper)`
     min-height: 0;
     padding: 0 20px 12px 20px;
+
+    ${media.tablet} {
+        padding: 8px;
+    }
 `
 
 const SearchAreaWrapper = styled(FlexWrapper)`
@@ -42,7 +46,12 @@ const ContentsAreaWrapper = styled(FlexWrapper)`
     align-self: stretch; /* 부모 Flex의 align-items: stretch에 맞춰 세로 길이 맞춤 */
 
     ${media.laptop} {
-        max-width: 584px;
+        max-width: none;
+    }
+
+    ${media.tablet} {
+        width: 100%;
+        max-width: none;
     }
 `
 
@@ -123,11 +132,17 @@ const TimetableInfoArea = styled.div`
         padding: 16px;
         border-radius: 12px;
     }
+
+    ${media.tablet} {
+        height: auto;
+        padding: 8px;
+    }
 `
 
 export default function Timetable() {
     const queryClient = useQueryClient()
 
+    const isTablet = useIsDevice("tablet")
     const isLaptop = useIsDevice("laptop")
     const isDesktop = useIsDevice("desktop")
 
@@ -146,6 +161,9 @@ export default function Timetable() {
     const [currentTimetableName, setCurrentTimetableName] = useState<string>("")
     const [year, setYear] = useState<number>(-1)
     const [semesterEnum, setSemesterEnum] = useState<SemesterEnum>(1)
+
+    // for timetable area size(temporary)
+    const [contentsAreaWidth, setContentsAreaWidth] = useState(0)
     const [contentsAreaHeight, setContentsAreaHeight] = useState<number>(0)
 
     const { query: timetable } = useAPI("GET", `/timetables/${currentTimetableId}`, {
@@ -188,15 +206,16 @@ export default function Timetable() {
     )
 
     useEffect(() => {
-        function matchHeight() {
+        function matchWidthHeight() {
             if (contentsAreaRef.current) {
+                setContentsAreaWidth(contentsAreaRef.current.offsetWidth)
                 setContentsAreaHeight(contentsAreaRef.current.offsetHeight)
             }
         }
 
-        matchHeight()
-        window.addEventListener("resize", matchHeight)
-        return () => window.removeEventListener("resize", matchHeight)
+        matchWidthHeight()
+        window.addEventListener("resize", matchWidthHeight)
+        return () => window.removeEventListener("resize", matchWidthHeight)
     }, [])
 
     useEffect(() => {
@@ -238,16 +257,30 @@ export default function Timetable() {
             flex="1 0 0"
             ref={outerRef}
         >
-            <SearchAreaWrapper
-                direction={isDesktop ? "column-reverse" : "row"}
-                align="flex-start"
-                gap={12}
-                ref={searchAreaRef}
-            >
-                {isLaptop && (
-                    <UtilButtonsArea>
-                        <UtilButtonsSubSection
-                            timetableName={currentTimetableName}
+            {!isTablet && (
+                <SearchAreaWrapper
+                    direction={isDesktop ? "column-reverse" : "row"}
+                    align="flex-start"
+                    gap={12}
+                    ref={searchAreaRef}
+                >
+                    {isLaptop && (
+                        <UtilButtonsArea>
+                            <UtilButtonsSubSection
+                                timetableName={currentTimetableName}
+                                timetableLectures={
+                                    currentTimetableId === null
+                                        ? (myTimetable.data?.lectures ?? [])
+                                        : (timetable.data?.lectures ?? [])
+                                }
+                                year={year}
+                                semester={semesterEnum}
+                            />
+                        </UtilButtonsArea>
+                    )}
+                    {/*과목 목록 영역*/}
+                    <LectureListArea>
+                        <LectureListSection
                             timetableLectures={
                                 currentTimetableId === null
                                     ? (myTimetable.data?.lectures ?? [])
@@ -255,40 +288,28 @@ export default function Timetable() {
                             }
                             year={year}
                             semester={semesterEnum}
+                            hoveredLecture={hover}
+                            selectedLecture={selected}
+                            setSelectedLecture={setSelected}
+                            setHoveredLecture={setHover}
+                            timeFilter={timeFilter}
+                            setTimeFilter={setTimeFilter}
+                            currentTimetableId={currentTimetableId}
                         />
-                    </UtilButtonsArea>
-                )}
-                {/*과목 목록 영역*/}
-                <LectureListArea>
-                    <LectureListSection
-                        timetableLectures={
-                            currentTimetableId === null
-                                ? (myTimetable.data?.lectures ?? [])
-                                : (timetable.data?.lectures ?? [])
-                        }
-                        year={year}
-                        semester={semesterEnum}
-                        hoveredLecture={hover}
-                        selectedLecture={selected}
-                        setSelectedLecture={setSelected}
-                        setHoveredLecture={setHover}
-                        timeFilter={timeFilter}
-                        setTimeFilter={setTimeFilter}
-                        currentTimetableId={currentTimetableId}
-                    />
-                </LectureListArea>
-                {!isDesktop && <StyledDivider direction="column" />}
-                {/*과목 정보 영역*/}
-                <LectureInfoArea>
-                    <LectureDetailSection
-                        selectedLecture={
-                            selected ? selected : hover?.length == 1 ? hover[0] : null
-                        }
-                        year={year}
-                        semester={semesterEnum}
-                    />
-                </LectureInfoArea>
-            </SearchAreaWrapper>
+                    </LectureListArea>
+                    {!isDesktop && <StyledDivider direction="column" />}
+                    {/*과목 정보 영역*/}
+                    <LectureInfoArea>
+                        <LectureDetailSection
+                            selectedLecture={
+                                selected ? selected : hover?.length == 1 ? hover[0] : null
+                            }
+                            year={year}
+                            semester={semesterEnum}
+                        />
+                    </LectureInfoArea>
+                </SearchAreaWrapper>
+            )}
             <ContentsAreaWrapper
                 direction="column"
                 gap={0}
@@ -319,7 +340,7 @@ export default function Timetable() {
                 >
                     <TimetableArea direction="column" gap={0} ref={contentsAreaRef}>
                         <CustomTimeTableGrid
-                            cellWidth={100}
+                            cellWidth={isTablet ? (contentsAreaWidth - 60) / 5 : 100}
                             fullHeight={
                                 isLaptop
                                     ? contentsAreaHeight - 60

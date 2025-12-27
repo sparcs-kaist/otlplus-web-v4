@@ -160,6 +160,53 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
         setDragging(false)
     }
 
+    const handleTouchStart = (event: React.TouchEvent) => {
+        if (gridRef.current && hover == null && selected == null) {
+            const touch = event.touches[0]
+            if (!touch) return
+            const gridRect = gridRef.current.getBoundingClientRect()
+            const mouseX = touch.clientX - gridRect.left
+            const mouseY = touch.clientY - gridRect.top
+            const row = Math.floor(mouseY / cellHeight)
+            const col = getColumnIndex(mouseX, m, [], 0, cellWidth, colPadding, 0)
+            if (row >= 0 && row < n && col >= 0 && col < m) {
+                setDragging(true)
+                setStartRow(row)
+                setLastRow(row)
+                setCol(col)
+                setSelected(null)
+            }
+        }
+    }
+
+    const handleTouchMove = (event: React.TouchEvent) => {
+        if (dragging && gridRef.current) {
+            const touch = event.touches[0]
+            if (!touch) return
+            const gridRect = gridRef.current.getBoundingClientRect()
+            const mouseY = touch.clientY - gridRect.top
+            const row = Math.floor(mouseY / cellHeight)
+            if (row >= 0 && row < n && col! >= 0 && col! < m) {
+                if (row !== lastRow) {
+                    setLastRow(row)
+                }
+            }
+        }
+    }
+
+    const handleTouchEnd = () => {
+        handleMouseUp()
+    }
+
+    useEffect(() => {
+        if (dragging) {
+            window.addEventListener("mouseup", handleMouseUp)
+        }
+        return () => {
+            window.removeEventListener("mouseup", handleMouseUp)
+        }
+    }, [dragging, handleMouseUp])
+
     const getArea = (
         startRow: number,
         endRow: number,
@@ -215,13 +262,20 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
                         display: "inline-block",
                         position: "relative",
                         userSelect: "none",
+                        touchAction: "none",
                     }}
                     onClick={() => {
                         setSelected(null)
                     }}
                     onMouseDown={handleMouseDown}
                     onMouseMove={handleMouseMove}
-                    onMouseUp={handleMouseUp}
+                    onMouseUp={(e) => {
+                        e.stopPropagation()
+                        handleMouseUp()
+                    }}
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
                 >
                     {renderGrid(n, m, cellWidth, cellHeight, colPadding, [], 10, 0)}
                     {renderTargetArea(

@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next"
 
 import { getAverageScoreLabel } from "@/common/enum/scoreEnum"
 import type { Lecture } from "@/common/schemas/lecture"
+import { media } from "@/styles/themes/media"
 
 const TotalRow = styled.div`
     display: flex;
@@ -12,6 +13,10 @@ const TotalRow = styled.div`
     justify-content: center;
     align-items: center;
     gap: 48px;
+
+    ${media.mobile} {
+        gap: 20px;
+    }
 `
 
 const TotalItem = styled.div<{ highlighted?: boolean }>`
@@ -43,6 +48,10 @@ const GradeRow = styled.div`
     justify-content: center;
     align-items: center;
     gap: 48px;
+
+    ${media.mobile} {
+        gap: 20px;
+    }
 `
 
 const GradeItem = styled.div`

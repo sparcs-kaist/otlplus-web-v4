@@ -4,11 +4,17 @@ import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
 
 import type { Lecture } from "@/common/schemas/lecture"
+import { media } from "@/styles/themes/media"
 
 const CreditGrid = styled.div`
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 4px 16px;
+
+    ${media.tablet} {
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 4px 8px;
+    }
 `
 
 const CreditRow = styled.div`
@@ -22,17 +28,31 @@ const CreditRow = styled.div`
     &:hover {
         color: ${({ theme }) => theme.colors.Highlight.default};
     }
+
+    ${media.tablet} {
+        padding-left: 0;
+    }
 `
 
 const CreditTypeLabel = styled.span`
     font-size: 14px;
     font-weight: 700;
+    white-space: nowrap;
+
+    ${media.mobile} {
+        font-size: 12px;
+    }
 `
 
 const CreditNumber = styled.span`
     font-size: 14px;
     font-weight: 400;
     padding-left: 8px;
+    white-space: nowrap;
+
+    ${media.mobile} {
+        font-size: 12px;
+    }
 `
 
 const CreditAdditionalInfo = styled.span`
@@ -40,6 +60,10 @@ const CreditAdditionalInfo = styled.span`
     font-weight: 400;
     padding-left: 2px;
     color: ${({ theme }) => theme.colors.Highlight.default};
+
+    ${media.mobile} {
+        display: none;
+    }
 `
 
 type TypeKeys =
