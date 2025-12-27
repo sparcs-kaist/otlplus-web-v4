@@ -194,7 +194,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
         "GET",
         `/users/${user?.id}/wishlist`,
         {
-            enabled: status === "success",
+            enabled: status === "success" && year != -1,
         },
     )
 

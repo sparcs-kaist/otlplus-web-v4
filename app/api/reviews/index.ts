@@ -20,7 +20,6 @@ export const GETResponse = z.object({
     averageGrade: z.number(),
     averageLoad: z.number(),
     averageSpeech: z.number(),
-    myReviewId: z.array(z.number().int()),
 })
 
 export type GETReviewsQuery = z.infer<typeof GETRequest>

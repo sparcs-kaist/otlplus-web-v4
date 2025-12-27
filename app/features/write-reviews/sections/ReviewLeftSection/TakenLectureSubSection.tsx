@@ -24,7 +24,7 @@ interface TakenLectureSubSectionProps {
 function isSameLecture(
     lecture: getAPIResponseType<
         "GET",
-        "/users/$userId/lectures"
+        "/users/userId/lectures"
     >["lecturesWrap"][number]["lectures"][number],
     lecture2: WriteReviewsSelectedLectureType,
     year: number,

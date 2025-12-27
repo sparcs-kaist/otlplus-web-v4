@@ -39,7 +39,6 @@ export interface ReviewWritingBlockProps {
     professors: Professor[]
     year: number
     semester: SemesterEnum
-    myReview?: Review
 }
 
 function ReviewWritingBlock({
@@ -48,11 +47,12 @@ function ReviewWritingBlock({
     professors,
     year,
     semester,
-    myReview,
 }: ReviewWritingBlockProps) {
     const { t } = useTranslation()
-    const { user } = useUserStore()
+    const { user, status } = useUserStore()
     const queryClient = useQueryClient()
+
+    const [myReview, setMyReview] = useState<Review | null>(null)
 
     const { requestFunction: requestCreateFunction } = useAPI("POST", "/reviews", {
         onSuccess: () => {
@@ -60,17 +60,46 @@ function ReviewWritingBlock({
             queryClient.invalidateQueries({
                 queryKey: [`/users/${user?.id}/lectures`],
             })
+            queryClient.invalidateQueries({
+                queryKey: ["/users/written-reviews"],
+            })
         },
     })
+
     const { requestFunction: requestEditFunction } = useAPI(
         "PUT",
         `/reviews/${myReview?.id}`,
         {
             onSuccess: () => {
-                queryClient.invalidateQueries({ queryKey: ["/reviews"] })
+                queryClient.invalidateQueries({
+                    queryKey: ["/reviews"],
+                })
+                queryClient.invalidateQueries({
+                    queryKey: [`/users/${user?.id}/lectures`],
+                })
+                queryClient.invalidateQueries({
+                    queryKey: ["/users/written-reviews"],
+                })
             },
         },
     )
+
+    const { query: userReviewsQuery } = useAPI("GET", `/users/written-reviews`, {
+        enabled: status === "success",
+    })
+
+    useEffect(() => {
+        if (userReviewsQuery.data) {
+            const existingReview = userReviewsQuery.data.reviews.find(
+                (review) => review.lectureId === lectureId,
+            )
+            if (existingReview) {
+                setMyReview(existingReview)
+            } else {
+                setMyReview(null)
+            }
+        }
+    }, [userReviewsQuery.data])
 
     const [reviewText, setReviewText] = useState<string>("")
 
@@ -86,14 +115,18 @@ function ReviewWritingBlock({
     }
 
     useEffect(() => {
+        console.log(lectureId)
         resetReviewStates()
+    }, [lectureId])
+
+    useEffect(() => {
         if (myReview) {
             setReviewText(myReview.content)
             setReviewGrade(myReview.grade)
             setReviewLoad(myReview.load)
             setReviewSpeech(myReview.speech)
         }
-    }, [])
+    }, [myReview])
 
     function submitReview() {
         if (myReview) {

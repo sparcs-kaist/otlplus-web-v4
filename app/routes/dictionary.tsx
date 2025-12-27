@@ -1,4 +1,4 @@
-import { use, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 
 import styled from "@emotion/styled"
 import { useSearchParams } from "react-router"
