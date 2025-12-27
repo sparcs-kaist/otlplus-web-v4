@@ -99,7 +99,7 @@ function ReviewWritingBlock({
                 setMyReview(null)
             }
         }
-    }, [userReviewsQuery.data])
+    }, [userReviewsQuery.data, lectureId])
 
     const [reviewText, setReviewText] = useState<string>("")
 
