@@ -3,13 +3,24 @@ import { del, get, set } from "idb-keyval"
 
 const IDB_KEY = "otlplus-query-cache"
 
+function serialize(client: PersistedClient): string {
+    return JSON.stringify(client)
+}
+
+function deserialize(cachedString: string): PersistedClient {
+    return JSON.parse(cachedString) as PersistedClient
+}
+
 export function createIDBPersister(): Persister {
     return {
         persistClient: async (client: PersistedClient) => {
-            await set(IDB_KEY, client)
+            const serialized = serialize(client)
+            await set(IDB_KEY, serialized)
         },
         restoreClient: async () => {
-            return await get<PersistedClient>(IDB_KEY)
+            const cached = await get<string>(IDB_KEY)
+            if (!cached) return undefined
+            return deserialize(cached)
         },
         removeClient: async () => {
             await del(IDB_KEY)
@@ -19,10 +30,6 @@ export function createIDBPersister(): Persister {
 
 export const idbPersister = createIDBPersister()
 
-/**
- * Clear all persisted query cache from IndexedDB.
- * Should be called on logout to prevent stale user data.
- */
 export async function clearQueryCache(): Promise<void> {
     await del(IDB_KEY)
 }
