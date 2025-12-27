@@ -11,33 +11,39 @@ const renderGrid = (
     pageStart: number,
 ) => {
     const grid: JSX.Element[] = []
+    const lastRowIndex = n - 1
+    const lastColIndex = m - 1
+
     for (let i = 0; i < n; i++) {
         const row: JSX.Element[] = []
+        const isEvenRow = i % 2 === 0
+        const isLastRow = i === lastRowIndex
+
         for (let j = 0; j < m; j++) {
-            const uniqueId = `${i * m + j}`
             const isShown = !placeholderIndex.includes(j + pageStart)
-            const newRec = (
+            const isLastCol = j === lastColIndex
+
+            row.push(
                 <div
-                    key={uniqueId}
-                    id={uniqueId}
+                    key={j}
                     style={{
-                        width: `${isShown ? cellWidth : placeholderWidth}px`,
-                        height: `${cellHeight}px`,
+                        width: isShown ? cellWidth : placeholderWidth,
+                        height: cellHeight,
                         display: "inline-block",
                         textAlign: "center",
-                        borderTop: `${
-                            isShown
-                                ? i % 2 == 0
-                                    ? "1px solid rgba(232, 232, 232, 1)"
-                                    : "1px dashed rgba(232, 232, 232, 1)"
-                                : "0px"
-                        }`,
-                        borderBottom: `${isShown && i == n - 1 ? "1px solid rgba(232, 232, 232, 1)" : "0px"}`,
-                        marginRight: `${j < m - 1 ? `${colPadding}px` : "0px"}`,
+                        borderTop: isShown
+                            ? isEvenRow
+                                ? "1px solid rgba(232, 232, 232, 1)"
+                                : "1px dashed rgba(232, 232, 232, 1)"
+                            : undefined,
+                        borderBottom:
+                            isShown && isLastRow
+                                ? "1px solid rgba(232, 232, 232, 1)"
+                                : undefined,
+                        marginRight: isLastCol ? undefined : colPadding,
                     }}
-                />
+                />,
             )
-            row.push(newRec)
         }
         grid.push(
             <div key={i} style={{ display: "flex" }}>
