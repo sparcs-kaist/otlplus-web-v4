@@ -98,7 +98,7 @@ function Footer() {
                 padding="0px 20px 55px 20px"
             >
                 <FlexWrapper direction="row" justify="center" align="center" gap={127}>
-                    <StyledImg src="/headerIcon.png" />
+                    <StyledImg src={`${import.meta.env.BASE_URL}headerIcon.png`} />
                     <FlexWrapper
                         direction="row"
                         justify="flex-start"

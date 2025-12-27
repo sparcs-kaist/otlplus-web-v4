@@ -49,7 +49,12 @@ function SearchSection() {
             <SearchArea
                 options={["type", "department", "level", "term"]}
                 onSearch={handleSearch}
-                SearchIcon={<SearchImg src="/searchIcon.png" alt="search" />}
+                SearchIcon={
+                    <SearchImg
+                        src={`${import.meta.env.BASE_URL}searchIcon.png`}
+                        alt="search"
+                    />
+                }
             />
         </SearchSectionInner>
     )

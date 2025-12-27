@@ -46,7 +46,7 @@ const Menu: React.FC<MenuProps> = ({ setMobileSidebarOpen }) => {
     return (
         <MenuWrapper direction="row" justify="space-between" align="center" gap={0}>
             <StyledLink to="/" onClick={setMobileSidebarOpen}>
-                <StyledImg src="/headerIcon.png" alt="Logo" />
+                <StyledImg src={`${import.meta.env.BASE_URL}headerIcon.png`} alt="Logo" />
             </StyledLink>
             <LinkWrapper direction="row" gap={24}>
                 <StyledLink to="/dictionary">{t("header.dictionary")}</StyledLink>
