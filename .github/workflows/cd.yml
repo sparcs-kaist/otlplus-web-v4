@@ -152,36 +152,6 @@ jobs:
         permissions:
             contents: write
         steps:
-            - name: Notify Slack - Deploy Started
-              id: slack-start
-              continue-on-error: true
-              uses: slackapi/slack-github-action@v2.1.0
-              with:
-                  method: chat.postMessage
-                  token: ${{ secrets.SLACK_BOT_TOKEN }}
-                  payload: |
-                      channel: ${{ secrets.SLACK_CHANNEL_ID }}
-                      text: "🚀 *OTL+ Production 배포 시작*"
-                      blocks:
-                        - type: section
-                          text:
-                            type: mrkdwn
-                            text: "🚀 *OTL+ Production 배포 시작*"
-                        - type: section
-                          fields:
-                            - type: mrkdwn
-                              text: "*Environment:*\nProduction"
-                            - type: mrkdwn
-                              text: "*Release:*\n`${{ github.event.release.tag_name }}`"
-                            - type: mrkdwn
-                              text: "*Commit:*\n`${{ github.sha }}`"
-                            - type: mrkdwn
-                              text: "*Author:*\n${{ github.actor }}"
-                        - type: context
-                          elements:
-                            - type: mrkdwn
-                              text: "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Workflow>"
-
             - uses: actions/checkout@v4
 
             - name: Setup pnpm
@@ -203,6 +173,7 @@ jobs:
               env:
                   VITE_SENTRY_DSN: ${{ vars.SENTRY_DSN_PROD }}
                   VITE_APP_API_URL: ${{ vars.API_URL_PROD }}
+                  VITE_APP_LOG_LEVEL: info
                   VITE_DEV_MODE: false
                   VITE_CHANNELTALK_PLUGIN_KEY: ${{ vars.CHANNELTALK_PLUGIN_KEY }}
 
@@ -233,57 +204,3 @@ jobs:
                   asset_path: ./build-${{ github.event.release.tag_name }}.tar.gz
                   asset_name: build-${{ github.event.release.tag_name }}.tar.gz
                   asset_content_type: application/gzip
-
-            - name: Notify Slack - Deploy Success
-              if: success()
-              continue-on-error: true
-              uses: slackapi/slack-github-action@v2.1.0
-              with:
-                  method: chat.postMessage
-                  token: ${{ secrets.SLACK_BOT_TOKEN }}
-                  payload: |
-                      channel: ${{ secrets.SLACK_CHANNEL_ID }}
-                      thread_ts: "${{ fromJson(steps.slack-start.outputs.response).ts }}"
-                      text: "✅ *OTL+ Production 배포 완료*"
-                      blocks:
-                        - type: section
-                          text:
-                            type: mrkdwn
-                            text: "✅ *배포 완료* - 성공 🎉"
-                        - type: section
-                          fields:
-                            - type: mrkdwn
-                              text: "*Release:*\n`${{ github.event.release.tag_name }}`"
-                            - type: mrkdwn
-                              text: "*Author:*\n${{ github.actor }}"
-                        - type: context
-                          elements:
-                            - type: mrkdwn
-                              text: "<https://otl.sparcs.org|View Site> | <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Workflow>"
-
-            - name: Notify Slack - Deploy Failed
-              if: failure()
-              continue-on-error: true
-              uses: slackapi/slack-github-action@v2.1.0
-              with:
-                  method: chat.postMessage
-                  token: ${{ secrets.SLACK_BOT_TOKEN }}
-                  payload: |
-                      channel: ${{ secrets.SLACK_CHANNEL_ID }}
-                      thread_ts: "${{ fromJson(steps.slack-start.outputs.response).ts }}"
-                      text: "❌ *OTL+ Production 배포 실패*"
-                      blocks:
-                        - type: section
-                          text:
-                            type: mrkdwn
-                            text: "❌ *배포 실패* - 실패 ⚠️"
-                        - type: section
-                          fields:
-                            - type: mrkdwn
-                              text: "*Release:*\n`${{ github.event.release.tag_name }}`"
-                            - type: mrkdwn
-                              text: "*Author:*\n${{ github.actor }}"
-                        - type: context
-                          elements:
-                            - type: mrkdwn
-                              text: "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Workflow Logs>"
