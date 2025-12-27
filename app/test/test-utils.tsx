@@ -26,7 +26,7 @@ interface ProvidersProps {
 }
 
 function TestProviders({ children }: ProvidersProps) {
-    const queryClient = createTestQueryClient()
+    const queryClient = React.useMemo(() => createTestQueryClient(), [])
     const theme = themes["light"]
 
     return (
