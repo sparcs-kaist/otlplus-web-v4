@@ -8,6 +8,7 @@ import { clientEnv } from "@/env"
 import AccountInfoSection from "@/features/account/sections/AccountInfoSection"
 import AccountInterestedMajorSection from "@/features/account/sections/AccountInterestedMajorSection"
 import { axiosClient } from "@/libs/axios"
+import { clearQueryCache } from "@/libs/offline"
 import { removeLocalStorageItem } from "@/utils/localStorage"
 import useIsDevice from "@/utils/useIsDevice"
 
@@ -30,7 +31,9 @@ const AccountPageModal: React.FC<AccountPageModalProps> = ({
 
     const { t } = useTranslation()
 
-    const handleLogout = () => {
+    const handleLogout = async () => {
+        await clearQueryCache()
+
         if (process.env.NODE_ENV === "production") {
             location.href =
                 clientEnv.VITE_APP_API_URL +

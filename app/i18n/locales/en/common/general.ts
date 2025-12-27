@@ -27,14 +27,9 @@ export const general = {
     offline: {
         title: "Connection Failed",
         description:
-            "Unable to connect to server. You can view your timetable in offline mode.",
-        viewOfflineTimetable: "View Offline Timetable",
+            "Unable to connect to server. Please check your internet connection.",
         goHome: "Go Home",
         retry: "Retry",
-        lastSynced: "Last synced",
-        offlineMode: "Offline Mode",
-        noCache: "No cached timetable",
-        noCacheDescription:
-            "No timetable data available offline. Please check your internet connection and try again.",
+        banner: "You are offline. Timetable is available for viewing.",
     },
 }

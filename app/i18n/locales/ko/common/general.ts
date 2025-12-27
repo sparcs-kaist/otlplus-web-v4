@@ -26,15 +26,9 @@ export const general = {
     wishlist: "찜목록",
     offline: {
         title: "서버 연결 실패",
-        description:
-            "서버에 연결할 수 없습니다. 오프라인 모드로 시간표를 확인할 수 있습니다.",
-        viewOfflineTimetable: "오프라인 시간표 보기",
+        description: "서버에 연결할 수 없습니다. 인터넷 연결을 확인해 주세요.",
         goHome: "홈으로 돌아가기",
         retry: "다시 시도",
-        lastSynced: "마지막 동기화",
-        offlineMode: "오프라인 모드",
-        noCache: "저장된 시간표가 없습니다",
-        noCacheDescription:
-            "오프라인에서 볼 수 있는 시간표 데이터가 없습니다. 인터넷 연결을 확인하고 다시 시도해 주세요.",
+        banner: "오프라인 상태입니다. 시간표는 열람할 수 있습니다.",
     },
 }

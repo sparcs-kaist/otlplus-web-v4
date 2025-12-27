@@ -1,1 +1,1 @@
-export { idbPersister, createIDBPersister } from "./queryPersister"
+export { idbPersister, createIDBPersister, clearQueryCache } from "./queryPersister"

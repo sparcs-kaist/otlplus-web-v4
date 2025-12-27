@@ -6,6 +6,7 @@ import SearchIcon from "@mui/icons-material/Search"
 import { useQueryClient } from "@tanstack/react-query"
 
 import Modal from "@/common/components/Modal"
+import OfflineBanner from "@/common/components/OfflineBanner"
 import StyledDivider from "@/common/components/StyledDivider"
 import { type SemesterEnum } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
@@ -395,6 +396,7 @@ export default function Timetable() {
                         setYear={setYear}
                         setSemester={setSemesterEnum}
                     />
+                    <OfflineBanner />
                 </FlexWrapper>
                 <Block
                     direction={isLaptop ? "column" : "row"}

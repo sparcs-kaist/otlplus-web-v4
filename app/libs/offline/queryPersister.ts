@@ -18,3 +18,11 @@ export function createIDBPersister(): Persister {
 }
 
 export const idbPersister = createIDBPersister()
+
+/**
+ * Clear all persisted query cache from IndexedDB.
+ * Should be called on logout to prevent stale user data.
+ */
+export async function clearQueryCache(): Promise<void> {
+    await del(IDB_KEY)
+}
