@@ -168,12 +168,12 @@ const arePropsEqual = (
     if (prevProps.lecture.professors.length !== nextProps.lecture.professors.length) {
         return false
     }
-    for (let i = 0; i < prevProps.lecture.professors.length; i++) {
-        const prevProf = prevProps.lecture.professors[i]
-        const nextProf = nextProps.lecture.professors[i]
-        if (!prevProf || !nextProf || prevProf.name !== nextProf.name) {
-            return false
-        }
+    if (
+        !prevProps.lecture.professors.every(
+            (prevProf, i) => prevProf.name === nextProps.lecture.professors[i]?.name,
+        )
+    ) {
+        return false
     }
 
     // Compare timeBlock object properties that are used in rendering
