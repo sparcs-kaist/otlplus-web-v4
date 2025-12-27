@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 
+import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft"
 import ChevronRightIcon from "@mui/icons-material/ChevronRight"
@@ -54,6 +55,8 @@ const NavButton = styled.div<{ position: "left" | "right" }>`
 `
 
 export default function MobileReviewSlideSection() {
+    const theme = useTheme()
+
     const [currentIndex, setCurrentIndex] = useState(1)
     const [transition, setTransition] = useState("transform 0.3s ease-in-out")
     const [isTransitioning, setIsTransitioning] = useState(false)
@@ -168,13 +171,13 @@ export default function MobileReviewSlideSection() {
             </SlideTrack>
 
             <NavButton position="left" onClick={handlePrev}>
-                <Icon size={20}>
+                <Icon size={20} color={theme.colors.Text.default}>
                     <ChevronLeftIcon />
                 </Icon>
             </NavButton>
 
             <NavButton position="right" onClick={handleNext}>
-                <Icon size={20}>
+                <Icon size={20} color={theme.colors.Text.default}>
                     <ChevronRightIcon />
                 </Icon>
             </NavButton>

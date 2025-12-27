@@ -6,6 +6,7 @@ import type { Lecture } from "@/common/schemas/lecture"
 import CreditGridSubSection from "@/features/timetable/sections/TimetableInfoSection/CreditGridSubSection"
 import CreditScoreSubSection from "@/features/timetable/sections/TimetableInfoSection/CreditScoreSubSection"
 import ExamTimeSubSection from "@/features/timetable/sections/TimetableInfoSection/ExamTimeSubSection"
+import MapSubSection from "@/features/timetable/sections/TimetableInfoSection/MapSubSection"
 import UtilButtonsSubSection from "@/features/timetable/sections/TimetableInfoSection/UtilButtonsSubSection"
 import { media } from "@/styles/themes/media"
 import useIsDevice from "@/utils/useIsDevice"
@@ -31,28 +32,6 @@ const InfoArea = styled.div`
     }
 `
 
-const MapImage = styled.div`
-    width: 100%;
-    height: 220px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    overflow: hidden;
-
-    &::before {
-        content: "";
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        background-image: url("/campus_map.png");
-        background-size: cover;
-        background-position: center;
-        opacity: 0.8;
-    }
-`
-
 interface TimetableInfoSectionProps {
     timetableName: string
     timetableLectures: Lecture[]
@@ -75,7 +54,13 @@ export default function TimetableInfoSection({
     return (
         <InfoArea>
             {/* 캠퍼스 맵 */}
-            {!isLaptop && <MapImage />}
+            {!isLaptop && (
+                <MapSubSection
+                    timetableLectures={timetableLectures}
+                    hover={hover}
+                    setHover={setHover}
+                />
+            )}
             {/* 학점 분류별 */}
             <CreditGridSubSection
                 hover={hover}

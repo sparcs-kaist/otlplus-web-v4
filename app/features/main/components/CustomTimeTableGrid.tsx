@@ -37,6 +37,7 @@ const TimeWrapper = styled.div<{ cellHeight: number }>`
     gap: ${({ cellHeight }) => `${cellHeight * 2 - 11}px`};
     font-size: 8px;
     line-height: 11px;
+    color: ${({ theme }) => theme.colors.Text.default};
 `
 
 const DateWrapper = styled.div<{ width: number }>`
@@ -46,6 +47,7 @@ const DateWrapper = styled.div<{ width: number }>`
     line-height: 15px;
     padding-bottom: 5px;
     text-align: center;
+    color: ${({ theme }) => theme.colors.Text.default};
 `
 
 const CustomTimeTableGrid: React.FC<GridProps> = ({
