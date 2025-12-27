@@ -13,7 +13,7 @@ import Typography from "@/common/primitives/Typography"
 import { useAPI } from "@/utils/api/useAPI"
 
 const SemesterButtonWrapper = styled(FlexWrapper)`
-    width: 136px;
+    width: 150px;
     height: 32px;
     background-color: ${({ theme }) => theme.colors.Background.Section.default};
     border-radius: 6px;

@@ -1,3 +1,5 @@
+import { useEffect } from "react"
+
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import { Close } from "@mui/icons-material"
@@ -18,11 +20,15 @@ interface TimeFilterProps {
 function TimeFilterArea({ timeFilter, setTimeFilter }: TimeFilterProps) {
     const theme = useTheme()
 
+    useEffect(() => {
+        console.log(timeFilter)
+    }, [timeFilter])
+
     return (
         <FlexWrapper direction="column" gap={0}>
             <TimeFilterInner direction="row" gap={0}>
-                {timeFilter == null ? (
-                    <Typography color="Text.default">
+                {!timeFilter ? (
+                    <Typography color="Text.default" type="Normal">
                         클릭 후 시간표에서 드래그하여 선택
                     </Typography>
                 ) : (
