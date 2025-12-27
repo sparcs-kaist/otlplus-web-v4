@@ -1,6 +1,7 @@
 import React from "react"
 
 import styled from "@emotion/styled"
+import * as Sentry from "@sentry/react"
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import {
     Links,
@@ -115,13 +116,12 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
             error.status === 404
                 ? "The requested page could not be found."
                 : error.statusText || details
-    } else if (
-        process.env.NODE_ENV === "development" &&
-        error &&
-        error instanceof Error
-    ) {
-        details = error.message
-        stack = error.stack
+    } else if (error && error instanceof Error) {
+        Sentry.captureException(error)
+        if (process.env.NODE_ENV === "development") {
+            details = error.message
+            stack = error.stack
+        }
     }
 
     return (
