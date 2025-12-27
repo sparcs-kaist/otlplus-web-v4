@@ -131,24 +131,20 @@ const LectureTile: React.FC<{
     )
 }
 
+// Props type for the comparison function
+type LectureTileProps = {
+    lecture: Lecture
+    timeBlock: ClassTime
+    cellWidth: number
+    cellHeight: number
+    isSelected?: boolean
+    isHovered?: boolean
+}
+
 // Custom comparison function for React.memo to handle object props
 const arePropsEqual = (
-    prevProps: {
-        lecture: Lecture
-        timeBlock: ClassTime
-        cellWidth: number
-        cellHeight: number
-        isSelected?: boolean
-        isHovered?: boolean
-    },
-    nextProps: {
-        lecture: Lecture
-        timeBlock: ClassTime
-        cellWidth: number
-        cellHeight: number
-        isSelected?: boolean
-        isHovered?: boolean
-    },
+    prevProps: LectureTileProps,
+    nextProps: LectureTileProps,
 ) => {
     // Compare primitive props
     if (
@@ -162,7 +158,6 @@ const arePropsEqual = (
 
     // Compare lecture object properties that are used in rendering
     if (
-        prevProps.lecture.id !== nextProps.lecture.id ||
         prevProps.lecture.courseId !== nextProps.lecture.courseId ||
         prevProps.lecture.name !== nextProps.lecture.name
     ) {
@@ -174,9 +169,9 @@ const arePropsEqual = (
         return false
     }
     for (let i = 0; i < prevProps.lecture.professors.length; i++) {
-        if (
-            prevProps.lecture.professors[i]?.name !== nextProps.lecture.professors[i]?.name
-        ) {
+        const prevProf = prevProps.lecture.professors[i]
+        const nextProf = nextProps.lecture.professors[i]
+        if (!prevProf || !nextProf || prevProf.name !== nextProf.name) {
             return false
         }
     }
