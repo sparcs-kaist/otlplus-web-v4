@@ -1,5 +1,5 @@
 import type { HTMLAttributes } from "react"
-import React from "react"
+import React, { memo } from "react"
 
 import styled from "@emotion/styled"
 
@@ -134,4 +134,4 @@ const Button = ({
     )
 }
 
-export default Button
+export default memo(Button)

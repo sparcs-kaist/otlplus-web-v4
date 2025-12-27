@@ -1,3 +1,5 @@
+import { memo, useCallback } from "react"
+
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import CircleIcon from "@mui/icons-material/Circle"
@@ -44,15 +46,17 @@ const CourseBlock: React.FC<CourseBlockProps> = ({
     const { t } = useTranslation()
     const theme = useTheme()
 
+    const handleClick = useCallback(() => {
+        if (isSelected) {
+            selectCourseId(null)
+        } else {
+            selectCourseId(course.id)
+        }
+    }, [isSelected, course.id, selectCourseId])
+
     return (
         <CourseBlockInner
-            onClick={() => {
-                if (isSelected) {
-                    selectCourseId(null)
-                } else {
-                    selectCourseId(course.id)
-                }
-            }}
+            onClick={handleClick}
             selected={isSelected}
         >
             <FlexWrapper direction="row" gap={0} justify="space-between" align="center">
@@ -111,4 +115,4 @@ const CourseBlock: React.FC<CourseBlockProps> = ({
     )
 }
 
-export default CourseBlock
+export default memo(CourseBlock)

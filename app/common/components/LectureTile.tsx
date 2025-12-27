@@ -1,3 +1,4 @@
+import { memo } from "react"
 import type { CSSProperties } from "react"
 
 import styled from "@emotion/styled"
@@ -130,4 +131,4 @@ const LectureTile: React.FC<{
     )
 }
 
-export default LectureTile
+export default memo(LectureTile)

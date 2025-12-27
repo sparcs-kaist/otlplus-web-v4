@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { memo, useCallback, useState } from "react"
 
 import styled from "@emotion/styled"
 import FavoriteIcon from "@mui/icons-material/Favorite"
@@ -156,4 +156,4 @@ function ReviewBlock({
     } else return reviewContent
 }
 
-export default ReviewBlock
+export default memo(ReviewBlock)
