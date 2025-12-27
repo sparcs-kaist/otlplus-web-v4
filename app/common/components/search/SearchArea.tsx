@@ -148,8 +148,9 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
         <FlexWrapper
             direction="column"
             align="stretch"
+            justify="stretch"
             gap={0}
-            style={{ maxHeight: "100%" }}
+            style={{ maxHeight: "100%", width: "100%" }}
         >
             <FlexWrapper
                 direction="row"
@@ -181,27 +182,30 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
             </FlexWrapper>
 
             <AnimatePresence>
-                {open && (
-                    <motion.div
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                        variants={dropInVariants}
-                        transition={{ duration: 0.3, ease: "easeInOut" }}
-                        style={{
-                            overflow: "hidden",
-                            display: "flex",
-                            gap: "16px",
-                            flexDirection: "column",
-                            alignItems: "stretch",
-                            padding: "16px",
-                            flexShrink: 1,
-                        }}
+                <motion.div
+                    initial="hidden"
+                    animate={open ? "visible" : "hidden"}
+                    exit="exit"
+                    variants={dropInVariants}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    style={{
+                        display: "flex",
+                        flexShrink: 1,
+                        width: "100%",
+                        minHeight: 0,
+                    }}
+                >
+                    <FlexWrapper
+                        direction="column"
+                        align="stretch"
+                        gap={16}
+                        padding="16px"
+                        flex="1 0 0"
+                        style={{ overflowY: "auto", minHeight: 0 }}
                     >
                         <SearchFilterArea
                             options={options}
                             onChange={onChange}
-                            // 임시 방편, 나중에 방법 알아내면 수정할 예정
                             {...(withTimeFilter(options, timeFilter) as any)}
                         />
                         <FlexWrapper direction="row" justify="flex-end" gap={8}>
@@ -223,8 +227,8 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
                                 <Typography>검색</Typography>
                             </Button>
                         </FlexWrapper>
-                    </motion.div>
-                )}
+                    </FlexWrapper>
+                </motion.div>
             </AnimatePresence>
         </FlexWrapper>
     )

@@ -115,7 +115,6 @@ function ReviewWritingBlock({
     }
 
     useEffect(() => {
-        console.log(lectureId)
         resetReviewStates()
     }, [lectureId])
 

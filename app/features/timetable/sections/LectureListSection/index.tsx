@@ -33,7 +33,7 @@ const LectureListSectionInner = styled(FlexWrapper)`
     overflow: hidden;
 `
 
-const SearchSubSection = styled.div`
+const SearchSubSection = styled(FlexWrapper)`
     border-radius: 6px;
     border: 1px solid ${({ theme }) => theme.colors.Line.divider};
     max-height: 100%;
@@ -347,7 +347,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
             gap={8}
             ref={outerRef}
         >
-            <SearchSubSection>
+            <SearchSubSection direction="row" justify="stretch" gap={0}>
                 <SearchArea
                     options={["type", "department", "level", "term", "time"]}
                     timeFilter={timeFilter}
