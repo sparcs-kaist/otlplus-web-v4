@@ -4,6 +4,7 @@ import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import SearchIcon from "@mui/icons-material/Search"
 import { useQueryClient } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
 
 import Modal from "@/common/components/Modal"
 import StyledDivider from "@/common/components/StyledDivider"
@@ -19,9 +20,11 @@ import LectureListSection from "@/features/timetable/sections/LectureListSection
 import TabButtonRow from "@/features/timetable/sections/TabsRowSubSection/TabButtonRow"
 import TimetableInfoSection from "@/features/timetable/sections/TimetableInfoSection"
 import UtilButtonsSubSection from "@/features/timetable/sections/TimetableInfoSection/UtilButtonsSubSection"
+import { timetableCache, useNetworkStatus } from "@/libs/offline"
 import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
 import useIsDevice from "@/utils/useIsDevice"
+import useUserStore from "@/utils/zustand/useUserStore"
 
 const TimetableWrapper = styled(FlexWrapper)`
     min-height: 0;
@@ -165,9 +168,32 @@ const MobileControlBar = styled(FlexWrapper)`
     white-space: nowrap;
 `
 
+const OfflineBadge = styled.div`
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    background-color: ${({ theme }) => theme.colors.Highlight.default};
+    color: ${({ theme }) => theme.colors.Text.default};
+
+    &::before {
+        content: "";
+        display: block;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background-color: white;
+    }
+`
+
 export default function Timetable() {
+    const { t } = useTranslation()
     const queryClient = useQueryClient()
     const theme = useTheme()
+    const { user } = useUserStore()
+    const { isOnline } = useNetworkStatus()
 
     const isTablet = useIsDevice("tablet")
     const isLaptop = useIsDevice("laptop")
@@ -196,22 +222,56 @@ export default function Timetable() {
     // Mobile search modal state
     const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
 
+    // Offline mode state
+    const [cachedLectures, setCachedLectures] = useState<Lecture[]>([])
+    const [isUsingCache, setIsUsingCache] = useState(false)
+
     const { query: timetable } = useAPI("GET", `/timetables/${currentTimetableId}`, {
-        enabled: currentTimetableId !== null,
+        enabled: currentTimetableId !== null && isOnline,
     })
 
     const { query: myTimetable, setParams: setMyTimetableParams } = useAPI(
         "GET",
         "/timetables/my-timetable",
         {
-            enabled: currentTimetableId === null,
+            enabled: currentTimetableId === null && isOnline,
         },
     )
 
-    const currentTimetableLectures =
+    const onlineLectures =
         currentTimetableId === null
             ? (myTimetable.data?.lectures ?? [])
             : (timetable.data?.lectures ?? [])
+
+    const currentTimetableLectures = isUsingCache ? cachedLectures : onlineLectures
+
+    const syncToCache = useCallback(async () => {
+        if (user?.id && onlineLectures.length > 0 && year !== -1) {
+            await timetableCache.save(user.id, year, String(semesterEnum), onlineLectures)
+        }
+    }, [user?.id, onlineLectures, year, semesterEnum])
+
+    const loadFromCache = useCallback(async () => {
+        if (!user?.id) return
+        const cached = await timetableCache.getLatestForUser(user.id)
+        if (cached) {
+            setCachedLectures(cached.lectures)
+            setIsUsingCache(true)
+        }
+    }, [user?.id])
+
+    useEffect(() => {
+        if (isOnline && onlineLectures.length > 0 && user?.id) {
+            syncToCache()
+            setIsUsingCache(false)
+        }
+    }, [isOnline, onlineLectures, user?.id, syncToCache])
+
+    useEffect(() => {
+        if (!isOnline && user?.id) {
+            loadFromCache()
+        }
+    }, [isOnline, user?.id, loadFromCache])
 
     const { requestFunction: removeLectureFunction } = useAPI(
         "PATCH",
@@ -379,17 +439,26 @@ export default function Timetable() {
                 align="stretch"
                 justify="stretch"
             >
-                {/* 시간표 탭 */}
-                <TabButtonRow
-                    timeTableLectures={currentTimetableLectures}
-                    currentTimetableId={currentTimetableId}
-                    setCurrentTimetableId={setCurrentTimetableId}
-                    setCurrentTimetableName={setCurrentTimetableName}
-                    year={year}
-                    semester={semesterEnum}
-                    setYear={setYear}
-                    setSemester={setSemesterEnum}
-                />
+                <FlexWrapper
+                    direction="row"
+                    align="center"
+                    justify="space-between"
+                    gap={8}
+                >
+                    <TabButtonRow
+                        timeTableLectures={currentTimetableLectures}
+                        currentTimetableId={currentTimetableId}
+                        setCurrentTimetableId={setCurrentTimetableId}
+                        setCurrentTimetableName={setCurrentTimetableName}
+                        year={year}
+                        semester={semesterEnum}
+                        setYear={setYear}
+                        setSemester={setSemesterEnum}
+                    />
+                    {isUsingCache && (
+                        <OfflineBadge>{t("common.offline.offlineMode")}</OfflineBadge>
+                    )}
+                </FlexWrapper>
                 <Block
                     direction={isLaptop ? "column" : "row"}
                     gap={isLaptop ? 12 : 30}

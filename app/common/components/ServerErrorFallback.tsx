@@ -10,7 +10,6 @@ import Button from "./Button"
 
 interface ServerErrorFallbackProps {
     onRetry?: () => void
-    showOfflineOption?: boolean
 }
 
 const Container = styled.div`
@@ -49,19 +48,12 @@ const ButtonContainer = styled(FlexWrapper)`
     width: 100%;
 `
 
-const ServerErrorFallback: React.FC<ServerErrorFallbackProps> = ({
-    onRetry,
-    showOfflineOption = true,
-}) => {
+const ServerErrorFallback: React.FC<ServerErrorFallbackProps> = ({ onRetry }) => {
     const { t } = useTranslation()
     const navigate = useNavigate()
 
     const handleGoHome = () => {
         navigate("/")
-    }
-
-    const handleViewOffline = () => {
-        navigate("/timetable/offline")
     }
 
     return (
@@ -80,14 +72,8 @@ const ServerErrorFallback: React.FC<ServerErrorFallbackProps> = ({
                 </FlexWrapper>
 
                 <ButtonContainer direction="column" align="center" gap={12}>
-                    {showOfflineOption && (
-                        <Button type="highlighted" onClick={handleViewOffline} $isFlexRow>
-                            {t("common.offline.viewOfflineTimetable")}
-                        </Button>
-                    )}
-
                     {onRetry && (
-                        <Button type="default" onClick={onRetry} $isFlexRow>
+                        <Button type="highlighted" onClick={onRetry} $isFlexRow>
                             {t("common.offline.retry")}
                         </Button>
                     )}
