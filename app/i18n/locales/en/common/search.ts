@@ -1,6 +1,7 @@
 export const search = {
     search: "Search",
     cancel: "Cancel",
+    submit: "Search",
     level: "Grade",
     department: "Department",
     term: "Term",
