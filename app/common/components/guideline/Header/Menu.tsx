@@ -8,6 +8,7 @@ import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import { media } from "@/styles/themes/media"
 import useBackendStatusStore from "@/utils/zustand/useBackendStatusStore"
+import useUserStore from "@/utils/zustand/useUserStore"
 
 const MenuWrapper = styled(FlexWrapper)`
     gap: 231px;
@@ -53,6 +54,7 @@ interface MenuProps {
 const Menu: React.FC<MenuProps> = ({ setMobileSidebarOpen }) => {
     const { t } = useTranslation()
     const isBackendReachable = useBackendStatusStore((state) => state.isBackendReachable)
+    const { status } = useUserStore()
 
     return (
         <MenuWrapper direction="row" justify="space-between" align="center" gap={0}>
@@ -63,7 +65,7 @@ const Menu: React.FC<MenuProps> = ({ setMobileSidebarOpen }) => {
                 <StyledLink to="/dictionary">{t("header.dictionary")}</StyledLink>
                 <StyledLink to="/write-reviews">{t("header.writeReviews")}</StyledLink>
                 <StyledLink to="/timetable">{t("header.timetable")}</StyledLink>
-                {!isBackendReachable && (
+                {!isBackendReachable && status === "success" && (
                     <OfflineIndicator direction="row" align="center" gap={6}>
                         <Icon size={14} color="inherit">
                             <CloudOffIcon />
