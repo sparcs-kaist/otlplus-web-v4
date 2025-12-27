@@ -1,6 +1,7 @@
 export const search = {
     search: "검색",
-    cancel: "취소",
+    close: "닫기",
+    reset: "초기화",
     submit: "검색",
     level: "학년",
     department: "학과",

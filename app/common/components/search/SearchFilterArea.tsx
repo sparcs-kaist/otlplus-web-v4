@@ -98,6 +98,8 @@ type TimeProps<ops extends readonly SearchOptions[]> = "time" extends ops[number
 export type SearchFilterAreaProps<ops extends readonly SearchOptions[]> = {
     options: ops
     onChange: (options: ExportDataType) => void
+    resetTrigger: boolean
+    onResetTriggerComplete: () => void
 } & TimeProps<ops>
 
 const ChipsDetail = SearchOptionsChipsDetail
@@ -117,6 +119,8 @@ function SearchFilterArea<ops extends readonly SearchOptions[]>({
     onChange,
     timeFilter,
     setTimeFilter,
+    resetTrigger,
+    onResetTriggerComplete,
 }: SearchFilterAreaProps<ops>) {
     const { t } = useTranslation()
 
@@ -246,6 +250,14 @@ function SearchFilterArea<ops extends readonly SearchOptions[]>({
 
         onChange(data)
     }, [selectedOptions])
+
+    useEffect(() => {
+        if (resetTrigger) {
+            setChosenList(makeChosenList())
+            if (isOptions("time") && setTimeFilter) setTimeFilter(null)
+            onResetTriggerComplete()
+        }
+    }, [resetTrigger])
 
     return (
         <SearchFilterAreaWrapper direction="column" align="stretch" gap={12}>
