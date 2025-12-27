@@ -95,6 +95,12 @@ const CourseHistorySubsection: React.FC<CourseHistorySubsectionProps> = ({
         setIsHistoryFolded(shouldFold)
     }, [isMobile, courseDetail])
 
+    const onWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+        if (e.deltaY === 0) return
+        const target = e.currentTarget as HTMLDivElement
+        target.scrollLeft = target.scrollLeft + e.deltaY
+    }
+
     return (
         <>
             <FlexWrapper
@@ -116,6 +122,7 @@ const CourseHistorySubsection: React.FC<CourseHistorySubsectionProps> = ({
                 initial={{ height: isHistoryFolded ? 0 : "auto" }}
                 animate={{ height: isHistoryFolded ? 0 : "auto" }}
                 transition={{ duration: 0.2, ease: "easeInOut" }}
+                onWheel={onWheel}
             >
                 {[...(courseDetail?.history || [])].reverse().map((history, index) => (
                     <CourseHistoryBlock
