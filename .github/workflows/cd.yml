@@ -66,23 +66,24 @@ jobs:
             - name: Build
               run: pnpm build
               env:
-                  VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN_DEV }}
+                  VITE_SENTRY_DSN: ${{ vars.SENTRY_DSN_DEV }}
                   VITE_APP_API_URL: https://api.otl.dev.sparcs.org
                   VITE_APP_LOG_LEVEL: info
                   VITE_DEV_MODE: true
                   VITE_APP_DEV_API_AUTH_TOKEN: ${{ secrets.VITE_APP_DEV_API_AUTH_TOKEN }}
+                  VITE_CHANNELTALK_PLUGIN_KEY: ${{ vars.CHANNELTALK_PLUGIN_KEY }}
 
             - name: Configure AWS credentials
               uses: aws-actions/configure-aws-credentials@v4
               with:
-                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV }}
+                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}
                   aws-region: ap-northeast-2
 
             - name: Upload to S3 Dev
               run: |
-                  aws s3 sync build/ s3://otl-plus-dev/ --delete
-                  echo "✅ Uploaded build files to S3 Dev: s3://otl-plus-dev/"
+                  aws s3 sync build/ s3://${{ vars.S3_BUCKET_DEV }}/ --delete
+                  echo "✅ Uploaded build files to S3 Dev: s3://${{ vars.S3_BUCKET_DEV }}/"
 
             - name: Invalidate CloudFront cache
               run: |
@@ -200,20 +201,22 @@ jobs:
             - name: Build
               run: pnpm build
               env:
-                  VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN_PROD }}
+                  VITE_SENTRY_DSN: ${{ vars.SENTRY_DSN_PROD }}
+                  VITE_APP_API_URL: ${{ vars.API_URL_PROD }}
                   VITE_DEV_MODE: false
+                  VITE_CHANNELTALK_PLUGIN_KEY: ${{ vars.CHANNELTALK_PLUGIN_KEY }}
 
             - name: Configure AWS credentials
               uses: aws-actions/configure-aws-credentials@v4
               with:
-                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
+                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
                   aws-region: ap-northeast-2
 
             - name: Upload to S3 Production
               run: |
-                  aws s3 sync build/ s3://otl.sparcs.org-1/${{ github.event.release.tag_name }}/ --delete
-                  echo "✅ Uploaded build files to S3 Production: s3://otl.sparcs.org-1/${{ github.event.release.tag_name }}/"
+                  aws s3 sync build/ s3://${{ vars.S3_BUCKET_PROD }}/${{ github.event.release.tag_name }}/ --delete
+                  echo "✅ Uploaded build files to S3 Production: s3://${{ vars.S3_BUCKET_PROD }}/${{ github.event.release.tag_name }}/"
 
             - name: Create build archive
               run: |
