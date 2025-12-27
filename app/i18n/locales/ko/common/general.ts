@@ -30,5 +30,13 @@ export const general = {
         goHome: "홈으로 돌아가기",
         retry: "다시 시도",
         banner: "오프라인 상태입니다. 시간표는 열람할 수 있습니다.",
+        navDisabled: "오프라인 모드에서는 이용할 수 없습니다",
+    },
+    serverError: {
+        title: "서버 장애",
+        apology: "불편을 드려 죄송합니다",
+        description: "현재 서버에 문제가 발생했습니다. 잠시 후 다시 시도해 주세요.",
+        goHome: "홈으로 돌아가기",
+        retry: "다시 시도",
     },
 }
