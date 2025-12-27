@@ -32,10 +32,24 @@ import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { Timetables } from "@/common/schemas/timetables"
 import SemesterButton from "@/features/timetable/sections/TabsRowSubSection/SemesterButton"
+import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
 import useUserStore from "@/utils/zustand/useUserStore"
 
 import TabButton from "./TabButton"
+
+const TabButtonRowWrapper = styled(FlexWrapper)`
+    width: 100%;
+    max-width: 890px;
+
+    ${media.laptop} {
+        max-width: 586px;
+    }
+
+    ${media.tablet} {
+        max-width: 100%;
+    }
+`
 
 const TabRow = styled(FlexWrapper)`
     overflow-x: auto;
@@ -125,7 +139,15 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
                 <FlexWrapper direction="row" gap={0} align="center">
                     {isSelected && (
                         <IconButton onClick={onCopy} styles={{ padding: 5 }}>
-                            <Icon size={15} onClick={() => {}}>
+                            <Icon
+                                size={15}
+                                onClick={() => {}}
+                                color={
+                                    isSelected
+                                        ? theme.colors.Highlight.default
+                                        : theme.colors.Text.lighter
+                                }
+                            >
                                 <ContentCopyIcon />
                             </Icon>
                         </IconButton>
@@ -134,7 +156,11 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
                         <Icon
                             size={17.5}
                             onClick={() => {}}
-                            color={isSelected ? "inherit" : theme.colors.Text.lighter}
+                            color={
+                                isSelected
+                                    ? theme.colors.Highlight.default
+                                    : theme.colors.Text.lighter
+                            }
                         >
                             <CloseIcon />
                         </Icon>
@@ -277,12 +303,11 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
     }
 
     return (
-        <FlexWrapper
+        <TabButtonRowWrapper
             direction="row"
             justify="space-between"
             align="center"
-            gap={0}
-            style={{ maxWidth: "890px", width: "100%" }}
+            gap={4}
         >
             <FlexWrapper
                 direction="row"
@@ -323,7 +348,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                         >
                             <Icon
                                 size={15}
-                                color={theme.colors.Text.default}
+                                color={theme.colors.Highlight.default}
                                 onClick={() => {}}
                             >
                                 <ContentCopyIcon />
@@ -414,7 +439,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                 setSemester={setSemester}
                 setCurrentTimetableId={setCurrentTimetableId}
             />
-        </FlexWrapper>
+        </TabButtonRowWrapper>
     )
 }
 

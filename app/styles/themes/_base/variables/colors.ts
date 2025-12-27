@@ -86,37 +86,6 @@ export const colors = {
                     2: "#F4BADB",
                 },
             },
-            dark: {
-                red: {
-                    1: "#EDA0A0",
-                    2: "#F5837A",
-                },
-                orange: {
-                    1: "#F49A6B",
-                    2: "#F0BE78",
-                },
-                yellow: {
-                    1: "#F1D676",
-                    2: "#F4F180",
-                },
-                green: {
-                    1: "#C3F38C",
-                    2: "#8FE9BF",
-                    3: "#8BDBD4",
-                },
-                blue: {
-                    1: "#99DDF1",
-                    2: "#84BCEA",
-                },
-                purple: {
-                    1: "#89A0EA",
-                    2: "#BE92EC",
-                },
-                pink: {
-                    1: "#E19DE9",
-                    2: "#F487C5",
-                },
-            },
         },
     },
 
