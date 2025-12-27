@@ -19,4 +19,7 @@ export default defineConfig({
             ignored: ["**/node_modules/**", "**/.pnpm/**", "**/build/**"],
         },
     },
+    build: {
+        chunkSizeWarningLimit: 1000,
+    },
 })
