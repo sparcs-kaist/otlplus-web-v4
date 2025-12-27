@@ -186,14 +186,14 @@ jobs:
 
             - name: Upload to S3 Production
               run: |
-                  aws s3 sync build/ s3://${{ vars.S3_BUCKET_PROD }}/${{ github.event.release.tag_name }}/ --delete
-                  echo "✅ Uploaded build files to S3 Production: s3://${{ vars.S3_BUCKET_PROD }}/${{ github.event.release.tag_name }}/"
+                  aws s3 sync build/client/ s3://${{ vars.S3_BUCKET_PROD }}/${{ github.event.release.tag_name }}/ --delete
+                  echo "✅ Uploaded client build files to S3 Production: s3://${{ vars.S3_BUCKET_PROD }}/${{ github.event.release.tag_name }}/"
 
             - name: Create build archive
               run: |
-                  cd build
-                  tar -czf ../build-${{ github.event.release.tag_name }}.tar.gz .
-                  cd ..
+                  cd build/client
+                  tar -czf ../../build-${{ github.event.release.tag_name }}.tar.gz .
+                  cd ../..
 
             - name: Upload release asset
               uses: actions/upload-release-asset@v1
