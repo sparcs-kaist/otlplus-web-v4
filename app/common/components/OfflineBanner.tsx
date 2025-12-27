@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
-import { useNetworkStatus } from "@/utils/useNetworkStatus"
+import useBackendStatusStore from "@/utils/zustand/useBackendStatusStore"
 
 const Banner = styled(FlexWrapper)`
     background-color: ${({ theme }) => theme.colors.Background.Section.default};
@@ -16,10 +16,10 @@ const Banner = styled(FlexWrapper)`
 `
 
 const OfflineBanner: React.FC = () => {
-    const isOnline = useNetworkStatus()
+    const isBackendReachable = useBackendStatusStore((state) => state.isBackendReachable)
     const { t } = useTranslation()
 
-    if (isOnline) return null
+    if (isBackendReachable) return null
 
     return (
         <Banner direction="row" align="center" gap={8}>
