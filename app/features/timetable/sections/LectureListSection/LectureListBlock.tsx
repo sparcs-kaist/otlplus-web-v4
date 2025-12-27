@@ -11,6 +11,7 @@ import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 import checkOverlap from "@/utils/timetable/checkOverlap"
+import useIsDevice from "@/utils/useIsDevice"
 
 import formatProfessorName from "./formatProfessorName"
 
@@ -89,6 +90,8 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
     handleAddToTimetable,
     t,
 }) => {
+    const isTablet = useIsDevice("tablet")
+
     const courseId = course.lectures[0]?.courseId ?? -1
     const opacity =
         selectedLecture != null && selectedLecture.courseId !== courseId ? 0.3 : 1
@@ -124,13 +127,18 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
             <Divider />
             {course.lectures.map((lecture, idx) => {
                 const wish = isInWish.includes(lecture.id)
+                const isHovered =
+                    hoveredLecture?.some((lec) => lec.id === lecture.id) === true
                 return (
                     <React.Fragment key={lecture.id}>
                         <LectureItemWrapper
+                            data-lecture-id={lecture.id}
                             onMouseEnter={() => {
+                                if (isTablet) return
                                 setHoveredLecture([lecture])
                             }}
                             onMouseLeave={() => {
+                                if (isTablet) return
                                 setHoveredLecture(null)
                             }}
                             onClick={() => {
@@ -141,70 +149,92 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
                                 setSelectedLecture(lecture)
                             }}
                             isHighlighted={
-                                selectedLecture?.id === lecture.id ||
-                                hoveredLecture?.some((lec) => lec.id === lecture.id) ===
-                                    true
+                                selectedLecture?.id === lecture.id || isHovered
                             }
                         >
-                            <FlexWrapper
-                                direction="row"
-                                gap={6}
-                                style={{
-                                    opacity: course.completed ? 0.3 : 1,
-                                }}
-                            >
-                                <Typography type={"NormalBold"} color={"Text.default"}>
-                                    {lecture.classNo}
-                                </Typography>
-                                <Typography type={"Normal"} color={"Text.default"}>
-                                    {formatProfessorName(lecture.professors)}
-                                </Typography>
+                            <FlexWrapper direction="column" gap={0}>
+                                {isTablet && isHovered && (
+                                    <Typography type="Small" color="Text.placeholder">
+                                        {lecture.department.name} / {lecture.type}
+                                    </Typography>
+                                )}
+                                <FlexWrapper
+                                    direction="row"
+                                    gap={6}
+                                    style={{
+                                        opacity: course.completed ? 0.3 : 1,
+                                    }}
+                                >
+                                    <Typography type="NormalBold" color="Text.default">
+                                        {lecture.classNo}
+                                    </Typography>
+                                    <Typography type="Normal" color="Text.default">
+                                        {formatProfessorName(lecture.professors)}
+                                    </Typography>
+                                </FlexWrapper>
+                                {isTablet && isHovered && (
+                                    <Typography type="Small" color="Text.placeholder">
+                                        {lecture.classes[0]?.buildingName}{" "}
+                                        {lecture.classes[0]?.roomName} /{" "}
+                                        {lecture.limitPeople}
+                                    </Typography>
+                                )}
                             </FlexWrapper>
                             <FlexWrapper
                                 direction="row"
                                 gap={6}
                                 onClick={(e) => e.stopPropagation()}
                             >
-                                {wish || isWishlist ? (
-                                    <Icon
-                                        size={15}
-                                        color="#E54C65"
-                                        onClick={() => handleLikeClick(wish, lecture.id)}
+                                {!isTablet &&
+                                    (wish || isWishlist ? (
+                                        <Icon
+                                            size={15}
+                                            color="#E54C65"
+                                            onClick={() =>
+                                                handleLikeClick(wish, lecture.id)
+                                            }
+                                        >
+                                            <FavoriteIcon />
+                                        </Icon>
+                                    ) : (
+                                        <Icon
+                                            size={15}
+                                            onClick={() =>
+                                                handleLikeClick(wish, lecture.id)
+                                            }
+                                        >
+                                            <FavoriteBorderIcon />
+                                        </Icon>
+                                    ))}
+                                {(!isTablet ||
+                                    hoveredLecture?.some(
+                                        (lec) => lec.id === lecture.id,
+                                    )) && (
+                                    <span
+                                        style={{
+                                            opacity:
+                                                currentTimetableId == null ||
+                                                timetableLectures.some((lec) =>
+                                                    checkOverlap(
+                                                        lec.classes,
+                                                        lecture.classes,
+                                                    ),
+                                                )
+                                                    ? 0.3
+                                                    : 1,
+                                            cursor: isAddTimetablePending
+                                                ? "wait"
+                                                : "pointer",
+                                        }}
                                     >
-                                        <FavoriteIcon />
-                                    </Icon>
-                                ) : (
-                                    <Icon
-                                        size={15}
-                                        onClick={() => handleLikeClick(wish, lecture.id)}
-                                    >
-                                        <FavoriteBorderIcon />
-                                    </Icon>
+                                        <Icon
+                                            size={isTablet ? 30 : 15}
+                                            onClick={() => handleAddToTimetable(lecture)}
+                                        >
+                                            <AddIcon />
+                                        </Icon>
+                                    </span>
                                 )}
-                                <span
-                                    style={{
-                                        opacity:
-                                            currentTimetableId == null ||
-                                            timetableLectures.some((lec) =>
-                                                checkOverlap(
-                                                    lec.classes,
-                                                    lecture.classes,
-                                                ),
-                                            )
-                                                ? 0.3
-                                                : 1,
-                                        cursor: isAddTimetablePending
-                                            ? "wait"
-                                            : "pointer",
-                                    }}
-                                >
-                                    <Icon
-                                        size={15}
-                                        onClick={() => handleAddToTimetable(lecture)}
-                                    >
-                                        <AddIcon />
-                                    </Icon>
-                                </span>
                             </FlexWrapper>
                         </LectureItemWrapper>
                         {idx !== course.lectures.length - 1 && <Divider />}

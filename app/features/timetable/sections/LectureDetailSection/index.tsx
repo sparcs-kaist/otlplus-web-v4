@@ -50,7 +50,7 @@ const LectureTitle = styled(FlexWrapper)`
 `
 
 const LectureActionsWrapper = styled(FlexWrapper)`
-    position: absolute;
+    position: sticky;
     bottom: 0;
     width: 100%;
     padding: 12px 0;
@@ -282,22 +282,23 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
 
                             {!timetableLectures?.some(
                                 (lec) => lec.id === selectedLecture.id,
-                            ) && (
-                                <Button
-                                    type="selected"
-                                    onClick={() => {
-                                        handleAddToTimetable(selectedLecture)
-                                        if (onMobileModalClose) onMobileModalClose()
-                                    }}
-                                >
-                                    <Icon size={15}>
-                                        <AddIcon />
-                                    </Icon>
-                                    <Typography type="NormalBold">
-                                        시간표에 추가
-                                    </Typography>
-                                </Button>
-                            )}
+                            ) &&
+                                currentTimetableId && (
+                                    <Button
+                                        type="selected"
+                                        onClick={() => {
+                                            handleAddToTimetable(selectedLecture)
+                                            if (onMobileModalClose) onMobileModalClose()
+                                        }}
+                                    >
+                                        <Icon size={15}>
+                                            <AddIcon />
+                                        </Icon>
+                                        <Typography type="NormalBold">
+                                            시간표에 추가
+                                        </Typography>
+                                    </Button>
+                                )}
                         </LectureActionsWrapper>
                     )}
                 </>
