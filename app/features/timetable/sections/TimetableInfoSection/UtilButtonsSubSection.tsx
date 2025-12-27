@@ -30,6 +30,12 @@ const UtilButtonsWrapper = styled(FlexWrapper)`
         flex-wrap: wrap;
         align-items: center;
     }
+
+    ${media.tablet} {
+        height: auto;
+        flex-wrap: nowrap;
+        align-items: flex-start;
+    }
 `
 
 const ExportButton = styled.button`
@@ -61,6 +67,7 @@ export default function UtilButtonsSubSection({
     semester: SemesterEnum
 }) {
     const theme = useTheme()
+    const isTablet = useIsDevice("tablet")
     const isLaptop = useIsDevice("laptop")
 
     const { query } = useAPI("GET", "/semesters")
@@ -87,7 +94,7 @@ export default function UtilButtonsSubSection({
     }, [process])
 
     return (
-        <UtilButtonsWrapper direction="column" gap={8}>
+        <UtilButtonsWrapper direction={isTablet ? "row" : "column"} gap={8}>
             <ExportButton
                 onClick={() => {
                     if (process === "idle") {
@@ -106,7 +113,7 @@ export default function UtilButtonsSubSection({
                 <Icon size={16} color={theme.colors.Highlight.default} onClick={() => {}}>
                     {process == "successCopyImage" ? <Check /> : <ContentCopyIcon />}
                 </Icon>
-                <span>이미지로 복사하기</span>
+                {!isTablet && <span>이미지로 복사하기</span>}
             </ExportButton>
             <ExportButton
                 onClick={() => {
@@ -126,7 +133,7 @@ export default function UtilButtonsSubSection({
                 <Icon size={16} color={theme.colors.Highlight.default} onClick={() => {}}>
                     {process == "successDownloadImage" ? <Check /> : <ImageIcon />}
                 </Icon>
-                <span>이미지로 내보내기</span>
+                {!isTablet && <span>이미지로 내보내기</span>}
             </ExportButton>
             <ExportButton
                 onClick={() => {
@@ -151,14 +158,14 @@ export default function UtilButtonsSubSection({
                         <CalendarMonthIcon />
                     )}
                 </Icon>
-                <span>캘린더로 내보내기</span>
+                {!isTablet && <span>캘린더로 내보내기</span>}
             </ExportButton>
             {!isLaptop && <StyledDivider />}
             <ExportButton onClick={() => console.log("실라버스 모아보기")}>
                 <Icon size={16} color={theme.colors.Highlight.default} onClick={() => {}}>
                     <MenuBookIcon />
                 </Icon>
-                <span>실라버스 모아보기</span>
+                {!isTablet && <span>실라버스 모아보기</span>}
             </ExportButton>
         </UtilButtonsWrapper>
     )

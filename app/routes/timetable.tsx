@@ -1,11 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 
+import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
+import SearchIcon from "@mui/icons-material/Search"
 import { useQueryClient } from "@tanstack/react-query"
 
 import StyledDivider from "@/common/components/StyledDivider"
 import { type SemesterEnum } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
+import Icon from "@/common/primitives/Icon"
+import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimeBlock } from "@/common/schemas/timeblock"
 import CustomTimeTableGrid from "@/features/timetable/components/CustomTimeTableGrid"
@@ -38,6 +42,10 @@ const SearchAreaWrapper = styled(FlexWrapper)`
         padding: 0;
         border-radius: 0;
     }
+
+    ${media.tablet} {
+        flex: 1 0 0;
+    }
 `
 
 const ContentsAreaWrapper = styled(FlexWrapper)`
@@ -52,6 +60,7 @@ const ContentsAreaWrapper = styled(FlexWrapper)`
     ${media.tablet} {
         width: 100%;
         max-width: none;
+        flex: 1 0 0;
     }
 `
 
@@ -102,6 +111,10 @@ const LectureListArea = styled.div`
     ${media.laptop} {
         width: 300px;
     }
+
+    ${media.tablet} {
+        width: 100%;
+    }
 `
 
 const UtilButtonsArea = styled.div`
@@ -139,8 +152,16 @@ const TimetableInfoArea = styled.div`
     }
 `
 
+const MobileControlBar = styled(FlexWrapper)`
+    background-color: ${({ theme }) => theme.colors.Background.Section.default};
+    padding: 8px;
+    border-radius: 12px;
+    white-space: nowrap;
+`
+
 export default function Timetable() {
     const queryClient = useQueryClient()
+    const theme = useTheme()
 
     const isTablet = useIsDevice("tablet")
     const isLaptop = useIsDevice("laptop")
@@ -156,7 +177,7 @@ export default function Timetable() {
     // Time filter state for search area
     const [timeFilter, setTimeFilter] = useState<TimeBlock | null>(null)
 
-    // Current timetable ID (placeholder - should come from timetable selection logic)
+    // Current timetable
     const [currentTimetableId, setCurrentTimetableId] = useState<number | null>(null)
     const [currentTimetableName, setCurrentTimetableName] = useState<string>("")
     const [year, setYear] = useState<number>(-1)
@@ -165,6 +186,9 @@ export default function Timetable() {
     // for timetable area size(temporary)
     const [contentsAreaWidth, setContentsAreaWidth] = useState(0)
     const [contentsAreaHeight, setContentsAreaHeight] = useState<number>(0)
+
+    // Mobile search modal state
+    const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
 
     const { query: timetable } = useAPI("GET", `/timetables/${currentTimetableId}`, {
         enabled: currentTimetableId !== null,
@@ -177,6 +201,11 @@ export default function Timetable() {
             enabled: currentTimetableId === null,
         },
     )
+
+    const currentTimetableLectures =
+        currentTimetableId === null
+            ? (myTimetable.data?.lectures ?? [])
+            : (timetable.data?.lectures ?? [])
 
     const { requestFunction: removeLectureFunction } = useAPI(
         "PATCH",
@@ -250,29 +279,51 @@ export default function Timetable() {
 
     return (
         <TimetableWrapper
-            direction="row"
+            direction={isTablet ? "column-reverse" : "row"}
             align="stretch"
             justify="center"
             gap={12}
             flex="1 0 0"
             ref={outerRef}
         >
-            {!isTablet && (
+            {!mobileSearchOpen && isTablet && (
+                <MobileControlBar direction="row" gap={0}>
+                    <UtilButtonsSubSection
+                        timetableName={currentTimetableName}
+                        timetableLectures={currentTimetableLectures}
+                        year={year}
+                        semester={semesterEnum}
+                    />
+                    <FlexWrapper
+                        direction="row"
+                        gap={4}
+                        align="center"
+                        style={{ height: "100%" }}
+                        onClick={() => {
+                            setMobileSearchOpen(true)
+                        }}
+                    >
+                        <Icon size={16} color={theme.colors.Highlight.default}>
+                            <SearchIcon />
+                        </Icon>
+                        <Typography type="Normal" color="Highlight.default">
+                            과목 검색하기
+                        </Typography>
+                    </FlexWrapper>
+                </MobileControlBar>
+            )}
+            {(mobileSearchOpen || !isTablet) && (
                 <SearchAreaWrapper
                     direction={isDesktop ? "column-reverse" : "row"}
                     align="flex-start"
                     gap={12}
                     ref={searchAreaRef}
                 >
-                    {isLaptop && (
+                    {!isTablet && isLaptop && (
                         <UtilButtonsArea>
                             <UtilButtonsSubSection
                                 timetableName={currentTimetableName}
-                                timetableLectures={
-                                    currentTimetableId === null
-                                        ? (myTimetable.data?.lectures ?? [])
-                                        : (timetable.data?.lectures ?? [])
-                                }
+                                timetableLectures={currentTimetableLectures}
                                 year={year}
                                 semester={semesterEnum}
                             />
@@ -281,11 +332,7 @@ export default function Timetable() {
                     {/*과목 목록 영역*/}
                     <LectureListArea>
                         <LectureListSection
-                            timetableLectures={
-                                currentTimetableId === null
-                                    ? (myTimetable.data?.lectures ?? [])
-                                    : (timetable.data?.lectures ?? [])
-                            }
+                            timetableLectures={currentTimetableLectures}
                             year={year}
                             semester={semesterEnum}
                             hoveredLecture={hover}
@@ -299,15 +346,21 @@ export default function Timetable() {
                     </LectureListArea>
                     {!isDesktop && <StyledDivider direction="column" />}
                     {/*과목 정보 영역*/}
-                    <LectureInfoArea>
-                        <LectureDetailSection
-                            selectedLecture={
-                                selected ? selected : hover?.length == 1 ? hover[0] : null
-                            }
-                            year={year}
-                            semester={semesterEnum}
-                        />
-                    </LectureInfoArea>
+                    {!isTablet && (
+                        <LectureInfoArea>
+                            <LectureDetailSection
+                                selectedLecture={
+                                    selected
+                                        ? selected
+                                        : hover?.length == 1
+                                          ? hover[0]
+                                          : null
+                                }
+                                year={year}
+                                semester={semesterEnum}
+                            />
+                        </LectureInfoArea>
+                    )}
                 </SearchAreaWrapper>
             )}
             <ContentsAreaWrapper
@@ -318,11 +371,7 @@ export default function Timetable() {
             >
                 {/* 시간표 탭 */}
                 <TabButtonRow
-                    timeTableLectures={
-                        currentTimetableId === null
-                            ? (myTimetable.data?.lectures ?? [])
-                            : (timetable.data?.lectures ?? [])
-                    }
+                    timeTableLectures={currentTimetableLectures}
                     currentTimetableId={currentTimetableId}
                     setCurrentTimetableId={setCurrentTimetableId}
                     setCurrentTimetableName={setCurrentTimetableName}
@@ -346,11 +395,7 @@ export default function Timetable() {
                                     ? contentsAreaHeight - 60
                                     : contentsAreaHeight - 36
                             }
-                            lectureSummary={
-                                currentTimetableId === null
-                                    ? (myTimetable.data?.lectures ?? [])
-                                    : (timetable.data?.lectures ?? [])
-                            }
+                            lectureSummary={currentTimetableLectures}
                             setTimeFilter={setTimeFilter}
                             hover={hover}
                             setHover={setHover}
@@ -368,11 +413,7 @@ export default function Timetable() {
                     <TimetableInfoArea>
                         <TimetableInfoSection
                             timetableName={currentTimetableName}
-                            timetableLectures={
-                                currentTimetableId === null
-                                    ? (myTimetable.data?.lectures ?? [])
-                                    : (timetable.data?.lectures ?? [])
-                            }
+                            timetableLectures={currentTimetableLectures}
                             hover={hover}
                             setHover={setHover}
                             year={year}
