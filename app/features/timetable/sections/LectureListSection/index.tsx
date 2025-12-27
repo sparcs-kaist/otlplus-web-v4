@@ -367,7 +367,11 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                         setIsWishlist((prev) => !prev)
                     }}
                 >
-                    <Icon size={15} color={theme.colors.Highlight.default}>
+                    <Icon
+                        size={15}
+                        color={theme.colors.Highlight.default}
+                        onClick={() => {}}
+                    >
                         {isWishlist ? <FavoriteIcon /> : <FavoriteBorderIcon />}
                     </Icon>
                     <Typography type={"Normal"} color={"Highlight.default"}>

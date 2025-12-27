@@ -39,9 +39,14 @@ const FilledIcons = {
     hallOfFameFeed: EmojiEvents,
     liked: Favorite,
 }
+
 const TabSelectedStyle = ({ theme }: { theme: Theme }) => css`
     background: ${theme.colors.Background.Section.default};
     color: ${theme.colors.Highlight.default};
+
+    &:hover {
+        background: ${theme.colors.Background.Section.default};
+    }
 `
 
 const Tab = styled(FlexWrapper)<{ selected: boolean }>`
@@ -50,6 +55,11 @@ const Tab = styled(FlexWrapper)<{ selected: boolean }>`
     border-radius: 12px 12px 0 0;
     cursor: pointer;
     height: 34px;
+
+    &:hover {
+        background: ${({ theme }) => theme.colors.Background.Tab.darker};
+    }
+
     ${({ selected, theme }) => selected && TabSelectedStyle({ theme })}
 `
 

@@ -77,7 +77,7 @@ function buildOriginalPathRegex(path: Path): RegExp {
 export function getOriginalPathValue<P extends DynamicPath>(path: P): GetOriginalPath<P> {
     const blocks = path.split("/")
     const originalBlocks = originalPaths.map((originalPath) => originalPath.split("/"))
-    let scores = new Map<(typeof originalPaths)[number], number>()
+    const scores = new Map<(typeof originalPaths)[number], number>()
 
     originalBlocks.forEach((originalBlock, index) => {
         originalBlock.forEach((segment, segmentIndex) => {

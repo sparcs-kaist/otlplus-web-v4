@@ -17,16 +17,18 @@ import {
     horizontalListSortingStrategy,
     useSortable,
 } from "@dnd-kit/sortable"
+import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import AddIcon from "@mui/icons-material/Add"
 import CloseIcon from "@mui/icons-material/Close"
 import ContentCopyIcon from "@mui/icons-material/ContentCopy"
-import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 
 import { SemesterEnum } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
+import { IconButton } from "@/common/primitives/IconButton"
+import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { Timetables } from "@/common/schemas/timetables"
 import SemesterButton from "@/features/timetable/sections/TabsRowSubSection/SemesterButton"
@@ -45,7 +47,7 @@ const TabRow = styled(FlexWrapper)`
     }
 `
 
-const TimetableName = styled.span`
+const TimetableName = styled(Typography)`
     outline: none;
     user-select: none;
 `
@@ -69,6 +71,8 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
     onNameChange,
     isDragging,
 }) => {
+    const theme = useTheme()
+
     const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
         id: timetable.id,
     })
@@ -112,17 +116,30 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
                     }}
                     contentEditable={false}
                     suppressContentEditableWarning={true}
+                    type="Normal"
+                    color={isSelected ? "Highlight.default" : "Text.lighter"}
+                    style={{ paddingTop: 4, paddingBottom: 3.5 }}
                 >
                     {timetable.name ? timetable.name : "No Title"}
                 </TimetableName>
-                {isSelected && (
-                    <Icon size={15} onClick={onCopy}>
-                        <ContentCopyIcon />
-                    </Icon>
-                )}
-                <Icon size={17.5} onClick={onDelete}>
-                    <CloseIcon />
-                </Icon>
+                <FlexWrapper direction="row" gap={0} align="center">
+                    {isSelected && (
+                        <IconButton onClick={onCopy} styles={{ padding: 5 }}>
+                            <Icon size={15} onClick={() => {}}>
+                                <ContentCopyIcon />
+                            </Icon>
+                        </IconButton>
+                    )}
+                    <IconButton onClick={onDelete} styles={{ padding: 3.75 }}>
+                        <Icon
+                            size={17.5}
+                            onClick={() => {}}
+                            color={isSelected ? "inherit" : theme.colors.Text.lighter}
+                        >
+                            <CloseIcon />
+                        </Icon>
+                    </IconButton>
+                </FlexWrapper>
             </TabButton>
         </div>
     )
@@ -151,7 +168,6 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
 }) => {
     const { t } = useTranslation()
     const { status } = useUserStore()
-    const queryClient = useQueryClient()
 
     const { query: timetables, setParams } = useAPI("GET", "/timetables", {
         select: (data) => {
@@ -267,7 +283,13 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
             gap={0}
             style={{ maxWidth: "890px", width: "100%" }}
         >
-            <FlexWrapper direction="row" gap={3} flex="1 1 auto" style={{ minWidth: 0 }}>
+            <FlexWrapper
+                direction="row"
+                align="flex-start"
+                gap={3}
+                flex="1 1 auto"
+                style={{ minWidth: 0 }}
+            >
                 <TabButton
                     key="my-timetable"
                     type={currentTimetableId == null ? "selected" : "default"}
@@ -275,10 +297,19 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                         setCurrentTimetableId(null)
                     }}
                 >
-                    {t("timetable.myTimetable")}
+                    <Typography
+                        type="Normal"
+                        color={
+                            currentTimetableId === null
+                                ? "Highlight.default"
+                                : "Text.lighter"
+                        }
+                        style={{ paddingTop: 4, paddingBottom: 3.5 }}
+                    >
+                        {t("timetable.myTimetable")}
+                    </Typography>
                     {currentTimetableId === null && (
-                        <Icon
-                            size={15}
+                        <IconButton
                             onClick={(e) => {
                                 e.stopPropagation()
                                 addTimetable({
@@ -287,9 +318,12 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                                     lectureIds: timeTableLectures.map((lec) => lec.id),
                                 })
                             }}
+                            styles={{ padding: 5 }}
                         >
-                            <ContentCopyIcon />
-                        </Icon>
+                            <Icon size={15} onClick={() => {}}>
+                                <ContentCopyIcon />
+                            </Icon>
+                        </IconButton>
                     )}
                 </TabButton>
                 <TabRow direction="row" gap={3} flex="1 1 auto" onWheel={onWheel}>
@@ -356,9 +390,11 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                             })
                         }}
                     >
-                        <Icon size={17.5}>
-                            <AddIcon />
-                        </Icon>
+                        <IconButton onClick={(e) => {}} styles={{ padding: 3.75 }}>
+                            <Icon size={17.5} onClick={() => {}}>
+                                <AddIcon />
+                            </Icon>
+                        </IconButton>
                     </TabButton>
                 </TabRow>
             </FlexWrapper>

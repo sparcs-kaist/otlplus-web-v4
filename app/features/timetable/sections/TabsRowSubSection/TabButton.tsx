@@ -10,7 +10,7 @@ type TabButtonProps = {
 
 const TabButtonInner = styled.div`
     display: inline-flex;
-    padding: 8px 12px;
+    padding: 5px 12px;
     justify-content: center;
     align-items: center;
     border-top-right-radius: 12px;
@@ -24,6 +24,10 @@ const TabButtonDefaultInner = styled(TabButtonInner)`
     color: ${({ theme }) => theme.colors.Text.lighter};
     background-color: ${({ theme }) => theme.colors.Background.Tab.dark};
     cursor: pointer;
+
+    &:hover {
+        background-color: ${({ theme }) => theme.colors.Background.Tab.darker};
+    }
 `
 
 const TabButtonSelectedInner = styled(TabButtonInner)`

@@ -8,6 +8,7 @@ import NavigateNextIcon from "@mui/icons-material/NavigateNext"
 import { SemesterEnum, semesterToString } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
+import { IconButton } from "@/common/primitives/IconButton"
 import Typography from "@/common/primitives/Typography"
 import { useAPI } from "@/utils/api/useAPI"
 
@@ -16,7 +17,7 @@ const SemesterButtonWrapper = styled(FlexWrapper)`
     height: 32px;
     background-color: ${({ theme }) => theme.colors.Background.Section.default};
     border-radius: 6px;
-    padding: 8px 10px;
+    padding: 3px 10px;
     flex-shrink: 0;
 `
 
@@ -98,32 +99,43 @@ export default function SemesterButton({
             justify="space-between"
             align="center"
         >
-            <Icon
-                size={20}
-                color={
-                    isFirstSemester
-                        ? theme.colors.Text.disable
-                        : theme.colors.Highlight.default
-                }
-                onClick={onClickPreviousSemester}
+            <IconButton
+                onClick={isFirstSemester ? undefined : onClickPreviousSemester}
+                styles={{ padding: 2.5 }}
             >
-                <NavigateBeforeIcon />
-            </Icon>
+                <Icon
+                    size={20}
+                    color={
+                        isFirstSemester
+                            ? theme.colors.Text.disable
+                            : theme.colors.Highlight.default
+                    }
+                    onClick={isFirstSemester ? undefined : () => {}}
+                >
+                    <NavigateBeforeIcon />
+                </Icon>
+            </IconButton>
             <Typography color="Highlight.default">{year}</Typography>
             <Typography color="Highlight.default">
                 {semesterToString(semester)}
             </Typography>
-            <Icon
-                size={20}
-                color={
-                    isLastSemester
-                        ? theme.colors.Text.disable
-                        : theme.colors.Highlight.default
-                }
-                onClick={onClickNextSemester}
+
+            <IconButton
+                onClick={isLastSemester ? undefined : onClickNextSemester}
+                styles={{ padding: 2.5 }}
             >
-                <NavigateNextIcon />
-            </Icon>
+                <Icon
+                    size={20}
+                    color={
+                        isLastSemester
+                            ? theme.colors.Text.disable
+                            : theme.colors.Highlight.default
+                    }
+                    onClick={isLastSemester ? undefined : () => {}}
+                >
+                    <NavigateNextIcon />
+                </Icon>
+            </IconButton>
         </SemesterButtonWrapper>
     )
 }
