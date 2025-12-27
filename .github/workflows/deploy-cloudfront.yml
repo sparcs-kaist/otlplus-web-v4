@@ -30,6 +30,34 @@ jobs:
       contents: read
     
     steps:
+      - name: Notify Slack - Deploy Started
+        uses: slackapi/slack-github-action@v2.1.0
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            channel: ${{ secrets.SLACK_CHANNEL_ID }}
+            text: "🚀 *OTL+ CloudFront 배포 시작*"
+            blocks:
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "🚀 *OTL+ CloudFront 배포 시작*"
+              - type: section
+                fields:
+                  - type: mrkdwn
+                    text: "*Environment:*\n${{ inputs.environment }}"
+                  - type: mrkdwn
+                    text: "*Tag:*\n`${{ inputs.tag_name }}`"
+                  - type: mrkdwn
+                    text: "*Triggered by:*\n${{ github.actor }}"
+                  - type: mrkdwn
+                    text: "*Type:*\nManual Dispatch"
+              - type: context
+                elements:
+                  - type: mrkdwn
+                    text: "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Workflow>"
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -171,3 +199,60 @@ jobs:
           echo "### 다음 단계" >> $GITHUB_STEP_SUMMARY
           echo "CloudFront 전파가 완료될 때까지 몇 분 기다려주세요. 배포 상태는 [CloudFront 콘솔](https://console.aws.amazon.com/cloudfront/v3/home?region=us-east-1#/distributions/${{ steps.set-env.outputs.cloudfront_dist_id }})에서 확인할 수 있습니다." >> $GITHUB_STEP_SUMMARY
 
+      - name: Notify Slack - Deploy Success
+        if: success()
+        uses: slackapi/slack-github-action@v2.1.0
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            channel: ${{ secrets.SLACK_CHANNEL_ID }}
+            text: "✅ *OTL+ CloudFront 배포 완료*"
+            blocks:
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "✅ *OTL+ CloudFront 배포 완료*"
+              - type: section
+                fields:
+                  - type: mrkdwn
+                    text: "*Environment:*\n${{ inputs.environment }}"
+                  - type: mrkdwn
+                    text: "*Status:*\n성공 🎉"
+                  - type: mrkdwn
+                    text: "*Tag:*\n`${{ inputs.tag_name }}`"
+                  - type: mrkdwn
+                    text: "*Triggered by:*\n${{ github.actor }}"
+              - type: context
+                elements:
+                  - type: mrkdwn
+                    text: "<${{ inputs.environment == 'production' && 'https://otl.sparcs.org' || 'https://otl.dev.sparcs.org' }}|View Site> | <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Workflow>"
+
+      - name: Notify Slack - Deploy Failed
+        if: failure()
+        uses: slackapi/slack-github-action@v2.1.0
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.SLACK_BOT_TOKEN }}
+          payload: |
+            channel: ${{ secrets.SLACK_CHANNEL_ID }}
+            text: "❌ *OTL+ CloudFront 배포 실패*"
+            blocks:
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: "❌ *OTL+ CloudFront 배포 실패*"
+              - type: section
+                fields:
+                  - type: mrkdwn
+                    text: "*Environment:*\n${{ inputs.environment }}"
+                  - type: mrkdwn
+                    text: "*Status:*\n실패 ⚠️"
+                  - type: mrkdwn
+                    text: "*Tag:*\n`${{ inputs.tag_name }}`"
+                  - type: mrkdwn
+                    text: "*Triggered by:*\n${{ github.actor }}"
+              - type: context
+                elements:
+                  - type: mrkdwn
+                    text: "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Workflow Logs>"
