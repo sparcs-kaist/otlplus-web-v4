@@ -63,6 +63,8 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
 
     const [chipsOptions, setChipsOptions] = useState<ExportDataType>({})
 
+    const [resetTrigger, setResetTrigger] = useState(false)
+
     useEffect(() => {
         if (!timeFilter) return
         setOpen(true)
@@ -81,6 +83,12 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
     }
 
     function handleReset() {
+        setChipsOptions({})
+        setValue("")
+        setResetTrigger(true)
+    }
+
+    function handleClose() {
         setOpen(false)
     }
 
@@ -205,14 +213,26 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
                             options={options}
                             onChange={onChange}
                             {...(withTimeFilter(options, timeFilter) as any)}
+                            resetTrigger={resetTrigger}
+                            onResetTriggerComplete={() => {
+                                setResetTrigger(false)
+                            }}
                         />
                         <FlexWrapper direction="row" justify="flex-end" gap={8}>
                             <Button
                                 $paddingLeft={24}
                                 $paddingTop={9}
-                                onClick={handleReset}
+                                onClick={handleClose}
                             >
-                                <Typography>{t("common.search.cancel")}</Typography>
+                                <Typography>{t("common.search.close")}</Typography>
+                            </Button>
+                            <Button
+                                $paddingLeft={24}
+                                $paddingTop={9}
+                                onClick={handleReset}
+                                type="state5"
+                            >
+                                <Typography>{t("common.search.reset")}</Typography>
                             </Button>
                             <Button
                                 $paddingLeft={24}

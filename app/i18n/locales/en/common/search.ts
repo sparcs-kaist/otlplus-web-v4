@@ -1,6 +1,7 @@
 export const search = {
     search: "Search",
-    cancel: "Cancel",
+    close: "Close",
+    reset: "Reset",
     submit: "Search",
     level: "Grade",
     department: "Department",
