@@ -353,7 +353,9 @@ export default function Timetable() {
                     {/*과목 정보 영역*/}
                     {!isTablet && (
                         <LectureInfoArea
-                            style={!isTablet ? { overflow: "auto" } : undefined}
+                            style={
+                                !isTablet || isTablet ? { overflow: "auto" } : undefined
+                            }
                         >
                             <LectureDetailSection
                                 selectedLecture={
