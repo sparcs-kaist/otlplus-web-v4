@@ -33,6 +33,7 @@ const BlockInner = styled(FlexWrapper)<{
     cursor: pointer;
     border-radius: 5px;
     opacity: ${({ written, isSelected }) => (isSelected ? 1 : written ? 0.3 : 1)};
+    text-align: center;
 
     ${({ theme, isHovered }) => isHovered && HoveredStyle(theme)};
     ${({ theme, isSelected }) => isSelected && SelectedStyle(theme)};

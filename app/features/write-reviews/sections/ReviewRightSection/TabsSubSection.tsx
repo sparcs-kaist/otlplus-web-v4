@@ -18,6 +18,7 @@ import { type TabType, TabTypes } from "@/common/interface/ReviewWriteTabs"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
+import useIsDevice from "@/utils/useIsDevice"
 import useUserStore from "@/utils/zustand/useUserStore"
 
 interface tabsSubSectionType {
@@ -38,9 +39,14 @@ const FilledIcons = {
     hallOfFameFeed: EmojiEvents,
     liked: Favorite,
 }
+
 const TabSelectedStyle = ({ theme }: { theme: Theme }) => css`
     background: ${theme.colors.Background.Section.default};
     color: ${theme.colors.Highlight.default};
+
+    &:hover {
+        background: ${theme.colors.Background.Section.default};
+    }
 `
 
 const Tab = styled(FlexWrapper)<{ selected: boolean }>`
@@ -48,10 +54,17 @@ const Tab = styled(FlexWrapper)<{ selected: boolean }>`
     color: ${({ theme }) => theme.colors.Text.lighter};
     border-radius: 12px 12px 0 0;
     cursor: pointer;
+    height: 34px;
+
+    &:hover {
+        background: ${({ theme }) => theme.colors.Background.Tab.darker};
+    }
+
     ${({ selected, theme }) => selected && TabSelectedStyle({ theme })}
 `
 
 function TabsSubSection({ tab, setTab }: tabsSubSectionType) {
+    const isTablet = useIsDevice("tablet")
     const { t } = useTranslation()
     const { status } = useUserStore()
 
@@ -77,9 +90,17 @@ function TabsSubSection({ tab, setTab }: tabsSubSectionType) {
                         <Icon size={12}>
                             {tab == tabType ? <ThisIconFilled /> : <ThisIcon />}
                         </Icon>
-                        <Typography type="Normal">
-                            {t(`writeReviews.tabs.${tabType}`)}
-                        </Typography>
+                        {isTablet ? (
+                            tab == tabType && (
+                                <Typography type="Normal">
+                                    {t(`writeReviews.tabs.${tabType}`)}
+                                </Typography>
+                            )
+                        ) : (
+                            <Typography type="Normal">
+                                {t(`writeReviews.tabs.${tabType}`)}
+                            </Typography>
+                        )}
                     </Tab>
                 )
             })}

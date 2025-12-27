@@ -1,4 +1,4 @@
-import { type ReactElement, useState } from "react"
+import { type ReactElement, useEffect, useState } from "react"
 
 import { Search } from "@mui/icons-material"
 import { AnimatePresence, motion } from "framer-motion"
@@ -10,7 +10,6 @@ import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import { type TimeBlock } from "@/common/schemas/timeblock"
 import { useAPI } from "@/utils/api/useAPI"
-import { formatTimeAreaToString } from "@/utils/timetable/formatTimeblockToString"
 
 import Button from "../Button"
 import SearchFilterArea, {
@@ -32,7 +31,7 @@ export type SearchParamsType = {
 type TimeProps<ops extends readonly SearchOptions[]> = "time" extends ops[number]
     ? {
           timeFilter: TimeBlock | null
-          setTimeFilter: (timeFilter: TimeBlock | null) => object
+          setTimeFilter: (timeFilter: TimeBlock | null) => void
       }
     : { timeFilter?: never; setTimeFilter?: never }
 
@@ -64,6 +63,11 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
 
     const [chipsOptions, setChipsOptions] = useState<ExportDataType>({})
 
+    useEffect(() => {
+        if (!timeFilter) return
+        setOpen(true)
+    }, [timeFilter])
+
     const handleKeyDown = (
         event: React.KeyboardEvent<HTMLInputElement>,
         chipsOptions: ExportDataType,
@@ -73,37 +77,16 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
 
         if (event.key === "Enter") {
             handleSubmit(chipsOptions, textValue)
-            console.log("입력된 값:", value)
         }
     }
 
     function handleReset() {
         setOpen(false)
-        setChipsOptions({})
     }
 
     function handleSubmit(chipsOptions: ExportDataType, textValue: string) {
-        console.log("필터 결과")
         setOpen(false)
         onSearch(getSearchParams(chipsOptions, textValue))
-        setChipsOptions({})
-    }
-
-    function getOptionList(
-        chipsOptions: ExportDataType,
-        key: keyof typeof chipsOptions,
-    ): string {
-        let result: string = ""
-        const value = chipsOptions[key]
-
-        if (value != undefined) {
-            if (key == "time") result = `${formatTimeAreaToString(value as TimeBlock)}`
-
-            if (isSingleSelectOption(key)) result = t((value as [any, string])[1])
-            else result = (value as [any, string]).map((x) => t(x[1])).join(", ")
-        }
-
-        return result
     }
 
     function getSearchParams(
@@ -163,81 +146,64 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
         <FlexWrapper
             direction="column"
             align="stretch"
+            justify="stretch"
             gap={0}
-            style={{ maxHeight: "100%" }}
+            style={{ maxHeight: "100%", width: "100%" }}
         >
             <FlexWrapper
-                direction="column"
-                align="stretch"
+                direction="row"
+                justify="stretch"
+                align="center"
                 onClick={() => {
                     if (!open) setOpen(true)
                 }}
                 gap={0}
                 padding="4px 16px"
             >
-                <FlexWrapper direction="row" align="center" gap={0}>
-                    {SearchIcon == undefined ? (
-                        <Icon size={17.5} color="#E54C65" onClick={() => {}}>
-                            <Search />
-                        </Icon>
-                    ) : (
-                        SearchIcon
-                    )}
-                    <TextInput
-                        value={value}
-                        handleChange={(newValue) => {
-                            setValue(newValue)
-                        }}
-                        placeholder={t("common.search.placeholder")}
-                        onKeyDown={(e) => {
-                            handleKeyDown(e, chipsOptions, value)
-                        }}
-                    />
-                </FlexWrapper>
-                <FlexWrapper direction="row" gap={8} align="center">
-                    {Object.keys(chipsOptions).map((key) => (
-                        <FlexWrapper
-                            direction="row"
-                            gap={0}
-                            padding="8px 0px 0px 0px"
-                            key={key}
-                        >
-                            <Typography type="SmallerBold">
-                                {t(`common.search.${key}`)}:&nbsp;
-                            </Typography>
-                            <Typography type="Smaller">
-                                {getOptionList(
-                                    chipsOptions,
-                                    key as keyof typeof chipsOptions,
-                                )}
-                            </Typography>
-                        </FlexWrapper>
-                    ))}
-                </FlexWrapper>
+                {SearchIcon == undefined ? (
+                    <Icon size={17.5} color="#E54C65" onClick={() => {}}>
+                        <Search />
+                    </Icon>
+                ) : (
+                    SearchIcon
+                )}
+                <TextInput
+                    value={value}
+                    handleChange={(newValue) => {
+                        setValue(newValue)
+                    }}
+                    placeholder={t("common.search.placeholder")}
+                    onKeyDown={(e) => {
+                        handleKeyDown(e, chipsOptions, value)
+                    }}
+                />
             </FlexWrapper>
 
             <AnimatePresence>
-                {open && (
-                    <motion.div
-                        initial="hidden"
-                        animate="visible"
-                        exit="exit"
-                        variants={dropInVariants}
-                        transition={{ duration: 0.3, ease: "easeInOut" }}
-                        style={{
-                            overflow: "hidden",
-                            display: "flex",
-                            gap: "16px",
-                            flexDirection: "column",
-                            alignItems: "stretch",
-                            padding: "16px",
-                            flexShrink: 1,
-                        }}
+                <motion.div
+                    initial="hidden"
+                    animate={open ? "visible" : "hidden"}
+                    exit="exit"
+                    variants={dropInVariants}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    style={{
+                        display: "flex",
+                        flexShrink: 1,
+                        width: "100%",
+                        minHeight: 0,
+                    }}
+                >
+                    <FlexWrapper
+                        direction="column"
+                        align="stretch"
+                        gap={16}
+                        padding="16px"
+                        flex="1 0 0"
+                        style={{ overflowY: "auto", minHeight: 0 }}
                     >
                         <SearchFilterArea
                             options={options}
                             onChange={onChange}
-                            // 임시 방편, 나중에 방법 알아내면 수정할 예정
                             {...(withTimeFilter(options, timeFilter) as any)}
                         />
                         <FlexWrapper direction="row" justify="flex-end" gap={8}>
@@ -246,7 +212,7 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
                                 $paddingTop={9}
                                 onClick={handleReset}
                             >
-                                <Typography>취소</Typography>
+                                <Typography>{t("common.search.cancel")}</Typography>
                             </Button>
                             <Button
                                 $paddingLeft={24}
@@ -256,11 +222,11 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
                                     handleSubmit(chipsOptions, value)
                                 }}
                             >
-                                <Typography>검색</Typography>
+                                <Typography>{t("common.search.submit")}</Typography>
                             </Button>
                         </FlexWrapper>
-                    </motion.div>
-                )}
+                    </FlexWrapper>
+                </motion.div>
             </AnimatePresence>
         </FlexWrapper>
     )

@@ -103,13 +103,7 @@ function ScheduleSection() {
     if (!dueDate) return null
 
     return (
-        <Widget
-            width={418}
-            direction="column"
-            align="stretch"
-            gap={0}
-            padding="23px 30px"
-        >
+        <Widget direction="column" align="stretch" gap={0} padding="23px 30px">
             <FlexWrapper direction="column" align="stretch" gap={16}>
                 <FlexWrapper direction="column" align="center" gap={10}>
                     <FlexWrapper direction="column" align="stretch" gap={0}>

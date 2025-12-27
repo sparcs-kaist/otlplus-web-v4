@@ -1,4 +1,4 @@
-import { use, useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
 import styled from "@emotion/styled"
 import { useSearchParams } from "react-router"
@@ -82,10 +82,10 @@ export default function DictionaryPage() {
         }
     }, [selectedCourseId])
 
-    function closeMobileModal() {
+    const closeMobileModal = useCallback(() => {
         setMobileModal(false)
         setSelectedCourseId(null)
-    }
+    }, [])
 
     return (
         <DictionaryWrapper direction="row" align="stretch" justify="center" gap={12}>

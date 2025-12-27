@@ -91,7 +91,7 @@ export type ExportDataType = {
 type TimeProps<ops extends readonly SearchOptions[]> = "time" extends ops[number]
     ? {
           timeFilter: TimeBlock | null
-          setTimeFilter: (timeFilter: TimeBlock | null) => {}
+          setTimeFilter: (timeFilter: TimeBlock | null) => void
       }
     : { timeFilter?: never; setTimeFilter?: never }
 
@@ -250,11 +250,11 @@ function SearchFilterArea<ops extends readonly SearchOptions[]>({
     return (
         <SearchFilterAreaWrapper direction="column" align="stretch" gap={12}>
             {options.map((option) => (
-                <FlexWrapper direction="column" gap={6} key={option}>
+                <FlexWrapper direction="column" gap={6} key={option} flex="1 1 auto">
                     <Typography type="NormalBold" color="Text.default">
                         {t(`common.search.${option}`)}
                     </Typography>
-                    <FlexWrapper direction="column" gap={0}>
+                    <FlexWrapper direction="column" gap={0} style={{ width: "100%" }}>
                         {(() => {
                             if (hasKey(chosenList, option) && option in chosenList)
                                 return (
@@ -271,7 +271,7 @@ function SearchFilterArea<ops extends readonly SearchOptions[]>({
                                         selectedAll={isSelectedAll(chosenList, option)}
                                     />
                                 )
-                            else if (option == "time" && timeFilter != undefined)
+                            else if (option == "time")
                                 return (
                                     <TimeFilterArea
                                         timeFilter={timeFilter}

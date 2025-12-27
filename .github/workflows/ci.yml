@@ -1,75 +1,76 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    push:
+        branches: [main, rc]
+    pull_request:
+        branches: [main, rc]
 
 env:
-  NODE_VERSION: 20
+    NODE_VERSION: 20
 
 jobs:
-  format-and-lint:
-    name: Format and Lint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    format-and-lint:
+        name: Format and Lint
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.7.1
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: 10.7.1
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: pnpm
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
 
-      - name: Format check
-        run: pnpm format
+            - name: Format check
+              run: pnpm format
 
-      - name: Lint
-        run: pnpm lint
+            - name: Lint
+              run: pnpm lint
 
-      - name: Type check
-        run: pnpm typecheck
+            - name: Type check
+              run: pnpm typecheck
 
-  build:
-    name: Build
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    build:
+        name: Build
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.7.1
+            - name: Setup pnpm
+              uses: pnpm/action-setup@v4
+              with:
+                  version: 10.7.1
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: pnpm
+            - name: Setup Node
+              uses: actions/setup-node@v4
+              with:
+                  node-version: ${{ env.NODE_VERSION }}
+                  cache: pnpm
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
 
-      - name: Build
-        run: pnpm build
-        env:
-          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN_DEV }}
-          VITE_APP_API_URL: https://otl.dev.sparcs.org/api
-          VITE_APP_LOG_LEVEL: info
-          VITE_DEV_MODE: true
+            - name: Build
+              run: pnpm build
+              env:
+                  VITE_SENTRY_DSN: ${{ vars.SENTRY_DSN_DEV }}
+                  VITE_APP_API_URL: https://api.otl.dev.sparcs.org
+                  VITE_APP_LOG_LEVEL: info
+                  VITE_DEV_MODE: true
+                  VITE_CHANNELTALK_PLUGIN_KEY: ${{ vars.CHANNELTALK_PLUGIN_KEY }}
 
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-output
-          path: build/
-          retention-days: 1
+            - name: Upload build artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: build-output
+                  path: build/
+                  retention-days: 1

@@ -18,5 +18,10 @@ export const general = {
     am: "AM",
     pm: "PM",
     year: "year",
+    room: "Room",
     language: "Language",
-};
+    limit: "Limit",
+    exam: "Exam",
+    completedCourse: "Completed",
+    wishlist: "Wishlist",
+}

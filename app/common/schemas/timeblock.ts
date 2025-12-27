@@ -3,7 +3,7 @@ import { z } from "zod"
 import { WeekdayEnum } from "@/common/enum/weekdayEnum"
 
 export const TimeBlockSchema = z.object({
-    day: z.enum(WeekdayEnum).or(z.date()),
+    day: z.enum(WeekdayEnum),
     begin: z.number().int().min(0).max(1440),
     end: z.number().int().min(0).max(1440),
 })

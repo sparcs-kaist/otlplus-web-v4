@@ -6,8 +6,8 @@ import { TimeBlockSchema } from "@/common/schemas/timeblock"
 
 const ClassTimeSchema = TimeBlockSchema.extend({
     buildingCode: z.string(),
-    placeName: z.string(),
-    placeNameShort: z.string().optional(),
+    buildingName: z.string(),
+    roomName: z.string(),
 })
 
 const ExamTimeSchema = TimeBlockSchema.extend({
@@ -38,4 +38,5 @@ export const LectureSchema = z.object({
 })
 
 export type ClassTime = z.infer<typeof ClassTimeSchema>
+export type ExamTime = z.infer<typeof ExamTimeSchema>
 export type Lecture = z.infer<typeof LectureSchema>

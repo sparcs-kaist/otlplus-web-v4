@@ -15,9 +15,7 @@ import { useAPI } from "@/utils/api/useAPI"
 
 import CourseHistorySubsection from "./CourseHistorySubsection"
 import CourseInfoSubsection from "./CourseInfoSubsection"
-import CourseReviewSubsection, {
-    type CourseReviewSubsectionHandle,
-} from "./CourseReviewSubsection"
+import CourseReviewSubsection from "./CourseReviewSubsection"
 
 const CourseDetailSectionInner = styled(FlexWrapper)`
     width: 100%;
@@ -66,53 +64,36 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
         enabled: selectedCourseId !== null,
     })
 
-    const courseDetail: GETCourseDetailResponse | null = query.data ?? null
-
     const [selectedProfessorId, setSelectedProfessorId] = useState<number | null>(null)
     const [writableReviewProps, setWritableReviewProps] = useState<
         ReviewWritingBlockProps[]
     >([])
 
-    const reviewSectionRef = useRef<HTMLDivElement>(null)
-    const reviewSubsectionRef = useRef<CourseReviewSubsectionHandle>(null)
-
-    const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-        const el = e.currentTarget
-        const nearBottom = el.scrollHeight - el.scrollTop - el.clientHeight < 48
-        if (nearBottom) {
-            reviewSubsectionRef.current?.loadMoreReviews()
-        }
-    }
-
     useEffect(() => {
-        if (courseDetail) {
+        if (query.data) {
             const writableReviews: ReviewWritingBlockProps[] = []
-            courseDetail.history.forEach((history) => {
-                // if (history.myLectureId !== 0) {
-                //     const professors =
-                //         history.classes.find(
-                //             (cls) => cls.lectureId === history.myLectureId,
-                //         )?.professors || []
-                //     writableReviews.push({
-                //         name: courseDetail.name,
-                //         lectureId: history.myLectureId,
-                //         professors: professors,
-                //         year: history.year,
-                //         semester: history.semester,
-                //     })
-                // }
+            query.data.history.forEach((history) => {
+                if (history.myLectureId !== null) {
+                    const professors =
+                        history.classes.find(
+                            (cls) => cls.lectureId === history.myLectureId,
+                        )?.professors || []
+                    writableReviews.push({
+                        name: query.data.name,
+                        lectureId: history.myLectureId,
+                        professors: professors,
+                        year: history.year,
+                        semester: history.semester,
+                    })
+                }
             })
             setWritableReviewProps(writableReviews)
         }
-    }, [courseDetail])
+    }, [query.data])
+
     useEffect(() => {
         setSelectedProfessorId(null)
     }, [selectedCourseId])
-    useEffect(() => {
-        if (selectedProfessorId !== null && !reviewSubsectionRef.current?.isLoading) {
-            reviewSectionRef.current?.scrollIntoView({ behavior: "smooth" })
-        }
-    }, [selectedProfessorId, query.isLoading])
 
     return (
         <CourseDetailSectionInner
@@ -120,7 +101,6 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
             gap={12}
             align={"center"}
             justify={selectedCourseId ? "start" : "center"}
-            onScroll={handleScroll}
         >
             {selectedCourseId ? (
                 query.isLoading ? (
@@ -142,7 +122,7 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
                             >
                                 {isMobileModal && <div style={{ width: 20 }}></div>}
                                 <Typography type={"Bigger"} color={"Text.default"}>
-                                    {courseDetail?.name}
+                                    {query.data?.name}
                                 </Typography>
                                 {isMobileModal && (
                                     <Icon
@@ -155,32 +135,26 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
                                 )}
                             </FlexWrapper>
                             <Typography type={"Big"} color={"Text.default"}>
-                                {courseDetail?.code}
+                                {query.data?.code}
                             </Typography>
                         </CourseTitle>
                         <CourseDetailWrapper direction="column" gap={10} align="center">
-                            <CourseInfoSubsection courseDetail={courseDetail} />
+                            <CourseInfoSubsection courseDetail={query.data} />
                         </CourseDetailWrapper>
                         <Divider />
                         <CourseDetailWrapper direction="column" gap={10}>
                             <CourseHistorySubsection
-                                courseDetail={courseDetail}
+                                courseDetail={query.data}
                                 selectedProfessorId={selectedProfessorId}
                                 setSelectedProfessorId={setSelectedProfessorId}
                             />
                         </CourseDetailWrapper>
                         <Divider />
-                        <CourseDetailWrapper
-                            ref={reviewSectionRef}
-                            direction="column"
-                            gap={10}
-                            flex="1 1 auto"
-                        >
+                        <CourseDetailWrapper direction="column" gap={10} flex="1 1 auto">
                             <CourseReviewSubsection
                                 selectedCourseId={selectedCourseId}
                                 selectedProfessorId={selectedProfessorId}
                                 writableReviewProps={writableReviewProps}
-                                ref={reviewSubsectionRef}
                             />
                         </CourseDetailWrapper>
                     </>

@@ -1,12 +1,12 @@
 import { z } from "zod"
 
 import { SemesterEnum } from "@/common/enum/semesterEnum"
-import { TimetableSchema } from "@/common/schemas/timetable"
 import { TimetablesSchema } from "@/common/schemas/timetables"
 
 // GET /api/timetables
 export const GETRequest = z.object({
-    userId: z.number().int(),
+    year: z.number().int(),
+    semester: z.enum(SemesterEnum),
 })
 
 export const GETResponse = z.object({
@@ -18,13 +18,14 @@ export type GETTimetablesResponse = z.infer<typeof GETResponse>
 
 // POST /api/timetables
 export const POSTRequest = z.object({
-    userId: z.number().int(),
     year: z.number().int(),
     semester: z.enum(SemesterEnum),
     lectureIds: z.array(z.number().int()),
 })
 
-export const POSTResponse = TimetableSchema
+export const POSTResponse = z.object({
+    id: z.number().int(),
+})
 
 export type POSTTimetableBody = z.infer<typeof POSTRequest>
 export type POSTTimetableResponse = z.infer<typeof POSTResponse>
@@ -45,6 +46,6 @@ export const PATCHRequest = z.object({
     order: z.number().int().optional(),
 })
 
-export const PATCHResponse = TimetableSchema
+export const PATCHResponse = z.object({})
 
 export type PATCHTimetableBody = z.infer<typeof PATCHRequest>

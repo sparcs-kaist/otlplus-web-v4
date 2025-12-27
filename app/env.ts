@@ -9,11 +9,14 @@ const stringToBoolean = (value: string) => {
 const publicEnvSchema = z.object({
     VITE_APP_LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]),
     VITE_APP_API_URL: z.url(),
+    VITE_DEV_MODE: z.preprocess((value) => stringToBoolean(value as string), z.boolean()),
     VITE_APP_API_MOCK_MODE: z.preprocess(
         (value) => stringToBoolean(value as string),
         z.boolean(),
     ),
     VITE_APP_DEV_API_AUTH_TOKEN: z.string().optional(),
+    VITE_CHANNELTALK_PLUGIN_KEY: z.string().optional(),
+    VITE_GA_MEASUREMENT_ID: z.string().optional(),
 })
 
 export const clientEnv = publicEnvSchema.parse(import.meta.env)

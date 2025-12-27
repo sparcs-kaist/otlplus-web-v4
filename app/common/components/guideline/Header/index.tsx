@@ -72,7 +72,7 @@ const Header: React.FC = () => {
             if (process.env.NODE_ENV === "development") {
                 setDeveloperLoginOpen(true)
             } else {
-                location.href = `/session/login`
+                location.href = clientEnv.VITE_APP_API_URL + `/session/login`
             }
         } else {
             setAccountPageOpen(true)
@@ -82,14 +82,17 @@ const Header: React.FC = () => {
     useEffect(() => {
         if (process.env.NODE_ENV === "development") {
             const devStudentId = getLocalStorageItem("devStudentId")
-            const devToken = clientEnv.VITE_APP_DEV_API_AUTH_TOKEN
             if (devStudentId) {
                 axiosClient.defaults.headers.common["X-AUTH-SID"] = devStudentId
-                axiosClient.defaults.headers.common["X-SID-AUTH-TOKEN"] = devToken
             }
+        }
+        if (clientEnv.VITE_DEV_MODE) {
+            axiosClient.defaults.headers.common["X-SID-AUTH-TOKEN"] =
+                clientEnv.VITE_APP_DEV_API_AUTH_TOKEN
         }
         setEnabled(true)
     }, [])
+
     useEffect(() => {
         if (query.isLoading || !enabled) return
         if (query.data) {
@@ -98,8 +101,10 @@ const Header: React.FC = () => {
         } else {
             setUserInfo(null)
             clearUser()
+            setEnabled(false)
         }
     }, [query.data, query.isLoading, enabled])
+
     useEffect(() => {
         if (!isMobile) setMobileSidebarOpen(false)
     }, [isMobile])
@@ -126,6 +131,7 @@ const Header: React.FC = () => {
                     handleAccountButtonClick={handleAccountButtonClick}
                     userName={userInfo ? userInfo.name : "Sign in"}
                     mobileSidebar={false}
+                    isLoading={query.isLoading}
                 />
                 <MobileSidebarButtonWrapper onClick={() => setMobileSidebarOpen(true)}>
                     <Icon size={18}>
@@ -141,6 +147,7 @@ const Header: React.FC = () => {
                         handleAccountButtonClick={handleAccountButtonClick}
                         userName={userInfo ? userInfo.name : "Sign in"}
                         mobileSidebar={true}
+                        isLoading={query.isLoading}
                     />
                 }
             />

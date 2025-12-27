@@ -12,7 +12,7 @@ export const type = {
     majorRequired: "Major Required",
     majorElective: "Major Elective",
     generalRequired: "General Required",
-    humanitiesSocialElective: "Humanities & Social Elective",
+    humanitiesSocial: "Humanities & Social Elective",
     humanities: "Humanities",
     thesisStudy: "Thesis Study",
     individualStudy: "Individual Study",
@@ -31,4 +31,4 @@ export const type = {
     etcShort: "ETC",
     totalCredit: "Credit",
     totalAu: "AU",
-};
+}

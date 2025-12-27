@@ -3,6 +3,7 @@ export const writeReviews = {
         title: "내가 들은 과목",
         written: "작성 후기",
         likes: "추천",
+        selectPlaceholder: "강의를 선택해주세요",
     },
     write: {
         title: "후기 작성 - {{lectureName}}",

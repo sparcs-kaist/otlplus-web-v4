@@ -7,24 +7,27 @@ import { LectureSchema } from "@/common/schemas/lecture"
 // GET /api/lectures
 export const GETRequest = z.object({
     keyword: z.string().optional(),
-    type: z.string().optional(),
-    department: z.number().int().optional(),
-    level: z.number().int().optional(),
-    limit: z.number().int().optional(),
+    type: z.array(z.string()).optional(),
+    department: z.array(z.number().int()).optional(),
+    level: z.array(z.number().int()).optional(),
     year: z.number().int().optional(),
     semester: z.enum(SemesterEnum).optional(),
     day: z.enum(WeekdayEnum).optional(),
     begin: z.number().int().optional(),
     end: z.number().int().optional(),
+    order: z.enum(["code", "popular", "studentCount"]),
+    offset: z.number().int(),
+    limit: z.number().int(),
 })
 
 export const GETResponse = z.object({
     courses: z.array(
         z.object({
+            id: z.number().int(),
             name: z.string(),
             code: z.string(),
             type: z.string(),
-            completedCourse: z.boolean(),
+            completed: z.boolean(),
             lectures: z.array(LectureSchema),
         }),
     ),
