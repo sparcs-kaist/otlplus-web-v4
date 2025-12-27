@@ -52,5 +52,5 @@ export const useGoogleAnalytics = () => {
         if (!GA_TRACKING_ID) return
 
         pageview(location.pathname + location.search)
-    }, [location])
+    }, [location.pathname, location.search])
 }
