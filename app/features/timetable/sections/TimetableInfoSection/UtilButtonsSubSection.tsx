@@ -6,9 +6,7 @@ import { Check } from "@mui/icons-material"
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth"
 import ContentCopyIcon from "@mui/icons-material/ContentCopy"
 import ImageIcon from "@mui/icons-material/Image"
-import MenuBookIcon from "@mui/icons-material/MenuBook"
 
-import StyledDivider from "@/common/components/StyledDivider"
 import { SemesterEnum, semesterToString } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
@@ -68,7 +66,6 @@ export default function UtilButtonsSubSection({
 }) {
     const theme = useTheme()
     const isTablet = useIsDevice("tablet")
-    const isLaptop = useIsDevice("laptop")
 
     const { query } = useAPI("GET", "/semesters")
 
@@ -159,13 +156,6 @@ export default function UtilButtonsSubSection({
                     )}
                 </Icon>
                 {!isTablet && <span>캘린더로 내보내기</span>}
-            </ExportButton>
-            {!isLaptop && <StyledDivider />}
-            <ExportButton onClick={() => console.log("실라버스 모아보기")}>
-                <Icon size={16} color={theme.colors.Highlight.default} onClick={() => {}}>
-                    <MenuBookIcon />
-                </Icon>
-                {!isTablet && <span>실라버스 모아보기</span>}
             </ExportButton>
         </UtilButtonsWrapper>
     )
