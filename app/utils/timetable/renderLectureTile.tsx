@@ -74,6 +74,21 @@ const renderLectureTile = (
                             }
                         }
                     }}
+                    onTouchStart={(event: React.TouchEvent) => {
+                        // Stop propagation to prevent grid's touch handler
+                        event.stopPropagation()
+                    }}
+                    onTouchEnd={(event: React.TouchEvent) => {
+                        event.stopPropagation()
+                        // Handle as click on touch end
+                        if (lecture === selected) {
+                            setSelected(null)
+                        } else {
+                            if (lecture !== undefined) {
+                                setSelected(lecture)
+                            }
+                        }
+                    }}
                     onMouseEnter={() => {
                         if (!dragging && lecture !== undefined) {
                             setHover([lecture])
