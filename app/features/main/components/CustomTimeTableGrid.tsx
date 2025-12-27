@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import React, { useCallback, useMemo, useRef, useState } from "react"
 
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
@@ -19,6 +19,9 @@ interface GridProps {
     setSelected: React.Dispatch<React.SetStateAction<Lecture | null>>
 }
 
+const FULL_HEIGHT = 926.5
+const ROWS = 32
+
 const SectionWrapper = styled.div`
     display: flex;
     flex-direction: row;
@@ -27,27 +30,33 @@ const SectionWrapper = styled.div`
     height: fit-content;
 `
 
-const TimeWrapper = styled.div<{ cellHeight: number }>`
+const TimeWrapper = styled.div`
     padding-top: 15px;
     display: flex;
     flex-grow: 1;
     flex-direction: column;
     height: 100%;
     justify-content: space-evenly;
-    gap: ${({ cellHeight }) => `${cellHeight * 2 - 11}px`};
+    gap: calc(var(--cell-height) * 2 - 11px);
     font-size: 8px;
     line-height: 11px;
     color: ${({ theme }) => theme.colors.Text.default};
 `
 
-const DateWrapper = styled.div<{ width: number }>`
-    width: ${(props) => `${props.width}px`};
+const DateWrapper = styled.div`
+    width: var(--cell-width);
     align-items: center;
     font-size: 12px;
     line-height: 15px;
     padding-bottom: 5px;
     text-align: center;
     color: ${({ theme }) => theme.colors.Text.default};
+`
+
+const GridContainer = styled.div`
+    display: inline-block;
+    position: relative;
+    user-select: none;
 `
 
 const CustomTimeTableGrid: React.FC<GridProps> = ({
@@ -74,20 +83,17 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
     const isAnyOver24 = checkAnyOver24(lectureSummary)
     const n = isAnyOver24 ? 38 : 32
     const end = isAnyOver24 ? 27 : 24
-    const [cellHeight, setCellHeight] = useState(isAnyOver24 ? 22 : 25)
+    const cellHeight = FULL_HEIGHT / ROWS
 
-    // 전체 셀 크기를 반응형으로 조정하는 부분
-    useEffect(() => {
-        const handleResize = () => {
-            const fullHeight = 926.5
-            setCellHeight(fullHeight / 32)
-        }
-
-        window.addEventListener("resize", handleResize)
-        handleResize()
-
-        return () => window.removeEventListener("resize", handleResize)
-    }, [])
+    const cssVariables = useMemo(
+        () =>
+            ({
+                "--cell-height": `${cellHeight}px`,
+                "--cell-width": `${cellWidth}px`,
+                "--col-padding": `${colPadding}px`,
+            }) as React.CSSProperties,
+        [cellHeight, cellWidth],
+    )
 
     const [draggingArea] = useState<Map<number, boolean[]>>(
         new Map(
@@ -123,8 +129,8 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
     }, [setSelected])
 
     return (
-        <SectionWrapper>
-            <TimeWrapper cellHeight={cellHeight}>
+        <SectionWrapper style={cssVariables}>
+            <TimeWrapper>
                 {Array.from({ length: end - begin + 1 }, (_, index) => index + begin).map(
                     (number) => (
                         <div key={number}>{number % 12 || 12}</div>
@@ -138,22 +144,14 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
                             date !== "none" && (
                                 <DateWrapper
                                     key={index}
-                                    width={date === "" ? 10 : cellWidth}
+                                    style={date === "" ? { width: "10px" } : undefined}
                                 >
                                     {date}
                                 </DateWrapper>
                             ),
                     )}
                 </FlexWrapper>
-                <div
-                    ref={gridRef}
-                    style={{
-                        display: "inline-block",
-                        position: "relative",
-                        userSelect: "none",
-                    }}
-                    onClick={handleClick}
-                >
+                <GridContainer ref={gridRef} onClick={handleClick}>
                     {grid}
                     {renderTargetArea(
                         true,
@@ -168,7 +166,7 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
                         0,
                     )}
                     {lectureTiles}
-                </div>
+                </GridContainer>
             </FlexWrapper>
         </SectionWrapper>
     )

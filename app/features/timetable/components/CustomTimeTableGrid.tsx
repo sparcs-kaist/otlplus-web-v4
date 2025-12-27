@@ -40,25 +40,32 @@ const SectionWrapper = styled.div`
     height: fit-content;
 `
 
-const TimeWrapper = styled.div<{ cellHeight: number }>`
+const TimeWrapper = styled.div`
     padding-top: 15px;
     display: flex;
     flex-grow: 1;
     flex-direction: column;
     height: 100%;
     justify-content: space-evenly;
-    gap: ${({ cellHeight }) => `${cellHeight * 2 - 11}px`};
+    gap: calc(var(--cell-height) * 2 - 11px);
     font-size: 8px;
     line-height: 11px;
 `
 
-const DateWrapper = styled.div<{ width: number }>`
-    width: ${(props) => `${props.width}px`};
+const DateWrapper = styled.div`
+    width: var(--cell-width);
     align-items: center;
     font-size: 12px;
     line-height: 15px;
     padding-bottom: 5px;
     text-align: center;
+`
+
+const GridContainer = styled.div`
+    display: inline-block;
+    position: relative;
+    user-select: none;
+    touch-action: none;
 `
 
 const CustomTimeTableGrid: React.FC<GridProps> = ({
@@ -88,19 +95,17 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
     const isAnyOver24 = checkAnyOver24(lectureSummary)
     const n = isAnyOver24 ? 38 : 32
     const end = isAnyOver24 ? 27 : 24
-    const [cellHeight, setCellHeight] = useState(0)
+    const cellHeight = useMemo(() => fullHeight / 32, [fullHeight])
 
-    // 전체 셀 크기를 반응형으로 조정하는 부분
-    useEffect(() => {
-        const handleResize = () => {
-            setCellHeight(fullHeight / 32)
-        }
-
-        window.addEventListener("resize", handleResize)
-        handleResize()
-
-        return () => window.removeEventListener("resize", handleResize)
-    }, [fullHeight])
+    const cssVariables = useMemo(
+        () =>
+            ({
+                "--cell-height": `${cellHeight}px`,
+                "--cell-width": `${cellWidth}px`,
+                "--col-padding": `${colPadding}px`,
+            }) as React.CSSProperties,
+        [cellHeight, cellWidth],
+    )
 
     const [dragging, setDragging] = useState<boolean>(false)
     const [startRow, setStartRow] = useState<number | null>(null)
@@ -324,8 +329,8 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
     )
 
     return (
-        <SectionWrapper>
-            <TimeWrapper cellHeight={cellHeight}>
+        <SectionWrapper style={cssVariables}>
+            <TimeWrapper>
                 {Array.from({ length: end - begin + 1 }, (_, index) => index + begin).map(
                     (number) => (
                         <Typography key={number} color="Text.default">
@@ -341,21 +346,15 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
                             date !== "none" && (
                                 <DateWrapper
                                     key={index}
-                                    width={date === "" ? 10 : cellWidth}
+                                    style={date === "" ? { width: "10px" } : undefined}
                                 >
                                     <Typography color="Text.default">{date}</Typography>
                                 </DateWrapper>
                             ),
                     )}
                 </FlexWrapper>
-                <div
+                <GridContainer
                     ref={gridRef}
-                    style={{
-                        display: "inline-block",
-                        position: "relative",
-                        userSelect: "none",
-                        touchAction: "none",
-                    }}
                     onClick={handleClick}
                     onMouseDown={handleMouseDown}
                     onMouseMove={handleMouseMove}
@@ -378,7 +377,7 @@ const CustomTimeTableGrid: React.FC<GridProps> = ({
                         0,
                     )}
                     {lectureTiles}
-                </div>
+                </GridContainer>
             </FlexWrapper>
         </SectionWrapper>
     )
