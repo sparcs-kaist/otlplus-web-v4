@@ -13,7 +13,7 @@ import useThemeStore from "@/utils/zustand/useThemeStore"
 
 const CACHE_TIME_24H = 1000 * 60 * 60 * 24
 
-const PERSISTABLE_QUERY_PREFIXES = ["/timetables", "/semesters"]
+const PERSISTABLE_QUERY_PREFIXES = ["/timetables", "/semesters", "/users/info"]
 
 function shouldPersistQuery(queryKey: readonly unknown[]): boolean {
     const key = queryKey[0]
@@ -40,6 +40,12 @@ queryClient.setQueryDefaults(["/timetables"], {
 queryClient.setQueryDefaults(["/semesters"], {
     gcTime: CACHE_TIME_24H,
     staleTime: 1000 * 60 * 60,
+    networkMode: "offlineFirst",
+})
+
+queryClient.setQueryDefaults(["/users/info"], {
+    gcTime: Infinity,
+    staleTime: 1000 * 60 * 5,
     networkMode: "offlineFirst",
 })
 
