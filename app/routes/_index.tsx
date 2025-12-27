@@ -86,7 +86,8 @@ export default function Home() {
                     </SearchSectionWrapper>
                     <FlexWrapper
                         direction="column"
-                        justify="center"
+                        align="stretch"
+                        justify="stretch"
                         gap={24}
                         style={{ width: "100%" }}
                     >
