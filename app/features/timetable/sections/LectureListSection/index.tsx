@@ -416,10 +416,9 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
         if (!isTablet || searchResult.courses.length === 0) return
 
         // DOM이 렌더링된 후 실행되도록 requestAnimationFrame 두 번 사용
-        let rafId1: number
         let rafId2: number
 
-        rafId1 = requestAnimationFrame(() => {
+        const rafId1 = requestAnimationFrame(() => {
             rafId2 = requestAnimationFrame(() => {
                 handleMobileScroll()
             })
