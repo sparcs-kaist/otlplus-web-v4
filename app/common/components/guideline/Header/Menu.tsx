@@ -85,7 +85,7 @@ const Menu: React.FC<MenuProps> = ({ setMobileSidebarOpen }) => {
     const isOfflineMode = !isBackendReachable && status === "success"
 
     const renderNavLink = (path: string, label: string) => {
-        if (isOfflineMode) {
+        if (isOfflineMode && path !== "/" && path !== "/timetable") {
             return (
                 <DisabledLink data-tooltip={t("common.offline.navDisabled")}>
                     {label}

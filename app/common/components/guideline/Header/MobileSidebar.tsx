@@ -101,7 +101,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
     }
 
     const renderNavLink = (path: string, label: string) => {
-        if (isOfflineMode) {
+        if (isOfflineMode && path !== "/" && path !== "/timetable") {
             return <DisabledLink>{label}</DisabledLink>
         }
         return (
