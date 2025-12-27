@@ -24,4 +24,17 @@ export const general = {
     exam: "Exam",
     completedCourse: "Completed",
     wishlist: "Wishlist",
+    offline: {
+        title: "Connection Failed",
+        description:
+            "Unable to connect to server. You can view your timetable in offline mode.",
+        viewOfflineTimetable: "View Offline Timetable",
+        goHome: "Go Home",
+        retry: "Retry",
+        lastSynced: "Last synced",
+        offlineMode: "Offline Mode",
+        noCache: "No cached timetable",
+        noCacheDescription:
+            "No timetable data available offline. Please check your internet connection and try again.",
+    },
 }
