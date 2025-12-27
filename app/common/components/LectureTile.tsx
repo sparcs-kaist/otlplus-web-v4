@@ -131,4 +131,67 @@ const LectureTile: React.FC<{
     )
 }
 
-export default memo(LectureTile)
+// Custom comparison function for React.memo to handle object props
+const arePropsEqual = (
+    prevProps: {
+        lecture: Lecture
+        timeBlock: ClassTime
+        cellWidth: number
+        cellHeight: number
+        isSelected?: boolean
+        isHovered?: boolean
+    },
+    nextProps: {
+        lecture: Lecture
+        timeBlock: ClassTime
+        cellWidth: number
+        cellHeight: number
+        isSelected?: boolean
+        isHovered?: boolean
+    },
+) => {
+    // Compare primitive props
+    if (
+        prevProps.cellWidth !== nextProps.cellWidth ||
+        prevProps.cellHeight !== nextProps.cellHeight ||
+        prevProps.isSelected !== nextProps.isSelected ||
+        prevProps.isHovered !== nextProps.isHovered
+    ) {
+        return false
+    }
+
+    // Compare lecture object properties that are used in rendering
+    if (
+        prevProps.lecture.id !== nextProps.lecture.id ||
+        prevProps.lecture.courseId !== nextProps.lecture.courseId ||
+        prevProps.lecture.name !== nextProps.lecture.name
+    ) {
+        return false
+    }
+
+    // Compare professors array
+    if (prevProps.lecture.professors.length !== nextProps.lecture.professors.length) {
+        return false
+    }
+    for (let i = 0; i < prevProps.lecture.professors.length; i++) {
+        if (
+            prevProps.lecture.professors[i]?.name !== nextProps.lecture.professors[i]?.name
+        ) {
+            return false
+        }
+    }
+
+    // Compare timeBlock object properties that are used in rendering
+    if (
+        prevProps.timeBlock.begin !== nextProps.timeBlock.begin ||
+        prevProps.timeBlock.end !== nextProps.timeBlock.end ||
+        prevProps.timeBlock.buildingCode !== nextProps.timeBlock.buildingCode ||
+        prevProps.timeBlock.placeName !== nextProps.timeBlock.placeName
+    ) {
+        return false
+    }
+
+    return true
+}
+
+export default memo(LectureTile, arePropsEqual)
