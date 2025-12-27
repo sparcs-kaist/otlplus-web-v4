@@ -53,12 +53,21 @@ const MapPinWrapper = styled.div<{ left: number; top: number }>`
     background-color: ${({ theme }) => theme.colors.Background.Section.default};
     left: ${({ left }) => left}%;
     top: ${({ top }) => top}%;
-    transform: translate(-50%, -50%);
     position: absolute;
     font-size: 10px;
     color: ${({ theme }) => theme.colors.Text.default};
     border-radius: 4px;
     padding: 2px 4px;
+`
+
+const MapPinPointer = styled.div`
+    width: 0;
+    height: 0;
+    border-left: 3px solid transparent;
+    border-right: 3px solid transparent;
+    border-top: 6px solid ${({ theme }) => theme.colors.Background.Section.default};
+    position: absolute;
+    top: 17px;
 `
 
 const MapPin = styled.div<{ courseId: number; highlighted: boolean }>`
@@ -77,24 +86,24 @@ const MapPin = styled.div<{ courseId: number; highlighted: boolean }>`
 `
 
 const POSITION_OF_LOCATIONS = new Map([
-    ["E2", { left: 60, top: 81 }],
-    ["E3", { left: 67, top: 75 }],
-    ["E6", { left: 68, top: 63 }],
-    ["E7", { left: 77, top: 61 }],
-    ["E11", { left: 53, top: 58 }],
-    ["E16", { left: 53, top: 49 }],
-    ["N1", { left: 88, top: 39 }],
-    ["N3", { left: 53, top: 45 }],
-    ["N4", { left: 62, top: 41 }],
-    ["N5", { left: 74, top: 39 }],
-    ["N7", { left: 33, top: 41 }],
-    ["N22", { left: 79, top: 35 }],
-    ["N24", { left: 76, top: 31 }],
-    ["N25", { left: 59, top: 36 }],
-    ["N27", { left: 57, top: 24 }],
-    ["W1", { left: 31, top: 84 }],
-    ["W8", { left: 35, top: 55 }],
-    ["W16", { left: 40, top: 87 }],
+    ["E2", { left: 52, top: 70 }],
+    ["E3", { left: 59, top: 64 }],
+    ["E6", { left: 60, top: 52 }],
+    ["E7", { left: 69, top: 50 }],
+    ["E11", { left: 45, top: 47 }],
+    ["E16", { left: 45, top: 38 }],
+    ["N1", { left: 80, top: 28 }],
+    ["N3", { left: 45, top: 34 }],
+    ["N4", { left: 54, top: 30 }],
+    ["N5", { left: 66, top: 28 }],
+    ["N7", { left: 25, top: 30 }],
+    ["N22", { left: 71, top: 24 }],
+    ["N24", { left: 68, top: 20 }],
+    ["N25", { left: 51, top: 25 }],
+    ["N27", { left: 49, top: 13 }],
+    ["W1", { left: 26, top: 73 }],
+    ["W8", { left: 27, top: 44 }],
+    ["W16", { left: 35, top: 76 }],
 ])
 
 export default function MapSubSection({
@@ -125,6 +134,7 @@ export default function MapSubSection({
                             setHover(null)
                         }}
                     >
+                        <MapPinPointer />
                         {location}
                         {lectures.map((lecture) => (
                             <MapPin

@@ -1,6 +1,7 @@
 import { useMemo } from "react"
 
 import styled from "@emotion/styled"
+import { useTranslation } from "react-i18next"
 
 import { WeekdayEnum, weekdayToString } from "@/common/enum/weekdayEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
@@ -54,6 +55,8 @@ export default function ExamTimeSubSection({
     hover,
     setHover,
 }: ExamTimeSubSectionProps) {
+    const { t } = useTranslation()
+
     const examsByDay = useMemo(() => {
         const examsByDay: {
             [key: number]: { lectureName: string; lectureId: number; time: string }[]
@@ -107,7 +110,7 @@ export default function ExamTimeSubSection({
             flex="1 1 0"
         >
             <Typography type="NormalBold" color="Text.default">
-                시험시간표
+                {t("timetable.examTimetable")}
             </Typography>
             {dayLabels.map(({ day, color }) => {
                 const exams = examsByDay[day]

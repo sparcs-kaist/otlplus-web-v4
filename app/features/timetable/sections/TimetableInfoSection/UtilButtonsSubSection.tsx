@@ -6,9 +6,8 @@ import { Check } from "@mui/icons-material"
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth"
 import ContentCopyIcon from "@mui/icons-material/ContentCopy"
 import ImageIcon from "@mui/icons-material/Image"
-import MenuBookIcon from "@mui/icons-material/MenuBook"
+import { useTranslation } from "react-i18next"
 
-import StyledDivider from "@/common/components/StyledDivider"
 import { SemesterEnum, semesterToString } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
@@ -66,9 +65,9 @@ export default function UtilButtonsSubSection({
     year: number
     semester: SemesterEnum
 }) {
+    const { t } = useTranslation()
     const theme = useTheme()
     const isTablet = useIsDevice("tablet")
-    const isLaptop = useIsDevice("laptop")
 
     const { query } = useAPI("GET", "/semesters")
 
@@ -113,7 +112,7 @@ export default function UtilButtonsSubSection({
                 <Icon size={16} color={theme.colors.Highlight.default} onClick={() => {}}>
                     {process == "successCopyImage" ? <Check /> : <ContentCopyIcon />}
                 </Icon>
-                {!isTablet && <span>이미지로 복사하기</span>}
+                {!isTablet && <span>{t("timetable.copyImage")}</span>}
             </ExportButton>
             <ExportButton
                 onClick={() => {
@@ -133,7 +132,7 @@ export default function UtilButtonsSubSection({
                 <Icon size={16} color={theme.colors.Highlight.default} onClick={() => {}}>
                     {process == "successDownloadImage" ? <Check /> : <ImageIcon />}
                 </Icon>
-                {!isTablet && <span>이미지로 내보내기</span>}
+                {!isTablet && <span>{t("timetable.exportImage")}</span>}
             </ExportButton>
             <ExportButton
                 onClick={() => {
@@ -158,14 +157,7 @@ export default function UtilButtonsSubSection({
                         <CalendarMonthIcon />
                     )}
                 </Icon>
-                {!isTablet && <span>캘린더로 내보내기</span>}
-            </ExportButton>
-            {!isLaptop && <StyledDivider />}
-            <ExportButton onClick={() => console.log("실라버스 모아보기")}>
-                <Icon size={16} color={theme.colors.Highlight.default} onClick={() => {}}>
-                    <MenuBookIcon />
-                </Icon>
-                {!isTablet && <span>실라버스 모아보기</span>}
+                {!isTablet && <span>{t("timetable.exportICal")}</span>}
             </ExportButton>
         </UtilButtonsWrapper>
     )

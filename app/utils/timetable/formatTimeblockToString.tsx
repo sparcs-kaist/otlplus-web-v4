@@ -1,9 +1,7 @@
 import i18n from "i18next"
 
-import { WeekdayEnum } from "@/common/enum/weekdayEnum"
+import { weekdayToString } from "@/common/enum/weekdayEnum"
 import type { TimeBlock } from "@/common/schemas/timeblock"
-
-import { weekdayEnKorMap } from "./WeekdayKorEnMap"
 
 function formatMinuteToString(minute: number, by12: boolean = false): string {
     const hour = Math.floor(minute / 60)
@@ -18,9 +16,7 @@ function formatMinuteToString(minute: number, by12: boolean = false): string {
 
 // timetable에서 시간 filter 위함
 export function formatTimeAreaToString(timeBlock: TimeBlock): string {
-    const eng = WeekdayEnum[timeBlock.day as WeekdayEnum]
-
-    return `${weekdayEnKorMap.get(eng)} ${formatMinuteToString(
+    return `${weekdayToString(timeBlock.day)} ${formatMinuteToString(
         timeBlock.begin,
         true,
     )} - ${formatMinuteToString(timeBlock.end, true)}`
