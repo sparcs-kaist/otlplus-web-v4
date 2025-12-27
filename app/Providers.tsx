@@ -13,15 +13,34 @@ import useThemeStore from "@/utils/zustand/useThemeStore"
 
 const CACHE_TIME_24H = 1000 * 60 * 60 * 24
 
+const PERSISTABLE_QUERY_PREFIXES = ["/timetables", "/semesters"]
+
+function shouldPersistQuery(queryKey: readonly unknown[]): boolean {
+    const key = queryKey[0]
+    if (typeof key !== "string") return false
+    return PERSISTABLE_QUERY_PREFIXES.some((prefix) => key.startsWith(prefix))
+}
+
 export const queryClient = new QueryClient({
     defaultOptions: {
         queries: {
             gcTime: CACHE_TIME_24H,
             staleTime: 1000 * 60 * 5,
             retry: 1,
-            networkMode: "offlineFirst",
         },
     },
+})
+
+queryClient.setQueryDefaults(["/timetables"], {
+    gcTime: Infinity,
+    staleTime: 1000 * 60 * 5,
+    networkMode: "offlineFirst",
+})
+
+queryClient.setQueryDefaults(["/semesters"], {
+    gcTime: CACHE_TIME_24H,
+    staleTime: 1000 * 60 * 60,
+    networkMode: "offlineFirst",
 })
 
 const Providers: React.FC<React.PropsWithChildren> = (props) => {
@@ -36,7 +55,10 @@ const Providers: React.FC<React.PropsWithChildren> = (props) => {
             client={queryClient}
             persistOptions={{
                 persister: idbPersister,
-                maxAge: CACHE_TIME_24H,
+                maxAge: Infinity,
+                dehydrateOptions: {
+                    shouldDehydrateQuery: (query) => shouldPersistQuery(query.queryKey),
+                },
             }}
         >
             <I18nextProvider i18n={i18n}>
