@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
 import styled from "@emotion/styled"
+import { useSearchParams } from "react-router"
 
 import Modal from "@/common/components/Modal"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
@@ -50,13 +51,13 @@ const CourseDetailSectionWrapper = styled(SectionWrapper)`
 
 export default function DictionaryPage() {
     const isTablet = useIsDevice("tablet")
+    const [searchParams] = useSearchParams()
 
     const [mobileModal, setMobileModal] = useState(false)
-    const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null)
 
+    const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null)
     useEffect(() => {
-        const params = new URLSearchParams(window.location.search)
-        const courseId = params.get("courseId")
+        const courseId = searchParams.get("courseId")
         if (courseId) {
             const courseIdNumber = parseInt(courseId, 10)
             if (!isNaN(courseIdNumber)) {
@@ -74,16 +75,17 @@ export default function DictionaryPage() {
             setMobileModal(true)
         }
     }, [isTablet])
+
     useEffect(() => {
         if (isTablet && selectedCourseId !== null) {
             setMobileModal(true)
         }
     }, [selectedCourseId])
 
-    function closeMobileModal() {
+    const closeMobileModal = useCallback(() => {
         setMobileModal(false)
         setSelectedCourseId(null)
-    }
+    }, [])
 
     return (
         <DictionaryWrapper direction="row" align="stretch" justify="center" gap={12}>

@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next"
 
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
+import useIsDevice from "@/utils/useIsDevice"
 
 interface MySummarySubSectionProps {
     totalLectures: number
@@ -14,15 +15,18 @@ function MySummarySubSection({
     reviewedLectures,
     totalLikes,
 }: MySummarySubSectionProps) {
+    const isMobile = useIsDevice("mobile")
     const { t } = useTranslation()
 
     return (
         <FlexWrapper direction="column" align="center" gap={10}>
-            <Typography type="Big" color="Text.default">
-                {t("writeReviews.mySummary.title")}
-            </Typography>
+            {!isMobile && (
+                <Typography type="Big" color="Text.default">
+                    {t("writeReviews.mySummary.title")}
+                </Typography>
+            )}
 
-            <FlexWrapper direction="row" align="center" gap={48}>
+            <FlexWrapper direction="row" align="center" gap={isMobile ? 18 : 48}>
                 <FlexWrapper direction="column" align="center" gap={2}>
                     <FlexWrapper direction="row" align="flex-end" gap={0}>
                         <Typography type="BiggerBold" color="Text.default">

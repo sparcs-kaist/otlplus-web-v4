@@ -24,6 +24,20 @@ const CourseHistory = styled(motion.div)`
     gap: 20px;
 
     &::-webkit-scrollbar {
+        height: 7px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background-color: ${({ theme }) => theme.colors.Background.Section.default};
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background-color: ${({ theme }) => theme.colors.Line.default};
+        border-radius: 8px;
+    }
+
+    &:hover::-webkit-scrollbar-thumb {
+        background-color: ${({ theme }) => theme.colors.Line.dark};
         height: 0;
     }
 `
@@ -32,9 +46,9 @@ const CourseHistoryBlock = styled(FlexWrapper)`
     height: 100%;
 `
 
-const FoldButton = styled(KeyboardArrowDownIcon)<{ isFolded: boolean }>`
-    transform: ${(props) => (props.isFolded ? "rotate(0deg)" : "rotate(180deg)")};
-    transition: transform 0.3s ease-in-out;
+const FoldButton = styled(KeyboardArrowDownIcon)<{ isfolded: boolean }>`
+    transform: ${(props) => (props.isfolded ? "rotate(0deg)" : "rotate(180deg)")};
+    transition: transform 0.2s ease-in-out;
 `
 
 const NoHistoryText = styled(Typography)`
@@ -46,7 +60,7 @@ const NoHistoryText = styled(Typography)`
 `
 
 interface CourseHistorySubsectionProps {
-    courseDetail: GETCourseDetailResponse | null
+    courseDetail: GETCourseDetailResponse | undefined
     selectedProfessorId: number | null
     setSelectedProfessorId: React.Dispatch<React.SetStateAction<number | null>>
 }
@@ -94,16 +108,16 @@ const CourseHistorySubsection: React.FC<CourseHistorySubsectionProps> = ({
                     {t("dictionary.courseHistory")}
                 </Typography>
                 <Icon size={20} color={theme.colors.Text.default}>
-                    <FoldButton isFolded={isHistoryFolded} />
+                    <FoldButton isfolded={isHistoryFolded} />
                 </Icon>
             </FlexWrapper>
             <CourseHistory
                 ref={historyScroll}
                 initial={{ height: isHistoryFolded ? 0 : "auto" }}
                 animate={{ height: isHistoryFolded ? 0 : "auto" }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
             >
-                {courseDetail?.history.map((history, index) => (
+                {[...(courseDetail?.history || [])].reverse().map((history, index) => (
                     <CourseHistoryBlock
                         key={index}
                         direction="column"
@@ -119,23 +133,24 @@ const CourseHistorySubsection: React.FC<CourseHistorySubsectionProps> = ({
                             </NoHistoryText>
                         ) : (
                             <FlexWrapper direction="column" gap={4} align={"center"}>
-                                {history.classes.map((classData) => (
+                                {history.classes.map((classData, idx) => (
                                     <CourseHistoryChip
+                                        key={idx}
                                         selected={
                                             selectedProfessorId ==
-                                            classData.professors[0].id
+                                            (classData.professors[0]?.id ?? -1)
                                         }
                                         chipIndex={classData.classNo}
                                         chipText={professorName(classData.professors)}
                                         onClick={() => {
                                             if (
                                                 selectedProfessorId ===
-                                                classData.professors[0].id
+                                                (classData.professors[0]?.id ?? -1)
                                             ) {
                                                 setSelectedProfessorId(null)
                                             } else {
                                                 setSelectedProfessorId(
-                                                    classData.professors[0].id,
+                                                    classData.professors[0]?.id ?? null,
                                                 )
                                             }
                                         }}

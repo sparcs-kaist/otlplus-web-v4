@@ -1,6 +1,8 @@
 import React from "react"
 
 import styled from "@emotion/styled"
+import * as Sentry from "@sentry/react"
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools"
 import {
     Links,
     Meta,
@@ -12,6 +14,8 @@ import {
 
 import Header from "@/common/components/guideline/Header"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
+import { clientEnv } from "@/env"
+import { useGoogleAnalytics } from "@/utils/googleAnalytics"
 
 import type { Route } from "./+types/root"
 import Providers from "./Providers"
@@ -45,6 +49,26 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
                 <Meta />
                 <Links />
+                {clientEnv.VITE_GA_MEASUREMENT_ID && (
+                    <>
+                        <script
+                            async
+                            src={`https://www.googletagmanager.com/gtag/js?id=${clientEnv.VITE_GA_MEASUREMENT_ID}`}
+                        />
+                        <script
+                            dangerouslySetInnerHTML={{
+                                __html: `
+                                    window.dataLayer = window.dataLayer || [];
+                                    function gtag(){dataLayer.push(arguments);}
+                                    gtag('js', new Date());
+                                    gtag('config', '${clientEnv.VITE_GA_MEASUREMENT_ID}', {
+                                        page_path: window.location.pathname,
+                                    });
+                                `,
+                            }}
+                        />
+                    </>
+                )}
             </head>
             <body>
                 <Providers>{children}</Providers>
@@ -69,12 +93,14 @@ const OutletWrapper = styled(FlexWrapper)`
 `
 
 export default function App() {
+    useGoogleAnalytics()
     return (
         <AppWrapper direction="column" align="stretch" justify="stretch" gap={0}>
             <Header />
             <OutletWrapper direction="column" gap={0} align="stretch">
                 <Outlet />
             </OutletWrapper>
+            <ReactQueryDevtools initialIsOpen={false} />
         </AppWrapper>
     )
 }
@@ -90,13 +116,12 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
             error.status === 404
                 ? "The requested page could not be found."
                 : error.statusText || details
-    } else if (
-        process.env.NODE_ENV === "development" &&
-        error &&
-        error instanceof Error
-    ) {
-        details = error.message
-        stack = error.stack
+    } else if (error && error instanceof Error) {
+        Sentry.captureException(error)
+        if (process.env.NODE_ENV === "development") {
+            details = error.message
+            stack = error.stack
+        }
     }
 
     return (

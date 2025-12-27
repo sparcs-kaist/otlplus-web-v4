@@ -1,40 +1,79 @@
 import React from "react"
 
 import { ThemeProvider } from "@emotion/react"
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
+import { QueryClient } from "@tanstack/react-query"
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client"
 import { I18nextProvider } from "react-i18next"
 
+import ChannelTalkProvider from "@/libs/channeltalk"
 import i18n from "@/libs/i18n"
+import { idbPersister } from "@/libs/offline/queryPersister"
 import themes from "@/styles/themes"
-import useThemeStore, { type Theme } from "@/utils/useThemeStore"
+import useThemeStore from "@/utils/zustand/useThemeStore"
 
-export const SelectedThemeContext = React.createContext<{
-    selectedTheme: Theme
-    setSelectedTheme: (theme: Theme) => void
-}>({
-    selectedTheme: "light",
-    setSelectedTheme: () => {},
+const CACHE_TIME_24H = 1000 * 60 * 60 * 24
+
+const PERSISTABLE_QUERY_PREFIXES = ["/timetables", "/semesters", "/users/info"]
+
+function shouldPersistQuery(queryKey: readonly unknown[]): boolean {
+    const key = queryKey[0]
+    if (typeof key !== "string") return false
+    return PERSISTABLE_QUERY_PREFIXES.some((prefix) => key.startsWith(prefix))
+}
+
+export const queryClient = new QueryClient({
+    defaultOptions: {
+        queries: {
+            gcTime: CACHE_TIME_24H,
+            staleTime: 1000 * 30,
+            retry: 1,
+        },
+    },
+})
+
+queryClient.setQueryDefaults(["/timetables"], {
+    gcTime: Infinity,
+    staleTime: 1000 * 60 * 5,
+    networkMode: "offlineFirst",
+})
+
+queryClient.setQueryDefaults(["/semesters"], {
+    gcTime: CACHE_TIME_24H,
+    staleTime: 1000 * 60 * 60,
+    networkMode: "offlineFirst",
+})
+
+queryClient.setQueryDefaults(["/users/info"], {
+    gcTime: Infinity,
+    staleTime: 1000 * 60 * 5,
+    networkMode: "offlineFirst",
 })
 
 const Providers: React.FC<React.PropsWithChildren> = (props) => {
-    const queryClient = new QueryClient()
-
-    const { selectedTheme, setSelectedTheme } = useThemeStore()
+    const { displayedTheme } = useThemeStore()
 
     const extractedTheme = React.useMemo(() => {
-        return themes[selectedTheme]
-    }, [selectedTheme])
+        return themes[displayedTheme]
+    }, [displayedTheme])
 
     return (
-        <QueryClientProvider client={queryClient}>
+        <PersistQueryClientProvider
+            client={queryClient}
+            persistOptions={{
+                persister: idbPersister,
+                maxAge: Infinity,
+                dehydrateOptions: {
+                    shouldDehydrateQuery: (query) => shouldPersistQuery(query.queryKey),
+                },
+            }}
+        >
             <I18nextProvider i18n={i18n}>
-                <SelectedThemeContext.Provider
-                    value={{ selectedTheme, setSelectedTheme }}
-                >
-                    <ThemeProvider theme={extractedTheme}>{props.children}</ThemeProvider>
-                </SelectedThemeContext.Provider>
+                <ThemeProvider theme={extractedTheme}>
+                    <ChannelTalkProvider />
+                    {props.children}
+                </ThemeProvider>
             </I18nextProvider>
-        </QueryClientProvider>
+        </PersistQueryClientProvider>
     )
 }
 

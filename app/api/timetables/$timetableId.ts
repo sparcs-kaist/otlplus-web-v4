@@ -1,23 +1,23 @@
 import { z } from "zod"
 
 import { LectureSchema } from "@/common/schemas/lecture"
-import { TimetableSchema } from "@/common/schemas/timetable"
 
 //GET /api/timetables/:timetableId
-export const getTimetable = z.object({
-  response: TimetableSchema,
+export const GETRequest = z.object({})
+
+export const GETResponse = z.object({
+    lectures: z.array(LectureSchema),
 })
 
-export type GETTimetableByIdResponse = z.infer<typeof getTimetable.shape.response>
+export type GETTimetableByIdResponse = z.infer<typeof GETResponse>
 
 // PATCH /api/timetables/:timetableId
-export const patchTimetableById = z.object({
-  body: z.object({
+export const PATCHRequest = z.object({
     lectureId: z.number().int(),
-    action: z.enum(["add", "remove"]),
-  }),
-  response: LectureSchema,
+    action: z.enum(["add", "delete"]),
 })
 
-export type PATCHTimetableByIdBody = z.infer<typeof patchTimetableById.shape.body>
-export type PATCHTimetableByIdResponse = z.infer<typeof patchTimetableById.shape.response>
+export const PATCHResponse = LectureSchema
+
+export type PATCHTimetableByIdBody = z.infer<typeof PATCHRequest>
+export type PATCHTimetableByIdResponse = z.infer<typeof PATCHResponse>

@@ -65,7 +65,10 @@ const MemberCard: React.FC<MemberCardProps> = ({ name, nickname, role, hover }) 
                     </Typography>
                 ) : (
                     <FlexWrapper direction="row" gap={0}>
-                        <StyledImage src="/sparcsLogo.svg" alt="Sparcs Logo" />
+                        <StyledImage
+                            src={`${import.meta.env.BASE_URL}sparcsLogo.svg`}
+                            alt="Sparcs Logo"
+                        />
                         <Nickname type="Normal">{nickname}</Nickname>
                     </FlexWrapper>
                 )}

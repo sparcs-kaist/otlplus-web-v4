@@ -4,13 +4,14 @@ import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import CloseIcon from "@mui/icons-material/Close"
 
-import type { GETCourseDetailResponse } from "@/api/courses/$courseId"
-import exampleCourse from "@/api/example/Course"
+import { type GETCourseDetailResponse } from "@/api/courses/$courseId"
 import Credits from "@/common/components/Credits"
+import LoadingCircle from "@/common/components/LoadingCircle"
 import { type ReviewWritingBlockProps } from "@/common/components/reviews/ReviewWritingBlock"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
+import { useAPI } from "@/utils/api/useAPI"
 
 import CourseHistorySubsection from "./CourseHistorySubsection"
 import CourseInfoSubsection from "./CourseInfoSubsection"
@@ -59,26 +60,26 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
 }) => {
     const theme = useTheme()
 
-    const [courseDetail, setCourseDetail] = useState<GETCourseDetailResponse | null>(
-        exampleCourse,
-    )
+    const { query } = useAPI("GET", `/courses/${selectedCourseId}`, {
+        enabled: selectedCourseId !== null,
+    })
+
     const [selectedProfessorId, setSelectedProfessorId] = useState<number | null>(null)
     const [writableReviewProps, setWritableReviewProps] = useState<
         ReviewWritingBlockProps[]
     >([])
-    const reviewSectionRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
-        if (courseDetail) {
+        if (query.data) {
             const writableReviews: ReviewWritingBlockProps[] = []
-            courseDetail.history.forEach((history) => {
-                if (history.myLectureId !== 0) {
+            query.data.history.forEach((history) => {
+                if (history.myLectureId !== null) {
                     const professors =
                         history.classes.find(
                             (cls) => cls.lectureId === history.myLectureId,
                         )?.professors || []
                     writableReviews.push({
-                        name: courseDetail.name,
+                        name: query.data.name,
                         lectureId: history.myLectureId,
                         professors: professors,
                         year: history.year,
@@ -88,12 +89,11 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
             })
             setWritableReviewProps(writableReviews)
         }
-    }, [courseDetail])
+    }, [query.data])
+
     useEffect(() => {
-        if (selectedProfessorId !== null) {
-            reviewSectionRef.current?.scrollIntoView({ behavior: "smooth" })
-        }
-    }, [selectedProfessorId])
+        setSelectedProfessorId(null)
+    }, [selectedCourseId])
 
     return (
         <CourseDetailSectionInner
@@ -103,61 +103,62 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
             justify={selectedCourseId ? "start" : "center"}
         >
             {selectedCourseId ? (
-                <>
-                    <CourseTitle
-                        direction="column"
-                        gap={2}
-                        align={"center"}
-                        justify={"center"}
-                    >
-                        <FlexWrapper
-                            direction="row"
-                            align="center"
-                            gap={8}
-                            justify={isMobileModal ? "space-between" : "center"}
-                            style={{ width: "100%" }}
+                query.isLoading ? (
+                    <LoadingCircle />
+                ) : (
+                    <>
+                        <CourseTitle
+                            direction="column"
+                            gap={2}
+                            align={"center"}
+                            justify={"center"}
                         >
-                            {isMobileModal && <div style={{ width: 20 }}></div>}
-                            <Typography type={"Bigger"} color={"Text.default"}>
-                                {courseDetail?.name}
+                            <FlexWrapper
+                                direction="row"
+                                align="center"
+                                gap={8}
+                                justify={isMobileModal ? "space-between" : "center"}
+                                style={{ width: "100%" }}
+                            >
+                                {isMobileModal && <div style={{ width: 20 }}></div>}
+                                <Typography type={"Bigger"} color={"Text.default"}>
+                                    {query.data?.name}
+                                </Typography>
+                                {isMobileModal && (
+                                    <Icon
+                                        size={20}
+                                        onClick={onMobileModalClose}
+                                        color={theme.colors.Text.default}
+                                    >
+                                        <CloseIcon />
+                                    </Icon>
+                                )}
+                            </FlexWrapper>
+                            <Typography type={"Big"} color={"Text.default"}>
+                                {query.data?.code}
                             </Typography>
-                            {isMobileModal && (
-                                <Icon
-                                    size={20}
-                                    onClick={onMobileModalClose}
-                                    color={theme.colors.Text.default}
-                                >
-                                    <CloseIcon />
-                                </Icon>
-                            )}
-                        </FlexWrapper>
-                        <Typography type={"Big"} color={"Text.default"}>
-                            {courseDetail?.code}
-                        </Typography>
-                    </CourseTitle>
-                    <CourseDetailWrapper direction="column" gap={10} align="center">
-                        <CourseInfoSubsection courseDetail={courseDetail} />
-                    </CourseDetailWrapper>
-                    <Divider />
-                    <CourseDetailWrapper direction="column" gap={10}>
-                        <CourseHistorySubsection
-                            courseDetail={courseDetail}
-                            selectedProfessorId={selectedProfessorId}
-                            setSelectedProfessorId={setSelectedProfessorId}
-                        />
-                    </CourseDetailWrapper>
-                    <Divider />
-                    <CourseDetailWrapper
-                        ref={reviewSectionRef}
-                        direction="column"
-                        gap={10}
-                    >
-                        <CourseReviewSubsection
-                            selectedProfessorId={selectedProfessorId}
-                            writableReviewProps={writableReviewProps}
-                        />
-                    </CourseDetailWrapper>
-                </>
+                        </CourseTitle>
+                        <CourseDetailWrapper direction="column" gap={10} align="center">
+                            <CourseInfoSubsection courseDetail={query.data} />
+                        </CourseDetailWrapper>
+                        <Divider />
+                        <CourseDetailWrapper direction="column" gap={10}>
+                            <CourseHistorySubsection
+                                courseDetail={query.data}
+                                selectedProfessorId={selectedProfessorId}
+                                setSelectedProfessorId={setSelectedProfessorId}
+                            />
+                        </CourseDetailWrapper>
+                        <Divider />
+                        <CourseDetailWrapper direction="column" gap={10} flex="1 1 auto">
+                            <CourseReviewSubsection
+                                selectedCourseId={selectedCourseId}
+                                selectedProfessorId={selectedProfessorId}
+                                writableReviewProps={writableReviewProps}
+                            />
+                        </CourseDetailWrapper>
+                    </>
+                )
             ) : (
                 <Credits />
             )}

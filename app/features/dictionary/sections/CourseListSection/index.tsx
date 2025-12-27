@@ -1,18 +1,22 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import CircleIcon from "@mui/icons-material/Circle"
 import { Trans, useTranslation } from "react-i18next"
+import { useInView } from "react-intersection-observer"
+import { useSearchParams } from "react-router"
 
-import { type GETCoursesResponse } from "@/api/courses"
-import exampleCourseSearchResults from "@/api/example/CourseSearchResults"
+import LoadingCircle from "@/common/components/LoadingCircle"
 import ScrollableDropdown from "@/common/components/ScrollableDropdown"
 import SearchArea, { type SearchParamsType } from "@/common/components/search/SearchArea"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import CourseBlock from "@/features/dictionary/components/CourseBlock"
+import type { getAPIResponseType } from "@/utils/api/getAPIType"
+import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
+import checkEmpty from "@/utils/search/checkEmpty"
 
 const CourseListSectionInner = styled(FlexWrapper)`
     width: 100%;
@@ -66,17 +70,95 @@ interface CourseListSectionProps {
     setSelectedCourseId: React.Dispatch<React.SetStateAction<number | null>>
 }
 
-const CourseListSection: React.FC<CourseListSectionProps> = ({
+const LIMIT = 20
+
+function CourseListSection({
     selectedCourseId,
     setSelectedCourseId,
-}) => {
+}: CourseListSectionProps) {
     const { t } = useTranslation()
     const theme = useTheme()
+    const [searchParams] = useSearchParams()
 
-    const [searchResult, setSearchResult] = useState<GETCoursesResponse>(
-        exampleCourseSearchResults,
-    )
     const [sortOption, setSortOption] = useState<number>(0)
+
+    const [enabled, setEnabled] = useState(false)
+
+    const [searchResult, setSearchResult] = useState<
+        getAPIResponseType<"GET", "/courses">
+    >({
+        courses: [],
+        totalCount: 0,
+    })
+
+    const { query, setParams, data } = useInfiniteAPI("GET", "/courses", {
+        infinites: ["courses"],
+        limit: LIMIT,
+        enabled: enabled,
+    })
+
+    const { inView, ref } = useInView({
+        threshold: 0,
+    })
+
+    useEffect(() => {
+        if (inView && query.hasNextPage && !query.isFetchingNextPage) {
+            query.fetchNextPage()
+        }
+    }, [inView])
+
+    useEffect(() => {
+        const term = searchParams.get("term")
+            ? parseInt(searchParams.get("term") as string)
+            : undefined
+        const param: SearchParamsType = {
+            keyword: searchParams.get("keyword") || "",
+            type: searchParams.getAll("type"),
+            department: searchParams.getAll("department").map((dept) => parseInt(dept)),
+            level: searchParams.getAll("level").map((lvl) => parseInt(lvl)),
+        }
+        if (term !== undefined) {
+            param.term = term
+        }
+        if (checkEmpty(param)) return
+        handleSearch(param)
+    }, [])
+
+    useEffect(() => {
+        if (data === undefined) return
+
+        setSearchResult(data)
+    }, [data])
+
+    useEffect(() => {
+        if (sortOption == 0 && enabled == false) return
+
+        setSearchResult({ courses: [], totalCount: 0 })
+        setParams((prevState) => {
+            return {
+                ...prevState,
+                order:
+                    (["code", "popular", "studentCount"] as const)[sortOption] ?? "code",
+                offset: 0,
+            }
+        })
+        setEnabled(true)
+    }, [sortOption])
+
+    const handleSearch = (param: SearchParamsType) => {
+        if (checkEmpty(param)) {
+            alert(t("common.search.empty"))
+            return
+        }
+        const fullParam = {
+            ...param,
+            order: (["code", "popular", "studentCount"] as const)[sortOption] ?? "code",
+            offset: 0,
+            limit: LIMIT,
+        }
+        setParams(fullParam)
+        setEnabled(true)
+    }
 
     return (
         <CourseListSectionInner
@@ -88,12 +170,10 @@ const CourseListSection: React.FC<CourseListSectionProps> = ({
             <SearchSubSection>
                 <SearchArea
                     options={["type", "department", "level", "term"]}
-                    onSearch={(params: SearchParamsType) => {
-                        alert(JSON.stringify(params))
-                    }}
+                    onSearch={handleSearch}
                 />
             </SearchSubSection>
-            {searchResult.length !== 0 ? (
+            {searchResult.courses.length !== 0 ? (
                 <>
                     <FlexWrapper
                         direction="row"
@@ -104,7 +184,7 @@ const CourseListSection: React.FC<CourseListSectionProps> = ({
                         <HeaderText color={"Text.default"}>
                             <Trans
                                 i18nKey="dictionary.courseCountInfo"
-                                count={searchResult.length}
+                                count={data?.totalCount}
                                 components={{
                                     bold: (
                                         <Typography
@@ -142,16 +222,19 @@ const CourseListSection: React.FC<CourseListSectionProps> = ({
                         </SortWrapper>
                     </FlexWrapper>
                     <CourseBlockWrapper direction="column" gap={12}>
-                        {searchResult.map((course) => (
+                        {searchResult.courses.map((course, idx) => (
                             <CourseBlock
-                                key={course.id}
+                                key={idx}
                                 course={course}
                                 isSelected={selectedCourseId == course.id}
                                 selectCourseId={setSelectedCourseId}
                             />
                         ))}
+                        {query.hasNextPage && <LoadingCircle ref={ref} />}
                     </CourseBlockWrapper>
                 </>
+            ) : query.isLoading ? (
+                <LoadingCircle />
             ) : (
                 <NoResultText type={"Bigger"} color={"Text.placeholder"}>
                     {t("dictionary.noResults")}

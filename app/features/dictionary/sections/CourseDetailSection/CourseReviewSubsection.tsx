@@ -1,10 +1,10 @@
-import React, { useState } from "react"
+import React, { use, useEffect, useState } from "react"
 
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
+import { useInView } from "react-intersection-observer"
 
-import exampleReviews from "@/api/example/Reviews"
-import type { GETReviewsResponse } from "@/api/reviews"
+import LoadingCircle from "@/common/components/LoadingCircle"
 import ReviewBlock from "@/common/components/reviews/ReviewBlock"
 import ReviewWritingBlock, {
     type ReviewWritingBlockProps,
@@ -13,6 +13,7 @@ import { getAverageScoreLabel } from "@/common/enum/scoreEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import CourseReviewLanguageChip from "@/features/dictionary/components/CourseReviewLanguageChip"
+import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
 
 const NumberWrapper = styled(FlexWrapper)`
     width: 300px;
@@ -24,18 +25,58 @@ const NumberContent = styled(FlexWrapper)`
 `
 
 interface CourseReviewSubsectionProps {
+    selectedCourseId: number | null
     selectedProfessorId: number | null
     writableReviewProps: ReviewWritingBlockProps[]
 }
 
+const LIMIT = 20
+
 const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
+    selectedCourseId,
     selectedProfessorId,
     writableReviewProps,
 }) => {
     const { t } = useTranslation()
 
-    const [reviews, setReviews] = useState<GETReviewsResponse | null>(exampleReviews)
     const [reviewLanguage, setReviewLanguage] = useState("all")
+    const [enabled, setEnabled] = useState(false)
+
+    const { query, setParams, data } = useInfiniteAPI("GET", "/reviews", {
+        infinites: ["reviews"],
+        limit: LIMIT,
+        enabled: enabled,
+    })
+
+    const { ref, inView } = useInView()
+
+    useEffect(() => {
+        setParams({
+            mode: "default",
+            courseId: selectedCourseId || undefined,
+            professorId: selectedProfessorId || undefined,
+        })
+    }, [])
+
+    useEffect(() => {
+        setParams((prevState) => {
+            const base = prevState ?? {}
+            return {
+                ...base,
+                ...(selectedCourseId !== null ? { courseId: selectedCourseId } : {}),
+                ...(selectedProfessorId !== null
+                    ? { professorId: selectedProfessorId }
+                    : {}),
+            }
+        })
+        setEnabled(selectedCourseId !== null)
+    }, [selectedProfessorId, selectedCourseId])
+
+    useEffect(() => {
+        if (inView && query.hasNextPage && !query.isFetchingNextPage) {
+            query.fetchNextPage()
+        }
+    }, [inView])
 
     return (
         <>
@@ -57,63 +98,84 @@ const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
                     ))}
                 </FlexWrapper>
             </FlexWrapper>
-            <FlexWrapper
-                direction={"row"}
-                gap={0}
-                justify="center"
-                align="center"
-                style={{ width: "100%" }}
-            >
-                <NumberWrapper
-                    direction="row"
-                    gap={0}
-                    justify={"space-between"}
-                    align={"center"}
-                >
-                    {[
-                        [
-                            getAverageScoreLabel(
-                                reviews?.averageGrade,
-                                reviews?.reviews.length,
-                            ),
-                            t("common.grade"),
-                        ],
-                        [
-                            getAverageScoreLabel(
-                                reviews?.averageLoad,
-                                reviews?.reviews.length,
-                            ),
-                            t("common.load"),
-                        ],
-                        [
-                            getAverageScoreLabel(
-                                reviews?.averageSpeech,
-                                reviews?.reviews.length,
-                            ),
-                            t("common.speech"),
-                        ],
-                    ].map(([value, label], index) => (
-                        <NumberContent
-                            key={index}
-                            direction="column"
+            {data === null && query.isLoading ? (
+                <LoadingCircle />
+            ) : (
+                <>
+                    <FlexWrapper
+                        direction={"row"}
+                        gap={0}
+                        justify="center"
+                        align="center"
+                        style={{ width: "100%" }}
+                    >
+                        <NumberWrapper
+                            direction="row"
                             gap={0}
+                            justify={"space-between"}
                             align={"center"}
                         >
-                            <Typography type={"Bigger"} color={"Text.default"}>
-                                {value}
-                            </Typography>
-                            <Typography type={"Smaller"} color={"Text.default"}>
-                                {label}
-                            </Typography>
-                        </NumberContent>
+                            {[
+                                [
+                                    getAverageScoreLabel(
+                                        data?.averageGrade,
+                                        data?.reviews.length,
+                                    ),
+                                    t("common.grade"),
+                                ],
+                                [
+                                    getAverageScoreLabel(
+                                        data?.averageLoad,
+                                        data?.reviews.length,
+                                    ),
+                                    t("common.load"),
+                                ],
+                                [
+                                    getAverageScoreLabel(
+                                        data?.averageSpeech,
+                                        data?.reviews.length,
+                                    ),
+                                    t("common.speech"),
+                                ],
+                            ].map(([value, label], index) => (
+                                <NumberContent
+                                    key={index}
+                                    direction="column"
+                                    gap={0}
+                                    align={"center"}
+                                >
+                                    <Typography type={"Bigger"} color={"Text.default"}>
+                                        {value}
+                                    </Typography>
+                                    <Typography type={"Smaller"} color={"Text.default"}>
+                                        {label}
+                                    </Typography>
+                                </NumberContent>
+                            ))}
+                        </NumberWrapper>
+                    </FlexWrapper>
+                    {writableReviewProps.map((props, index) => (
+                        <ReviewWritingBlock {...props} key={index} />
                     ))}
-                </NumberWrapper>
-            </FlexWrapper>
-            {exampleReviews.reviews.length > 0 &&
-                writableReviewProps.map((props) => <ReviewWritingBlock {...props} />)}
-            {reviews?.reviews.map((review) => (
-                <ReviewBlock review={review} likeReview={() => {}} key={review.id} />
-            ))}
+                    {data?.reviews.map((review) => {
+                        if (
+                            reviewLanguage === "english" &&
+                            !/^[A-Za-z0-9\s\p{P}\p{S}]+$/u.test(review.content)
+                        ) {
+                            return null
+                        } else {
+                            return (
+                                <ReviewBlock
+                                    review={review}
+                                    key={review.id}
+                                    linkToDictionary={false}
+                                />
+                            )
+                        }
+                    })}
+                    {query.hasNextPage && <LoadingCircle ref={ref} />}
+                </>
+            )}
         </>
     )
 }

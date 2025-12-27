@@ -1,3 +1,5 @@
+import { memo, useCallback } from "react"
+
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import CircleIcon from "@mui/icons-material/Circle"
@@ -9,7 +11,7 @@ import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 
 interface CourseBlockProps {
-    course: GETCoursesResponse[number]
+    course: GETCoursesResponse["courses"][number]
     isSelected: boolean
     selectCourseId: React.Dispatch<React.SetStateAction<number | null>>
 }
@@ -44,34 +46,40 @@ const CourseBlock: React.FC<CourseBlockProps> = ({
     const { t } = useTranslation()
     const theme = useTheme()
 
+    const handleClick = useCallback(() => {
+        if (isSelected) {
+            selectCourseId(null)
+        } else {
+            selectCourseId(course.id)
+        }
+    }, [isSelected, course.id, selectCourseId])
+
     return (
-        <CourseBlockInner
-            onClick={() => {
-                if (isSelected) {
-                    selectCourseId(null)
-                } else {
-                    selectCourseId(course.id)
-                }
-            }}
-            selected={isSelected}
-        >
-            <FlexWrapper direction="row" gap={6} align={"center"}>
-                <Icon
-                    size={12}
-                    color={
-                        course.open
-                            ? theme.colors.Highlight.default
-                            : theme.colors.Text.disable
-                    }
-                >
-                    <CircleIcon />
-                </Icon>
-                <Typography type={"NormalBold"} color={"Text.default"}>
-                    {course.title}
-                </Typography>
-                <Typography type={"Normal"} color={"Text.placeholder"}>
-                    {course.code}
-                </Typography>
+        <CourseBlockInner onClick={handleClick} selected={isSelected}>
+            <FlexWrapper direction="row" gap={0} justify="space-between" align="center">
+                <FlexWrapper direction="row" gap={6} align={"center"}>
+                    <Icon
+                        size={12}
+                        color={
+                            course.open
+                                ? theme.colors.Highlight.default
+                                : theme.colors.Text.disable
+                        }
+                    >
+                        <CircleIcon />
+                    </Icon>
+                    <Typography type={"NormalBold"} color={"Text.default"}>
+                        {course.name}
+                    </Typography>
+                    <Typography type={"Normal"} color={"Text.placeholder"}>
+                        {course.code}
+                    </Typography>
+                </FlexWrapper>
+                {course.completed && (
+                    <Typography type="Normal" color="Text.lighter">
+                        {t("common.completedCourse")}
+                    </Typography>
+                )}
             </FlexWrapper>
             <Divider />
             <FlexWrapper direction="column" gap={4}>
@@ -104,4 +112,4 @@ const CourseBlock: React.FC<CourseBlockProps> = ({
     )
 }
 
-export default CourseBlock
+export default memo(CourseBlock)

@@ -1,4 +1,4 @@
-import React from "react"
+import React, { memo } from "react"
 
 import type { Theme } from "@emotion/react"
 import styled from "@emotion/styled"
@@ -27,7 +27,7 @@ const getColorFromTheme = (theme: Theme, colorString: ThemeColors) => {
         const [colorKey, shade] = colorString.split(".")
         const colorValue = theme.colors[colorKey as keyof Theme["colors"]]
 
-        if (typeof colorValue === "object" && shade in colorValue) {
+        if (typeof colorValue === "object" && shade && shade in colorValue) {
             return colorValue[shade as unknown as keyof typeof colorValue]
         }
     }
@@ -82,4 +82,4 @@ const Typography: React.FC<TypographyProps> = ({ children, ...rest }) => (
     <TypographyInner {...rest}>{children}</TypographyInner>
 )
 
-export default Typography
+export default memo(Typography)

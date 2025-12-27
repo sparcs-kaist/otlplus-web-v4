@@ -1,2 +1,2 @@
-export const TabTypes = ["write", "popularFeed", "reviewFeed", "liked"] as const
+export const TabTypes = ["write", "recentFeed", "hallOfFameFeed", "liked"] as const
 export type TabType = (typeof TabTypes)[number]

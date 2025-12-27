@@ -66,37 +66,6 @@ export const darkThemeColors: ThemeType["colors"] = {
         TimeTable: {
             default: {
                 red: {
-                    1: "#F2CECE",
-                    2: "#F4B3AE",
-                },
-                orange: {
-                    1: "#F2BCA0",
-                    2: "#F0D3AB",
-                },
-                yellow: {
-                    1: "#F1E1A9",
-                    2: "#F4F2B3",
-                },
-                green: {
-                    1: "#DBF4BE",
-                    2: "#BEEDD7",
-                    3: "#B7D2DE",
-                },
-                blue: {
-                    1: "#C9DAF4",
-                    2: "#B4D3ED",
-                },
-                purple: {
-                    1: "#B9C5ED",
-                    2: "#D8C1F0",
-                },
-                pink: {
-                    1: "#EBCAEF",
-                    2: "#F4BADB",
-                },
-            },
-            dark: {
-                red: {
                     1: "#EDA0A0",
                     2: "#F5837A",
                 },

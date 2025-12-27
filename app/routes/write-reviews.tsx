@@ -1,54 +1,42 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 import styled from "@emotion/styled"
 
-import exampleUserPastLectures from "@/api/example/UserPastLectures"
-import { type GETUserPastLecturesResponse } from "@/api/users/$userId/lectures"
-import { type GETWritableReviewsResponse } from "@/api/users/writable-reviews"
 import { SemesterEnum } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
+import type { Professor } from "@/common/schemas/professor"
 import ReviewLeftSection from "@/features/write-reviews/sections/ReviewLeftSection"
 import ReviewRightSection from "@/features/write-reviews/sections/ReviewRightSection"
-
-const WriteReviewWrapper = FlexWrapper
+import { media } from "@/styles/themes/media"
+import useIsDevice from "@/utils/useIsDevice"
 
 const WriteReviewWrapperInner = styled(FlexWrapper)`
+    width: 100%;
     overflow: auto;
+    padding: 0 20px 15px 20px;
+
+    ${media.mobile} {
+        padding: 0 8px 12px 8px;
+    }
 `
 
+export type WriteReviewsSelectedLectureType = {
+    name: string
+    courseId: number
+    lectureId: number
+    professors: Professor[]
+    year: number
+    semester: SemesterEnum
+}
+
 export default function WriteReviews() {
-    const [takenLectures, setTakenLectures] = useState<GETUserPastLecturesResponse>(
-        exampleUserPastLectures,
-    )
+    const isMobile = useIsDevice("mobile")
 
-    const [selectedLecture, setSelectedLecture] = useState<GETWritableReviewsResponse>({
-        name: "",
-        courseId: 0,
-        professors: [{ name: "", id: 0 }],
-        year: 0,
-        semester: SemesterEnum.SPRING,
-    })
-
-    useEffect(() => {
-        const lectureWrap1 = takenLectures.lecturesWrap[0]
-
-        const { year, semester } = lectureWrap1
-
-        const lecture1 = lectureWrap1.lectures[0]
-
-        const { name, courseId, professors } = lecture1
-
-        setSelectedLecture({
-            year,
-            semester,
-            name,
-            courseId,
-            professors,
-        })
-    }, [takenLectures])
+    const [selectedLecture, setSelectedLecture] =
+        useState<WriteReviewsSelectedLectureType | null>(null)
 
     return (
-        <WriteReviewWrapper
+        <FlexWrapper
             direction="column"
             align="center"
             justify="stretch"
@@ -56,20 +44,21 @@ export default function WriteReviews() {
             flex="1 0 0"
         >
             <WriteReviewWrapperInner
-                direction="row"
+                direction={isMobile ? "column" : "row"}
                 align="stretch"
                 justify="center"
                 gap={12}
-                padding="0px 0px 15px 0px"
                 flex="1 0 0"
             >
                 <ReviewLeftSection
-                    takenLectures={takenLectures}
                     selectedLecture={selectedLecture}
                     setSelectedLecture={setSelectedLecture}
                 />
-                <ReviewRightSection selectedLecture={selectedLecture} />
+                <ReviewRightSection
+                    selectedLecture={selectedLecture}
+                    setSelectedLecture={setSelectedLecture}
+                />
             </WriteReviewWrapperInner>
-        </WriteReviewWrapper>
+        </FlexWrapper>
     )
 }
