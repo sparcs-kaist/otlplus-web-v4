@@ -5,44 +5,26 @@ import CloseIcon from "@mui/icons-material/Close"
 
 import Icon from "@/common/primitives/Icon"
 import type { ClassTime, Lecture } from "@/common/schemas/lecture"
-import useThemeStore from "@/utils/zustand/useThemeStore"
 
-// tile Color를 mapping 해주는 부분
-export const colorMap: Array<CSSProperties["color"]> = [
-    "#F2CECE",
-    "#F4B3AE",
-    "#F2BCA0",
-    "#F0D3AB",
-    "#F1E1A9",
-    "#F4F2B3",
-    "#DBF4BE",
-    "#BEEDD7",
-    "#B7D2DE",
-    "#C9DAF4",
-    "#B4D3ED",
-    "#B9C5ED",
-    "#D8C1F0",
-    "#EBCAEF",
-    "#F4BADB",
-]
-
-export const darkColorMap: Array<CSSProperties["color"]> = [
-    "#EDA0A0",
-    "#F5837A",
-    "#F49A6B",
-    "#F0BE78",
-    "#F1D676",
-    "#F4F180",
-    "#C3F38C",
-    "#8FE9BF",
-    "#8BDBD4",
-    "#99DDF1",
-    "#84BCEA",
-    "#89A0EA",
-    "#BE92EC",
-    "#E19DE9",
-    "#F487C5",
-]
+const flattenTimeTableColors = (timeTable: any): Array<CSSProperties["color"]> => {
+    return [
+        timeTable?.red?.[1],
+        timeTable?.red?.[2],
+        timeTable?.orange?.[1],
+        timeTable?.orange?.[2],
+        timeTable?.yellow?.[1],
+        timeTable?.yellow?.[2],
+        timeTable?.green?.[1],
+        timeTable?.green?.[2],
+        timeTable?.green?.[3],
+        timeTable?.blue?.[1],
+        timeTable?.blue?.[2],
+        timeTable?.purple?.[1],
+        timeTable?.purple?.[2],
+        timeTable?.pink?.[1],
+        timeTable?.pink?.[2],
+    ].map((c) => c ?? "#CCCCCC")
+}
 
 const TileWrapper = styled.div<{
     course_id: number
@@ -51,7 +33,6 @@ const TileWrapper = styled.div<{
     isHighlighted: boolean
     isOverlapped: boolean
     cellHeight: number
-    isDarkMode: boolean
     hoverSelectBanned: boolean
 }>`
     display: flex;
@@ -62,20 +43,17 @@ const TileWrapper = styled.div<{
     margin-bottom: 2px;
     margin-top: 2px;
     justify-content: center;
-    background-color: ${({
-        theme,
-        course_id,
-        isHighlighted,
-        isOverlapped,
-        isDarkMode,
-    }) =>
+    background-color: ${({ theme, course_id, isHighlighted, isOverlapped }) =>
         isOverlapped
             ? theme.colors.Text.default
             : isHighlighted
               ? theme.colors.Highlight.default
-              : isDarkMode
-                ? darkColorMap[course_id % 15]
-                : colorMap[course_id % 15]};
+              : (() => {
+                    const flat = flattenTimeTableColors(
+                        theme.colors?.Tile?.TimeTable?.default,
+                    )
+                    return flat[course_id % flat.length]
+                })()};
     border-radius: 2px;
     overflow: hidden;
     overflow-wrap: break-word;
@@ -140,8 +118,6 @@ const LectureTile: React.FC<{
     isOverlapped = false,
     removeFunction,
 }) => {
-    const { displayedTheme } = useThemeStore()
-
     const isHighlighted = isSelected || isHovered || false
 
     return (
@@ -152,7 +128,6 @@ const LectureTile: React.FC<{
             isHighlighted={isHighlighted}
             isOverlapped={isOverlapped}
             cellHeight={cellHeight}
-            isDarkMode={displayedTheme === "dark"}
             hoverSelectBanned={hoverSelectBanned}
         >
             {removeFunction !== undefined && (isSelected || isHovered) && (
