@@ -27,7 +27,7 @@ const useIsDevice = (type: DeviceType): boolean => {
                     return false
             }
         },
-        [type, theme.breakpoints]
+        [type, theme.breakpoints],
     )
 
     const [isMatch, setIsMatch] = useState(() => getIsMatch(getInitialWidth()))
