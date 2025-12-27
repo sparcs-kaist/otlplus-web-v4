@@ -19,6 +19,7 @@ import LectureReviewSubsection from "./LectureReviewSubsection"
 const LectureDetailSectionInner = styled(FlexWrapper)`
     width: 100%;
     height: 100%;
+    overflow-x: hidden;
     overflow-y: auto;
 
     scrollbar-width: none;

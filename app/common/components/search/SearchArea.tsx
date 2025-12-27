@@ -82,13 +82,11 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
 
     function handleReset() {
         setOpen(false)
-        setChipsOptions({})
     }
 
     function handleSubmit(chipsOptions: ExportDataType, textValue: string) {
         setOpen(false)
         onSearch(getSearchParams(chipsOptions, textValue))
-        setChipsOptions({})
     }
 
     function getSearchParams(

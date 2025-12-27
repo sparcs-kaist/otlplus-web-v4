@@ -101,6 +101,11 @@ const LectureListArea = styled.div`
     height: 100%;
     display: flex;
 
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+        display: none;
+    }
+
     ${media.desktop} {
         width: 380px;
         background-color: ${({ theme }) => theme.colors.Background.Section.default};
@@ -330,7 +335,7 @@ export default function Timetable() {
                         </UtilButtonsArea>
                     )}
                     {/*과목 목록 영역*/}
-                    <LectureListArea>
+                    <LectureListArea style={!isTablet ? { overflow: "auto" } : undefined}>
                         <LectureListSection
                             timetableLectures={currentTimetableLectures}
                             year={year}
@@ -347,7 +352,9 @@ export default function Timetable() {
                     {!isDesktop && <StyledDivider direction="column" />}
                     {/*과목 정보 영역*/}
                     {!isTablet && (
-                        <LectureInfoArea>
+                        <LectureInfoArea
+                            style={!isTablet ? { overflow: "auto" } : undefined}
+                        >
                             <LectureDetailSection
                                 selectedLecture={
                                     selected

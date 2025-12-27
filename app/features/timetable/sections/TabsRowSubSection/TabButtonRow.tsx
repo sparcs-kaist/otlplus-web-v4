@@ -196,19 +196,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
     const { status } = useUserStore()
     const theme = useTheme()
 
-    const { query: timetables, setParams } = useAPI("GET", "/timetables", {
-        select: (data) => {
-            if (currentTimetableId != null) {
-                data.timetables.forEach((timetable) => {
-                    if (timetable.id === currentTimetableId) {
-                        setCurrentTimetableName(timetable.name)
-                    }
-                })
-            }
-
-            return data
-        },
-    })
+    const { query: timetables, setParams } = useAPI("GET", "/timetables")
     const { requestFunction: addTimetable } = useAPI("POST", "/timetables", {
         onSuccess: (data) => {
             timetables.refetch()
@@ -254,6 +242,14 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
         setLocalTimetables(
             list.slice().sort((a, b) => a.timeTableOrder - b.timeTableOrder),
         )
+
+        if (currentTimetableId != null) {
+            timetables.data?.timetables.forEach((timetable) => {
+                if (timetable.id === currentTimetableId) {
+                    setCurrentTimetableName(timetable.name)
+                }
+            })
+        }
     }, [timetables.data, year, semester])
 
     useEffect(() => {

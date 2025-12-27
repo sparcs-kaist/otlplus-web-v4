@@ -23,6 +23,7 @@ import { useAPI } from "@/utils/api/useAPI"
 import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
 import checkEmpty from "@/utils/search/checkEmpty"
 import checkOverlap from "@/utils/timetable/checkOverlap"
+import useIsDevice from "@/utils/useIsDevice"
 import useUserStore from "@/utils/zustand/useUserStore"
 
 import LectureListBlock from "./LectureListBlock"
@@ -113,6 +114,10 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     const { ref, inView } = useInView({ threshold: 0 })
 
     const [enabled, setEnabled] = useState(false)
+
+    const isTablet = useIsDevice("tablet")
+    const isLaptop = useIsDevice("laptop")
+    const isDesktop = useIsDevice("desktop")
 
     const mergeCoursesById = useCallback((response?: GETLecturesResponse) => {
         if (!response) return response
@@ -366,6 +371,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                     onClick={() => {
                         setIsWishlist((prev) => !prev)
                     }}
+                    style={{ paddingBlock: 10 }}
                 >
                     <Icon
                         size={15}
@@ -378,20 +384,27 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                         {t("common.wishlist")}
                     </Typography>
                 </Chip>
-                <DropDownWrapper direction="row" gap={0}>
-                    <ScrollableDropdown
-                        options={[
-                            t("dictionary.sortOptions.code"),
-                            t("dictionary.sortOptions.popularity"),
-                            t("dictionary.sortOptions.studentCount"),
-                        ]}
-                        setSelectedOption={setSortOption}
-                        selectedOption={sortOption}
-                    />
-                </DropDownWrapper>
+                {searchResult.courses.length !== 0 && (
+                    <DropDownWrapper direction="row" gap={0}>
+                        <ScrollableDropdown
+                            options={[
+                                t("dictionary.sortOptions.code"),
+                                t("dictionary.sortOptions.popularity"),
+                                t("dictionary.sortOptions.studentCount"),
+                            ]}
+                            setSelectedOption={setSortOption}
+                            selectedOption={sortOption}
+                        />
+                    </DropDownWrapper>
+                )}
             </FlexWrapper>
             {searchResult.courses.length !== 0 ? (
-                <CourseBlockWrapper direction="column" gap={12} ref={wrapperRef}>
+                <CourseBlockWrapper
+                    direction="column"
+                    gap={12}
+                    ref={wrapperRef}
+                    style={isTablet ? { flex: "0 0 auto" } : {}}
+                >
                     {searchResult.courses.map((course) => (
                         <LectureListBlock
                             key={course.id}
