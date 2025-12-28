@@ -1,4 +1,4 @@
-import { memo, useState } from "react"
+import { memo, useMemo, useState } from "react"
 
 import styled from "@emotion/styled"
 import FavoriteIcon from "@mui/icons-material/Favorite"
@@ -15,6 +15,7 @@ import Typography from "@/common/primitives/Typography"
 import { type Review } from "@/common/schemas/review"
 import { useAPI } from "@/utils/api/useAPI"
 import professorName from "@/utils/professorName"
+import useUserStore from "@/utils/zustand/useUserStore"
 
 const Content = styled(Typography)<{ overflow: boolean }>`
     line-height: 1.5;
@@ -66,7 +67,12 @@ function ReviewBlock({
     linkToDictionary = true,
 }: ReviewBlockProps) {
     const { t } = useTranslation()
+    const { status } = useUserStore()
     const navigator = useNavigate()
+
+    const { query: userReviewsQuery } = useAPI("GET", `/users/written-reviews`, {
+        enabled: status === "success",
+    })
 
     const { requestFunction } = useAPI("PATCH", `/reviews/${review.id}/liked`, {
         onSuccess: () => {
@@ -81,6 +87,13 @@ function ReviewBlock({
     })
 
     const [likeOverride, setLikeOverride] = useState<boolean | null>(null)
+
+    const writtenReviewIds: number[] = useMemo(() => {
+        if (userReviewsQuery.data) {
+            return userReviewsQuery.data.reviews.map((rev: Review) => rev.id)
+        }
+        return []
+    }, [userReviewsQuery.data])
 
     if (!review) return
 
@@ -139,20 +152,25 @@ function ReviewBlock({
                         {t("common.speech")} {ScoreEnum[review.speech]}
                     </Typography>
                 </FlexWrapper>
-                <FlexWrapper direction="row" gap={4} align="center">
-                    <Typography type="Normal" color="Highlight.default">
-                        {t("common.review.like")}
-                    </Typography>
-                    <IconButton onClick={(e) => likeReview(e)} styles={{ padding: 3 }}>
-                        <Icon size={18} color="crimson" onClick={() => {}}>
-                            {(likeOverride ?? review.likedByUser) ? (
-                                <FavoriteIcon />
-                            ) : (
-                                <FavoriteBorderOutlinedIcon />
-                            )}
-                        </Icon>
-                    </IconButton>
-                </FlexWrapper>
+                {!writtenReviewIds.includes(review.id) && (
+                    <FlexWrapper direction="row" gap={4} align="center">
+                        <Typography type="Normal" color="Highlight.default">
+                            {t("common.review.like")}
+                        </Typography>
+                        <IconButton
+                            onClick={(e) => likeReview(e)}
+                            styles={{ padding: 3 }}
+                        >
+                            <Icon size={18} color="crimson" onClick={() => {}}>
+                                {(likeOverride ?? review.likedByUser) ? (
+                                    <FavoriteIcon />
+                                ) : (
+                                    <FavoriteBorderOutlinedIcon />
+                                )}
+                            </Icon>
+                        </IconButton>
+                    </FlexWrapper>
+                )}
             </FlexWrapper>
         </SelectWrapper>
     )
