@@ -55,6 +55,10 @@ const SelectWrapper = styled(FlexWrapper)<{ clickable: boolean }>`
     user-select: ${(props) => (props.clickable ? "none" : "auto")};
 `
 
+const LikeButtonWrapper = styled(FlexWrapper)`
+    cursor: pointer;
+`
+
 interface ReviewBlockProps {
     review: Review
     withWrapper?: boolean
@@ -153,14 +157,16 @@ function ReviewBlock({
                     </Typography>
                 </FlexWrapper>
                 {!writtenReviewIds.includes(review.id) && (
-                    <FlexWrapper direction="row" gap={4} align="center">
+                    <LikeButtonWrapper
+                        direction="row"
+                        gap={4}
+                        align="center"
+                        onClick={(e) => likeReview(e)}
+                    >
                         <Typography type="Normal" color="Highlight.default">
                             {t("common.review.like")}
                         </Typography>
-                        <IconButton
-                            onClick={(e) => likeReview(e)}
-                            styles={{ padding: 3 }}
-                        >
+                        <IconButton styles={{ padding: 3 }}>
                             <Icon size={18} color="crimson" onClick={() => {}}>
                                 {(likeOverride ?? review.likedByUser) ? (
                                     <FavoriteIcon />
@@ -169,7 +175,7 @@ function ReviewBlock({
                                 )}
                             </Icon>
                         </IconButton>
-                    </FlexWrapper>
+                    </LikeButtonWrapper>
                 )}
             </FlexWrapper>
         </SelectWrapper>
