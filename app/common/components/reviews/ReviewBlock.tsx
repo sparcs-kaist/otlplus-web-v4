@@ -21,6 +21,7 @@ const Content = styled(Typography)<{ overflow: boolean }>`
     line-height: 1.5;
     width: 100%;
 
+    word-break: break-word;
     ${(props) =>
         props.overflow &&
         `
