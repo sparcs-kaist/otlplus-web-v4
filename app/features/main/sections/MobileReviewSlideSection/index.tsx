@@ -18,6 +18,7 @@ const MobileReviewSlideSectionWrapper = styled(FlexWrapper)`
     overflow: hidden;
     width: 100%;
     touch-action: pan-y; /* Allow vertical scrolling, but handle horizontal swipes manually */
+    border-radius: 16px;
 `
 
 const SlideTrack = styled(FlexWrapper)<{
