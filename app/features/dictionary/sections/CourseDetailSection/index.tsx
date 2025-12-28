@@ -1,10 +1,10 @@
-import React, { useEffect, useRef, useState } from "react"
+import React, { useEffect, useState } from "react"
 
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import CloseIcon from "@mui/icons-material/Close"
+import { useSearchParams } from "react-router"
 
-import { type GETCourseDetailResponse } from "@/api/courses/$courseId"
 import Credits from "@/common/components/Credits"
 import LoadingCircle from "@/common/components/LoadingCircle"
 import { type ReviewWritingBlockProps } from "@/common/components/reviews/ReviewWritingBlock"
@@ -59,6 +59,7 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
     onMobileModalClose,
 }) => {
     const theme = useTheme()
+    const [searchParams, setSearchParams] = useSearchParams()
 
     const { query } = useAPI("GET", `/courses/${selectedCourseId}`, {
         enabled: selectedCourseId !== null,
@@ -93,6 +94,16 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
 
     useEffect(() => {
         setSelectedProfessorId(null)
+        const professorId = searchParams.get("professorId")
+        if (professorId) {
+            const professorIdNumber = parseInt(professorId, 10)
+            if (!isNaN(professorIdNumber)) {
+                setSelectedProfessorId(professorIdNumber)
+                setSearchParams({})
+            } else {
+                setSelectedProfessorId(null)
+            }
+        }
     }, [selectedCourseId])
 
     return (

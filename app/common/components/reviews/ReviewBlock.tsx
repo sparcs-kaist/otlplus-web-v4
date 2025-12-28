@@ -118,7 +118,9 @@ function ReviewBlock({
             clickable={linkToDictionary}
             onClick={() => {
                 if (linkToDictionary) {
-                    navigator(`/dictionary?courseId=${review.courseId}`)
+                    navigator(
+                        `/dictionary?courseId=${review.courseId}&professorId=${review.professors[0]?.id}`,
+                    )
                 }
             }}
         >

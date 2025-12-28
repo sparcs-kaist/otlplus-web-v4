@@ -24,6 +24,7 @@ const EditButton = styled.button`
     background-color: ${({ theme }) => theme.colors.Background.Block.default};
     color: ${({ theme }) => theme.colors.Text.default};
     font-size: ${({ theme }) => theme.fonts.Normal.fontSize}px;
+    white-space: nowrap;
 
     &:hover {
         background-color: ${({ theme }) => theme.colors.Background.Block.dark};
@@ -77,12 +78,16 @@ const Index: React.FC<AccountInterestedMajorSectionProps> = ({ userInfo }) => {
         <AccountInterestedMajorSectionWrapper direction="column" gap={12}>
             <FlexWrapper
                 direction={"row"}
-                gap={0}
+                gap={12}
                 align="center"
                 justify="space-between"
                 style={{ width: "100%" }}
             >
-                <Typography type="NormalBold" color="Text.default">
+                <Typography
+                    type="NormalBold"
+                    color="Text.default"
+                    style={{ whiteSpace: "nowrap" }}
+                >
                     {t("account.interestedDepartments")}
                 </Typography>
                 {!isEditing && (
