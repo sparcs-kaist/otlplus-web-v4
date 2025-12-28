@@ -3,6 +3,7 @@ import React, { use, useEffect, useState } from "react"
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
 import { useInView } from "react-intersection-observer"
+import { de } from "zod/v4/locales"
 
 import LoadingCircle from "@/common/components/LoadingCircle"
 import ReviewBlock from "@/common/components/reviews/ReviewBlock"
@@ -61,6 +62,7 @@ const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
     useEffect(() => {
         setParams((prevState) => {
             const base = prevState ?? {}
+            if (selectedProfessorId === null) delete base.professorId
             return {
                 ...base,
                 ...(selectedCourseId !== null ? { courseId: selectedCourseId } : {}),
