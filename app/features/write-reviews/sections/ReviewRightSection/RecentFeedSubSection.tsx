@@ -25,7 +25,7 @@ function RecentFeedSubSection() {
     useEffect(() => {
         if (inView && query.hasNextPage && !query.isFetchingNextPage)
             query.fetchNextPage()
-    }, [inView, query])
+    }, [inView])
 
     useEffect(() => {
         setParams({
