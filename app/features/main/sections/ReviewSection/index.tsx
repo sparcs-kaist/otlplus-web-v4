@@ -1,6 +1,7 @@
-import { type Dispatch, Fragment, type SetStateAction, useState } from "react"
+import { type Dispatch, Fragment, type SetStateAction, use, useState } from "react"
 
 import styled from "@emotion/styled"
+import { useQueryClient } from "@tanstack/react-query"
 import { Trans, useTranslation } from "react-i18next"
 
 import Button from "@/common/components/Button"
@@ -29,7 +30,8 @@ const ScoreGrid = styled.div`
 `
 
 function ReviewSection() {
-    const { status } = useUserStore()
+    const { user, status } = useUserStore()
+    const queryClient = useQueryClient()
 
     const { query } = useAPI("GET", "/users/writable-review", {
         enabled: status === "success",
@@ -56,6 +58,7 @@ function ReviewSection() {
 
     function submitReview() {
         if (!query.data) return
+
         requestFunction({
             lectureId: query.data.lectureId,
             content: reviewText,
@@ -63,6 +66,8 @@ function ReviewSection() {
             load: reviewLoad,
             speech: reviewSpeech,
         })
+        queryClient.invalidateQueries({ queryKey: [`/users/written-reviews`] })
+        queryClient.invalidateQueries({ queryKey: [`/users/${user?.id}/lectures`] })
     }
 
     if (!query.data) {
