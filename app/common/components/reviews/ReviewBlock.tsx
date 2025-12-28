@@ -10,6 +10,7 @@ import { ScoreEnum } from "@/common/enum/scoreEnum"
 import { semesterToString } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
+import { IconButton } from "@/common/primitives/IconButton"
 import Typography from "@/common/primitives/Typography"
 import { type Review } from "@/common/schemas/review"
 import { useAPI } from "@/utils/api/useAPI"
@@ -95,8 +96,8 @@ function ReviewBlock({
         <SelectWrapper
             direction="column"
             align="stretch"
-            gap={8}
-            padding="0 4px"
+            gap={3}
+            padding="3px 4px 0px 4px"
             clickable={linkToDictionary}
             onClick={() => {
                 if (linkToDictionary) {
@@ -104,23 +105,26 @@ function ReviewBlock({
                 }
             }}
         >
-            <FlexWrapper direction="row" gap={6}>
-                <Typography type="NormalBold" color="Text.default">
-                    {review.courseName}
-                </Typography>
-                <Typography type="Normal" color="Text.lighter">
-                    {professorName(review.professors)}
-                </Typography>
-                <Typography type="Normal" color="Text.lighter">
-                    {review.year} {semesterToString(review.semester)}
-                </Typography>
+            <FlexWrapper direction="column" gap={8}>
+                <FlexWrapper direction="row" gap={6}>
+                    <Typography type="NormalBold" color="Text.default">
+                        {review.courseName}
+                    </Typography>
+                    <Typography type="Normal" color="Text.lighter">
+                        {professorName(review.professors)}
+                    </Typography>
+                    <Typography type="Normal" color="Text.lighter">
+                        {review.year} {semesterToString(review.semester)}
+                    </Typography>
+                </FlexWrapper>
+                <FlexWrapper direction="row" gap={0} style={{ overflow: "hidden" }}>
+                    <Content type="Normal" color="Text.default" overflow={!withWrapper}>
+                        {review.content}
+                    </Content>
+                </FlexWrapper>
             </FlexWrapper>
-            <FlexWrapper direction="row" gap={0} style={{ overflow: "hidden" }}>
-                <Content type="Normal" color="Text.default" overflow={!withWrapper}>
-                    {review.content}
-                </Content>
-            </FlexWrapper>
-            <FlexWrapper direction="row" justify="space-between" gap={0}>
+
+            <FlexWrapper direction="row" justify="space-between" align="center" gap={0}>
                 <FlexWrapper direction="row" gap={8}>
                     <Typography type="Normal" color="Text.lighter">
                         {t("common.review.like")} {review.like}
@@ -135,17 +139,19 @@ function ReviewBlock({
                         {t("common.speech")} {ScoreEnum[review.speech]}
                     </Typography>
                 </FlexWrapper>
-                <FlexWrapper direction="row" gap={4} onClick={(e) => likeReview(e)}>
+                <FlexWrapper direction="row" gap={4} align="center">
                     <Typography type="Normal" color="Highlight.default">
                         {t("common.review.like")}
                     </Typography>
-                    <Icon size={18} color="crimson">
-                        {(likeOverride ?? review.likedByUser) ? (
-                            <FavoriteIcon />
-                        ) : (
-                            <FavoriteBorderOutlinedIcon />
-                        )}
-                    </Icon>
+                    <IconButton onClick={(e) => likeReview(e)} styles={{ padding: 3 }}>
+                        <Icon size={18} color="crimson" onClick={() => {}}>
+                            {(likeOverride ?? review.likedByUser) ? (
+                                <FavoriteIcon />
+                            ) : (
+                                <FavoriteBorderOutlinedIcon />
+                            )}
+                        </Icon>
+                    </IconButton>
                 </FlexWrapper>
             </FlexWrapper>
         </SelectWrapper>
