@@ -111,6 +111,7 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
     )
 
     useEffect(() => {
+        if (year === -1) return
         setWishListQuery({ year: year, semester: semester })
     }, [year, semester, currentTimetableId])
     useEffect(() => {

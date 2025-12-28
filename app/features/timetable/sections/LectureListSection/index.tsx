@@ -312,6 +312,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
 
     useEffect(() => {
         setSearchResult({ courses: [] })
+        if (year === -1) return
         setWishListQuery({ year: year, semester: semester })
     }, [year, semester])
 
