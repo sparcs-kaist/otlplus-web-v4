@@ -21,6 +21,7 @@ const Content = styled(Typography)<{ overflow: boolean }>`
     line-height: 1.5;
     width: 100%;
 
+    word-break: break-word;
     ${(props) =>
         props.overflow &&
         `
@@ -113,7 +114,7 @@ function ReviewBlock({
         <SelectWrapper
             direction="column"
             align="stretch"
-            gap={3}
+            gap={8}
             padding="3px 4px 0px 4px"
             clickable={linkToDictionary}
             onClick={() => {

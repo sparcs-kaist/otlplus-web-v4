@@ -32,7 +32,7 @@ function WriteReviewsSubSection({ selectedLecture }: WriteReviewsSubSectionType)
         if (inView && query.hasNextPage && !query.isFetchingNextPage) {
             query.fetchNextPage()
         }
-    }, [inView, query])
+    }, [inView])
 
     useEffect(() => {
         if (selectedLecture === null) return

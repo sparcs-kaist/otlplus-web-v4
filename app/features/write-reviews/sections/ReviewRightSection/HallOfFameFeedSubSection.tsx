@@ -32,7 +32,6 @@ function HallOfFameFeedSubSection() {
         },
     })
     const { query, setParams, data } = useInfiniteAPI("GET", "/reviews", {
-        gcTime: 0,
         infinites: ["reviews"],
         limit: LIMIT,
     })
@@ -43,7 +42,7 @@ function HallOfFameFeedSubSection() {
         if (inView && query.hasNextPage && !query.isFetchingNextPage) {
             query.fetchNextPage()
         }
-    }, [inView, query])
+    }, [inView])
 
     const [selectedOption, setSelectedOption] = useState(0)
     const [offset, setOffset] = useState(0)
@@ -53,6 +52,7 @@ function HallOfFameFeedSubSection() {
             mode: "hall-of-fame",
         })
     }, [])
+
     useEffect(() => {
         if (selectedOption === 0) {
             setParams({

@@ -25,7 +25,6 @@ const HeaderWrapper = styled.div`
     height: max-content;
     z-index: 500;
     background-color: ${({ theme }) => theme.colors.Background.Page.default};
-    position: fixed;
 `
 
 const HeaderBar = styled.div`
