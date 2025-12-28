@@ -22,4 +22,6 @@ const publicEnvSchema = z.object({
 
 export const clientEnv = publicEnvSchema.parse(import.meta.env)
 
-console.log("[Current Environment]", clientEnv)
+if (process.env.NODE_ENV === "development") {
+    console.log("[Current Environment]", clientEnv)
+}
