@@ -81,23 +81,33 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 const AppWrapper = styled(FlexWrapper)`
     width: 100%;
-    min-height: 100%;
+    height: 100%;
     position: absolute;
     overflow: hidden;
     background-color: ${({ theme }) => theme.colors.Background.Page.default};
 `
 
 const OutletWrapper = styled(FlexWrapper)`
-    margin-top: 50px;
-    flex: 1 1 auto;
+    overflow: auto;
+
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+        display: none;
+    }
 `
 
 export default function App() {
     useGoogleAnalytics()
     return (
-        <AppWrapper direction="column" align="stretch" justify="stretch" gap={0}>
+        <AppWrapper
+            direction="column"
+            align="stretch"
+            justify="stretch"
+            gap={0}
+            flex="0 1 auto"
+        >
             <Header />
-            <OutletWrapper direction="column" gap={0} align="stretch">
+            <OutletWrapper direction="column" gap={0} align="stretch" flex="1 1 auto">
                 <Outlet />
             </OutletWrapper>
             <ReactQueryDevtools initialIsOpen={false} />
