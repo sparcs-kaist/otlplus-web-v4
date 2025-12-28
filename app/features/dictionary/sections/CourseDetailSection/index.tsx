@@ -153,7 +153,7 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
                             <CourseInfoSubsection courseDetail={query.data} />
                         </CourseDetailWrapper>
                         <Divider />
-                        <CourseDetailWrapper direction="column" gap={10}>
+                        <CourseDetailWrapper direction="column" gap={0}>
                             <CourseHistorySubsection
                                 courseDetail={query.data}
                                 selectedProfessorId={selectedProfessorId}

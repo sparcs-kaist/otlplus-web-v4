@@ -51,7 +51,7 @@ const ReviewWrapper = styled.div<{ clickable: boolean }>`
 
 const SelectWrapper = styled(FlexWrapper)<{ clickable: boolean }>`
     width: 100%;
-    cursor: ${(props) => (props.clickable ? "pointer" : "default")};
+    cursor: ${(props) => (props.clickable ? "pointer" : "auto")};
     user-select: ${(props) => (props.clickable ? "none" : "auto")};
 `
 

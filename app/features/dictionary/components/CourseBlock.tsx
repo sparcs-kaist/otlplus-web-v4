@@ -21,9 +21,16 @@ const CourseBlockInner = styled.div<{ selected: boolean }>`
     border-radius: 7px;
     padding: 8px 10px;
     border: 1px ${({ theme }) => theme.colors.Background.Block.dark} solid;
+    cursor: pointer;
+    &:hover {
+        background-color: ${({ theme, selected }) =>
+            selected
+                ? theme.colors.Background.Block.darker
+                : theme.colors.Background.Block.dark};
+    }
     background-color: ${({ selected, theme }) =>
         selected
-            ? theme.colors.Background.Block.dark
+            ? theme.colors.Background.Block.darker
             : theme.colors.Background.Block.default};
 `
 
