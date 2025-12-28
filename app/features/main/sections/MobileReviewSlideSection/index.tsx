@@ -7,22 +7,24 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight"
 
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
+import { IconButton } from "@/common/primitives/IconButton"
 import HallOfFameFeedSection from "@/features/main/sections/HallOfFameFeedSection"
 import LikedMajorFeedSection from "@/features/main/sections/LikedMajorFeedSection"
 import RecentFeedSection from "@/features/main/sections/RecentFeedSection"
+import useIsDevice from "@/utils/useIsDevice"
 
 const MobileReviewSlideSectionWrapper = styled(FlexWrapper)`
-    flex: 1 1 0;
-    overflow: hidden;
     position: relative;
+    overflow: hidden;
     width: 100%;
-    min-height: 500px;
     touch-action: pan-y; /* Allow vertical scrolling, but handle horizontal swipes manually */
 `
 
-const SlideTrack = styled.div<{ index: number; transition: string; offset: number }>`
-    display: flex;
-    flex-direction: row;
+const SlideTrack = styled(FlexWrapper)<{
+    index: number
+    transition: string
+    offset: number
+}>`
     width: 500%;
     height: 100%;
     transition: ${({ transition }) => transition};
@@ -31,12 +33,8 @@ const SlideTrack = styled.div<{ index: number; transition: string; offset: numbe
     );
 `
 
-const SlideItem = styled.div`
-    display: flex;
+const SlideItem = styled(FlexWrapper)`
     width: 20%;
-    height: 100%;
-    flex-shrink: 0;
-    overflow-y: hidden;
 `
 
 const NavButton = styled.div<{ position: "left" | "right" }>`
@@ -56,6 +54,7 @@ const NavButton = styled.div<{ position: "left" | "right" }>`
 
 export default function MobileReviewSlideSection() {
     const theme = useTheme()
+    const isMobile = useIsDevice("mobile")
 
     const [currentIndex, setCurrentIndex] = useState(1)
     const [transition, setTransition] = useState("transform 0.3s ease-in-out")
@@ -153,12 +152,22 @@ export default function MobileReviewSlideSection() {
             direction="column"
             gap={0}
             align="stretch"
+            justify="stretch"
             ref={containerRef}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
+            flex={isMobile ? "1 1 auto" : "1 1 0"}
         >
-            <SlideTrack index={currentIndex} transition={transition} offset={dragOffset}>
+            <SlideTrack
+                direction="row"
+                gap={0}
+                align="stretch"
+                justify="stretch"
+                index={currentIndex}
+                transition={transition}
+                offset={dragOffset}
+            >
                 {[
                     <HallOfFameFeedSection key="clone-last" />,
                     <RecentFeedSection key="recent" />,
@@ -166,20 +175,26 @@ export default function MobileReviewSlideSection() {
                     <HallOfFameFeedSection key="hall" />,
                     <RecentFeedSection key="clone-first" />,
                 ].map((component, idx) => (
-                    <SlideItem key={idx}>{component}</SlideItem>
+                    <SlideItem direction="row" align="stretch" gap={0} key={idx}>
+                        {component}
+                    </SlideItem>
                 ))}
             </SlideTrack>
 
-            <NavButton position="left" onClick={handlePrev}>
-                <Icon size={20} color={theme.colors.Text.default}>
-                    <ChevronLeftIcon />
-                </Icon>
+            <NavButton position="left">
+                <IconButton onClick={handlePrev}>
+                    <Icon size={20} color={theme.colors.Text.default} onClick={() => {}}>
+                        <ChevronLeftIcon />
+                    </Icon>
+                </IconButton>
             </NavButton>
 
-            <NavButton position="right" onClick={handleNext}>
-                <Icon size={20} color={theme.colors.Text.default}>
-                    <ChevronRightIcon />
-                </Icon>
+            <NavButton position="right">
+                <IconButton onClick={handleNext}>
+                    <Icon size={20} color={theme.colors.Text.default} onClick={() => {}}>
+                        <ChevronRightIcon />
+                    </Icon>
+                </IconButton>
             </NavButton>
         </MobileReviewSlideSectionWrapper>
     )

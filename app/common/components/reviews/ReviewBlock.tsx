@@ -139,7 +139,7 @@ function ReviewBlock({
                     <Typography type="Normal" color="Highlight.default">
                         {t("common.review.like")}
                     </Typography>
-                    <Icon size={18} color="crimson">
+                    <Icon size={18} color="crimson" onClick={() => {}}>
                         {(likeOverride ?? review.likedByUser) ? (
                             <FavoriteIcon />
                         ) : (

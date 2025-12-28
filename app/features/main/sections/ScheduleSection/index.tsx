@@ -107,7 +107,12 @@ function ScheduleSection() {
             <FlexWrapper direction="column" align="stretch" gap={16}>
                 <FlexWrapper direction="column" align="center" gap={10}>
                     <FlexWrapper direction="column" align="stretch" gap={0}>
-                        <FlexWrapper direction="row" justify="center" gap={0}>
+                        <FlexWrapper
+                            direction="row"
+                            justify="center"
+                            gap={0}
+                            style={{ textAlign: "center" }}
+                        >
                             <Typography type="BiggerBold" color="Text.dark">
                                 <Trans
                                     i18nKey="main.schedule.title"
@@ -115,13 +120,22 @@ function ScheduleSection() {
                                 />
                             </Typography>
                         </FlexWrapper>
-                        <FlexWrapper direction="row" justify="center" gap={0}>
+                        <FlexWrapper
+                            direction="row"
+                            justify="center"
+                            gap={0}
+                            style={{ textAlign: "center" }}
+                        >
                             <Typography type="BiggerBold" color="Text.dark">
                                 {timeLeft}
                             </Typography>
                         </FlexWrapper>
                     </FlexWrapper>
-                    <FlexWrapper direction="column" gap={0}>
+                    <FlexWrapper
+                        direction="column"
+                        gap={0}
+                        style={{ textAlign: "center" }}
+                    >
                         <Typography type="Normal" color="Text.placeholder">
                             {getContentString()} {dueDate.getFullYear()}.
                             {String(dueDate.getMonth() + 1).padStart(2, "0")}.

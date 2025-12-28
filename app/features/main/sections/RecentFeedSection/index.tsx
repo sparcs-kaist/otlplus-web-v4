@@ -1,4 +1,5 @@
 import { useEffect } from "react"
+import React from "react"
 
 import { useTheme } from "@emotion/react"
 import { Trans, useTranslation } from "react-i18next"
@@ -50,16 +51,12 @@ function RecentFeedSection() {
             </FlexWrapper>
             <FlexWrapper direction="column" gap={30} style={{ width: "100%" }}>
                 {query.data?.reviews.map((review, idx) => (
-                    <>
-                        <ReviewBlock
-                            key={review.id}
-                            review={review}
-                            withWrapper={false}
-                        />
+                    <React.Fragment key={review.id}>
+                        <ReviewBlock review={review} withWrapper={false} />
                         {idx !== (query.data?.reviews.length ?? 1) - 1 && (
                             <StyledDivider color={theme.colors.Line.dark} />
                         )}
-                    </>
+                    </React.Fragment>
                 ))}
             </FlexWrapper>
         </Widget>
