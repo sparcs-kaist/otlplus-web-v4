@@ -30,6 +30,10 @@ const TimetableWrapper = styled(FlexWrapper)`
     ${media.tablet} {
         padding: 8px;
     }
+
+    ${media.mobile} {
+        padding: 0 8px 8px 8px;
+    }
 `
 
 const SearchAreaWrapper = styled(FlexWrapper)`
@@ -243,6 +247,11 @@ export default function Timetable() {
     )
 
     useEffect(() => {
+        setHover(null)
+        setSelected(null)
+    }, [mobileSearchOpen])
+
+    useEffect(() => {
         function matchWidthHeight() {
             if (contentsAreaRef.current) {
                 setContentsAreaWidth(contentsAreaRef.current.offsetWidth)
@@ -296,7 +305,7 @@ export default function Timetable() {
             direction={isTablet ? "column" : "row"}
             align="stretch"
             justify="center"
-            gap={12}
+            gap={isTablet ? 8 : 12}
             flex="1 0 0"
             ref={outerRef}
         >

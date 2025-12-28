@@ -1,5 +1,6 @@
 import React, { memo } from "react"
 
+import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import AddIcon from "@mui/icons-material/Add"
 import FavoriteIcon from "@mui/icons-material/Favorite"
@@ -90,6 +91,7 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
     handleAddToTimetable,
     t,
 }) => {
+    const theme = useTheme()
     const isTablet = useIsDevice("tablet")
 
     const courseId = course.lectures[0]?.courseId ?? -1
@@ -189,7 +191,7 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
                                     (wish || isWishlist ? (
                                         <Icon
                                             size={15}
-                                            color="#E54C65"
+                                            color={theme.colors.Highlight.default}
                                             onClick={() =>
                                                 handleLikeClick(wish, lecture.id)
                                             }
@@ -199,6 +201,7 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
                                     ) : (
                                         <Icon
                                             size={15}
+                                            color={theme.colors.Text.default}
                                             onClick={() =>
                                                 handleLikeClick(wish, lecture.id)
                                             }
@@ -229,6 +232,7 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
                                     >
                                         <Icon
                                             size={isTablet ? 30 : 15}
+                                            color={theme.colors.Text.default}
                                             onClick={() => handleAddToTimetable(lecture)}
                                         >
                                             <AddIcon />

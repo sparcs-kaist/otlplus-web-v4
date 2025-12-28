@@ -88,7 +88,7 @@ const AppWrapper = styled(FlexWrapper)`
 `
 
 const OutletWrapper = styled(FlexWrapper)`
-    margin-top: 60px;
+    margin-top: 50px;
     flex: 1 1 auto;
 `
 
