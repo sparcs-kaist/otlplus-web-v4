@@ -1,5 +1,6 @@
 import { type ReactElement, useEffect, useState } from "react"
 
+import styled from "@emotion/styled"
 import { Search } from "@mui/icons-material"
 import { AnimatePresence, motion } from "framer-motion"
 import { useTranslation } from "react-i18next"
@@ -46,6 +47,16 @@ const dropInVariants = {
     visible: { opacity: 1, height: "auto" },
     exit: { opacity: 0, height: 0 },
 }
+
+const SearchFilterAreaInner = styled(FlexWrapper)`
+    overflow-y: auto;
+    min-height: 0;
+
+    scrollbar-width: none;
+    --webkit-scrollbar {
+        display: none;
+    }
+`
 
 function SearchArea<const ops extends readonly SearchOptions[]>({
     options,
@@ -201,13 +212,12 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
                         minHeight: 0,
                     }}
                 >
-                    <FlexWrapper
+                    <SearchFilterAreaInner
                         direction="column"
                         align="stretch"
                         gap={16}
                         padding="16px"
                         flex="1 0 0"
-                        style={{ overflowY: "auto", minHeight: 0 }}
                     >
                         <SearchFilterArea
                             options={options}
@@ -245,7 +255,7 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
                                 <Typography>{t("common.search.submit")}</Typography>
                             </Button>
                         </FlexWrapper>
-                    </FlexWrapper>
+                    </SearchFilterAreaInner>
                 </motion.div>
             </AnimatePresence>
         </FlexWrapper>
