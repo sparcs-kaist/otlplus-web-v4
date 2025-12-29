@@ -1,5 +1,6 @@
 import { type ReactElement, useEffect, useState } from "react"
 
+import { useTheme } from "@emotion/react"
 import { Search } from "@mui/icons-material"
 import { AnimatePresence, motion } from "framer-motion"
 import { useTranslation } from "react-i18next"
@@ -55,6 +56,7 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
     setTimeFilter,
 }: SearchAreaProps<ops>) {
     const { t } = useTranslation()
+    const theme = useTheme()
 
     const { query } = useAPI("GET", "/department-options")
 
@@ -169,7 +171,11 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
                 padding="4px 16px"
             >
                 {SearchIcon == undefined ? (
-                    <Icon size={17.5} color="#E54C65" onClick={() => {}}>
+                    <Icon
+                        size={17.5}
+                        color={theme.colors.Highlight.default}
+                        onClick={() => {}}
+                    >
                         <Search />
                     </Icon>
                 ) : (

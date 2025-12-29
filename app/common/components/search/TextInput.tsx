@@ -37,7 +37,8 @@ const Input = styled.input<{
     background-color: ${({ theme }) => theme.colors.Background.Section.default};
 
     &::placeholder {
-        color: ${({ $placeholderColor }) => $placeholderColor || "#aaaaaa"};
+        color: ${({ $placeholderColor, theme }) =>
+            $placeholderColor || theme.colors.Text.placeholder};
     }
 
     ${({ disabled }) => disabled && disabledStyle};
