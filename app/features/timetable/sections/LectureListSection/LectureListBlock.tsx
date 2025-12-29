@@ -252,7 +252,7 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
 export default memo(LectureListBlock, (prev, next) => {
     // Basic props comparison
     if (
-        prev.course.id !== next.course.id ||
+        prev.course !== next.course ||
         prev.isInWish !== next.isInWish || // Assuming array ref changes if content changes, or use deep compare if necessary (usually ref change from state)
         prev.isWishlist !== next.isWishlist ||
         prev.currentTimetableId !== next.currentTimetableId ||
