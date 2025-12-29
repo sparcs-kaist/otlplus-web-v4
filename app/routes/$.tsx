@@ -76,7 +76,7 @@ export default function Page404() {
 
                 <ButtonContainer direction="column" align="center" gap={12}>
                     <Button type="default" onClick={handleGoHome} $isFlexRow>
-                        <Typography type="Normal" color="Text.default">
+                        <Typography type="Normal">
                             {t("common.notFound.goHome")}
                         </Typography>
                     </Button>
