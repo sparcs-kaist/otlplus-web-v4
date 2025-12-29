@@ -1,6 +1,6 @@
 import { type ReactElement, useEffect, useState } from "react"
 
-import styled from "@emotion/styled"
+import { useTheme } from "@emotion/react"
 import { Search } from "@mui/icons-material"
 import { AnimatePresence, motion } from "framer-motion"
 import { useTranslation } from "react-i18next"
@@ -48,16 +48,6 @@ const dropInVariants = {
     exit: { opacity: 0, height: 0 },
 }
 
-const SearchFilterAreaInner = styled(FlexWrapper)`
-    overflow-y: auto;
-    min-height: 0;
-
-    scrollbar-width: none;
-    --webkit-scrollbar {
-        display: none;
-    }
-`
-
 function SearchArea<const ops extends readonly SearchOptions[]>({
     options,
     onSearch,
@@ -66,6 +56,7 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
     setTimeFilter,
 }: SearchAreaProps<ops>) {
     const { t } = useTranslation()
+    const theme = useTheme()
 
     const { query } = useAPI("GET", "/department-options")
 
@@ -180,7 +171,11 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
                 padding="4px 16px"
             >
                 {SearchIcon == undefined ? (
-                    <Icon size={17.5} color="#E54C65" onClick={() => {}}>
+                    <Icon
+                        size={17.5}
+                        color={theme.colors.Highlight.default}
+                        onClick={() => {}}
+                    >
                         <Search />
                     </Icon>
                 ) : (
@@ -212,12 +207,13 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
                         minHeight: 0,
                     }}
                 >
-                    <SearchFilterAreaInner
+                    <FlexWrapper
                         direction="column"
                         align="stretch"
                         gap={16}
                         padding="16px"
                         flex="1 0 0"
+                        style={{ overflowY: "auto", minHeight: 0 }}
                     >
                         <SearchFilterArea
                             options={options}
@@ -255,7 +251,7 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
                                 <Typography>{t("common.search.submit")}</Typography>
                             </Button>
                         </FlexWrapper>
-                    </SearchFilterAreaInner>
+                    </FlexWrapper>
                 </motion.div>
             </AnimatePresence>
         </FlexWrapper>
