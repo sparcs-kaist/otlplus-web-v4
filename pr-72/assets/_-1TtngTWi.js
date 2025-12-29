@@ -1,0 +1,2 @@
+import{w as e}from"./chunk-UIGDSWPH-ClhI_Z4l.js";import{j as r}from"./emotion-react-jsx-runtime.browser.esm-D2PZwVTC.js";import{F as t}from"./FlexWrapper-B6Hxm4Zw.js";import"./Typography-DeI78L6T.js";const c=e(function(){return r(t,{direction:"row",align:"stretch",justify:"center",gap:0,flex:"1 0 0",children:r(t,{direction:"column",align:"center",justify:"center",gap:16,flex:"1 0 0"})})});export{c as default};
+//# sourceMappingURL=_-1TtngTWi.js.map
