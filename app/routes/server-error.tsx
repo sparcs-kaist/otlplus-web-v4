@@ -89,7 +89,7 @@ export default function ServerErrorPage() {
                         </Typography>
                     </Button>
                     <Button type="default" onClick={handleGoHome} $isFlexRow>
-                        <Typography type="Normal" color="Text.default">
+                        <Typography type="Normal">
                             {t("common.serverError.goHome")}
                         </Typography>
                     </Button>
