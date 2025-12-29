@@ -41,6 +41,7 @@ const AccountPageModal: React.FC<AccountPageModalProps> = ({
         } else {
             removeLocalStorageItem("devStudentId")
             delete axiosClient.defaults.headers.common["X-AUTH-SID"]
+            delete axiosClient.defaults.headers.common["X-SID-AUTH-TOKEN"]
             location.reload()
         }
     }
