@@ -37,14 +37,20 @@ export default function LoginSuccessPage() {
                 await qc.prefetchQuery({
                     queryKey: ["/users/info", null, lang],
                     queryFn: async () => {
-                        const { data } = await axiosClient.get("/api/v2/users/info")
+                        const { data } = await axiosClient.get("/api/v2/users/info", {
+                            headers: { "Cache-Control": "no-cache" },
+                        })
                         return data
                     },
                 })
 
                 try {
-                    const { data: semesterData } =
-                        await axiosClient.get("/api/v2/semesters")
+                    const { data: semesterData } = await axiosClient.get(
+                        "/api/v2/semesters",
+                        {
+                            headers: { "Cache-Control": "no-cache" },
+                        },
+                    )
                     if (semesterData?.semesters?.length > 0) {
                         const latestSemester =
                             semesterData.semesters[semesterData.semesters.length - 1]
@@ -66,6 +72,7 @@ export default function LoginSuccessPage() {
                                                 year: latestSemester.year,
                                                 semester: latestSemester.semester,
                                             },
+                                            headers: { "Cache-Control": "no-cache" },
                                         },
                                     )
                                     return data
