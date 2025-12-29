@@ -41,6 +41,7 @@ const ApologyText = styled(Typography)`
 const DescriptionText = styled(Typography)`
     text-align: center;
     max-width: 320px;
+    line-height: 1.5;
 `
 
 const ButtonContainer = styled(FlexWrapper)`
@@ -76,17 +77,21 @@ export default function ServerErrorPage() {
                             {t("common.serverError.apology")}
                         </ApologyText>
                     </FlexWrapper>
-                    <DescriptionText type="Normal" color="Text.placeholder">
+                    <DescriptionText type="Normal" color="Text.light">
                         {t("common.serverError.description")}
                     </DescriptionText>
                 </FlexWrapper>
 
                 <ButtonContainer direction="column" align="center" gap={12}>
                     <Button type="highlighted" onClick={handleRetry} $isFlexRow>
-                        {t("common.serverError.retry")}
+                        <Typography type="Normal" color="Text.bright">
+                            {t("common.serverError.retry")}
+                        </Typography>
                     </Button>
                     <Button type="default" onClick={handleGoHome} $isFlexRow>
-                        {t("common.serverError.goHome")}
+                        <Typography type="Normal">
+                            {t("common.serverError.goHome")}
+                        </Typography>
                     </Button>
                 </ButtonContainer>
             </ContentContainer>
