@@ -4,7 +4,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 
-import { axiosClient, axiosClientWithAuth } from "@/libs/axios"
+import { axiosClient } from "@/libs/axios"
 import { clearQueryCache } from "@/libs/offline"
 
 export default function LoginSuccessPage() {
@@ -29,9 +29,6 @@ export default function LoginSuccessPage() {
                     return
                 }
 
-                localStorage.setItem("accessToken", accessToken)
-                localStorage.setItem("refreshToken", refreshToken)
-
                 await clearQueryCache()
 
                 qc.removeQueries({ queryKey: ["/users/info"] })
@@ -40,8 +37,7 @@ export default function LoginSuccessPage() {
                 await qc.prefetchQuery({
                     queryKey: ["/users/info", null, lang],
                     queryFn: async () => {
-                        const { data } =
-                            await axiosClientWithAuth.get("/api/v2/users/info")
+                        const { data } = await axiosClient.get("/api/v2/users/info")
                         return data
                     },
                 })
@@ -63,7 +59,7 @@ export default function LoginSuccessPage() {
                                     lang,
                                 ],
                                 queryFn: async () => {
-                                    const { data } = await axiosClientWithAuth.get(
+                                    const { data } = await axiosClient.get(
                                         "/api/v2/timetables/my-timetable",
                                         {
                                             params: {
