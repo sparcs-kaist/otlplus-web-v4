@@ -43,7 +43,7 @@ const TabButtonRowWrapper = styled(FlexWrapper)`
     max-width: 890px;
 
     ${media.laptop} {
-        max-width: 586px;
+        max-width: 565px;
     }
 
     ${media.tablet} {
@@ -54,7 +54,6 @@ const TabButtonRowWrapper = styled(FlexWrapper)`
 const TabRow = styled(FlexWrapper)`
     overflow-x: auto;
     scrollbar-width: none;
-    min-width: 0;
 
     &::-webkit-scrollbar {
         display: none;
@@ -95,8 +94,8 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
         transform: { x: number; y: number; scaleX?: number; scaleY?: number } | null,
     ): string => {
         if (!transform) return ""
-        const { x, y, scaleX = 1, scaleY = 1 } = transform
-        return `translate3d(${x}px, ${y}px, 0) scaleX(${scaleX}) scaleY(${scaleY})`
+        const { x, y } = transform
+        return `translate3d(${x}px, ${y}px, 0)`
     }
 
     const style = {
@@ -253,7 +252,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
     }, [timetables.data, year, semester])
 
     useEffect(() => {
-        if (status === "success" && year !== -1) {
+        if (status === "success" && year !== -1 && semester > 0) {
             setParams({
                 year: year,
                 semester: semester,
@@ -302,15 +301,16 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
         <TabButtonRowWrapper
             direction="row"
             justify="space-between"
-            align="center"
+            align="stretch"
+            flex="0 1 auto"
             gap={4}
+            style={{ overflowX: "hidden" }}
         >
             <FlexWrapper
                 direction="row"
-                align="flex-start"
                 gap={3}
-                flex="1 1 auto"
-                style={{ minWidth: 0 }}
+                flex="0 1 auto"
+                style={{ overflowX: "auto" }}
             >
                 <TabButton
                     key="my-timetable"
@@ -428,13 +428,15 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                     </TabButton>
                 </TabRow>
             </FlexWrapper>
-            <SemesterButton
-                year={year}
-                semester={semester}
-                setYear={setYear}
-                setSemester={setSemester}
-                setCurrentTimetableId={setCurrentTimetableId}
-            />
+            <FlexWrapper direction="row" gap={0} align="center">
+                <SemesterButton
+                    year={year}
+                    semester={semester}
+                    setYear={setYear}
+                    setSemester={setSemester}
+                    setCurrentTimetableId={setCurrentTimetableId}
+                />
+            </FlexWrapper>
         </TabButtonRowWrapper>
     )
 }

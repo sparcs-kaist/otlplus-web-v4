@@ -500,69 +500,66 @@ export default function Timetable() {
                             />
                         </LectureInfoArea>
                     </SearchAreaWrapper>
-                    <ContentsAreaWrapper
-                        direction="column"
-                        gap={0}
-                        align="stretch"
-                        justify="stretch"
-                    >
-                        {/* 시간표 탭 */}
-                        <TabButtonRow
-                            timeTableLectures={currentTimetableLectures}
-                            currentTimetableId={currentTimetableId}
-                            setCurrentTimetableId={setCurrentTimetableId}
-                            setCurrentTimetableName={setCurrentTimetableName}
-                            year={year}
-                            semester={semesterEnum}
-                            setYear={setYear}
-                            setSemester={setSemesterEnum}
-                        />
-                        <Block
-                            direction={isLaptop ? "column" : "row"}
-                            gap={isLaptop ? 12 : 30}
-                            align="stretch"
-                            justify="flex-start"
-                            flex="1 0 0"
-                        >
-                            <TimetableArea
-                                direction="column"
-                                gap={0}
-                                ref={contentsAreaRef}
+                    <FlexWrapper direction="row" gap={0}>
+                        <ContentsAreaWrapper direction="column" gap={0}>
+                            {/* 시간표 탭 */}
+                            <TabButtonRow
+                                timeTableLectures={currentTimetableLectures}
+                                currentTimetableId={currentTimetableId}
+                                setCurrentTimetableId={setCurrentTimetableId}
+                                setCurrentTimetableName={setCurrentTimetableName}
+                                year={year}
+                                semester={semesterEnum}
+                                setYear={setYear}
+                                setSemester={setSemesterEnum}
+                            />
+                            <Block
+                                direction={isLaptop ? "column" : "row"}
+                                gap={isLaptop ? 12 : 30}
+                                align="stretch"
+                                justify="flex-start"
+                                flex="1 0 0"
                             >
-                                <CustomTimeTableGrid
-                                    cellWidth={100}
-                                    fullHeight={
-                                        isLaptop
-                                            ? contentsAreaHeight - 60
-                                            : contentsAreaHeight - 36
-                                    }
-                                    lectureSummary={currentTimetableLectures}
-                                    setTimeFilter={setTimeFilter}
-                                    hover={hover}
-                                    setHover={setHover}
-                                    selected={selected}
-                                    setSelected={setSelected}
-                                    removeFunction={
-                                        currentTimetableId === null
-                                            ? undefined
-                                            : handleRemoveLecture
-                                    }
-                                />
-                            </TimetableArea>
-                            {!isLaptop && <StyledDivider direction="column" />}
-                            {/*시간표 정보 영역*/}
-                            <TimetableInfoArea>
-                                <TimetableInfoSection
-                                    timetableName={currentTimetableName}
-                                    timetableLectures={currentTimetableLectures}
-                                    hover={hover}
-                                    setHover={setHover}
-                                    year={year}
-                                    semester={semesterEnum}
-                                />
-                            </TimetableInfoArea>
-                        </Block>
-                    </ContentsAreaWrapper>
+                                <TimetableArea
+                                    direction="column"
+                                    gap={0}
+                                    ref={contentsAreaRef}
+                                >
+                                    <CustomTimeTableGrid
+                                        cellWidth={100}
+                                        fullHeight={
+                                            isLaptop
+                                                ? contentsAreaHeight - 60
+                                                : contentsAreaHeight - 36
+                                        }
+                                        lectureSummary={currentTimetableLectures}
+                                        setTimeFilter={setTimeFilter}
+                                        hover={hover}
+                                        setHover={setHover}
+                                        selected={selected}
+                                        setSelected={setSelected}
+                                        removeFunction={
+                                            currentTimetableId === null
+                                                ? undefined
+                                                : handleRemoveLecture
+                                        }
+                                    />
+                                </TimetableArea>
+                                {!isLaptop && <StyledDivider direction="column" />}
+                                {/*시간표 정보 영역*/}
+                                <TimetableInfoArea>
+                                    <TimetableInfoSection
+                                        timetableName={currentTimetableName}
+                                        timetableLectures={currentTimetableLectures}
+                                        hover={hover}
+                                        setHover={setHover}
+                                        year={year}
+                                        semester={semesterEnum}
+                                    />
+                                </TimetableInfoArea>
+                            </Block>
+                        </ContentsAreaWrapper>
+                    </FlexWrapper>
                 </>
             )}
         </TimetableWrapper>

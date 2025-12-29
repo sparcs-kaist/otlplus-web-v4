@@ -63,7 +63,7 @@ const renderLectureTile = (
                         left: left,
                         top: top,
                     }}
-                    key={`${lecture.id}-${j}`}
+                    key={`${lecture.id}-${j}-${i}`}
                     onClick={(event: React.MouseEvent) => {
                         event.stopPropagation()
                         if (lecture === selected) {

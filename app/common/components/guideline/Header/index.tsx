@@ -25,12 +25,14 @@ const HeaderWrapper = styled.div`
     height: max-content;
     z-index: 500;
     background-color: ${({ theme }) => theme.colors.Background.Page.default};
+    padding-bottom: 5px;
 `
 
-const HeaderBar = styled.div`
+const HeaderBar = styled.div<{ selectedTheme: string }>`
     width: 100%;
     height: 5px;
-    background: ${({ theme }) => theme.colors.Highlight.default};
+    background: ${({ theme, selectedTheme }) =>
+        selectedTheme === "light" ? theme.colors.Highlight.default : "transparent"};
 `
 
 const HeaderInner = styled.header`
@@ -123,7 +125,7 @@ const Header: React.FC = () => {
                     setAccountPageOpen={setAccountPageOpen}
                 />
             )}
-            {displayedTheme !== "dark" && <HeaderBar />}
+            <HeaderBar selectedTheme={displayedTheme} />
             <HeaderInner>
                 <Menu setMobileSidebarOpen={() => setMobileSidebarOpen(false)} />
                 <Setting
