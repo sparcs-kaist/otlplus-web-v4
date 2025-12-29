@@ -11,6 +11,10 @@ function isNetworkError(error: AxiosError): boolean {
     )
 }
 
+function isServerError(status: number | undefined): boolean {
+    return status !== undefined && status >= 500 && status < 600
+}
+
 const errorInterceptor = {
     onFulfilled(values: AxiosResponse) {
         useBackendStatusStore.getState().setBackendReachable(true)
@@ -23,7 +27,19 @@ const errorInterceptor = {
             useBackendStatusStore.getState().setBackendReachable(true)
         }
 
-        switch (error.response?.status) {
+        const status = error.response?.status
+
+        if (isServerError(status)) {
+            if (
+                typeof window !== "undefined" &&
+                !window.location.pathname.includes("/server-error")
+            ) {
+                window.location.href = "/server-error"
+            }
+            return Promise.reject(error)
+        }
+
+        switch (status) {
             case HttpStatusCode.Unauthorized: {
                 // TODO: Handle Application Logic
                 return Promise.reject(error)
