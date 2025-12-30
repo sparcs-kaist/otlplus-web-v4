@@ -8,7 +8,6 @@ const StyledCard = styled(FlexWrapper)`
     height: 100px;
     border-radius: 12px;
     padding: 16px;
-    text-align: center;
     background-color: ${({ theme }) => theme.colors.Background.Tab.default};
     transition: box-shadow 0.2s ease-in-out;
     color: #eba12a;
