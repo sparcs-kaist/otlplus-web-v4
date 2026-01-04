@@ -214,6 +214,13 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
                                         (lec) => lec.id === lecture.id,
                                     )) && (
                                     <span
+                                        title={
+                                            currentTimetableId == null
+                                                ? t(
+                                                      "timetable.myTimeTableLectureAddWarning",
+                                                  )
+                                                : ""
+                                        }
                                         style={{
                                             opacity:
                                                 currentTimetableId == null ||
