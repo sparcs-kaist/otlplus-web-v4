@@ -30,11 +30,28 @@ const errorInterceptor = {
         const status = error.response?.status
 
         if (isServerError(status)) {
-            if (
-                typeof window !== "undefined" &&
-                !window.location.pathname.includes("/server-error")
-            ) {
-                window.location.href = "/server-error"
+            if (typeof window !== "undefined") {
+                const { location, sessionStorage } = window
+                const SERVER_ERROR_REDIRECT_FLAG = "serverErrorRedirected"
+
+                const onServerErrorPage = location.pathname.includes("/server-error")
+                let hasRedirected = false
+
+                try {
+                    hasRedirected =
+                        sessionStorage.getItem(SERVER_ERROR_REDIRECT_FLAG) === "true"
+                } catch {
+                    // Access to sessionStorage can fail in some environments; ignore.
+                }
+
+                if (!onServerErrorPage && !hasRedirected) {
+                    try {
+                        sessionStorage.setItem(SERVER_ERROR_REDIRECT_FLAG, "true")
+                    } catch {
+                        // Ignore storage errors; redirect will still proceed.
+                    }
+                    location.assign("/server-error")
+                }
             }
             return Promise.reject(error)
         }
