@@ -1,2 +1,0 @@
-import{w as t,x as r,r as c}from"./chunk-UIGDSWPH-C2ktfSeF.js";const u=t(function(){const e=r();return c.useEffect(()=>{const a=window.location.hash.substring(1),s=new URLSearchParams(a),o=s.get("accessToken"),n=s.get("refreshToken");o&&n?navigator.userAgent.includes("otl-app")?window.location.href=`org.sparcs.otl://login?accessToken=${o}&refreshToken=${n}`:e("/",{replace:!0}):e("/",{replace:!0})},[e]),null});export{u as default};
-//# sourceMappingURL=login.success-CR3OD1G_.js.map
