@@ -9,8 +9,12 @@ import { useAPI } from "@/utils/api/useAPI"
 import Widget from "../../../../common/primitives/Widget"
 
 const NoSchedulesPlaceholder = styled(Typography)`
-    margin: 80px;
+    min-height: 100px;
+    flex-grow: 1;
     text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 `
 
 function ScheduleFeedSection() {
@@ -25,7 +29,7 @@ function ScheduleFeedSection() {
                     {t("main.scheduleFeed.title")}
                 </Typography>
             </FlexWrapper>
-            <FlexWrapper direction="column" align="stretch" gap={15}>
+            <FlexWrapper direction="column" align="stretch" gap={15} flex="1 1 0">
                 {!query.data || query.data.schedules.length === 0 ? (
                     <NoSchedulesPlaceholder type="BiggerBold" color="Text.default">
                         {t("main.scheduleFeed.noSchedules")}
