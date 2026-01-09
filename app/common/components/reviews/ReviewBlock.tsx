@@ -56,7 +56,7 @@ const SelectWrapper = styled(FlexWrapper)<{ clickable: boolean }>`
 `
 
 const LikeButtonWrapper = styled(FlexWrapper)<{ nonLogin: boolean }>`
-    cursor: pointer;
+    cursor: ${({ nonLogin }) => (nonLogin ? "not-allowed" : "pointer")};
     opacity: ${({ nonLogin }) => (nonLogin ? 0.5 : 1)};
     color: ${({ theme, nonLogin }) =>
         nonLogin ? theme.colors.Text.disable : theme.colors.Highlight.default};
