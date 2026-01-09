@@ -110,11 +110,6 @@ const CourseBlockWrapper = styled(FlexWrapper)`
     }
 `
 
-const MobileEmptyDiv = styled.div`
-    flex: 1 0 0;
-    width: 100%;
-`
-
 const MobileLectureSelector = styled.div`
     width: 0;
     height: 0;
@@ -148,6 +143,7 @@ interface LectureListSectionProps {
     timetableLectures: Lecture[]
     year: number
     semester: SemesterEnum
+    setNonLoginTimetable: React.Dispatch<React.SetStateAction<Lecture[]>>
     hoveredLecture: Lecture[] | null
     setHoveredLecture: React.Dispatch<React.SetStateAction<Lecture[] | null>>
     selectedLecture: Lecture | null
@@ -163,6 +159,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     timetableLectures,
     year,
     semester,
+    setNonLoginTimetable,
     hoveredLecture,
     setHoveredLecture,
     selectedLecture,
@@ -458,17 +455,32 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     }
 
     const handleAddToTimetable = async (lecture: Lecture) => {
-        if (!currentTimetableId) {
-            console.warn("No timetable selected")
-            return
-        } else if (
-            timetableLectures.some((lec) => checkOverlap(lec.classes, lecture.classes))
-        ) {
-            alert(t("timetable.addLectureConflict"))
-            return
-        }
+        if (status === "success") {
+            if (!currentTimetableId) {
+                console.warn("No timetable selected")
+                return
+            }
+            if (
+                timetableLectures.some((lec) =>
+                    checkOverlap(lec.classes, lecture.classes),
+                )
+            ) {
+                alert(t("timetable.addLectureConflict"))
+                return
+            }
 
-        addTimetableFunction({ action: "add", lectureId: lecture.id })
+            addTimetableFunction({ action: "add", lectureId: lecture.id })
+        } else {
+            if (
+                timetableLectures.some((lec) =>
+                    checkOverlap(lec.classes, lecture.classes),
+                )
+            ) {
+                alert(t("timetable.addLectureConflict"))
+                return
+            }
+            setNonLoginTimetable((prev) => [...prev, lecture])
+        }
     }
 
     return (
@@ -490,23 +502,25 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
             <FlexWrapper
                 direction="row"
                 gap={0}
-                justify={"space-between"}
+                justify={status === "success" ? "space-between" : "flex-end"}
                 align={"center"}
             >
-                <Chip
-                    isSelected={isWishlist}
-                    onClick={() => {
-                        setIsWishlist((prev) => !prev)
-                    }}
-                    style={{ paddingBlock: 10 }}
-                >
-                    <Icon size={15} color={theme.colors.Highlight.default}>
-                        {isWishlist ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-                    </Icon>
-                    <Typography type={"Normal"} color={"Highlight.default"}>
-                        {t("common.wishlist")}
-                    </Typography>
-                </Chip>
+                {status === "success" && (
+                    <Chip
+                        isSelected={isWishlist}
+                        onClick={() => {
+                            setIsWishlist((prev) => !prev)
+                        }}
+                        style={{ paddingBlock: 10 }}
+                    >
+                        <Icon size={15} color={theme.colors.Highlight.default}>
+                            {isWishlist ? <FavoriteIcon /> : <FavoriteBorderIcon />}
+                        </Icon>
+                        <Typography type={"Normal"} color={"Highlight.default"}>
+                            {t("common.wishlist")}
+                        </Typography>
+                    </Chip>
+                )}
                 {searchResult.courses.length !== 0 && (
                     <DropDownWrapper direction="row" gap={0}>
                         <ScrollableDropdown
