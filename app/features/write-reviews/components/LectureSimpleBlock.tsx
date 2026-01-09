@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 import { css } from "@emotion/react"
 import styled from "@emotion/styled"
@@ -6,6 +6,7 @@ import styled from "@emotion/styled"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import { type ThemeType } from "@/styles/themes"
+import useUserStore from "@/utils/zustand/useUserStore"
 
 interface LectureSimpleBlockProps {
     lecture: {
@@ -18,6 +19,7 @@ interface LectureSimpleBlockProps {
 
 const HoveredStyle = (theme: ThemeType) => css`
     background: ${theme.colors.Background.Block.highlight};
+    cursor: pointer;
 `
 
 const SelectedStyle = (theme: ThemeType) => css`
@@ -30,7 +32,6 @@ const BlockInner = styled(FlexWrapper)<{
     written: boolean
 }>`
     background: ${({ theme }) => theme.colors.Background.Block.default};
-    cursor: pointer;
     border-radius: 5px;
     opacity: ${({ written, isSelected }) => (isSelected ? 1 : written ? 0.3 : 1)};
     text-align: center;
@@ -40,6 +41,7 @@ const BlockInner = styled(FlexWrapper)<{
 `
 
 function LectureSimpleBlock({ lecture, isSelected, written }: LectureSimpleBlockProps) {
+    const { status } = useUserStore()
     const [isHovered, setIsHovered] = useState(false)
 
     return (
@@ -52,9 +54,11 @@ function LectureSimpleBlock({ lecture, isSelected, written }: LectureSimpleBlock
             isSelected={isSelected}
             written={written}
             onMouseOver={() => {
+                if (status === "idle") return
                 setIsHovered(true)
             }}
             onMouseLeave={() => {
+                if (status === "idle") return
                 setIsHovered(false)
             }}
         >
