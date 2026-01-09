@@ -148,8 +148,8 @@ interface LectureListSectionProps {
     timetableLectures: Lecture[]
     year: number
     semester: SemesterEnum
-    hoveredLecture: Lecture[] | null
-    setHoveredLecture: React.Dispatch<React.SetStateAction<Lecture[] | null>>
+    hoveredLecture: Lecture[]
+    setHoveredLecture: React.Dispatch<React.SetStateAction<Lecture[]>>
     selectedLecture: Lecture | null
     setSelectedLecture: React.Dispatch<React.SetStateAction<Lecture | null>>
     timeFilter: TimeBlock | null

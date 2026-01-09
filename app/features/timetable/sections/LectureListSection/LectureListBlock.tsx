@@ -63,13 +63,13 @@ const Divider = styled.div`
 interface LectureListBlockProps {
     course: GETLecturesResponse["courses"][number]
     selectedLecture: Lecture | null
-    hoveredLecture: Lecture[] | null
+    hoveredLecture: Lecture[]
     isInWish: number[]
     isWishlist: boolean
     currentTimetableId: number | null
     timetableLectures: Lecture[]
     isAddTimetablePending: boolean
-    setHoveredLecture: (lecture: Lecture[] | null) => void
+    setHoveredLecture: (lecture: Lecture[]) => void
     setSelectedLecture: (lecture: Lecture | null) => void
     handleLikeClick: (wish: boolean, lectureId: number) => void
     handleAddToTimetable: (lecture: Lecture) => void
@@ -141,7 +141,7 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
                             }}
                             onMouseLeave={() => {
                                 if (isTablet) return
-                                setHoveredLecture(null)
+                                setHoveredLecture([])
                             }}
                             onClick={() => {
                                 if (lecture.id === selectedLecture?.id) {

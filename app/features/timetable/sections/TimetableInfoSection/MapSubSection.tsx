@@ -112,8 +112,8 @@ export default function MapSubSection({
     setHover,
 }: {
     timetableLectures: Lecture[]
-    hover: Lecture[] | null
-    setHover: React.Dispatch<React.SetStateAction<Lecture[] | null>>
+    hover: Lecture[]
+    setHover: React.Dispatch<React.SetStateAction<Lecture[]>>
 }) {
     return (
         <MapImage>
@@ -131,7 +131,7 @@ export default function MapSubSection({
                             setHover(lectures)
                         }}
                         onMouseLeave={() => {
-                            setHover(null)
+                            setHover([])
                         }}
                     >
                         <MapPinPointer />
