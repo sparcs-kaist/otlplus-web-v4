@@ -10,7 +10,6 @@ import { ScoreEnum } from "@/common/enum/scoreEnum"
 import { semesterToString } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
-import { IconButton } from "@/common/primitives/IconButton"
 import Typography from "@/common/primitives/Typography"
 import { type Review } from "@/common/schemas/review"
 import { useAPI } from "@/utils/api/useAPI"
@@ -56,8 +55,11 @@ const SelectWrapper = styled(FlexWrapper)<{ clickable: boolean }>`
     user-select: ${(props) => (props.clickable ? "none" : "auto")};
 `
 
-const LikeButtonWrapper = styled(FlexWrapper)`
-    cursor: pointer;
+const LikeButtonWrapper = styled(FlexWrapper)<{ nonLogin: boolean }>`
+    cursor: ${({ nonLogin }) => (nonLogin ? "not-allowed" : "pointer")};
+    opacity: ${({ nonLogin }) => (nonLogin ? 0.5 : 1)};
+    color: ${({ theme, nonLogin }) =>
+        nonLogin ? theme.colors.Text.disable : theme.colors.Highlight.default};
 `
 
 interface ReviewBlockProps {
@@ -104,6 +106,7 @@ function ReviewBlock({
 
     const likeReview = (e: React.MouseEvent) => {
         e.stopPropagation()
+        if (status !== "success") return
         requestFunction({
             reviewId: review.id,
             action: (likeOverride ?? review.likedByUser) ? "unlike" : "like",
@@ -165,19 +168,16 @@ function ReviewBlock({
                         gap={4}
                         align="center"
                         onClick={(e) => likeReview(e)}
+                        nonLogin={status !== "success"}
                     >
-                        <Typography type="Normal" color="Highlight.default">
-                            {t("common.review.like")}
-                        </Typography>
-                        <IconButton styles={{ padding: 3 }}>
-                            <Icon size={18} color="crimson" onClick={() => {}}>
-                                {(likeOverride ?? review.likedByUser) ? (
-                                    <FavoriteIcon />
-                                ) : (
-                                    <FavoriteBorderOutlinedIcon />
-                                )}
-                            </Icon>
-                        </IconButton>
+                        <Typography type="Normal">{t("common.review.like")}</Typography>
+                        <Icon size={18}>
+                            {(likeOverride ?? review.likedByUser) ? (
+                                <FavoriteIcon />
+                            ) : (
+                                <FavoriteBorderOutlinedIcon />
+                            )}
+                        </Icon>
                     </LikeButtonWrapper>
                 )}
             </FlexWrapper>

@@ -6,6 +6,7 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import type { WriteReviewsSelectedLectureType } from "@/routes/write-reviews"
 import type { getAPIResponseType } from "@/utils/api/getAPIType"
+import useUserStore from "@/utils/zustand/useUserStore"
 
 import LectureSimpleBlock from "../../components/LectureSimpleBlock"
 
@@ -45,6 +46,8 @@ function TakenLectureSubSection({
     setSelectedLectureIndex,
     last,
 }: TakenLectureSubSectionProps) {
+    const { status } = useUserStore()
+
     return (
         <FlexWrapper direction="column" align="stretch" justify="stretch" gap={10}>
             <Typography type="NormalBold" color="Text.default">
@@ -59,6 +62,7 @@ function TakenLectureSubSection({
                         align="stretch"
                         justify="stretch"
                         onClick={() => {
+                            if (status === "idle") return
                             if (selectedLecture) {
                                 if (
                                     isSameLecture(
