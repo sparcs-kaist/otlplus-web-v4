@@ -10,10 +10,13 @@ const StyledWidget = styled(Widget)`
     align-items: center;
     height: 100%;
     flex: 1 0 auto;
+    overflow-y: auto;
+    scrollbar-width: none;
 `
 
 const MarkdownContent = styled.div`
     width: 100%;
+    height: 100%;
     text-align: left;
     color: ${({ theme }) => theme.colors.Text.default};
 
