@@ -27,7 +27,7 @@ function Test() {
     const semesterRef = useRef<number>(3)
 
     const [hovered, setHovered] = useState<Lecture[]>([])
-    const [selected, setSelected] = useState<Lecture[]>([])
+    const [selected, setSelected] = useState<Lecture | null>(null)
 
     const [timeFilter, setTimeFilter] = useState<TimeBlock | null>(null)
 
@@ -36,8 +36,8 @@ function Test() {
         semesterRef.current = semesterRef.current == 1 ? 3 : 1
     }
 
-    function deleteLecture(lecture: Lecture) {
-        console.log("Delete lecture:", lecture)
+    function deleteLecture(lectureId: number) {
+        console.log("Delete lecture:", lectureId)
     }
 
     useEffect(() => {
@@ -92,7 +92,7 @@ function Test() {
                     >
                         <Typography type="Big">Selected Lectures</Typography>
                         <Typography type="Normal" color="Text.default">
-                            {selected[0]?.name || ""}
+                            {selected?.name || ""}
                         </Typography>
                     </FlexWrapper>
 

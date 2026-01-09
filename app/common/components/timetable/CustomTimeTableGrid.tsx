@@ -196,8 +196,8 @@ interface CustomTimeTableGridProps {
     deleteLecture?: (lectureId: number) => void
     hoveredLectures?: Lecture[]
     setHoveredLectures?: React.Dispatch<React.SetStateAction<Lecture[]>>
-    selectedLectures?: Lecture | null
-    setSelectedLectures?: React.Dispatch<React.SetStateAction<Lecture | null>>
+    selectedLecture?: Lecture | null
+    setSelectedLecture?: React.Dispatch<React.SetStateAction<Lecture | null>>
 }
 
 function CustomTimeTableGrid({
@@ -210,8 +210,8 @@ function CustomTimeTableGrid({
     deleteLecture,
     hoveredLectures = [],
     setHoveredLectures,
-    selectedLectures = null,
-    setSelectedLectures,
+    selectedLecture = null,
+    setSelectedLecture,
 }: CustomTimeTableGridProps) {
     const { t } = useTranslation()
 
@@ -298,9 +298,11 @@ function CustomTimeTableGrid({
         (lecture: Lecture) => {
             if (!needLectureInteraction) return
 
-            setSelectedLectures?.(lecture)
+            setSelectedLecture?.((prev) => {
+                return prev?.id === lecture.id ? null : lecture
+            })
         },
-        [setSelectedLectures, needLectureInteraction],
+        [setSelectedLecture, needLectureInteraction],
     )
 
     const clearHoveredLecturesCallback = useCallback(() => {
@@ -314,6 +316,24 @@ function CustomTimeTableGrid({
         },
         [needLectureDeletable, deleteLecture],
     )
+
+    useEffect(() => {
+        if (!needLectureInteraction) return
+
+        const hoveredIds = hoveredLectures.map((lec) => lec.id).join(" ")
+
+        overlayRef.current?.setAttribute("data-hovered-lectures", hoveredIds)
+    }, [hoveredLectures, needLectureInteraction])
+
+    useEffect(() => {
+        if (!needLectureInteraction) return
+
+        const selectedId = selectedLecture ? selectedLecture.id.toString() : ""
+
+        if (selectedId !== "")
+            overlayRef.current?.setAttribute("data-selected-lecture", selectedId)
+        else overlayRef.current?.setAttribute("data-selected-lecture", "")
+    }, [selectedLecture, needLectureInteraction])
 
     return (
         <FlexWrapper
@@ -414,19 +434,9 @@ function CustomTimeTableGrid({
                     ref={overlayRef}
                     data-interaction={needLectureInteraction}
                     data-lecture-deletable={needLectureDeletable}
-                    data-is-dragging="false"
-                    data-hovered-lectures={
-                        needLectureInteraction
-                            ? hoveredLectures.map((lec) => lec.id).join(" ")
-                            : ""
-                    }
-                    data-selected-lectures={
-                        needLectureInteraction
-                            ? selectedLectures
-                                ? selectedLectures.id.toString()
-                                : ""
-                            : ""
-                    }
+                    data-is-dragging={false}
+                    data-hovered-lectures=""
+                    data-selected-lecture=""
                     onPointerLeave={clearHoveredLecturesCallback}
                 >
                     {needTimeFilter && <HoverTile />}
@@ -450,13 +460,12 @@ export default memo(CustomTimeTableGrid, (prevProps, nextProps) => {
         prevProps.lectures === nextProps.lectures &&
         prevProps.cellWidth === nextProps.cellWidth &&
         prevProps.needTimeFilter === nextProps.needTimeFilter &&
-        prevProps.setTimeFilter === nextProps.setTimeFilter &&
         prevProps.needLectureInteraction === nextProps.needLectureInteraction &&
         prevProps.needLectureDeletable === nextProps.needLectureDeletable &&
         prevProps.deleteLecture === nextProps.deleteLecture &&
         prevProps.hoveredLectures === nextProps.hoveredLectures &&
         prevProps.setHoveredLectures === nextProps.setHoveredLectures &&
-        prevProps.selectedLectures === nextProps.selectedLectures &&
-        prevProps.setSelectedLectures === nextProps.setSelectedLectures
+        prevProps.selectedLecture === nextProps.selectedLecture &&
+        prevProps.setSelectedLecture === nextProps.setSelectedLecture
     )
 })

@@ -116,7 +116,7 @@ const LectureTileInner = styled(FlexWrapper)<{
     }
 
     [data-hovered-lectures~="${({ lectureId }) => lectureId}"] &,
-    [data-selected-lectures~="${({ lectureId }) => lectureId}"] & {
+    [data-selected-lecture="${({ lectureId }) => lectureId}"] & {
         ${({ theme }) => LectureTileHoverCss(theme)}
     }
 `

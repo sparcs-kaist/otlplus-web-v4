@@ -349,8 +349,8 @@ export default function Timetable() {
                                     setTimeFilter={setTimeFilter}
                                     hoveredLectures={hover}
                                     setHoveredLectures={setHover}
-                                    selectedLectures={selected}
-                                    setSelectedLectures={setSelected}
+                                    selectedLecture={selected}
+                                    setSelectedLecture={setSelected}
                                     deleteLecture={
                                         currentTimetableId === null
                                             ? undefined
@@ -525,13 +525,14 @@ export default function Timetable() {
                                     ref={contentsAreaRef}
                                 >
                                     <CustomTimeTableGrid
-                                        cellWidth="150px"
+                                        cellWidth="100px"
                                         lectures={currentTimetableLectures}
                                         setTimeFilter={setTimeFilter}
+                                        needLectureDeletable={currentTimetableId !== null}
                                         hoveredLectures={hover}
                                         setHoveredLectures={setHover}
-                                        selectedLectures={selected}
-                                        setSelectedLectures={setSelected}
+                                        selectedLecture={selected}
+                                        setSelectedLecture={setSelected}
                                         deleteLecture={
                                             currentTimetableId === null
                                                 ? undefined
