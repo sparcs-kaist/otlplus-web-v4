@@ -1,2 +1,0 @@
-import{c as o}from"./env-Buve47x1.js";import"./index-CwyB1uel.js";import{c as n}from"./queryPersister-CY7DFGkL.js";function e(){document.cookie="loginFromBeta=true; Domain=.otl.sparcs.org; Path=/",location.href=o.VITE_APP_API_URL+"/session/login"}async function r(){await n(),location.href=o.VITE_APP_API_URL+`/session/logout?next=${window.location.origin}`}export{e as a,r as h};
-//# sourceMappingURL=handleLoginLogout-jhdIzm--.js.map
