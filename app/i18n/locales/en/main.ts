@@ -31,5 +31,6 @@ export const main = {
     },
     scheduleFeed: {
         title: "School Schedules",
+        noSchedules: "No schedules",
     },
 }

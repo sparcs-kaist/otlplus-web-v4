@@ -11,6 +11,7 @@ import DeveloperLoginModal from "@/features/account/DeveloperLoginModal"
 import { axiosClient } from "@/libs/axios"
 import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
+import { handleLogin } from "@/utils/handleLoginLogout"
 import { getLocalStorageItem } from "@/utils/localStorage"
 import useIsDevice from "@/utils/useIsDevice"
 import useThemeStore from "@/utils/zustand/useThemeStore"
@@ -73,7 +74,7 @@ const Header: React.FC = () => {
             if (process.env.NODE_ENV === "development") {
                 setDeveloperLoginOpen(true)
             } else {
-                location.href = clientEnv.VITE_APP_API_URL + `/session/login`
+                handleLogin()
             }
         } else {
             setAccountPageOpen(true)

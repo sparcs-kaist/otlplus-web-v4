@@ -1,3 +1,4 @@
+import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
 
 import Line from "@/common/components/Line"
@@ -6,6 +7,15 @@ import Typography from "@/common/primitives/Typography"
 import { useAPI } from "@/utils/api/useAPI"
 
 import Widget from "../../../../common/primitives/Widget"
+
+const NoSchedulesPlaceholder = styled(Typography)`
+    min-height: 100px;
+    flex-grow: 1;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+`
 
 function ScheduleFeedSection() {
     const { t } = useTranslation()
@@ -19,7 +29,12 @@ function ScheduleFeedSection() {
                     {t("main.scheduleFeed.title")}
                 </Typography>
             </FlexWrapper>
-            <FlexWrapper direction="column" align="stretch" gap={15}>
+            <FlexWrapper direction="column" align="stretch" gap={15} flex="1 1 0">
+                {!query.data || query.data.schedules.length === 0 ? (
+                    <NoSchedulesPlaceholder type="BiggerBold" color="Text.default">
+                        {t("main.scheduleFeed.noSchedules")}
+                    </NoSchedulesPlaceholder>
+                ) : null}
                 {query.data?.schedules.map((schedule, idx) => (
                     <FlexWrapper key={idx} direction="column" align="stretch" gap={15}>
                         <FlexWrapper direction="row" justify="space-between" gap={0}>

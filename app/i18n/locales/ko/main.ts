@@ -30,5 +30,6 @@ export const main = {
     },
     scheduleFeed: {
         title: "주요 일정",
+        noSchedules: "일정 없음",
     },
 }
