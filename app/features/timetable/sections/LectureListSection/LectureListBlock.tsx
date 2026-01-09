@@ -13,6 +13,7 @@ import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 import checkOverlap from "@/utils/timetable/checkOverlap"
 import useIsDevice from "@/utils/useIsDevice"
+import useUserStore from "@/utils/zustand/useUserStore"
 
 import formatProfessorName from "./formatProfessorName"
 
@@ -91,6 +92,7 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
     handleAddToTimetable,
     t,
 }) => {
+    const { status } = useUserStore()
     const theme = useTheme()
     const isTablet = useIsDevice("tablet")
 
@@ -188,6 +190,7 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 {!isTablet &&
+                                    status === "success" &&
                                     (wish || isWishlist ? (
                                         <Icon
                                             size={15}
@@ -215,7 +218,8 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
                                     )) && (
                                     <span
                                         title={
-                                            currentTimetableId == null
+                                            currentTimetableId == null &&
+                                            status === "success"
                                                 ? t(
                                                       "timetable.myTimeTableLectureAddWarning",
                                                   )
@@ -223,7 +227,8 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
                                         }
                                         style={{
                                             opacity:
-                                                currentTimetableId == null ||
+                                                (currentTimetableId == null &&
+                                                    status === "success") ||
                                                 timetableLectures.some((lec) =>
                                                     checkOverlap(
                                                         lec.classes,
