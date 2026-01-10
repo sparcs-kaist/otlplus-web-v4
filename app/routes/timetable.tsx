@@ -331,6 +331,7 @@ export default function Timetable() {
                                 <CustomTimeTableGrid
                                     lectures={currentTimetableLectures}
                                     setTimeFilter={setTimeFilter}
+                                    needLectureDeletable={currentTimetableId !== null}
                                     hoveredLectures={hover}
                                     setHoveredLectures={setHover}
                                     selectedLecture={selected}

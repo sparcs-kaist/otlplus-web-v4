@@ -115,7 +115,9 @@ const LectureTileInner = styled(FlexWrapper)<{
         pointer-events: none;
     }
 
-    [data-hovered-lectures~="${({ lectureId }) => lectureId}"] &,
+    .timetable-grid-wrapper:not(:hover)
+        [data-hovered-lectures~="${({ lectureId }) => lectureId}"]
+        &,
     [data-selected-lecture="${({ lectureId }) => lectureId}"] & {
         ${({ theme }) => LectureTileHoverCss(theme)}
     }

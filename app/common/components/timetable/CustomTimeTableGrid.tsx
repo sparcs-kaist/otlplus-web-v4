@@ -92,11 +92,14 @@ interface BackgroundGridBlockProps {
     dayIdx: number
     timeIdx: number
     onMouseDown: (
-        e: React.PointerEvent<HTMLDivElement>,
+        e: React.PointerEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>,
         timeIdx: number,
         dayIdx: number,
     ) => void
-    onMouseEnter: (e: React.PointerEvent<HTMLDivElement>, timeIdx: number) => void
+    onMouseEnter: (
+        e: React.PointerEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>,
+        timeIdx: number,
+    ) => void
     [key: string]: any
 }
 
@@ -112,12 +115,14 @@ const MemoizedBackgroundGridBlock = memo(
             <BackgroundGridBlock
                 direction="column"
                 gap={0}
-                onPointerDown={(e) => onMouseDown(e, timeIdx, dayIdx)}
-                onPointerEnter={(e) => onMouseEnter(e, timeIdx)}
                 padding="3px"
                 align="stretch"
                 justify="stretch"
                 {...rest}
+                onPointerDown={(e) => onMouseDown(e, timeIdx, dayIdx)}
+                onPointerEnter={(e) => onMouseEnter(e, timeIdx)}
+                onTouchStart={(e) => onMouseDown(e, timeIdx, dayIdx)}
+                onTouchMove={(e) => onMouseEnter(e, timeIdx)}
             >
                 <FlexWrapper
                     direction="column"
@@ -169,6 +174,7 @@ const MemoizedLectureTiles = memo(
                 lectureId={lecture.id}
                 onPointerEnter={handleMouseEnter}
                 onPointerDown={handleMouseClick}
+                onTouchStart={handleMouseClick}
             >
                 {lecture.classes.map((_, classIdx) => (
                     <LectureTile
@@ -225,7 +231,11 @@ function CustomTimeTableGrid({
     const dayRef = useRef<number | null>(null)
 
     const handleMouseDown = useCallback(
-        (e: React.PointerEvent<HTMLDivElement>, timeIdx: number, dayIdx: number) => {
+        (
+            e: React.PointerEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>,
+            timeIdx: number,
+            dayIdx: number,
+        ) => {
             if (draggingRef.current || !needTimeFilter) return
 
             const startRow = timeIdx + 2
@@ -248,7 +258,10 @@ function CustomTimeTableGrid({
     )
 
     const handlePointerEnter = useCallback(
-        (e: React.PointerEvent<HTMLDivElement>, timeIdx: number) => {
+        (
+            e: React.PointerEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>,
+            timeIdx: number,
+        ) => {
             if (!draggingRef.current || anchorRef.current === null) return
 
             const start = anchorRef.current
@@ -307,6 +320,7 @@ function CustomTimeTableGrid({
 
     const clearHoveredLecturesCallback = useCallback(() => {
         setHoveredLectures?.([])
+        overlayRef.current?.setAttribute("data-is-hovering", "false")
     }, [setHoveredLectures])
 
     const deleteLectureCallback = useCallback(
@@ -371,6 +385,7 @@ function CustomTimeTableGrid({
                 justify="stretch"
                 flex="1 1 auto"
                 padding={`0 0 ${HEADER_HEIGHT * (1 - HEADER_CALIBRATION)}px 0`}
+                className="timetable-grid-wrapper"
             >
                 <BackgroundGrid
                     columns={`repeat(${DAYS.length}, ${cellWidth || "1fr"})`}
@@ -386,6 +401,7 @@ function CustomTimeTableGrid({
                         ? {
                               onPointerUp: handlePointerLeave,
                               onPointerLeave: handlePointerLeave,
+                              onTouchEnd: handlePointerLeave,
                           }
                         : {})}
                 >
@@ -438,6 +454,7 @@ function CustomTimeTableGrid({
                     data-hovered-lectures=""
                     data-selected-lecture=""
                     onPointerLeave={clearHoveredLecturesCallback}
+                    onTouchEnd={clearHoveredLecturesCallback}
                 >
                     {needTimeFilter && <HoverTile />}
                     {lectures.map((lecture, lectureIdx) => (
