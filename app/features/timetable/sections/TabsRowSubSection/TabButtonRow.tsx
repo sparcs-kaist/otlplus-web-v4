@@ -40,10 +40,10 @@ import TabButton from "./TabButton"
 
 const TabButtonRowWrapper = styled(FlexWrapper)`
     width: 100%;
-    max-width: 890px;
+    max-width: 897px;
 
     ${media.laptop} {
-        max-width: 565px;
+        max-width: 572px;
     }
 
     ${media.tablet} {

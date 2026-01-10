@@ -195,10 +195,6 @@ export default function Timetable() {
     const [year, setYear] = useState<number>(-1)
     const [semesterEnum, setSemesterEnum] = useState<SemesterEnum>(1)
 
-    // for timetable area size(temporary)
-    const [contentsAreaWidth, setContentsAreaWidth] = useState(0)
-    const [contentsAreaHeight, setContentsAreaHeight] = useState<number>(0)
-
     // Mobile search modal state
     const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
 
@@ -249,19 +245,6 @@ export default function Timetable() {
     useEffect(() => {
         setHover([])
         setSelected(null)
-    }, [mobileSearchOpen])
-
-    useEffect(() => {
-        function matchWidthHeight() {
-            if (contentsAreaRef.current) {
-                setContentsAreaWidth(contentsAreaRef.current.offsetWidth)
-                setContentsAreaHeight(contentsAreaRef.current.offsetHeight)
-            }
-        }
-
-        matchWidthHeight()
-        window.addEventListener("resize", matchWidthHeight)
-        return () => window.removeEventListener("resize", matchWidthHeight)
     }, [mobileSearchOpen])
 
     useEffect(() => {
@@ -342,9 +325,10 @@ export default function Timetable() {
                                 direction="column"
                                 gap={0}
                                 ref={contentsAreaRef}
+                                align="stretch"
+                                flex="1 1 auto"
                             >
                                 <CustomTimeTableGrid
-                                    cellWidth="150px"
                                     lectures={currentTimetableLectures}
                                     setTimeFilter={setTimeFilter}
                                     hoveredLectures={hover}
@@ -499,8 +483,13 @@ export default function Timetable() {
                             />
                         </LectureInfoArea>
                     </SearchAreaWrapper>
-                    <FlexWrapper direction="row" gap={0}>
-                        <ContentsAreaWrapper direction="column" gap={0}>
+                    <FlexWrapper direction="column" gap={0}>
+                        <ContentsAreaWrapper
+                            direction="column"
+                            gap={0}
+                            style={{ overflowX: "hidden" }}
+                            flex="1 1 auto"
+                        >
                             {/* 시간표 탭 */}
                             <TabButtonRow
                                 timeTableLectures={currentTimetableLectures}
