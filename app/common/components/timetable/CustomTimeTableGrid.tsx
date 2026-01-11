@@ -1,4 +1,4 @@
-import { Fragment, memo, useCallback, useEffect, useRef } from "react"
+import { Fragment, memo, useCallback, useEffect, useRef, useState } from "react"
 
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
@@ -230,6 +230,8 @@ function CustomTimeTableGrid({
     const timeRef = useRef<[number, number] | null>(null)
     const dayRef = useRef<number | null>(null)
 
+    const [ghostLecture, setGhostLecture] = useState<Lecture | null>(null)
+
     const handleMouseDown = useCallback(
         (
             e: React.PointerEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>,
@@ -334,10 +336,18 @@ function CustomTimeTableGrid({
     useEffect(() => {
         if (!needLectureInteraction) return
 
+        setGhostLecture?.(
+            hoveredLectures[0]
+                ? hoveredLectures.map((lec) => lec.id).includes(hoveredLectures[0]?.id)
+                    ? hoveredLectures[0]
+                    : null
+                : null,
+        )
+
         const hoveredIds = hoveredLectures.map((lec) => lec.id).join(" ")
 
         overlayRef.current?.setAttribute("data-hovered-lectures", hoveredIds)
-    }, [hoveredLectures, needLectureInteraction])
+    }, [hoveredLectures, needLectureInteraction, lectures])
 
     useEffect(() => {
         if (!needLectureInteraction) return
@@ -466,6 +476,7 @@ function CustomTimeTableGrid({
                             handleLectureTileSelect={handleLectureTileSelectCallback}
                         />
                     ))}
+                    {ghostLecture && <MemoizedLectureTiles lecture={ghostLecture} />}
                 </OverlayGrid>
             </FlexWrapper>
         </FlexWrapper>
