@@ -13,7 +13,7 @@ const ChipInner = styled.div`
     height: 28px;
     display: inline-flex;
     padding: 8px 16px;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     border-radius: 16px;
     font-size: 14px;
@@ -48,7 +48,7 @@ const ChipContentWrapper = styled.div`
     width: 100%;
     height: 100%;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
 `
 
 const CourseHistoryChip = ({
