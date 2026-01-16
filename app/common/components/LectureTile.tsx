@@ -150,7 +150,7 @@ const LectureTile: React.FC<{
                 </RemoveButton>
             )}
             <TitleWrapper isHighlighted={isHighlighted} isOverlapped={isOverlapped}>
-                {lecture.name}
+                {lecture.name + lecture.subtitle}
             </TitleWrapper>
             <DescWrapper isHighlighted={isHighlighted} isOverlapped={isOverlapped}>
                 {lecture.professors.map((prof) => prof.name).join(", ")}

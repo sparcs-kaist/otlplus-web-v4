@@ -58,7 +58,7 @@ const FoldButton = styled(KeyboardArrowDownIcon)<{ isfolded: string }>`
 `
 
 const NoHistoryText = styled(Typography)`
-    width: 150px;
+    min-width: 150px;
     flex-grow: 1;
     display: flex;
     align-items: center;
