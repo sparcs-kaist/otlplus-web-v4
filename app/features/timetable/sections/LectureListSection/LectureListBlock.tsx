@@ -170,7 +170,7 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
                                     }}
                                 >
                                     <Typography type="NormalBold" color="Text.default">
-                                        {lecture.classNo}
+                                        {lecture.classNo} {lecture.subtitle}
                                     </Typography>
                                     <Typography type="Normal" color="Text.default">
                                         {formatProfessorName(lecture.professors)}

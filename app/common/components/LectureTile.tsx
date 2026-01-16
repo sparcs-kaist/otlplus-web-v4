@@ -40,7 +40,6 @@ const TileWrapper = styled.div<{
     height: var(--tile-height);
     margin-bottom: 2px;
     margin-top: 2px;
-    justify-content: center;
     background-color: ${({ theme, course_id, isHighlighted, isOverlapped }) =>
         isOverlapped
             ? theme.colors.Text.default
