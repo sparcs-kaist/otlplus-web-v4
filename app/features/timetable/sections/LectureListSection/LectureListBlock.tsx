@@ -1,4 +1,4 @@
-import React, { memo } from "react"
+import React, { memo, useCallback, useEffect } from "react"
 
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
@@ -16,18 +16,27 @@ import useIsDevice from "@/utils/useIsDevice"
 
 import formatProfessorName from "./formatProfessorName"
 
-const CourseItemWrapper = styled.div<{ isSelected: boolean }>`
+const CourseItemWrapper = styled.div`
     width: 100%;
     display: flex;
     flex-direction: column;
     border-radius: 8px;
     background-color: ${({ theme }) => theme.colors.Background.Block.default};
     transition: all 0.2s ease;
-    transform: ${({ isSelected }) => (isSelected ? "translateY(-2px)" : "none")};
-    box-shadow: ${({ isSelected }) =>
-        isSelected ? "0 4px 8px rgba(0, 0, 0, 0.15)" : "none"};
+    transform: none;
+    box-shadow: none;
     overflow: hidden;
     flex-shrink: 0;
+
+    :not([data-selected-lecture=""]) & {
+        opacity: 0.3;
+    }
+
+    &: [data-is-selected= "true"] {
+        opacity: 1;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
 `
 
 const CourseTitleWrapper = styled.div`
@@ -39,18 +48,25 @@ const CourseTitleWrapper = styled.div`
     justify-content: space-between;
 `
 
-const LectureItemWrapper = styled.div<{ isHighlighted: boolean }>`
+const LectureItemWrapper = styled.div<{ lectureId: number }>`
     width: 100%;
     display: flex;
     align-items: center;
     padding: 8px 12px 8px 18px;
     flex-direction: row;
     justify-content: space-between;
-    background-color: ${({ isHighlighted, theme }) =>
-        isHighlighted
-            ? theme.colors.Background.Block.dark
-            : theme.colors.Background.Block.default};
+    background-color: ${({ theme }) => theme.colors.Background.Block.default};
     cursor: pointer;
+
+    &:hover,
+    [data-selected-lecture="${({ lectureId }) => lectureId}"] &,
+    [data-hovered-lectures~="${({ lectureId }) => lectureId}"]:not(:hover) & {
+        background-color: ${({ theme }) => theme.colors.Background.Block.dark};
+    }
+
+    :not(:hover) .onTablet {
+        display: none;
+    }
 `
 
 const Divider = styled.div`
@@ -62,15 +78,14 @@ const Divider = styled.div`
 
 interface LectureListBlockProps {
     course: GETLecturesResponse["courses"][number]
-    selectedLecture: Lecture | null
-    hoveredLecture: Lecture[]
-    isInWish: number[]
-    isWishlist: boolean
+    wishlist: number[]
     currentTimetableId: number | null
     timetableLectures: Lecture[]
     isAddTimetablePending: boolean
-    setHoveredLecture: (lecture: Lecture[]) => void
-    setSelectedLecture: (lecture: Lecture | null) => void
+    selectedLecture: Lecture | null
+    handleSetHoveredLecture: (lecture: Lecture) => void
+    handleClearHoveredLecture: () => void
+    handleSetSelectedLecture: (lecture: Lecture) => void
     handleLikeClick: (wish: boolean, lectureId: number) => void
     handleAddToTimetable: (lecture: Lecture) => void
     t: (key: string) => string
@@ -78,15 +93,14 @@ interface LectureListBlockProps {
 
 const LectureListBlock: React.FC<LectureListBlockProps> = ({
     course,
-    selectedLecture,
-    hoveredLecture,
-    isInWish,
-    isWishlist,
+    wishlist,
     currentTimetableId,
     timetableLectures,
     isAddTimetablePending,
-    setHoveredLecture,
-    setSelectedLecture,
+    handleSetHoveredLecture,
+    handleClearHoveredLecture,
+    handleSetSelectedLecture,
+    selectedLecture,
     handleLikeClick,
     handleAddToTimetable,
     t,
@@ -94,15 +108,20 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
     const theme = useTheme()
     const isTablet = useIsDevice("tablet")
 
-    const courseId = course.lectures[0]?.courseId ?? -1
-    const opacity =
-        selectedLecture != null && selectedLecture.courseId !== courseId ? 0.3 : 1
+    const wrapperRef = React.useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        wrapperRef.current?.setAttribute(
+            "data-is-selected",
+            selectedLecture?.id != null &&
+                course.lectures.some((lec) => lec.id === selectedLecture.id)
+                ? "true"
+                : "false",
+        )
+    }, [selectedLecture, course])
 
     return (
-        <CourseItemWrapper
-            isSelected={selectedLecture?.courseId === courseId}
-            style={{ opacity: opacity }}
-        >
+        <CourseItemWrapper ref={wrapperRef} data-is-selected="">
             <CourseTitleWrapper>
                 <FlexWrapper
                     direction="row"
@@ -128,35 +147,23 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
             </CourseTitleWrapper>
             <Divider />
             {course.lectures.map((lecture, idx) => {
-                const wish = isInWish.includes(lecture.id)
-                const isHovered =
-                    hoveredLecture?.some((lec) => lec.id === lecture.id) === true
+                const wish = wishlist.includes(lecture.id)
                 return (
                     <React.Fragment key={lecture.id}>
                         <LectureItemWrapper
                             data-lecture-id={lecture.id}
-                            onMouseEnter={() => {
-                                if (isTablet) return
-                                setHoveredLecture([lecture])
-                            }}
-                            onMouseLeave={() => {
-                                if (isTablet) return
-                                setHoveredLecture([])
-                            }}
-                            onClick={() => {
-                                if (lecture.id === selectedLecture?.id) {
-                                    setSelectedLecture(null)
-                                    return
-                                }
-                                setSelectedLecture(lecture)
-                            }}
-                            isHighlighted={
-                                selectedLecture?.id === lecture.id || isHovered
-                            }
+                            onMouseEnter={() => handleSetHoveredLecture(lecture)}
+                            onMouseLeave={handleClearHoveredLecture}
+                            onClick={() => handleSetSelectedLecture(lecture)}
+                            lectureId={lecture.id}
                         >
                             <FlexWrapper direction="column" gap={0}>
-                                {isTablet && isHovered && (
-                                    <Typography type="Small" color="Text.placeholder">
+                                {isTablet && (
+                                    <Typography
+                                        type="Small"
+                                        color="Text.placeholder"
+                                        className="onTablet"
+                                    >
                                         {lecture.department.name} / {lecture.type}
                                     </Typography>
                                 )}
@@ -174,8 +181,12 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
                                         {formatProfessorName(lecture.professors)}
                                     </Typography>
                                 </FlexWrapper>
-                                {isTablet && isHovered && (
-                                    <Typography type="Small" color="Text.placeholder">
+                                {isTablet && (
+                                    <Typography
+                                        type="Small"
+                                        color="Text.placeholder"
+                                        className="onTablet"
+                                    >
                                         {lecture.classes[0]?.buildingName}{" "}
                                         {lecture.classes[0]?.roomName} /{" "}
                                         {lecture.limitPeople}
@@ -188,7 +199,7 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
                                 onClick={(e) => e.stopPropagation()}
                             >
                                 {!isTablet &&
-                                    (wish || isWishlist ? (
+                                    (wish ? (
                                         <Icon
                                             size={15}
                                             color={theme.colors.Highlight.default}
@@ -209,43 +220,37 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
                                             <FavoriteBorderIcon />
                                         </Icon>
                                     ))}
-                                {(!isTablet ||
-                                    hoveredLecture?.some(
-                                        (lec) => lec.id === lecture.id,
-                                    )) && (
-                                    <span
-                                        title={
-                                            currentTimetableId == null
-                                                ? t(
-                                                      "timetable.myTimeTableLectureAddWarning",
-                                                  )
-                                                : ""
-                                        }
-                                        style={{
-                                            opacity:
-                                                currentTimetableId == null ||
-                                                timetableLectures.some((lec) =>
-                                                    checkOverlap(
-                                                        lec.classes,
-                                                        lecture.classes,
-                                                    ),
-                                                )
-                                                    ? 0.3
-                                                    : 1,
-                                            cursor: isAddTimetablePending
-                                                ? "wait"
-                                                : "pointer",
-                                        }}
+                                <span
+                                    title={
+                                        currentTimetableId == null
+                                            ? t("timetable.myTimeTableLectureAddWarning")
+                                            : ""
+                                    }
+                                    style={{
+                                        opacity:
+                                            currentTimetableId == null ||
+                                            timetableLectures.some((lec) =>
+                                                checkOverlap(
+                                                    lec.classes,
+                                                    lecture.classes,
+                                                ),
+                                            )
+                                                ? 0.3
+                                                : 1,
+                                        cursor: isAddTimetablePending
+                                            ? "wait"
+                                            : "pointer",
+                                    }}
+                                    className={isTablet ? "onTablet" : ""}
+                                >
+                                    <Icon
+                                        size={isTablet ? 30 : 15}
+                                        color={theme.colors.Text.default}
+                                        onClick={() => handleAddToTimetable(lecture)}
                                     >
-                                        <Icon
-                                            size={isTablet ? 30 : 15}
-                                            color={theme.colors.Text.default}
-                                            onClick={() => handleAddToTimetable(lecture)}
-                                        >
-                                            <AddIcon />
-                                        </Icon>
-                                    </span>
-                                )}
+                                        <AddIcon />
+                                    </Icon>
+                                </span>
                             </FlexWrapper>
                         </LectureItemWrapper>
                         {idx !== course.lectures.length - 1 && <Divider />}
@@ -260,29 +265,13 @@ export default memo(LectureListBlock, (prev, next) => {
     // Basic props comparison
     if (
         prev.course !== next.course ||
-        prev.isInWish !== next.isInWish || // Assuming array ref changes if content changes, or use deep compare if necessary (usually ref change from state)
-        prev.isWishlist !== next.isWishlist ||
+        prev.wishlist !== next.wishlist || // Assuming array ref changes if content changes, or use deep compare if necessary (usually ref change from state)
         prev.currentTimetableId !== next.currentTimetableId ||
         prev.timetableLectures !== next.timetableLectures ||
-        prev.isAddTimetablePending !== next.isAddTimetablePending ||
-        prev.selectedLecture !== next.selectedLecture // If selected lecture changes, we might need to re-render if it affects opacity/highlight
+        prev.isAddTimetablePending !== next.isAddTimetablePending
     ) {
         return false
     }
 
-    // Smart Hover Comparison
-    const prevHovered = prev.hoveredLecture
-    const nextHovered = next.hoveredLecture
-
-    if (prevHovered === nextHovered) return true
-
-    const courseLectureIds = prev.course.lectures.map((l) => l.id)
-    const isPrevIn = prevHovered?.some((h) => courseLectureIds.includes(h.id)) ?? false
-    const isNextIn = nextHovered?.some((h) => courseLectureIds.includes(h.id)) ?? false
-
-    // If neither the previous hover nor the next hover involves any lecture in this course,
-    // then the hover change is irrelevant to this block.
-    if (!isPrevIn && !isNextIn) return true
-
-    return false
+    return true
 })

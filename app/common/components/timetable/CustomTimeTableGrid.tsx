@@ -188,7 +188,7 @@ const MemoizedLectureTiles = memo(
         )
     },
     (prevProps, nextProps) => {
-        return prevProps.lecture === nextProps.lecture
+        return prevProps.lecture.id === nextProps.lecture.id
     },
 )
 

@@ -1,4 +1,4 @@
-import { type ReactElement, useEffect, useState } from "react"
+import { type ReactElement, memo, useEffect, useState } from "react"
 
 import { useTheme } from "@emotion/react"
 import { Search } from "@mui/icons-material"
@@ -258,4 +258,13 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
     )
 }
 
-export default SearchArea
+const SearchAreaMemo = memo(SearchArea, (prev, next) => {
+    return (
+        prev.options === next.options &&
+        prev.onSearch === next.onSearch &&
+        prev.SearchIcon === next.SearchIcon &&
+        prev.timeFilter === next.timeFilter &&
+        prev.setTimeFilter === next.setTimeFilter
+    )
+})
+export default SearchAreaMemo
