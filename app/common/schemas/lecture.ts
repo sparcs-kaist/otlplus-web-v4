@@ -19,6 +19,7 @@ export const LectureSchema = z.object({
     courseId: z.number().int(),
     classNo: z.string(),
     name: z.string(),
+    subtitle: z.string(),
     code: z.string(),
     department: DepartmentSchema,
     type: z.string(),

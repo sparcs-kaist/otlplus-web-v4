@@ -58,7 +58,7 @@ const FoldButton = styled(KeyboardArrowDownIcon)<{ isfolded: string }>`
 `
 
 const NoHistoryText = styled(Typography)`
-    width: 150px;
+    min-width: 150px;
     flex-grow: 1;
     display: flex;
     align-items: center;
@@ -156,7 +156,7 @@ const CourseHistorySubsection: React.FC<CourseHistorySubsectionProps> = ({
                 transition={{ duration: 0.2, ease: "easeInOut" }}
             >
                 <div />
-                <FlexWrapper direction="row" gap={20}>
+                <FlexWrapper direction="row" gap={20} style={{ minWidth: "min-content" }}>
                     {[...(courseDetail?.history || [])]
                         .reverse()
                         .map((history, index) => (
@@ -177,7 +177,7 @@ const CourseHistorySubsection: React.FC<CourseHistorySubsectionProps> = ({
                                     <FlexWrapper
                                         direction="column"
                                         gap={4}
-                                        align={"center"}
+                                        align={"stretch"}
                                     >
                                         {history.classes.map((classData, idx) => (
                                             <CourseHistoryChip
@@ -186,7 +186,11 @@ const CourseHistorySubsection: React.FC<CourseHistorySubsectionProps> = ({
                                                     selectedProfessorId ==
                                                     (classData.professors[0]?.id ?? -1)
                                                 }
-                                                chipIndex={classData.classNo}
+                                                chipIndex={
+                                                    classData.classNo +
+                                                    " " +
+                                                    classData.subtitle
+                                                }
                                                 chipText={professorName(
                                                     classData.professors,
                                                 )}

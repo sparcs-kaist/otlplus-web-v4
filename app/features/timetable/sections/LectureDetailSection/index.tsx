@@ -213,7 +213,7 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                         >
                             {isTablet && <div style={{ width: 20 }}></div>}
                             <Typography type={"Bigger"} color={"Text.default"}>
-                                {selectedLecture.name}
+                                {selectedLecture.name + selectedLecture.subtitle}
                             </Typography>
                             {isTablet && (
                                 <Icon
