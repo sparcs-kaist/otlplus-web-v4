@@ -48,6 +48,7 @@
         "idb-keyval": "^6.2.2",
         "isbot": "^5",
         "loglevel": "^1.9.2",
+        "mixpanel-browser": "^2.73.0",
         "react": "^19.2.0",
         "react-dom": "^19.2.0",
         "react-i18next": "^16.2.4",

@@ -15,6 +15,7 @@ import {
 import Header from "@/common/components/guideline/Header"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import { clientEnv } from "@/env"
+import { initMixpanel } from "@/libs/mixpanel"
 import { useGoogleAnalytics } from "@/utils/googleAnalytics"
 
 import type { Route } from "./+types/root"
@@ -98,6 +99,7 @@ const OutletWrapper = styled(FlexWrapper)`
 
 export default function App() {
     useGoogleAnalytics()
+    initMixpanel()
     return (
         <AppWrapper
             direction="column"
