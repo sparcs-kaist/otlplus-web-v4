@@ -85,14 +85,14 @@ jobs:
 
             - name: Upload to S3 Dev
               run: |
-                  aws s3 sync build/ s3://${{ vars.S3_BUCKET_DEV }}/ --delete
-                  echo "✅ Uploaded build files to S3 Dev: s3://${{ vars.S3_BUCKET_DEV }}/"
+                  aws s3 sync build/client/ s3://${{ vars.S3_BUCKET_DEV }}/v4/ --delete
+                  echo "✅ Uploaded build files to S3 Dev: s3://${{ vars.S3_BUCKET_DEV }}/v4/"
 
             - name: Invalidate CloudFront cache
               run: |
                   aws cloudfront create-invalidation \
                     --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_DEV }} \
-                    --paths "/*"
+                    --paths "/v4/*"
 
             - name: Notify Slack - Deploy Success
               if: success()
@@ -190,10 +190,21 @@ jobs:
                   aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
                   aws-region: ap-northeast-2
 
-            - name: Upload to S3 Production
+            - name: Upload to S3 Production (archive + live)
               run: |
-                  aws s3 sync build/client/ s3://${{ vars.S3_BUCKET_PROD }}/${{ github.event.release.tag_name }}/ --delete
-                  echo "✅ Uploaded client build files to S3 Production: s3://${{ vars.S3_BUCKET_PROD }}/${{ github.event.release.tag_name }}/"
+                  # 1. 버전별 백업 (롤백용) - 아카이브 버킷
+                  aws s3 sync build/client/ s3://${{ vars.S3_BUCKET_ARCHIVE }}/v4/${{ github.event.release.tag_name }}/ --delete
+                  echo "✅ Uploaded versioned backup: s3://${{ vars.S3_BUCKET_ARCHIVE }}/v4/${{ github.event.release.tag_name }}/"
+
+                  # 2. 라이브 서빙용 (CloudFront Function이 라우팅하는 경로) - 라이브 버킷
+                  aws s3 sync build/client/ s3://${{ vars.S3_BUCKET_PROD }}/v4/ --delete
+                  echo "✅ Uploaded live version: s3://${{ vars.S3_BUCKET_PROD }}/v4/"
+
+            - name: Invalidate CloudFront cache
+              run: |
+                  aws cloudfront create-invalidation \
+                    --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_PROD }} \
+                    --paths "/v4/*"
 
             - name: Create build archive
               run: |
