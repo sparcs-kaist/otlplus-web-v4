@@ -74,6 +74,7 @@ jobs:
                   VITE_DEV_MODE: true
                   VITE_APP_DEV_API_AUTH_TOKEN: ${{ secrets.VITE_APP_DEV_API_AUTH_TOKEN }}
                   VITE_CHANNELTALK_PLUGIN_KEY: ${{ vars.CHANNELTALK_PLUGIN_KEY }}
+                  VITE_MIXPANEL_TOKEN: ${{ secrets.VITE_MIXPANEL_TOKEN }}
 
             - name: Configure AWS credentials
               uses: aws-actions/configure-aws-credentials@v4
@@ -180,6 +181,7 @@ jobs:
                   VITE_APP_LOG_LEVEL: info
                   VITE_DEV_MODE: false
                   VITE_CHANNELTALK_PLUGIN_KEY: ${{ vars.CHANNELTALK_PLUGIN_KEY }}
+                  VITE_MIXPANEL_TOKEN: ${{ secrets.VITE_MIXPANEL_TOKEN }}
 
             - name: Configure AWS credentials
               uses: aws-actions/configure-aws-credentials@v4
