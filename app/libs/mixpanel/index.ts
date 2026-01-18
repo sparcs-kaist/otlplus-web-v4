@@ -1,13 +1,25 @@
-import mixpanel from "mixpanel-browser"
-
 import { clientEnv } from "@/env"
 
 export const MIXPANEL_TOKEN = clientEnv.VITE_MIXPANEL_TOKEN
 
 let isInitialized = false
+let mixpanelInstance: typeof import("mixpanel-browser").default | null = null
 
-export const initMixpanel = () => {
+const getMixpanel = async () => {
+    if (typeof window === "undefined") return null
+    if (!mixpanelInstance) {
+        const module = await import("mixpanel-browser")
+        mixpanelInstance = module.default
+    }
+    return mixpanelInstance
+}
+
+export const initMixpanel = async () => {
+    if (typeof window === "undefined") return
     if (!MIXPANEL_TOKEN || isInitialized) return
+
+    const mixpanel = await getMixpanel()
+    if (!mixpanel) return
 
     mixpanel.init(MIXPANEL_TOKEN, {
         debug: process.env.NODE_ENV === "development",
@@ -19,14 +31,18 @@ export const initMixpanel = () => {
     isInitialized = true
 }
 
-export const identifyUser = (user: {
+export const identifyUser = async (user: {
     id: number
     email: string
     name?: string
     studentNumber?: number
     degree?: string
 }) => {
+    if (typeof window === "undefined") return
     if (!MIXPANEL_TOKEN || !isInitialized) return
+
+    const mixpanel = await getMixpanel()
+    if (!mixpanel) return
 
     mixpanel.identify(user.id.toString())
     mixpanel.people.set({
@@ -37,14 +53,25 @@ export const identifyUser = (user: {
     })
 }
 
-export const resetUser = () => {
+export const resetUser = async () => {
+    if (typeof window === "undefined") return
     if (!MIXPANEL_TOKEN || !isInitialized) return
+
+    const mixpanel = await getMixpanel()
+    if (!mixpanel) return
 
     mixpanel.reset()
 }
 
-export const trackEvent = (eventName: string, properties?: Record<string, unknown>) => {
+export const trackEvent = async (
+    eventName: string,
+    properties?: Record<string, unknown>,
+) => {
+    if (typeof window === "undefined") return
     if (!MIXPANEL_TOKEN || !isInitialized) return
+
+    const mixpanel = await getMixpanel()
+    if (!mixpanel) return
 
     mixpanel.track(eventName, properties)
 }

@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect } from "react"
 
 import styled from "@emotion/styled"
 import * as Sentry from "@sentry/react"
@@ -99,7 +99,11 @@ const OutletWrapper = styled(FlexWrapper)`
 
 export default function App() {
     useGoogleAnalytics()
-    initMixpanel()
+
+    useEffect(() => {
+        initMixpanel()
+    }, [])
+
     return (
         <AppWrapper
             direction="column"
