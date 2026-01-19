@@ -52,7 +52,7 @@ const HoverTileInner = styled(FlexWrapper)`
 
 function HoverTile() {
     return (
-        <HoverTileWrapper direction="column" gap={0} padding="3px 0px" align="stretch">
+        <HoverTileWrapper direction="column" gap={0} padding="1px 0px" align="stretch">
             <HoverTileInner direction="column" gap={0} flex="1 1 auto" />
         </HoverTileWrapper>
     )

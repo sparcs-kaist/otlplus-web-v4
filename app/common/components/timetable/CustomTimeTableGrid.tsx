@@ -30,7 +30,7 @@ const SLOT_COUNT = (TIMES.length - 1) * 2
 
 const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday"]
 
-const HEADER_HEIGHT = 30
+const HEADER_HEIGHT = 20
 const HEADER_CALIBRATION = 0.8
 const ROW_GAP = 5
 const LINE_HEIGHT = 1
@@ -101,7 +101,7 @@ const MemoizedBackgroundGridBlock = memo(
             <BackgroundGridBlock
                 direction="column"
                 gap={0}
-                padding="3px"
+                padding="1px"
                 align="stretch"
                 justify="stretch"
                 {...rest}
@@ -372,9 +372,10 @@ function CustomTimeTableGrid({
                     align="end"
                     justify="space-between"
                     flex="1 1 auto"
+                    style={{ fontSize: "8px" }}
                 >
                     {TIMES.map((time, idx) => (
-                        <Typography key={idx} type="Smaller" color="Text.dark">
+                        <Typography key={idx} color="Text.dark">
                             {time}
                         </Typography>
                     ))}
@@ -412,13 +413,8 @@ function CustomTimeTableGrid({
                 >
                     {DAYS.map((day, dayIdx) => (
                         <Fragment key={day}>
-                            <FlexWrapper
-                                direction="column"
-                                gap={0}
-                                align="center"
-                                justify="center"
-                            >
-                                <Typography type="Normal" color="Text.dark">
+                            <FlexWrapper direction="column" gap={0} align="center">
+                                <Typography type="Small" color="Text.dark">
                                     {t(`common.days.${day}`)}
                                 </Typography>
                             </FlexWrapper>
