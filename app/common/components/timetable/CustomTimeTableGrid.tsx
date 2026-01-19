@@ -1,4 +1,4 @@
-import { Fragment, memo, useCallback, useEffect, useRef, useState } from "react"
+import { Fragment, memo, use, useCallback, useEffect, useRef, useState } from "react"
 
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
@@ -51,6 +51,7 @@ const OverlayGrid = styled(GridWrapper)`
 
 const BackgroundGridBlock = styled(FlexWrapper)`
     box-sizing: border-box;
+    touch-action: none;
 
     &.half {
         border-top: ${LINE_HEIGHT}px dashed ${({ theme }) => theme.colors.Line.block};
@@ -91,26 +92,11 @@ const BackgroundGridBlock = styled(FlexWrapper)`
 interface BackgroundGridBlockProps {
     dayIdx: number
     timeIdx: number
-    onMouseDown: (
-        e: React.PointerEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>,
-        timeIdx: number,
-        dayIdx: number,
-    ) => void
-    onMouseEnter: (
-        e: React.PointerEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>,
-        timeIdx: number,
-    ) => void
     [key: string]: any
 }
 
 const MemoizedBackgroundGridBlock = memo(
-    ({
-        dayIdx,
-        timeIdx,
-        onMouseDown,
-        onMouseEnter,
-        ...rest
-    }: BackgroundGridBlockProps) => {
+    ({ dayIdx, timeIdx, ...rest }: BackgroundGridBlockProps) => {
         return (
             <BackgroundGridBlock
                 direction="column"
@@ -119,16 +105,12 @@ const MemoizedBackgroundGridBlock = memo(
                 align="stretch"
                 justify="stretch"
                 {...rest}
-                onPointerDown={(e) => onMouseDown(e, timeIdx, dayIdx)}
-                onPointerEnter={(e) => onMouseEnter(e, timeIdx)}
-                onTouchStart={(e) => onMouseDown(e, timeIdx, dayIdx)}
-                onTouchMove={(e) => onMouseEnter(e, timeIdx)}
             >
                 <FlexWrapper
                     direction="column"
                     gap={0}
                     flex="1 1 auto"
-                    style={{ borderRadius: "4px" }}
+                    style={{ borderRadius: "4px", pointerEvents: "none" }}
                 />
             </BackgroundGridBlock>
         )
@@ -174,7 +156,7 @@ const MemoizedLectureTiles = memo(
                 lectureId={lecture.id}
                 onPointerEnter={handleMouseEnter}
                 onPointerDown={handleMouseClick}
-                onTouchStart={handleMouseClick}
+                onTouchMove={handleMouseEnter}
             >
                 {lecture.classes.map((_, classIdx) => (
                     <LectureTile
@@ -232,56 +214,40 @@ function CustomTimeTableGrid({
 
     const [ghostLecture, setGhostLecture] = useState<Lecture | null>(null)
 
-    const handleMouseDown = useCallback(
-        (
-            e: React.PointerEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>,
-            timeIdx: number,
-            dayIdx: number,
-        ) => {
-            if (draggingRef.current || !needTimeFilter) return
+    const handlePointerDown = useCallback((x: number, y: number) => {
+        const target = document.elementFromPoint(x, y)
+        if (target == null || !target.classList.contains("background-grid-block")) return
+        const timeIdx = parseInt(target.getAttribute("data-time-idx") || "", 10)
+        const dayIdx = parseInt(target.getAttribute("data-day-idx") || "", 10)
+        if (timeIdx == null || dayIdx == null) return
+        const startRow = timeIdx + 2
+        overlayRef.current?.style.setProperty("--hover-day", (dayIdx + 1).toString())
+        overlayRef.current?.style.setProperty("--hover-start", startRow.toString())
+        overlayRef.current?.style.setProperty("--hover-end", (startRow + 1).toString())
+        overlayRef.current?.setAttribute("data-is-dragging", "true")
+        backgroundRef.current?.setAttribute("data-is-dragging", "true")
+        draggingRef.current = true
 
-            const startRow = timeIdx + 2
-            overlayRef.current?.style.setProperty("--hover-day", (dayIdx + 1).toString())
-            overlayRef.current?.style.setProperty("--hover-start", startRow.toString())
-            overlayRef.current?.style.setProperty(
-                "--hover-end",
-                (startRow + 1).toString(),
-            )
-            overlayRef.current?.setAttribute("data-is-dragging", "true")
-            backgroundRef.current?.setAttribute("data-is-dragging", "true")
+        timeRef.current = [timeIdx, timeIdx + 1]
+        dayRef.current = dayIdx
+        anchorRef.current = timeIdx
+    }, [])
 
-            draggingRef.current = true
-
-            timeRef.current = [timeIdx, timeIdx + 1]
-            dayRef.current = dayIdx
-            anchorRef.current = timeIdx
-        },
-        [needTimeFilter],
-    )
-
-    const handlePointerEnter = useCallback(
-        (
-            e: React.PointerEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>,
-            timeIdx: number,
-        ) => {
-            if (!draggingRef.current || anchorRef.current === null) return
-
-            const start = anchorRef.current
-            const end = timeIdx
-
-            const minIdx = Math.min(start, end)
-            const maxIdx = Math.max(start, end)
-
-            const rowStart = minIdx + 2
-            const rowEnd = maxIdx + 3
-
-            overlayRef.current?.style.setProperty("--hover-start", rowStart.toString())
-            overlayRef.current?.style.setProperty("--hover-end", rowEnd.toString())
-
-            timeRef.current = [minIdx, maxIdx + 1]
-        },
-        [],
-    )
+    const handlePointerMove = useCallback((x: number, y: number) => {
+        const target = document.elementFromPoint(x, y)
+        if (target == null || !target.classList.contains("background-grid-block")) return
+        const timeIdx = parseInt(target.getAttribute("data-time-idx") || "", 10)
+        if (timeIdx == null) return
+        const start = anchorRef.current == null ? timeIdx : anchorRef.current
+        const end = timeIdx
+        const minIdx = Math.min(start, end)
+        const maxIdx = Math.max(start, end)
+        const rowStart = minIdx + 2
+        const rowEnd = maxIdx + 3
+        overlayRef.current?.style.setProperty("--hover-start", rowStart.toString())
+        overlayRef.current?.style.setProperty("--hover-end", rowEnd.toString())
+        timeRef.current = [minIdx, maxIdx + 1]
+    }, [])
 
     const handlePointerLeave = useCallback(() => {
         overlayRef.current?.setAttribute("data-is-dragging", "false")
@@ -299,6 +265,32 @@ function CustomTimeTableGrid({
         dayRef.current = null
         anchorRef.current = null
     }, [setTimeFilter])
+
+    const handleMouseDown = useCallback(
+        (e: React.PointerEvent<HTMLDivElement>) => {
+            if (draggingRef.current || !needTimeFilter) return
+            handlePointerDown(e.clientX, e.clientY)
+        },
+        [needTimeFilter],
+    )
+
+    const handleMouseMove = useCallback(
+        (e: React.PointerEvent<HTMLDivElement>) => {
+            if (!draggingRef.current || anchorRef.current === null) return
+            handlePointerMove(e.clientX, e.clientY)
+        },
+        [handlePointerMove],
+    )
+
+    const handleTouchMove = useCallback(
+        (e: React.TouchEvent<HTMLDivElement>) => {
+            if (!draggingRef.current || anchorRef.current === null) return
+            const touch = e.touches[0]
+            if (touch == null) return
+            handlePointerMove(touch.clientX, touch.clientY)
+        },
+        [handlePointerMove],
+    )
 
     const handleLectureTileHoverCallBack = useCallback(
         (lecture: Lecture) => {
@@ -409,8 +401,11 @@ function CustomTimeTableGrid({
                     data-need-time-filter={needTimeFilter}
                     {...(needTimeFilter
                         ? {
+                              onPointerDown: handleMouseDown,
+                              onPointerMove: handleMouseMove,
                               onPointerUp: handlePointerLeave,
                               onPointerLeave: handlePointerLeave,
+                              onTouchMove: handleTouchMove,
                               onTouchEnd: handlePointerLeave,
                           }
                         : {})}
@@ -433,8 +428,6 @@ function CustomTimeTableGrid({
                                     key={`${day}-${timeIdx}-memo`}
                                     dayIdx={dayIdx}
                                     timeIdx={timeIdx}
-                                    onMouseDown={handleMouseDown}
-                                    onMouseEnter={handlePointerEnter}
                                     className={[
                                         "background-grid-block",
                                         timeIdx % 2 === 0 ? "hour" : "half",
@@ -444,6 +437,8 @@ function CustomTimeTableGrid({
                                             ? "bold"
                                             : "",
                                     ].join(" ")}
+                                    data-day-idx={dayIdx}
+                                    data-time-idx={timeIdx}
                                 />
                             ))}
                         </Fragment>
