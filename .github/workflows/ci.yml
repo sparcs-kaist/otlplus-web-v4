@@ -59,14 +59,16 @@ jobs:
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
 
+            - name: Setup Doppler CLI
+              run: |
+                  curl -Ls https://dl.doppler.com/install.sh | sh
+
             - name: Build
-              run: pnpm build
+              run: doppler run -- pnpm build
               env:
-                  VITE_SENTRY_DSN: ${{ vars.SENTRY_DSN_DEV }}
-                  VITE_APP_API_URL: https://api.otl.dev.sparcs.org
-                  VITE_APP_LOG_LEVEL: info
-                  VITE_DEV_MODE: true
-                  VITE_CHANNELTALK_PLUGIN_KEY: ${{ vars.CHANNELTALK_PLUGIN_KEY }}
+                  DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+                  DOPPLER_PROJECT: otlplus-web-v4
+                  DOPPLER_CONFIG: dev
 
             - name: Upload build artifact
               uses: actions/upload-artifact@v4
@@ -98,12 +100,16 @@ jobs:
             - name: Install Playwright Browsers
               run: npx playwright install --with-deps chromium
 
+            - name: Setup Doppler CLI
+              run: |
+                  curl -Ls https://dl.doppler.com/install.sh | sh
+
             - name: Run E2E Tests
-              run: pnpm test:e2e
+              run: doppler run -- pnpm test:e2e
               env:
-                  VITE_APP_API_URL: https://api.otl.dev.sparcs.org
-                  VITE_APP_LOG_LEVEL: info
-                  VITE_DEV_MODE: true
+                  DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+                  DOPPLER_PROJECT: otlplus-web-v4
+                  DOPPLER_CONFIG: dev
                   VITE_APP_API_MOCK_MODE: true
 
             - name: Upload Playwright Report
