@@ -63,18 +63,13 @@ jobs:
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
 
+            - name: Install Doppler CLI
+              uses: dopplerhq/cli-action@v3
+
             - name: Build
-              run: pnpm build
+              run: doppler run -- pnpm build
               env:
-                  VITE_SENTRY_DSN: ${{ vars.SENTRY_DSN_DEV }}
-                  SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-                  SENTRY_PROJECT: otl-front-v4-dev
-                  VITE_APP_API_URL: https://api.otl.dev.sparcs.org
-                  VITE_APP_LOG_LEVEL: info
-                  VITE_DEV_MODE: true
-                  VITE_APP_DEV_API_AUTH_TOKEN: ${{ secrets.VITE_APP_DEV_API_AUTH_TOKEN }}
-                  VITE_CHANNELTALK_PLUGIN_KEY: ${{ vars.CHANNELTALK_PLUGIN_KEY }}
-                  VITE_MIXPANEL_TOKEN: ${{ secrets.VITE_MIXPANEL_TOKEN }}
+                  DOPPLER_TOKEN: ${{ secrets.DOPPLER_SECRET_DEV }}
 
             - name: Configure AWS credentials
               uses: aws-actions/configure-aws-credentials@v4
@@ -171,17 +166,13 @@ jobs:
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
 
+            - name: Install Doppler CLI
+              uses: dopplerhq/cli-action@v3
+
             - name: Build
-              run: pnpm build
+              run: doppler run -- pnpm build
               env:
-                  VITE_SENTRY_DSN: ${{ vars.SENTRY_DSN_PROD }}
-                  SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-                  SENTRY_PROJECT: otl-front-v4-prod
-                  VITE_APP_API_URL: ${{ vars.API_URL_PROD }}
-                  VITE_APP_LOG_LEVEL: info
-                  VITE_DEV_MODE: false
-                  VITE_CHANNELTALK_PLUGIN_KEY: ${{ vars.CHANNELTALK_PLUGIN_KEY }}
-                  VITE_MIXPANEL_TOKEN: ${{ secrets.VITE_MIXPANEL_TOKEN }}
+                  DOPPLER_TOKEN: ${{ secrets.DOPPLER_SECRET_PROD }}
 
             - name: Configure AWS credentials
               uses: aws-actions/configure-aws-credentials@v4
