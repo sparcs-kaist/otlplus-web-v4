@@ -34,15 +34,14 @@ jobs:
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
 
+            - name: Install Doppler CLI
+              uses: dopplerhq/cli-action@v3
+
             - name: Build
-              run: pnpm build
+              run: doppler run -- pnpm build
               env:
+                  DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN_DEV }}
                   VITE_BASE_PATH: /otlplus-web-v4/pr-${{ github.event.pull_request.number }}/
-                  VITE_SENTRY_DSN: ${{ vars.SENTRY_DSN_DEV }}
-                  VITE_APP_API_URL: https://api.otl.dev.sparcs.org
-                  VITE_APP_LOG_LEVEL: info
-                  VITE_DEV_MODE: true
-                  VITE_CHANNELTALK_PLUGIN_KEY: ${{ vars.CHANNELTALK_PLUGIN_KEY }}
 
             - name: Copy index.html to 404.html for SPA routing
               run: cp build/client/index.html build/client/404.html
