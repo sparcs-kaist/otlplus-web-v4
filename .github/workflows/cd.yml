@@ -175,6 +175,7 @@ jobs:
               env:
                   DOPPLER_TOKEN: ${{ secrets.DOPPLER_SECRET_PROD }}
                   SENTRY_PROJECT: otl-front-v4-prod
+                  SENTRY_PROJECT: otl-front-v4-prod
 
             - name: Configure AWS credentials
               uses: aws-actions/configure-aws-credentials@v4
