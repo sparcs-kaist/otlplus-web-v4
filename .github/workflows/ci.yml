@@ -42,7 +42,6 @@ jobs:
     build:
         name: Build
         runs-on: ubuntu-latest
-        if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
         steps:
             - uses: actions/checkout@v4
 
@@ -60,13 +59,14 @@ jobs:
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
 
-            - name: Install Doppler CLI
-              uses: dopplerhq/cli-action@v3
-
             - name: Build
-              run: doppler run -- pnpm build
+              run: pnpm build
               env:
-                  DOPPLER_TOKEN: ${{ secrets.DOPPLER_SECRET_DEV }}
+                  VITE_SENTRY_DSN: ${{ vars.SENTRY_DSN_DEV }}
+                  VITE_APP_API_URL: https://api.otl.dev.sparcs.org
+                  VITE_APP_LOG_LEVEL: info
+                  VITE_DEV_MODE: true
+                  VITE_CHANNELTALK_PLUGIN_KEY: ${{ vars.CHANNELTALK_PLUGIN_KEY }}
 
             - name: Upload build artifact
               uses: actions/upload-artifact@v4
@@ -78,7 +78,6 @@ jobs:
     e2e-tests:
         name: E2E Tests
         runs-on: ubuntu-latest
-        if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
         steps:
             - uses: actions/checkout@v4
 
@@ -99,13 +98,12 @@ jobs:
             - name: Install Playwright Browsers
               run: npx playwright install --with-deps chromium
 
-            - name: Install Doppler CLI
-              uses: dopplerhq/cli-action@v3
-
             - name: Run E2E Tests
-              run: doppler run -- pnpm test:e2e
+              run: pnpm test:e2e
               env:
-                  DOPPLER_TOKEN: ${{ secrets.DOPPLER_SECRET_DEV }}
+                  VITE_APP_API_URL: https://api.otl.dev.sparcs.org
+                  VITE_APP_LOG_LEVEL: info
+                  VITE_DEV_MODE: true
                   VITE_APP_API_MOCK_MODE: true
 
             - name: Upload Playwright Report
