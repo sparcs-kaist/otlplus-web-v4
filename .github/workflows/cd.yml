@@ -70,6 +70,7 @@ jobs:
               run: doppler run -- pnpm build
               env:
                   DOPPLER_TOKEN: ${{ secrets.DOPPLER_SECRET_DEV }}
+                  SENTRY_PROJECT: otl-front-v4-dev
 
             - name: Configure AWS credentials
               uses: aws-actions/configure-aws-credentials@v4
