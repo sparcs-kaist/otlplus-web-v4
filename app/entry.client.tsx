@@ -6,7 +6,8 @@ import { HydratedRouter } from "react-router/dom"
 
 import { clientEnv } from "@/env"
 
-if (clientEnv.VITE_SENTRY_DSN) {
+// Check if Sentry DSN is properly configured (not empty string)
+if (clientEnv.VITE_SENTRY_DSN && clientEnv.VITE_SENTRY_DSN.trim() !== "") {
     Sentry.init({
         dsn: clientEnv.VITE_SENTRY_DSN,
         environment: clientEnv.VITE_DEV_MODE ? "development" : "production",
