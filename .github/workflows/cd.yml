@@ -21,7 +21,7 @@ jobs:
             - uses: dopplerhq/secrets-fetch-action@v1.3.0
               id: doppler
               with:
-                  doppler-token: ${{ secrets.DOPPLER_TOKEN_DEV }}
+                  doppler-token: ${{ secrets.DOPPLER_SECRET_DEV }}
                   inject-env-vars: true
     
             - name: Notify Slack - Deploy Started
@@ -162,7 +162,7 @@ jobs:
             - uses: dopplerhq/secrets-fetch-action@v1.3.0
               id: doppler
               with:
-                  doppler-token: ${{ secrets.DOPPLER_TOKEN_PROD }}
+                  doppler-token: ${{ secrets.DOPPLER_SECRET_PROD }}
                   inject-env-vars: true
         
             - uses: actions/checkout@v4
