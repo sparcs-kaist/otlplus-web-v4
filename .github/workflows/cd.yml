@@ -189,16 +189,6 @@ jobs:
                   aws s3 sync build/client/ s3://${{ vars.S3_BUCKET_ARCHIVE }}/v4/${{ github.event.release.tag_name }}/ --delete
                   echo "✅ Uploaded versioned backup: s3://${{ vars.S3_BUCKET_ARCHIVE }}/v4/${{ github.event.release.tag_name }}/"
 
-                  # 2. 라이브 서빙용 (CloudFront Function이 라우팅하는 경로) - 라이브 버킷
-                  aws s3 sync build/client/ s3://${{ vars.S3_BUCKET_PROD }}/v4/ --delete
-                  echo "✅ Uploaded live version: s3://${{ vars.S3_BUCKET_PROD }}/v4/"
-
-            - name: Invalidate CloudFront cache
-              run: |
-                  aws cloudfront create-invalidation \
-                    --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_PROD }} \
-                    --paths "/v4/*"
-
             - name: Create build archive
               run: |
                   cd build/client
