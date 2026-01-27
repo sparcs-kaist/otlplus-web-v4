@@ -16,16 +16,22 @@ jobs:
         if: github.ref == 'refs/heads/rc' && github.event_name == 'push'
         permissions:
             contents: read
+            id-token: write
         steps:
+            - uses: dopplerhq/secrets-fetch-action@v1.3.0
+              id: doppler
+              with:
+                doppler-token: ${{ secrets.DOPPLER_TOKEN_DEV }}
+                inject-env-vars: true
             - name: Notify Slack - Deploy Started
               id: slack-start
               continue-on-error: true
               uses: slackapi/slack-github-action@v2.1.0
               with:
                   method: chat.postMessage
-                  token: ${{ secrets.SLACK_BOT_TOKEN }}
+                  token: ${{ steps.doppler.outputs.SLACK_BOT_TOKEN }}
                   payload: |
-                      channel: ${{ secrets.SLACK_CHANNEL_ID }}
+                      channel: ${{ steps.doppler.outputs.SLACK_CHANNEL_ID }}
                       text: "🚀 *OTL+ Dev 배포 시작*"
                       blocks:
                         - type: section
@@ -75,19 +81,19 @@ jobs:
             - name: Configure AWS credentials
               uses: aws-actions/configure-aws-credentials@v4
               with:
-                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_DEV }}
-                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_DEV }}
+                  aws-access-key-id: ${{ steps.doppler.outputs.AWS_ACCESS_KEY_ID }}
+                  aws-secret-access-key: ${{ steps.doppler.outputs.AWS_SECRET_ACCESS_KEY }}
                   aws-region: ap-northeast-2
 
             - name: Upload to S3 Dev
               run: |
-                  aws s3 sync build/client/ s3://${{ vars.S3_BUCKET_DEV }}/v4/ --delete
-                  echo "✅ Uploaded build files to S3 Dev: s3://${{ vars.S3_BUCKET_DEV }}/v4/"
+                  aws s3 sync build/client/ s3://${{ steps.doppler.outputs.S3_BUCKET }}/v4/ --delete
+                  echo "✅ Uploaded build files to S3 Dev: s3://${{ steps.doppler.outputs.S3_BUCKET }}/v4/"
 
             - name: Invalidate CloudFront cache
               run: |
                   aws cloudfront create-invalidation \
-                    --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_DEV }} \
+                    --distribution-id ${{ steps.doppler.outputs.CLOUDFRONT_DISTRIBUTION_ID }} \
                     --paths "/v4/*"
 
             - name: Notify Slack - Deploy Success
@@ -96,9 +102,9 @@ jobs:
               uses: slackapi/slack-github-action@v2.1.0
               with:
                   method: chat.postMessage
-                  token: ${{ secrets.SLACK_BOT_TOKEN }}
+                  token: ${{ steps.doppler.outputs.SLACK_BOT_TOKEN }}
                   payload: |
-                      channel: ${{ secrets.SLACK_CHANNEL_ID }}
+                      channel: ${{ steps.doppler.outputs.SLACK_CHANNEL_ID }}
                       thread_ts: "${{ fromJson(steps.slack-start.outputs.response).ts }}"
                       text: "✅ *OTL+ Dev 배포 완료*"
                       blocks:
@@ -123,9 +129,9 @@ jobs:
               uses: slackapi/slack-github-action@v2.1.0
               with:
                   method: chat.postMessage
-                  token: ${{ secrets.SLACK_BOT_TOKEN }}
+                  token: ${{ steps.doppler.outputs.SLACK_BOT_TOKEN }}
                   payload: |
-                      channel: ${{ secrets.SLACK_CHANNEL_ID }}
+                      channel: ${{ steps.doppler.outputs.SLACK_CHANNEL_ID }}
                       thread_ts: "${{ fromJson(steps.slack-start.outputs.response).ts }}"
                       text: "❌ *OTL+ Dev 배포 실패*"
                       blocks:
@@ -150,7 +156,13 @@ jobs:
         if: github.event_name == 'release'
         permissions:
             contents: write
+            id-token: write
         steps:
+            - uses: dopplerhq/secrets-fetch-action@v1.3.0
+              id: doppler
+              with:
+                doppler-token: ${{ secrets.DOPPLER_TOKEN_PROD }}
+                inject-env-vars: true
             - uses: actions/checkout@v4
 
             - name: Setup pnpm
@@ -179,25 +191,15 @@ jobs:
             - name: Configure AWS credentials
               uses: aws-actions/configure-aws-credentials@v4
               with:
-                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
-                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
+                  aws-access-key-id: ${{ steps.doppler.outputs.AWS_ACCESS_KEY_ID }}
+                  aws-secret-access-key: ${{ steps.doppler.outputs.AWS_SECRET_ACCESS_KEY }}
                   aws-region: ap-northeast-2
 
             - name: Upload to S3 Production (archive + live)
               run: |
                   # 1. 버전별 백업 (롤백용) - 아카이브 버킷
-                  aws s3 sync build/client/ s3://${{ vars.S3_BUCKET_ARCHIVE }}/v4/${{ github.event.release.tag_name }}/ --delete
-                  echo "✅ Uploaded versioned backup: s3://${{ vars.S3_BUCKET_ARCHIVE }}/v4/${{ github.event.release.tag_name }}/"
-
-                  # 2. 라이브 서빙용 (CloudFront Function이 라우팅하는 경로) - 라이브 버킷
-                  aws s3 sync build/client/ s3://${{ vars.S3_BUCKET_PROD }}/v4/ --delete
-                  echo "✅ Uploaded live version: s3://${{ vars.S3_BUCKET_PROD }}/v4/"
-
-            - name: Invalidate CloudFront cache
-              run: |
-                  aws cloudfront create-invalidation \
-                    --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_PROD }} \
-                    --paths "/v4/*"
+                  aws s3 sync build/client/ s3://${{ steps.doppler.outputs.S3_BUCKET_ARCHIVE }}/v4/${{ github.event.release.tag_name }}/ --delete
+                  echo "✅ Uploaded versioned backup: s3://${{ steps.doppler.outputs.S3_BUCKET_ARCHIVE }}/v4/${{ github.event.release.tag_name }}/"
 
             - name: Create build archive
               run: |
