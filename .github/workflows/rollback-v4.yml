@@ -24,8 +24,9 @@ jobs:
             - uses: dopplerhq/secrets-fetch-action@v1.3.0
               id: doppler
               with:
-                doppler-token: ${{ secrets.DOPPLER_TOKEN_PROD }}
-                inject-env-vars: true
+                  doppler-token: ${{ secrets.DOPPLER_TOKEN_PROD }}
+                  inject-env-vars: true
+    
             - name: Notify Slack - Rollback Started
               id: slack-start
               continue-on-error: true
