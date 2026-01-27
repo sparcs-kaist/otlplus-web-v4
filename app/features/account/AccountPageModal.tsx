@@ -4,12 +4,9 @@ import { useTranslation } from "react-i18next"
 import type { GETUserInfoResponse } from "@/api/users/info"
 import Modal from "@/common/components/Modal"
 import Typography from "@/common/primitives/Typography"
-import { clientEnv } from "@/env"
 import AccountInfoSection from "@/features/account/sections/AccountInfoSection"
 import AccountInterestedMajorSection from "@/features/account/sections/AccountInterestedMajorSection"
-import { axiosClient } from "@/libs/axios"
-import { clearQueryCache } from "@/libs/offline"
-import { removeLocalStorageItem } from "@/utils/localStorage"
+import { handleLogout } from "@/utils/handleLoginLogout"
 import useIsDevice from "@/utils/useIsDevice"
 
 const LogoutButton = styled(Typography)`
@@ -30,20 +27,6 @@ const AccountPageModal: React.FC<AccountPageModalProps> = ({
     const isTablet = useIsDevice("tablet")
 
     const { t } = useTranslation()
-
-    const handleLogout = async () => {
-        await clearQueryCache()
-
-        if (process.env.NODE_ENV === "production") {
-            location.href =
-                clientEnv.VITE_APP_API_URL +
-                `/session/logout?next=${window.location.origin}`
-        } else {
-            removeLocalStorageItem("devStudentId")
-            delete axiosClient.defaults.headers.common["X-AUTH-SID"]
-            location.reload()
-        }
-    }
 
     return (
         <Modal

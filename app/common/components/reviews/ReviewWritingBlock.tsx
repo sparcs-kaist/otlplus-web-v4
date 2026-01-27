@@ -63,6 +63,9 @@ function ReviewWritingBlock({
             queryClient.invalidateQueries({
                 queryKey: ["/users/written-reviews"],
             })
+            queryClient.invalidateQueries({
+                queryKey: ["/users/writable-review"],
+            })
         },
     })
 
@@ -79,6 +82,9 @@ function ReviewWritingBlock({
                 })
                 queryClient.invalidateQueries({
                     queryKey: ["/users/written-reviews"],
+                })
+                queryClient.invalidateQueries({
+                    queryKey: ["/users/writable-review"],
                 })
             },
         },

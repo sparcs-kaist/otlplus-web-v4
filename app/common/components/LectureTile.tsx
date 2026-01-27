@@ -40,7 +40,6 @@ const TileWrapper = styled.div<{
     height: var(--tile-height);
     margin-bottom: 2px;
     margin-top: 2px;
-    justify-content: center;
     background-color: ${({ theme, course_id, isHighlighted, isOverlapped }) =>
         isOverlapped
             ? theme.colors.Text.default
@@ -151,7 +150,7 @@ const LectureTile: React.FC<{
                 </RemoveButton>
             )}
             <TitleWrapper isHighlighted={isHighlighted} isOverlapped={isOverlapped}>
-                {lecture.name}
+                {lecture.name + lecture.subtitle}
             </TitleWrapper>
             <DescWrapper isHighlighted={isHighlighted} isOverlapped={isOverlapped}>
                 {lecture.professors.map((prof) => prof.name).join(", ")}

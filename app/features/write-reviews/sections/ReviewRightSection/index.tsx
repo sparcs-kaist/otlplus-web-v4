@@ -7,7 +7,6 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Widget from "@/common/primitives/Widget"
 import type { WriteReviewsSelectedLectureType } from "@/routes/write-reviews"
 import { media } from "@/styles/themes/media"
-import useIsDevice from "@/utils/useIsDevice"
 import useUserStore from "@/utils/zustand/useUserStore"
 
 import HallOfFameFeedSubSection from "./HallOfFameFeedSubSection"
@@ -23,7 +22,7 @@ interface ReviewRightSectionProps {
 
 const StyledWidget = styled(Widget)`
     background: transparent;
-    overflow: auto;
+    overflow: hidden;
     width: 1300px;
     flex: 0 1 auto;
 
@@ -41,6 +40,20 @@ const ReviewRightSubSection = styled(FlexWrapper)`
     background: ${({ theme }) => theme.colors.Background.Section.default};
     flex: 1 1 auto;
     border-top-right-radius: 16px;
+    overflow-y: auto;
+
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+        display: none;
+    }
+`
+
+const ReviewRightSectionInner = styled(FlexWrapper)`
+    overflow-y: auto;
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+        display: none;
+    }
 `
 
 function ReviewRightSection({
@@ -75,7 +88,7 @@ function ReviewRightSection({
                 gap={0}
                 padding="16px"
             >
-                <FlexWrapper
+                <ReviewRightSectionInner
                     direction="column"
                     align="stretch"
                     gap={12}
@@ -100,7 +113,7 @@ function ReviewRightSection({
                                 return null
                         }
                     })()}
-                </FlexWrapper>
+                </ReviewRightSectionInner>
             </ReviewRightSubSection>
         </StyledWidget>
     )

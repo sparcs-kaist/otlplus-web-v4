@@ -11,6 +11,7 @@ import DeveloperLoginModal from "@/features/account/DeveloperLoginModal"
 import { axiosClient } from "@/libs/axios"
 import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
+import { handleLogin } from "@/utils/handleLoginLogout"
 import { getLocalStorageItem } from "@/utils/localStorage"
 import useIsDevice from "@/utils/useIsDevice"
 import useThemeStore from "@/utils/zustand/useThemeStore"
@@ -25,13 +26,14 @@ const HeaderWrapper = styled.div`
     height: max-content;
     z-index: 500;
     background-color: ${({ theme }) => theme.colors.Background.Page.default};
-    position: fixed;
+    padding-bottom: 5px;
 `
 
-const HeaderBar = styled.div`
+const HeaderBar = styled.div<{ selectedTheme: string }>`
     width: 100%;
     height: 5px;
-    background: ${({ theme }) => theme.colors.Highlight.default};
+    background: ${({ theme, selectedTheme }) =>
+        selectedTheme === "light" ? theme.colors.Highlight.default : "transparent"};
 `
 
 const HeaderInner = styled.header`
@@ -72,7 +74,7 @@ const Header: React.FC = () => {
             if (process.env.NODE_ENV === "development") {
                 setDeveloperLoginOpen(true)
             } else {
-                location.href = clientEnv.VITE_APP_API_URL + `/session/login`
+                handleLogin()
             }
         } else {
             setAccountPageOpen(true)
@@ -124,7 +126,7 @@ const Header: React.FC = () => {
                     setAccountPageOpen={setAccountPageOpen}
                 />
             )}
-            {displayedTheme !== "dark" && <HeaderBar />}
+            <HeaderBar selectedTheme={displayedTheme} />
             <HeaderInner>
                 <Menu setMobileSidebarOpen={() => setMobileSidebarOpen(false)} />
                 <Setting

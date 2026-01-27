@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect } from "react"
 
 import styled from "@emotion/styled"
 import * as Sentry from "@sentry/react"
@@ -15,6 +15,7 @@ import {
 import Header from "@/common/components/guideline/Header"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import { clientEnv } from "@/env"
+import { initMixpanel } from "@/libs/mixpanel"
 import { useGoogleAnalytics } from "@/utils/googleAnalytics"
 
 import type { Route } from "./+types/root"
@@ -81,23 +82,38 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
 const AppWrapper = styled(FlexWrapper)`
     width: 100%;
-    min-height: 100%;
+    height: 100%;
     position: absolute;
     overflow: hidden;
     background-color: ${({ theme }) => theme.colors.Background.Page.default};
 `
 
 const OutletWrapper = styled(FlexWrapper)`
-    margin-top: 60px;
-    flex: 1 1 auto;
+    overflow: auto;
+
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+        display: none;
+    }
 `
 
 export default function App() {
     useGoogleAnalytics()
+
+    useEffect(() => {
+        initMixpanel()
+    }, [])
+
     return (
-        <AppWrapper direction="column" align="stretch" justify="stretch" gap={0}>
+        <AppWrapper
+            direction="column"
+            align="stretch"
+            justify="stretch"
+            gap={0}
+            flex="0 1 auto"
+        >
             <Header />
-            <OutletWrapper direction="column" gap={0} align="stretch">
+            <OutletWrapper direction="column" gap={0} align="stretch" flex="1 1 auto">
                 <Outlet />
             </OutletWrapper>
             <ReactQueryDevtools initialIsOpen={false} />

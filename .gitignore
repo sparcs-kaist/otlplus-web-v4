@@ -8,3 +8,7 @@
 
 # Environment variables
 .env
+
+# Playwright
+/playwright-report/
+/test-results/

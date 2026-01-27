@@ -1,0 +1,169 @@
+name: Rollback V4 to Specific Version
+
+on:
+    workflow_dispatch:
+        inputs:
+            tag_name:
+                description: "롤백할 태그 이름 (예: v1.0.0)"
+                required: true
+                type: string
+
+env:
+    AWS_REGION: ap-northeast-2
+
+jobs:
+    rollback:
+        name: Rollback V4 to ${{ inputs.tag_name }}
+        runs-on: ubuntu-latest
+        environment: production
+        permissions:
+            contents: read
+
+        steps:
+            - name: Notify Slack - Rollback Started
+              id: slack-start
+              continue-on-error: true
+              uses: slackapi/slack-github-action@v2.1.0
+              with:
+                  method: chat.postMessage
+                  token: ${{ secrets.SLACK_BOT_TOKEN }}
+                  payload: |
+                      channel: ${{ secrets.SLACK_CHANNEL_ID }}
+                      text: "🔄 *OTL+ V4 롤백 시작*"
+                      blocks:
+                        - type: section
+                          text:
+                            type: mrkdwn
+                            text: "🔄 *OTL+ V4 롤백 시작*"
+                        - type: section
+                          fields:
+                            - type: mrkdwn
+                              text: "*Environment:*\nProduction"
+                            - type: mrkdwn
+                              text: "*Target Tag:*\n`${{ inputs.tag_name }}`"
+                            - type: mrkdwn
+                              text: "*Triggered by:*\n${{ github.actor }}"
+                        - type: context
+                          elements:
+                            - type: mrkdwn
+                              text: "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Workflow>"
+
+            - name: Configure AWS credentials
+              uses: aws-actions/configure-aws-credentials@v4
+              with:
+                  aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID_PROD }}
+                  aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY_PROD }}
+                  aws-region: ${{ env.AWS_REGION }}
+
+            - name: Verify version exists in archive
+              run: |
+                  ARCHIVE_PATH="v4/${{ inputs.tag_name }}"
+                  ARCHIVE_BUCKET="${{ vars.S3_BUCKET_ARCHIVE }}"
+
+                  echo "📦 아카이브 버킷에서 버전 확인 중: s3://$ARCHIVE_BUCKET/$ARCHIVE_PATH/"
+
+                  if aws s3 ls "s3://$ARCHIVE_BUCKET/$ARCHIVE_PATH/" --recursive | head -n 1; then
+                    echo "✅ 버전 ${{ inputs.tag_name }}이(가) 아카이브에 존재합니다."
+                  else
+                    echo "❌ 오류: 버전 ${{ inputs.tag_name }}이(가) 아카이브 버킷에 존재하지 않습니다!"
+                    echo ""
+                    echo "📋 사용 가능한 V4 버전 목록:"
+                    aws s3 ls "s3://$ARCHIVE_BUCKET/v4/" | grep "PRE" | awk '{print "  - " $2}' || echo "  버전을 찾을 수 없습니다."
+                    exit 1
+                  fi
+
+            - name: Copy from archive to live bucket
+              run: |
+                  ARCHIVE_BUCKET="${{ vars.S3_BUCKET_ARCHIVE }}"
+                  LIVE_BUCKET="${{ vars.S3_BUCKET_PROD }}"
+                  TAG="${{ inputs.tag_name }}"
+
+                  echo "🔄 롤백 진행 중..."
+                  echo "   소스: s3://$ARCHIVE_BUCKET/v4/$TAG/"
+                  echo "   대상: s3://$LIVE_BUCKET/v4/"
+
+                  aws s3 sync "s3://$ARCHIVE_BUCKET/v4/$TAG/" "s3://$LIVE_BUCKET/v4/" --delete
+
+                  echo "✅ 롤백 완료: V4가 $TAG 버전으로 복원되었습니다."
+
+            - name: Invalidate CloudFront cache
+              run: |
+                  echo "🗑️ CloudFront 캐시 무효화 중..."
+
+                  INVALIDATION_ID=$(aws cloudfront create-invalidation \
+                    --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID_PROD }} \
+                    --paths "/v4/*" \
+                    --query 'Invalidation.Id' \
+                    --output text)
+
+                  echo "✅ 캐시 무효화 요청 완료!"
+                  echo "   Invalidation ID: $INVALIDATION_ID"
+                  echo ""
+                  echo "⏳ CloudFront 전파는 몇 분 정도 소요될 수 있습니다."
+
+            - name: Rollback Summary
+              run: |
+                  echo "## 🔄 V4 롤백 완료!" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "### 롤백 정보" >> $GITHUB_STEP_SUMMARY
+                  echo "- **환경**: Production" >> $GITHUB_STEP_SUMMARY
+                  echo "- **롤백 버전**: \`${{ inputs.tag_name }}\`" >> $GITHUB_STEP_SUMMARY
+                  echo "- **아카이브 버킷**: \`${{ vars.S3_BUCKET_ARCHIVE }}\`" >> $GITHUB_STEP_SUMMARY
+                  echo "- **라이브 버킷**: \`${{ vars.S3_BUCKET_PROD }}\`" >> $GITHUB_STEP_SUMMARY
+                  echo "" >> $GITHUB_STEP_SUMMARY
+                  echo "### 다음 단계" >> $GITHUB_STEP_SUMMARY
+                  echo "CloudFront 전파가 완료될 때까지 몇 분 기다려주세요." >> $GITHUB_STEP_SUMMARY
+
+            - name: Notify Slack - Rollback Success
+              if: success()
+              continue-on-error: true
+              uses: slackapi/slack-github-action@v2.1.0
+              with:
+                  method: chat.postMessage
+                  token: ${{ secrets.SLACK_BOT_TOKEN }}
+                  payload: |
+                      channel: ${{ secrets.SLACK_CHANNEL_ID }}
+                      thread_ts: "${{ fromJson(steps.slack-start.outputs.response).ts }}"
+                      text: "✅ *OTL+ V4 롤백 완료*"
+                      blocks:
+                        - type: section
+                          text:
+                            type: mrkdwn
+                            text: "✅ *롤백 완료* - 성공 🎉"
+                        - type: section
+                          fields:
+                            - type: mrkdwn
+                              text: "*Rolled back to:*\n`${{ inputs.tag_name }}`"
+                            - type: mrkdwn
+                              text: "*Environment:*\nProduction"
+                        - type: context
+                          elements:
+                            - type: mrkdwn
+                              text: "<https://otl.sparcs.org|View Site> | <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Workflow>"
+
+            - name: Notify Slack - Rollback Failed
+              if: failure()
+              continue-on-error: true
+              uses: slackapi/slack-github-action@v2.1.0
+              with:
+                  method: chat.postMessage
+                  token: ${{ secrets.SLACK_BOT_TOKEN }}
+                  payload: |
+                      channel: ${{ secrets.SLACK_CHANNEL_ID }}
+                      thread_ts: "${{ fromJson(steps.slack-start.outputs.response).ts }}"
+                      text: "❌ *OTL+ V4 롤백 실패*"
+                      blocks:
+                        - type: section
+                          text:
+                            type: mrkdwn
+                            text: "❌ *롤백 실패* - 실패 ⚠️"
+                        - type: section
+                          fields:
+                            - type: mrkdwn
+                              text: "*Target Tag:*\n`${{ inputs.tag_name }}`"
+                            - type: mrkdwn
+                              text: "*Environment:*\nProduction"
+                        - type: context
+                          elements:
+                            - type: mrkdwn
+                              text: "<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Workflow Logs>"

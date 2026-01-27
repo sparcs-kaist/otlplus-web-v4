@@ -79,7 +79,7 @@ const OptionScroll = styled.div<{
     border-left: 1px solid ${(props) => props.theme.colors.Line.default};
     border-right: 1px solid ${(props) => props.theme.colors.Line.default};
     border-bottom: 1px solid ${(props) => props.theme.colors.Line.default};
-    background: #fff;
+    background: ${(props) => props.theme.colors.Background.Section.default};
 
     &::-webkit-scrollbar {
         width: 0;

@@ -1,5 +1,6 @@
 import { type ReactElement, useEffect, useState } from "react"
 
+import { useTheme } from "@emotion/react"
 import { Search } from "@mui/icons-material"
 import { AnimatePresence, motion } from "framer-motion"
 import { useTranslation } from "react-i18next"
@@ -55,6 +56,7 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
     setTimeFilter,
 }: SearchAreaProps<ops>) {
     const { t } = useTranslation()
+    const theme = useTheme()
 
     const { query } = useAPI("GET", "/department-options")
 
@@ -62,6 +64,8 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
     const [value, setValue] = useState<string>("")
 
     const [chipsOptions, setChipsOptions] = useState<ExportDataType>({})
+
+    const [resetTrigger, setResetTrigger] = useState(false)
 
     useEffect(() => {
         if (!timeFilter) return
@@ -81,6 +85,12 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
     }
 
     function handleReset() {
+        setChipsOptions({})
+        setValue("")
+        setResetTrigger(true)
+    }
+
+    function handleClose() {
         setOpen(false)
     }
 
@@ -161,7 +171,11 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
                 padding="4px 16px"
             >
                 {SearchIcon == undefined ? (
-                    <Icon size={17.5} color="#E54C65" onClick={() => {}}>
+                    <Icon
+                        size={17.5}
+                        color={theme.colors.Highlight.default}
+                        onClick={() => {}}
+                    >
                         <Search />
                     </Icon>
                 ) : (
@@ -205,14 +219,26 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
                             options={options}
                             onChange={onChange}
                             {...(withTimeFilter(options, timeFilter) as any)}
+                            resetTrigger={resetTrigger}
+                            onResetTriggerComplete={() => {
+                                setResetTrigger(false)
+                            }}
                         />
                         <FlexWrapper direction="row" justify="flex-end" gap={8}>
                             <Button
                                 $paddingLeft={24}
                                 $paddingTop={9}
-                                onClick={handleReset}
+                                onClick={handleClose}
                             >
-                                <Typography>{t("common.search.cancel")}</Typography>
+                                <Typography>{t("common.search.close")}</Typography>
+                            </Button>
+                            <Button
+                                $paddingLeft={24}
+                                $paddingTop={9}
+                                onClick={handleReset}
+                                type="state5"
+                            >
+                                <Typography>{t("common.search.reset")}</Typography>
                             </Button>
                             <Button
                                 $paddingLeft={24}

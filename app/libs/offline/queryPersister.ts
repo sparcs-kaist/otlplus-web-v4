@@ -31,5 +31,5 @@ export function createIDBPersister(): Persister {
 export const idbPersister = createIDBPersister()
 
 export async function clearQueryCache(): Promise<void> {
-    await del(IDB_KEY)
+    await idbPersister.removeClient()
 }

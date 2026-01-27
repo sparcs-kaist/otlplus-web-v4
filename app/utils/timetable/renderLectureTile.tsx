@@ -63,9 +63,24 @@ const renderLectureTile = (
                         left: left,
                         top: top,
                     }}
-                    key={`${lecture.id}-${j}`}
+                    key={`${lecture.id}-${j}-${i}`}
                     onClick={(event: React.MouseEvent) => {
                         event.stopPropagation()
+                        if (lecture === selected) {
+                            setSelected(null)
+                        } else {
+                            if (lecture !== undefined) {
+                                setSelected(lecture)
+                            }
+                        }
+                    }}
+                    onTouchStart={(event: React.TouchEvent) => {
+                        // Stop propagation to prevent grid's touch handler
+                        event.stopPropagation()
+                    }}
+                    onTouchEnd={(event: React.TouchEvent) => {
+                        event.stopPropagation()
+                        // Handle as click on touch end
                         if (lecture === selected) {
                             setSelected(null)
                         } else {

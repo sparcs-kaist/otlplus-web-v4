@@ -46,7 +46,7 @@ const MapImage = styled.div`
     }
 `
 
-const MapPinWrapper = styled.div<{ left: number; top: number }>`
+const MapPinWrapper = styled.div<{ left: number; top: number; highlighted?: boolean }>`
     display: flex;
     gap: 4px;
     align-items: center;
@@ -55,7 +55,8 @@ const MapPinWrapper = styled.div<{ left: number; top: number }>`
     top: ${({ top }) => top}%;
     position: absolute;
     font-size: 10px;
-    color: ${({ theme }) => theme.colors.Text.default};
+    color: ${({ theme, highlighted }) =>
+        highlighted ? theme.colors.Highlight.default : theme.colors.Text.default};
     border-radius: 4px;
     padding: 2px 4px;
 `
@@ -121,6 +122,12 @@ export default function MapSubSection({
                 const lectures = timetableLectures.filter((l) =>
                     l.classes.some((c) => c.buildingCode.includes(location)),
                 )
+                hover?.forEach((h) => {
+                    if (timetableLectures.includes(h)) return
+                    if (h.classes.some((c) => c.buildingCode.includes(location))) {
+                        lectures.push(h)
+                    }
+                })
                 if (lectures.length === 0) return null
                 return (
                     <MapPinWrapper
@@ -133,6 +140,7 @@ export default function MapSubSection({
                         onMouseLeave={() => {
                             setHover(null)
                         }}
+                        highlighted={hover?.some((l) => lectures.includes(l)) ?? false}
                     >
                         <MapPinPointer />
                         {location}

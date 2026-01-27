@@ -31,5 +31,18 @@ export const general = {
         goHome: "Go Home",
         retry: "Retry",
         banner: "You are offline. Timetable is available for viewing.",
+        navDisabled: "Not available in offline mode",
+    },
+    serverError: {
+        title: "Server Error",
+        apology: "We apologize for the inconvenience",
+        description: "The server is experiencing issues. Please try again later.",
+        goHome: "Go Home",
+        retry: "Retry",
+    },
+    notFound: {
+        title: "Page Not Found",
+        description: "The page you are looking for does not exist or has been moved.",
+        goHome: "Go Home",
     },
 }

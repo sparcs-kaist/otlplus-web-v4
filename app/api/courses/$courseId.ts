@@ -20,6 +20,7 @@ export const GETResponse = z.object({
             classes: z.array(
                 z.object({
                     lectureId: z.number().int(),
+                    subtitle: z.string(),
                     classNo: z.string(),
                     professors: z.array(ProfessorSchema),
                 }),

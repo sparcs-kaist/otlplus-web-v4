@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import React, { useEffect } from "react"
 
 import { useTheme } from "@emotion/react"
 import { Trans, useTranslation } from "react-i18next"
@@ -8,12 +8,14 @@ import ReviewBlock from "@/common/components/reviews/ReviewBlock"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import { useAPI } from "@/utils/api/useAPI"
+import useIsDevice from "@/utils/useIsDevice"
 
 import Widget from "../../../../common/primitives/Widget"
 
 function LikedMajorFeedSection() {
     const {} = useTranslation() // 없으면 새로고침 안했을때 언어가 안바껴!
     const theme = useTheme()
+    const isLaptop = useIsDevice("laptop")
 
     const { query, setParams } = useAPI("GET", "/reviews", { gcTime: 0 })
 
@@ -26,7 +28,13 @@ function LikedMajorFeedSection() {
     }, [])
 
     return (
-        <Widget direction="column" gap={20} padding="30px" flex="1 1 0">
+        <Widget
+            direction="column"
+            gap={20}
+            padding="30px"
+            flex="1 1 0"
+            borderRadius={isLaptop ? 0 : undefined}
+        >
             <FlexWrapper direction="row" gap={0}>
                 <Trans
                     i18nKey="main.likedMajorFeed.title"
@@ -49,18 +57,14 @@ function LikedMajorFeedSection() {
                     }}
                 />
             </FlexWrapper>
-            <FlexWrapper direction="column" gap={30} style={{ width: "100%" }}>
+            <FlexWrapper direction="column" gap={20} style={{ width: "100%" }}>
                 {query.data?.reviews.map((review, idx) => (
-                    <>
-                        <ReviewBlock
-                            key={review.id}
-                            review={review}
-                            withWrapper={false}
-                        />
+                    <React.Fragment key={review.id}>
+                        <ReviewBlock review={review} withWrapper={false} />
                         {idx !== (query.data?.reviews.length ?? 1) - 1 && (
                             <StyledDivider color={theme.colors.Line.dark} />
                         )}
-                    </>
+                    </React.Fragment>
                 ))}
             </FlexWrapper>
         </Widget>

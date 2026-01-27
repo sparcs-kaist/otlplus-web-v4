@@ -22,6 +22,7 @@ import UtilButtonsSubSection from "@/features/timetable/sections/TimetableInfoSe
 import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
 import useIsDevice from "@/utils/useIsDevice"
+import useUserStore from "@/utils/zustand/useUserStore"
 
 const TimetableWrapper = styled(FlexWrapper)`
     min-height: 0;
@@ -29,6 +30,10 @@ const TimetableWrapper = styled(FlexWrapper)`
 
     ${media.tablet} {
         padding: 8px;
+    }
+
+    ${media.mobile} {
+        padding: 0 8px 8px 8px;
     }
 `
 
@@ -45,7 +50,9 @@ const SearchAreaWrapper = styled(FlexWrapper)`
     }
 
     ${media.tablet} {
-        flex: 1 0 0;
+        flex: 1 1 0;
+        min-height: 0;
+        height: 100%;
     }
 `
 
@@ -166,6 +173,7 @@ const MobileControlBar = styled(FlexWrapper)`
 `
 
 export default function Timetable() {
+    const { status } = useUserStore()
     const queryClient = useQueryClient()
     const theme = useTheme()
 
@@ -196,22 +204,25 @@ export default function Timetable() {
     // Mobile search modal state
     const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
 
+    const [nonLoginTimetable, setNonLoginTimetable] = useState<Lecture[]>([])
     const { query: timetable } = useAPI("GET", `/timetables/${currentTimetableId}`, {
-        enabled: currentTimetableId !== null,
+        enabled: currentTimetableId !== null && status === "success",
     })
 
     const { query: myTimetable, setParams: setMyTimetableParams } = useAPI(
         "GET",
         "/timetables/my-timetable",
         {
-            enabled: currentTimetableId === null,
+            enabled: currentTimetableId === null && status === "success",
         },
     )
 
     const currentTimetableLectures =
-        currentTimetableId === null
-            ? (myTimetable.data?.lectures ?? [])
-            : (timetable.data?.lectures ?? [])
+        status !== "success"
+            ? nonLoginTimetable
+            : currentTimetableId === null
+              ? (myTimetable.data?.lectures ?? [])
+              : (timetable.data?.lectures ?? [])
 
     const { requestFunction: removeLectureFunction } = useAPI(
         "PATCH",
@@ -230,6 +241,11 @@ export default function Timetable() {
         },
     )
 
+    const handleNonLoginRemoveLecture = useCallback((lectureId: number) => {
+        setNonLoginTimetable((prev) => prev.filter((lecture) => lecture.id !== lectureId))
+        setSelected(null)
+        setHover(null)
+    }, [])
     const handleRemoveLecture = useCallback(
         (lectureId: number) => {
             removeLectureFunction({
@@ -239,6 +255,11 @@ export default function Timetable() {
         },
         [removeLectureFunction],
     )
+
+    useEffect(() => {
+        setHover(null)
+        setSelected(null)
+    }, [mobileSearchOpen])
 
     useEffect(() => {
         function matchWidthHeight() {
@@ -251,7 +272,7 @@ export default function Timetable() {
         matchWidthHeight()
         window.addEventListener("resize", matchWidthHeight)
         return () => window.removeEventListener("resize", matchWidthHeight)
-    }, [])
+    }, [mobileSearchOpen])
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -276,6 +297,7 @@ export default function Timetable() {
         if (year !== -1) {
             setMyTimetableParams({ year: year, semester: semesterEnum })
         }
+        setNonLoginTimetable([])
     }, [year, semesterEnum])
 
     useEffect(() => {
@@ -283,81 +305,211 @@ export default function Timetable() {
         setHover(null)
     }, [currentTimetableId])
 
+    useEffect(() => {
+        if (timeFilter !== null && isTablet) {
+            setMobileSearchOpen(true)
+        }
+    }, [timeFilter])
+
     return (
         <TimetableWrapper
-            direction={isTablet ? "column-reverse" : "row"}
+            direction={isTablet ? "column" : "row"}
             align="stretch"
             justify="center"
-            gap={12}
+            gap={isTablet ? 8 : 12}
             flex="1 0 0"
             ref={outerRef}
         >
-            {!mobileSearchOpen && isTablet && (
-                <MobileControlBar direction="row" gap={0}>
-                    <UtilButtonsSubSection
-                        timetableName={currentTimetableName}
-                        timetableLectures={currentTimetableLectures}
-                        year={year}
-                        semester={semesterEnum}
-                    />
-                    <FlexWrapper
-                        direction="row"
-                        gap={4}
-                        align="center"
-                        style={{ height: "100%" }}
-                        onClick={() => {
-                            setMobileSearchOpen(true)
-                        }}
+            {isTablet ? (
+                <>
+                    {/* 상단: TimetableArea */}
+                    <ContentsAreaWrapper
+                        direction="column"
+                        gap={0}
+                        align="stretch"
+                        justify="stretch"
+                        style={
+                            mobileSearchOpen ? { flex: "1 1 0", minHeight: 0 } : undefined
+                        }
                     >
-                        <Icon size={16} color={theme.colors.Highlight.default}>
-                            <SearchIcon />
-                        </Icon>
-                        <Typography type="Normal" color="Highlight.default">
-                            과목 검색하기
-                        </Typography>
-                    </FlexWrapper>
-                </MobileControlBar>
-            )}
-            {(mobileSearchOpen || !isTablet) && (
-                <SearchAreaWrapper
-                    direction={isDesktop ? "column-reverse" : "row"}
-                    align="flex-start"
-                    gap={12}
-                    ref={searchAreaRef}
-                >
-                    {!isTablet && isLaptop && (
-                        <UtilButtonsArea>
-                            <UtilButtonsSubSection
-                                timetableName={currentTimetableName}
-                                timetableLectures={currentTimetableLectures}
-                                year={year}
-                                semester={semesterEnum}
-                            />
-                        </UtilButtonsArea>
-                    )}
-                    {/*과목 목록 영역*/}
-                    <LectureListArea style={!isTablet ? { overflow: "auto" } : undefined}>
-                        <LectureListSection
+                        <TabButtonRow
+                            timeTableLectures={currentTimetableLectures}
+                            currentTimetableId={currentTimetableId}
+                            setCurrentTimetableId={setCurrentTimetableId}
+                            setCurrentTimetableName={setCurrentTimetableName}
+                            year={year}
+                            semester={semesterEnum}
+                            setYear={setYear}
+                            setSemester={setSemesterEnum}
+                        />
+                        <Block
+                            direction="column"
+                            gap={12}
+                            align="stretch"
+                            justify="flex-start"
+                            flex="1 0 0"
+                        >
+                            <TimetableArea
+                                direction="column"
+                                gap={0}
+                                ref={contentsAreaRef}
+                            >
+                                <CustomTimeTableGrid
+                                    cellWidth={(contentsAreaWidth - 60) / 5}
+                                    fullHeight={contentsAreaHeight - 60}
+                                    lectureSummary={currentTimetableLectures}
+                                    setTimeFilter={setTimeFilter}
+                                    hover={hover}
+                                    setHover={setHover}
+                                    selected={selected}
+                                    setSelected={setSelected}
+                                    removeFunction={
+                                        status === "success"
+                                            ? currentTimetableId === null
+                                                ? undefined
+                                                : handleRemoveLecture
+                                            : handleNonLoginRemoveLecture
+                                    }
+                                />
+                            </TimetableArea>
+                        </Block>
+                    </ContentsAreaWrapper>
+
+                    {/* 중간: MobileControlBar + TimetableInfoArea */}
+                    <TimetableInfoArea>
+                        <TimetableInfoSection
+                            timetableName={currentTimetableName}
+                            timetableLectures={currentTimetableLectures}
+                            hover={hover}
+                            setHover={setHover}
+                            year={year}
+                            semester={semesterEnum}
+                        />
+                    </TimetableInfoArea>
+                    <MobileControlBar direction="row" gap={0}>
+                        <UtilButtonsSubSection
+                            timetableName={currentTimetableName}
                             timetableLectures={currentTimetableLectures}
                             year={year}
                             semester={semesterEnum}
-                            hoveredLecture={hover}
-                            selectedLecture={selected}
-                            setSelectedLecture={setSelected}
-                            setHoveredLecture={setHover}
-                            timeFilter={timeFilter}
-                            setTimeFilter={setTimeFilter}
-                            currentTimetableId={currentTimetableId}
                         />
-                    </LectureListArea>
-                    {!isDesktop && <StyledDivider direction="column" />}
-                    {/*과목 정보 영역*/}
-                    {!isTablet && (
-                        <LectureInfoArea
-                            style={
-                                !isTablet || isTablet ? { overflow: "auto" } : undefined
-                            }
+                        <FlexWrapper
+                            direction="row"
+                            gap={4}
+                            align="center"
+                            style={{ height: "100%" }}
+                            onClick={() => {
+                                setMobileSearchOpen(!mobileSearchOpen)
+                            }}
                         >
+                            <Icon size={16} color={theme.colors.Highlight.default}>
+                                <SearchIcon />
+                            </Icon>
+                            <Typography type="Normal" color="Highlight.default">
+                                {mobileSearchOpen ? "검색 닫기" : "과목 검색하기"}
+                            </Typography>
+                        </FlexWrapper>
+                    </MobileControlBar>
+
+                    {/* 하단: LectureListArea (검색 열렸을 때만) */}
+                    {mobileSearchOpen && (
+                        <SearchAreaWrapper
+                            direction="row"
+                            align="flex-start"
+                            gap={12}
+                            ref={searchAreaRef}
+                        >
+                            <LectureListArea>
+                                <LectureListSection
+                                    timetableLectures={currentTimetableLectures}
+                                    year={year}
+                                    semester={semesterEnum}
+                                    setNonLoginTimetable={setNonLoginTimetable}
+                                    hoveredLecture={hover}
+                                    selectedLecture={selected}
+                                    setSelectedLecture={setSelected}
+                                    setHoveredLecture={setHover}
+                                    timeFilter={timeFilter}
+                                    setTimeFilter={setTimeFilter}
+                                    currentTimetableId={currentTimetableId}
+                                />
+                            </LectureListArea>
+                        </SearchAreaWrapper>
+                    )}
+
+                    {/* 모달 */}
+                    {selected && (
+                        <Modal
+                            isOpen={Boolean(selected)}
+                            onClose={() => {}}
+                            fullScreen={true}
+                            header={false}
+                        >
+                            <LectureDetailSection
+                                setNonLoginTimetable={setNonLoginTimetable}
+                                handleRemoveFromTimetable={
+                                    status === "success"
+                                        ? currentTimetableId === null
+                                            ? undefined
+                                            : handleRemoveLecture
+                                        : handleNonLoginRemoveLecture
+                                }
+                                selectedLecture={
+                                    selected
+                                        ? selected
+                                        : hover?.length == 1
+                                          ? hover[0]
+                                          : null
+                                }
+                                year={year}
+                                semester={semesterEnum}
+                                onMobileModalClose={() => {
+                                    setHover(null)
+                                    setSelected(null)
+                                }}
+                                currentTimetableId={currentTimetableId}
+                                timetableLectures={currentTimetableLectures}
+                            />
+                        </Modal>
+                    )}
+                </>
+            ) : (
+                <>
+                    <SearchAreaWrapper
+                        direction={isDesktop ? "column-reverse" : "row"}
+                        align="flex-start"
+                        gap={12}
+                        ref={searchAreaRef}
+                    >
+                        {isLaptop && (
+                            <UtilButtonsArea>
+                                <UtilButtonsSubSection
+                                    timetableName={currentTimetableName}
+                                    timetableLectures={currentTimetableLectures}
+                                    year={year}
+                                    semester={semesterEnum}
+                                />
+                            </UtilButtonsArea>
+                        )}
+                        {/*과목 목록 영역*/}
+                        <LectureListArea style={{ overflow: "auto" }}>
+                            <LectureListSection
+                                timetableLectures={currentTimetableLectures}
+                                year={year}
+                                semester={semesterEnum}
+                                setNonLoginTimetable={setNonLoginTimetable}
+                                hoveredLecture={hover}
+                                selectedLecture={selected}
+                                setSelectedLecture={setSelected}
+                                setHoveredLecture={setHover}
+                                timeFilter={timeFilter}
+                                setTimeFilter={setTimeFilter}
+                                currentTimetableId={currentTimetableId}
+                            />
+                        </LectureListArea>
+                        {!isDesktop && <StyledDivider direction="column" />}
+                        {/*과목 정보 영역*/}
+                        <LectureInfoArea style={{ overflow: "auto" }}>
                             <LectureDetailSection
                                 selectedLecture={
                                     selected
@@ -370,95 +522,70 @@ export default function Timetable() {
                                 semester={semesterEnum}
                             />
                         </LectureInfoArea>
-                    )}
-                </SearchAreaWrapper>
-            )}
-            <ContentsAreaWrapper
-                direction="column"
-                gap={0}
-                align="stretch"
-                justify="stretch"
-            >
-                <FlexWrapper
-                    direction="row"
-                    align="center"
-                    justify="space-between"
-                    gap={8}
-                >
-                    <TabButtonRow
-                        timeTableLectures={currentTimetableLectures}
-                        currentTimetableId={currentTimetableId}
-                        setCurrentTimetableId={setCurrentTimetableId}
-                        setCurrentTimetableName={setCurrentTimetableName}
-                        year={year}
-                        semester={semesterEnum}
-                        setYear={setYear}
-                        setSemester={setSemesterEnum}
-                    />
-                </FlexWrapper>
-                <Block
-                    direction={isLaptop ? "column" : "row"}
-                    gap={isLaptop ? 12 : 30}
-                    align="stretch"
-                    justify="flex-start"
-                    flex="1 0 0"
-                >
-                    <TimetableArea direction="column" gap={0} ref={contentsAreaRef}>
-                        <CustomTimeTableGrid
-                            cellWidth={isTablet ? (contentsAreaWidth - 60) / 5 : 100}
-                            fullHeight={
-                                isLaptop
-                                    ? contentsAreaHeight - 60
-                                    : contentsAreaHeight - 36
-                            }
-                            lectureSummary={currentTimetableLectures}
-                            setTimeFilter={setTimeFilter}
-                            hover={hover}
-                            setHover={setHover}
-                            selected={selected}
-                            setSelected={setSelected}
-                            removeFunction={
-                                currentTimetableId === null
-                                    ? undefined
-                                    : handleRemoveLecture
-                            }
-                        />
-                    </TimetableArea>
-                    {!isLaptop && <StyledDivider direction="column" />}
-                    {/*시간표 정보 영역*/}
-                    <TimetableInfoArea>
-                        <TimetableInfoSection
-                            timetableName={currentTimetableName}
-                            timetableLectures={currentTimetableLectures}
-                            hover={hover}
-                            setHover={setHover}
-                            year={year}
-                            semester={semesterEnum}
-                        />
-                    </TimetableInfoArea>
-                </Block>
-            </ContentsAreaWrapper>
-            {isTablet && selected && (
-                <Modal
-                    isOpen={isTablet && Boolean(selected)}
-                    onClose={() => {}}
-                    fullScreen={true}
-                    header={false}
-                >
-                    <LectureDetailSection
-                        selectedLecture={
-                            selected ? selected : hover?.length == 1 ? hover[0] : null
-                        }
-                        year={year}
-                        semester={semesterEnum}
-                        onMobileModalClose={() => {
-                            setHover(null)
-                            setSelected(null)
-                        }}
-                        currentTimetableId={currentTimetableId}
-                        timetableLectures={currentTimetableLectures}
-                    />
-                </Modal>
+                    </SearchAreaWrapper>
+                    <FlexWrapper direction="row" gap={0}>
+                        <ContentsAreaWrapper direction="column" gap={0}>
+                            {/* 시간표 탭 */}
+                            <TabButtonRow
+                                timeTableLectures={currentTimetableLectures}
+                                currentTimetableId={currentTimetableId}
+                                setCurrentTimetableId={setCurrentTimetableId}
+                                setCurrentTimetableName={setCurrentTimetableName}
+                                year={year}
+                                semester={semesterEnum}
+                                setYear={setYear}
+                                setSemester={setSemesterEnum}
+                            />
+                            <Block
+                                direction={isLaptop ? "column" : "row"}
+                                gap={isLaptop ? 12 : 30}
+                                align="stretch"
+                                justify="flex-start"
+                                flex="1 0 0"
+                            >
+                                <TimetableArea
+                                    direction="column"
+                                    gap={0}
+                                    ref={contentsAreaRef}
+                                >
+                                    <CustomTimeTableGrid
+                                        cellWidth={100}
+                                        fullHeight={
+                                            isLaptop
+                                                ? contentsAreaHeight - 60
+                                                : contentsAreaHeight - 36
+                                        }
+                                        lectureSummary={currentTimetableLectures}
+                                        setTimeFilter={setTimeFilter}
+                                        hover={hover}
+                                        setHover={setHover}
+                                        selected={selected}
+                                        setSelected={setSelected}
+                                        removeFunction={
+                                            status === "success"
+                                                ? currentTimetableId === null
+                                                    ? undefined
+                                                    : handleRemoveLecture
+                                                : handleNonLoginRemoveLecture
+                                        }
+                                    />
+                                </TimetableArea>
+                                {!isLaptop && <StyledDivider direction="column" />}
+                                {/*시간표 정보 영역*/}
+                                <TimetableInfoArea>
+                                    <TimetableInfoSection
+                                        timetableName={currentTimetableName}
+                                        timetableLectures={currentTimetableLectures}
+                                        hover={hover}
+                                        setHover={setHover}
+                                        year={year}
+                                        semester={semesterEnum}
+                                    />
+                                </TimetableInfoArea>
+                            </Block>
+                        </ContentsAreaWrapper>
+                    </FlexWrapper>
+                </>
             )}
         </TimetableWrapper>
     )

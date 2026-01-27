@@ -50,7 +50,7 @@ const LectureTitle = styled(FlexWrapper)`
 `
 
 const LectureActionsWrapper = styled(FlexWrapper)`
-    position: absolute;
+    position: sticky;
     bottom: 0;
     width: 100%;
     padding: 12px 0;
@@ -66,6 +66,8 @@ const StyledAnchor = styled.a`
 `
 
 interface LectureDetailSectionProps {
+    setNonLoginTimetable?: React.Dispatch<React.SetStateAction<Lecture[]>>
+    handleRemoveFromTimetable?: (lectureId: number) => void
     selectedLecture: Lecture | undefined | null
     onMobileModalClose?: () => void
     year: number
@@ -75,6 +77,8 @@ interface LectureDetailSectionProps {
 }
 
 const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
+    setNonLoginTimetable,
+    handleRemoveFromTimetable,
     selectedLecture,
     onMobileModalClose,
     year,
@@ -111,6 +115,7 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
     )
 
     useEffect(() => {
+        if (year === -1) return
         setWishListQuery({ year: year, semester: semester })
     }, [year, semester, currentTimetableId])
     useEffect(() => {
@@ -142,7 +147,7 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
             syy: String(year),
             smtDivCd: String(semester),
             subjtCd: lecture.code,
-            syllabusOpenYn: "1",
+            syllabusOpenYn: "0",
         }
         const encodedLecture = btoa(JSON.stringify(payload))
         return `https://erp.kaist.ac.kr/com/lgin/SsoCtr/initExtPageWork.do?link=estblSubjt&params=${encodedLecture}`
@@ -150,6 +155,18 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
 
     const handleAddToTimetable = async (lecture: Lecture) => {
         if (!timetableLectures) return
+        if (status !== "success" && setNonLoginTimetable !== undefined) {
+            if (
+                timetableLectures.some((lec) =>
+                    checkOverlap(lec.classes, lecture.classes),
+                )
+            ) {
+                alert(t("timetable.addLectureConflict"))
+                return
+            }
+            setNonLoginTimetable((prev) => [...prev, lecture])
+            return
+        }
         if (!currentTimetableId) {
             console.warn("No timetable selected")
             return
@@ -196,7 +213,7 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                         >
                             {isTablet && <div style={{ width: 20 }}></div>}
                             <Typography type={"Bigger"} color={"Text.default"}>
-                                {selectedLecture.name}
+                                {selectedLecture.name + selectedLecture.subtitle}
                             </Typography>
                             {isTablet && (
                                 <Icon
@@ -261,28 +278,30 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                             gap={12}
                             justify="flex-end"
                         >
-                            {!wishListIds.includes(selectedLecture.id) && (
-                                <Button
-                                    onClick={() => {
-                                        handleLikeClick(
-                                            wishListIds.includes(selectedLecture.id),
-                                            selectedLecture.id,
-                                        )
-                                        if (onMobileModalClose) onMobileModalClose()
-                                    }}
-                                >
-                                    <Icon size={15}>
-                                        <FavoriteIcon />
-                                    </Icon>
-                                    <Typography type="NormalBold">
-                                        찜목록에 추가
-                                    </Typography>
-                                </Button>
-                            )}
+                            {status === "success" &&
+                                !wishListIds.includes(selectedLecture.id) && (
+                                    <Button
+                                        onClick={() => {
+                                            handleLikeClick(
+                                                wishListIds.includes(selectedLecture.id),
+                                                selectedLecture.id,
+                                            )
+                                            if (onMobileModalClose) onMobileModalClose()
+                                        }}
+                                    >
+                                        <Icon size={15}>
+                                            <FavoriteIcon />
+                                        </Icon>
+                                        <Typography type="NormalBold">
+                                            {t("timetable.addToWishlist")}
+                                        </Typography>
+                                    </Button>
+                                )}
 
-                            {!timetableLectures?.some(
+                            {(currentTimetableId || status !== "success") &&
+                            !timetableLectures?.some(
                                 (lec) => lec.id === selectedLecture.id,
-                            ) && (
+                            ) ? (
                                 <Button
                                     type="selected"
                                     onClick={() => {
@@ -294,7 +313,24 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                                         <AddIcon />
                                     </Icon>
                                     <Typography type="NormalBold">
-                                        시간표에 추가
+                                        {t("timetable.addToTimetable")}
+                                    </Typography>
+                                </Button>
+                            ) : (
+                                <Button
+                                    type="selected"
+                                    onClick={() => {
+                                        if (handleRemoveFromTimetable) {
+                                            handleRemoveFromTimetable(selectedLecture.id)
+                                        }
+                                        if (onMobileModalClose) onMobileModalClose()
+                                    }}
+                                >
+                                    <Icon size={15}>
+                                        <CloseIcon />
+                                    </Icon>
+                                    <Typography type="NormalBold">
+                                        {t("timetable.removeFromTimetable")}
                                     </Typography>
                                 </Button>
                             )}

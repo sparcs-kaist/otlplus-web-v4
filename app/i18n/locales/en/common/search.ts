@@ -1,6 +1,7 @@
 export const search = {
     search: "Search",
-    cancel: "Cancel",
+    close: "Close",
+    reset: "Reset",
     submit: "Search",
     level: "Grade",
     department: "Department",
@@ -10,5 +11,5 @@ export const search = {
     type: "Groups",
     placeholder: "Enter keywords",
     empty: "Please select at least one search filter",
-    timeFilterPlaceholder: "Click and drag on the timetable to select",
+    timeFilterPlaceholder: "Drag on the timetable to select",
 }

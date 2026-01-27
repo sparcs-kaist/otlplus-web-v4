@@ -51,7 +51,7 @@ const CourseDetailSectionWrapper = styled(SectionWrapper)`
 
 export default function DictionaryPage() {
     const isTablet = useIsDevice("tablet")
-    const [searchParams] = useSearchParams()
+    const [searchParams, setSearchParams] = useSearchParams()
 
     const [mobileModal, setMobileModal] = useState(false)
 
@@ -62,6 +62,10 @@ export default function DictionaryPage() {
             const courseIdNumber = parseInt(courseId, 10)
             if (!isNaN(courseIdNumber)) {
                 setSelectedCourseId(courseIdNumber)
+                setSearchParams((prevParams) => {
+                    prevParams.delete("courseId")
+                    return prevParams
+                })
             } else {
                 setSelectedCourseId(null)
             }

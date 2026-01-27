@@ -105,6 +105,7 @@ export default function Home() {
                                     <FlexWrapper
                                         direction="column"
                                         align="stretch"
+                                        justify="stretch"
                                         gap={24}
                                         flex="1 1 0"
                                     >

@@ -186,11 +186,11 @@ function Footer() {
                                 Apps
                             </Typography>
                             <FlexWrapper direction="column" gap={20}>
-                                <StyledLink href={serviceLink("buddy")} target="_blank">
-                                    <Typography type="Big" color="Text.dark">
-                                        Buddy app
-                                    </Typography>
-                                </StyledLink>
+                                {/*<StyledLink href={serviceLink("buddy")} target="_blank">*/}
+                                {/*    <Typography type="Big" color="Text.dark">*/}
+                                {/*        Buddy app*/}
+                                {/*    </Typography>*/}
+                                {/*</StyledLink>*/}
                                 <StyledLink href={serviceLink("otl")} target="_blank">
                                     <Typography type="Big" color="Text.dark">
                                         OTL app
