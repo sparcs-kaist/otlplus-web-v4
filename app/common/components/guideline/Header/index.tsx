@@ -9,6 +9,7 @@ import { clientEnv } from "@/env"
 import AccountPageModal from "@/features/account/AccountPageModal"
 import DeveloperLoginModal from "@/features/account/DeveloperLoginModal"
 import { axiosClient } from "@/libs/axios"
+import { identifyUser } from "@/libs/mixpanel"
 import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
 import { handleLogin } from "@/utils/handleLoginLogout"
@@ -100,6 +101,13 @@ const Header: React.FC = () => {
         if (query.data) {
             setUserInfo(query.data)
             setUser({ id: query.data.id, name: query.data.name })
+            identifyUser({
+                id: query.data.id,
+                email: query.data.mail,
+                name: query.data.name,
+                studentNumber: query.data.studentNumber,
+                degree: query.data.degree,
+            })
         } else {
             setUserInfo(null)
             clearUser()

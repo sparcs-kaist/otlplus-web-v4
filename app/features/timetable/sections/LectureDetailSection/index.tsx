@@ -16,6 +16,7 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
+import { trackEvent } from "@/libs/mixpanel"
 import { useAPI } from "@/utils/api/useAPI"
 import checkOverlap from "@/utils/timetable/checkOverlap"
 import useIsDevice from "@/utils/useIsDevice"
@@ -165,6 +166,14 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                 return
             }
             setNonLoginTimetable((prev) => [...prev, lecture])
+            trackEvent("Add Lecture to Timetable", {
+                lectureId: lecture.id,
+                lectureCode: lecture.code,
+                courseName: lecture.name,
+                timetableId: null,
+                isGuest: true,
+                source: "LectureDetail",
+            })
             return
         }
         if (!currentTimetableId) {
@@ -178,14 +187,28 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
         }
 
         addTimetableFunction({ action: "add", lectureId: lecture.id })
+        trackEvent("Add Lecture to Timetable", {
+            lectureId: lecture.id,
+            lectureCode: lecture.code,
+            courseName: lecture.name,
+            timetableId: currentTimetableId,
+            source: "LectureDetail",
+        })
     }
 
     const handleLikeClick = async (wish: boolean, lectureId: number) => {
         if (status === "idle") return
 
+        const action = wish ? "delete" : "add"
+        trackEvent("Update Wishlist", {
+            action,
+            lectureId,
+            source: "LectureDetail",
+        })
+
         patchUserWishlistFunction({
             lectureId: lectureId,
-            mode: wish ? "delete" : "add",
+            mode: action,
         })
     }
 

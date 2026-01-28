@@ -10,6 +10,7 @@ import { ScoreEnum } from "@/common/enum/scoreEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import TextInputArea from "@/common/primitives/TextInputArea"
 import Typography from "@/common/primitives/Typography"
+import { trackEvent } from "@/libs/mixpanel"
 import { useAPI } from "@/utils/api/useAPI"
 import useUserStore from "@/utils/zustand/useUserStore"
 
@@ -65,6 +66,14 @@ function ReviewSection() {
             grade: reviewGrade,
             load: reviewLoad,
             speech: reviewSpeech,
+        })
+        trackEvent("Submit Review", {
+            lectureId: query.data.lectureId,
+            courseName: query.data.name,
+            grade: reviewGrade,
+            load: reviewLoad,
+            speech: reviewSpeech,
+            source: "Home",
         })
         queryClient.invalidateQueries({ queryKey: [`/users/written-reviews`] })
         queryClient.invalidateQueries({ queryKey: [`/users/${user?.id}/lectures`] })
