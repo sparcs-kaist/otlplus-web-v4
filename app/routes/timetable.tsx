@@ -19,6 +19,7 @@ import LectureListSection from "@/features/timetable/sections/LectureListSection
 import TabButtonRow from "@/features/timetable/sections/TabsRowSubSection/TabButtonRow"
 import TimetableInfoSection from "@/features/timetable/sections/TimetableInfoSection"
 import UtilButtonsSubSection from "@/features/timetable/sections/TimetableInfoSection/UtilButtonsSubSection"
+import { trackEvent } from "@/libs/mixpanel"
 import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
 import useIsDevice from "@/utils/useIsDevice"
@@ -181,6 +182,10 @@ export default function Timetable() {
     const isLaptop = useIsDevice("laptop")
     const isDesktop = useIsDevice("desktop")
 
+    useEffect(() => {
+        trackEvent("Page View", { page: "Timetable" })
+    }, [])
+
     const searchAreaRef = useRef<HTMLDivElement>(null)
     const contentsAreaRef = useRef<HTMLDivElement>(null)
     const outerRef = useRef<HTMLDivElement>(null)
@@ -252,8 +257,12 @@ export default function Timetable() {
                 action: "delete",
                 lectureId: lectureId,
             })
+            trackEvent("Remove Lecture from Timetable", {
+                lectureId,
+                timetableId: currentTimetableId,
+            })
         },
-        [removeLectureFunction],
+        [removeLectureFunction, currentTimetableId],
     )
 
     useEffect(() => {

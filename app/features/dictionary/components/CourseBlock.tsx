@@ -9,6 +9,7 @@ import type { GETCoursesResponse } from "@/api/courses"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
+import { trackEvent } from "@/libs/mixpanel"
 
 interface CourseBlockProps {
     course: GETCoursesResponse["courses"][number]
@@ -58,8 +59,21 @@ const CourseBlock: React.FC<CourseBlockProps> = ({
             selectCourseId(null)
         } else {
             selectCourseId(course.id)
+            trackEvent("Select Course", {
+                courseId: course.id,
+                courseCode: course.code,
+                courseName: course.name,
+                department: course.department.name,
+            })
         }
-    }, [isSelected, course.id, selectCourseId])
+    }, [
+        isSelected,
+        course.id,
+        course.code,
+        course.name,
+        course.department.name,
+        selectCourseId,
+    ])
 
     return (
         <CourseBlockInner onClick={handleClick} selected={isSelected}>
