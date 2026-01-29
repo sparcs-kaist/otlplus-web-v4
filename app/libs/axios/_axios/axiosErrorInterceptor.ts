@@ -23,13 +23,19 @@ const errorInterceptor = {
     },
     async onRejected(error: AxiosError) {
         if (Sentry.getClient()) {
-            Sentry.captureException(error, {
-                tags: {
-                    type: "api_error",
-                    url: error.config?.url,
-                    method: error.config?.method,
-                    status: error.response?.status,
-                },
+            const originalUrl = error.config?.url
+            const safeUrlPath = originalUrl ? originalUrl.split("?")[0] : undefined
+            const safeError = new Error(error.message || "Axios request failed")
+
+            const tags: Record<string, string> = { type: "api_error" }
+            if (safeUrlPath) tags.url = safeUrlPath
+            if (error.config?.method) tags.method = error.config.method
+            if (error.response?.status !== undefined)
+                tags.status = String(error.response.status)
+
+            Sentry.captureException(safeError, {
+                tags,
+                extra: { axiosCode: error.code },
             })
         }
 
