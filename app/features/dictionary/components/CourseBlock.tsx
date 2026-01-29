@@ -66,14 +66,7 @@ const CourseBlock: React.FC<CourseBlockProps> = ({
                 department: course.department.name,
             })
         }
-    }, [
-        isSelected,
-        course.id,
-        course.code,
-        course.name,
-        course.department.name,
-        selectCourseId,
-    ])
+    }, [isSelected, course.id, selectCourseId])
 
     return (
         <CourseBlockInner onClick={handleClick} selected={isSelected}>
