@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react"
 import { AxiosError, type AxiosResponse, HttpStatusCode } from "axios"
 
 import useBackendStatusStore from "@/utils/zustand/useBackendStatusStore"
@@ -21,6 +22,17 @@ const errorInterceptor = {
         return values
     },
     async onRejected(error: AxiosError) {
+        if (Sentry.getClient()) {
+            Sentry.captureException(error, {
+                tags: {
+                    type: "api_error",
+                    url: error.config?.url,
+                    method: error.config?.method,
+                    status: error.response?.status,
+                },
+            })
+        }
+
         if (isNetworkError(error)) {
             useBackendStatusStore.getState().setBackendReachable(false)
         } else if (error.response) {
