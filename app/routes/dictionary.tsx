@@ -8,6 +8,7 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Widget from "@/common/primitives/Widget"
 import CourseDetailSection from "@/features/dictionary/sections/CourseDetailSection"
 import CourseListSection from "@/features/dictionary/sections/CourseListSection"
+import { trackEvent } from "@/libs/mixpanel"
 import { media } from "@/styles/themes/media"
 import useIsDevice from "@/utils/useIsDevice"
 
@@ -56,6 +57,11 @@ export default function DictionaryPage() {
     const [mobileModal, setMobileModal] = useState(false)
 
     const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null)
+
+    useEffect(() => {
+        trackEvent("Page View", { page: "Dictionary" })
+    }, [])
+
     useEffect(() => {
         const courseId = searchParams.get("courseId")
         if (courseId) {

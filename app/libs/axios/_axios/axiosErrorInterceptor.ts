@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/react"
 import { AxiosError, type AxiosResponse, HttpStatusCode } from "axios"
 
 import useBackendStatusStore from "@/utils/zustand/useBackendStatusStore"
@@ -21,6 +22,23 @@ const errorInterceptor = {
         return values
     },
     async onRejected(error: AxiosError) {
+        if (Sentry.getClient()) {
+            const originalUrl = error.config?.url
+            const safeUrlPath = originalUrl ? originalUrl.split("?")[0] : undefined
+            const safeError = new Error(error.message || "Axios request failed")
+
+            const tags: Record<string, string> = { type: "api_error" }
+            if (safeUrlPath) tags.url = safeUrlPath
+            if (error.config?.method) tags.method = error.config.method
+            if (error.response?.status !== undefined)
+                tags.status = String(error.response.status)
+
+            Sentry.captureException(safeError, {
+                tags,
+                extra: { axiosCode: error.code },
+            })
+        }
+
         if (isNetworkError(error)) {
             useBackendStatusStore.getState().setBackendReachable(false)
         } else if (error.response) {

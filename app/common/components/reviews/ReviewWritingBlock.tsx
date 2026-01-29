@@ -13,6 +13,7 @@ import TextInputArea from "@/common/primitives/TextInputArea"
 import Typography from "@/common/primitives/Typography"
 import type { Professor } from "@/common/schemas/professor"
 import type { Review } from "@/common/schemas/review"
+import { trackEvent } from "@/libs/mixpanel"
 import { useAPI } from "@/utils/api/useAPI"
 import professorName from "@/utils/professorName"
 import useUserStore from "@/utils/zustand/useUserStore"
@@ -143,10 +144,25 @@ function ReviewWritingBlock({
                 load: reviewLoad,
                 speech: reviewSpeech,
             })
+            trackEvent("Edit Review", {
+                reviewId: myReview.id,
+                lectureId,
+                courseName: name,
+                grade: reviewGrade,
+                load: reviewLoad,
+                speech: reviewSpeech,
+            })
         } else {
             requestCreateFunction({
                 lectureId: lectureId,
                 content: reviewText,
+                grade: reviewGrade,
+                load: reviewLoad,
+                speech: reviewSpeech,
+            })
+            trackEvent("Submit Review", {
+                lectureId,
+                courseName: name,
                 grade: reviewGrade,
                 load: reviewLoad,
                 speech: reviewSpeech,

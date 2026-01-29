@@ -133,7 +133,9 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
                 ? "The requested page could not be found."
                 : error.statusText || details
     } else if (error && error instanceof Error) {
-        Sentry.captureException(error)
+        if (Sentry.getClient()) {
+            Sentry.captureException(error)
+        }
         if (process.env.NODE_ENV === "development") {
             details = error.message
             stack = error.stack

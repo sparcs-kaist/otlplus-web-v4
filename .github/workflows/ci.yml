@@ -59,14 +59,14 @@ jobs:
             - name: Install dependencies
               run: pnpm install --frozen-lockfile
 
+            - name: Install Doppler CLI
+              uses: dopplerhq/cli-action@v3
+
             - name: Build
-              run: pnpm build
+              run: doppler run -- pnpm build
               env:
-                  VITE_SENTRY_DSN: ${{ vars.SENTRY_DSN_DEV }}
-                  VITE_APP_API_URL: https://api.otl.dev.sparcs.org
-                  VITE_APP_LOG_LEVEL: info
-                  VITE_DEV_MODE: true
-                  VITE_CHANNELTALK_PLUGIN_KEY: ${{ vars.CHANNELTALK_PLUGIN_KEY }}
+                  DOPPLER_TOKEN: ${{ secrets.DOPPLER_SECRET_DEV }}
+                  SENTRY_PROJECT: otl-front-v4-dev
 
             - name: Upload build artifact
               uses: actions/upload-artifact@v4

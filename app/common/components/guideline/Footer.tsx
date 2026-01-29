@@ -67,9 +67,9 @@ function Footer() {
         const araIOSLink = "https://apps.apple.com/kr/app/ara-for-kaist/id6457209147"
         const araAndroidLink =
             "https://play.google.com/store/apps/details?id=org.sparcs.newara"
-        const buddyIOSLink = "https://apps.apple.com/kr/app/kaist-buddy/id6502600498"
+        const buddyIOSLink = "https://apps.apple.com/kr/app/buddy-for-kaist/id6749929416"
         const buddyAndroidLink =
-            "https://play.google.com/store/apps/details?id=org.sparcs.buddy"
+            "https://play.google.com/store/apps/details?id=org.sparcs.soap&hl=ko"
         switch (service) {
             case "taxi":
                 if (os === "ios" || os === "mac") return taxiIOSLink
@@ -186,11 +186,11 @@ function Footer() {
                                 Apps
                             </Typography>
                             <FlexWrapper direction="column" gap={20}>
-                                {/*<StyledLink href={serviceLink("buddy")} target="_blank">*/}
-                                {/*    <Typography type="Big" color="Text.dark">*/}
-                                {/*        Buddy app*/}
-                                {/*    </Typography>*/}
-                                {/*</StyledLink>*/}
+                                <StyledLink href={serviceLink("buddy")} target="_blank">
+                                    <Typography type="Big" color="Text.dark">
+                                        Buddy app
+                                    </Typography>
+                                </StyledLink>
                                 <StyledLink href={serviceLink("otl")} target="_blank">
                                     <Typography type="Big" color="Text.dark">
                                         OTL app
