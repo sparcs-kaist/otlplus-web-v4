@@ -10,7 +10,7 @@ export function handleLogin() {
 }
 
 export async function handleLogout() {
-    trackEvent("Sign Out")
+    await trackEvent("Sign Out")
     resetUser()
     await clearQueryCache()
 
