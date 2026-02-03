@@ -45,7 +45,6 @@ function HallOfFameFeedSubSection() {
     }, [inView])
 
     const [selectedOption, setSelectedOption] = useState(0)
-    const [offset, setOffset] = useState(0)
 
     useEffect(() => {
         setParams({
