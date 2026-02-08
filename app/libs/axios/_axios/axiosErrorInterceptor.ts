@@ -76,11 +76,14 @@ const errorInterceptor = {
 
         switch (status) {
             case HttpStatusCode.Unauthorized: {
-                // TODO: Handle Application Logic
+                if (typeof window !== "undefined") {
+                    const { handleLogout } = await import("@/utils/handleLoginLogout")
+                    await handleLogout()
+                }
                 return Promise.reject(error)
             }
             case HttpStatusCode.Forbidden: {
-                // TODO: Handle Application Logic
+                // For now, just reject, but maybe redirect to an error page later
                 return Promise.reject(error)
             }
             default: {
