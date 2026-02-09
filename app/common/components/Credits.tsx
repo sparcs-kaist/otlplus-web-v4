@@ -65,7 +65,7 @@ const Credits: React.FC = () => {
                 </Typography>
             </StyledAnchor>
             <Typography color={"Text.placeholder"} type={"Big"}>
-                Ⓒ 2026, SPARCS OTL TEAM
+                Ⓒ {new Date().getFullYear()}, SPARCS OTL TEAM
             </Typography>
         </FlexWrapper>
     )
