@@ -1,4 +1,4 @@
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react"
+import { type Dispatch, type SetStateAction, useEffect, useMemo, useState } from "react"
 
 import styled from "@emotion/styled"
 import { useQueryClient } from "@tanstack/react-query"
@@ -32,6 +32,23 @@ const ReviewBoxWrapper = styled(FlexWrapper)`
 
 const GradesWrapper = styled(FlexWrapper)`
     flex-wrap: wrap;
+`
+
+const DisabledOverlay = styled.div<{ blur: boolean }>`
+    width: 100%;
+    height: 100%;
+    filter: ${(props) => (props.blur ? "blur(4px)" : "none")};
+    pointer-events: ${(props) => (props.blur ? "none" : "auto")};
+    user-select: ${(props) => (props.blur ? "none" : "auto")};
+`
+
+const DisabledMessage = styled(Typography)`
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    white-space: nowrap;
 `
 
 export interface ReviewWritingBlockProps {
@@ -94,6 +111,15 @@ function ReviewWritingBlock({
     const { query: userReviewsQuery } = useAPI("GET", `/users/written-reviews`, {
         enabled: status === "success",
     })
+    const { query: semesterQuery } = useAPI("GET", "/semesters")
+    const canWriteReview = useMemo(() => {
+        if (!semesterQuery.data) return false
+        const currentSemester = semesterQuery.data.semesters.find(
+            (sem) => sem.year === year && sem.semester === semester,
+        )
+        if (!currentSemester) return false
+        return new Date(currentSemester.courseDropDeadline) < new Date()
+    }, [semesterQuery.data])
 
     useEffect(() => {
         if (userReviewsQuery.data) {
@@ -137,6 +163,7 @@ function ReviewWritingBlock({
     }, [myReview])
 
     function submitReview() {
+        if (!canWriteReview) return
         if (myReview) {
             requestEditFunction({
                 content: reviewText,
@@ -172,67 +199,86 @@ function ReviewWritingBlock({
 
     return (
         <ReviewWrapper direction="column" gap={8} align="stretch">
-            <FlexWrapper direction="row" gap={6} align={"center"}>
-                <Typography type={"NormalBold"} color={"Text.default"}>
-                    {name}
-                </Typography>
-                {[
-                    professorName(professors),
-                    year,
-                    semesterToString(semester || SemesterEnum.SPRING),
-                ].map((text, idx) => {
-                    return (
-                        <Typography type={"Normal"} color={"Text.lighter"} key={idx}>
-                            {text}
-                        </Typography>
-                    )
-                })}
-            </FlexWrapper>
-            <ReviewBoxWrapper
-                direction="column"
-                gap={0}
-                justify="stretch"
-                align="stretch"
-            >
-                <TextInputArea
-                    placeholder={t("common.review.writingPlaceholder")}
-                    value={reviewText}
-                    handleChange={setReviewText}
-                    area={true}
-                />
-            </ReviewBoxWrapper>
-            <FlexWrapper direction="row" gap={20} justify="space-between" align="center">
-                <GradesWrapper direction="row" gap={12}>
-                    {(
-                        [
-                            [t("common.grade"), reviewGrade, setReviewGrade],
-                            [t("common.load"), reviewLoad, setReviewLoad],
-                            [t("common.speech"), reviewSpeech, setReviewSpeech],
-                        ] as [string, ScoreEnum, Dispatch<SetStateAction<ScoreEnum>>][]
-                    ).map(([tag, currentState, DispatchFunction]) => (
-                        <FlexWrapper direction="row" gap={6} align="center" key={tag}>
-                            <Typography type="Normal" color="Text.default">
-                                {tag}
-                            </Typography>
-                            <GradeWrap score={currentState} setScore={DispatchFunction} />
-                        </FlexWrapper>
-                    ))}
-                </GradesWrapper>
-                <Button
-                    type={
-                        reviewText && reviewGrade && reviewSpeech && reviewLoad
-                            ? "selected"
-                            : "disabled"
-                    }
-                    $paddingLeft={8}
-                    $paddingTop={8}
-                    onClick={submitReview}
-                >
-                    <Typography type="Normal">
-                        {myReview ? t("writeReviews.write.edit") : t("common.upload")}
+            {!canWriteReview && (
+                <DisabledMessage type="BigBold" color="Text.default">
+                    {t("common.review.notOpenYet")}
+                </DisabledMessage>
+            )}
+            <DisabledOverlay blur={!canWriteReview}>
+                <FlexWrapper direction="row" gap={6} align={"center"}>
+                    <Typography type={"NormalBold"} color={"Text.default"}>
+                        {name}
                     </Typography>
-                </Button>
-            </FlexWrapper>
+                    {[
+                        professorName(professors),
+                        year,
+                        semesterToString(semester || SemesterEnum.SPRING),
+                    ].map((text, idx) => {
+                        return (
+                            <Typography type={"Normal"} color={"Text.lighter"} key={idx}>
+                                {text}
+                            </Typography>
+                        )
+                    })}
+                </FlexWrapper>
+                <ReviewBoxWrapper
+                    direction="column"
+                    gap={0}
+                    justify="stretch"
+                    align="stretch"
+                >
+                    <TextInputArea
+                        placeholder={t("common.review.writingPlaceholder")}
+                        value={reviewText}
+                        handleChange={setReviewText}
+                        area={true}
+                    />
+                </ReviewBoxWrapper>
+                <FlexWrapper
+                    direction="row"
+                    gap={20}
+                    justify="space-between"
+                    align="center"
+                >
+                    <GradesWrapper direction="row" gap={12}>
+                        {(
+                            [
+                                [t("common.grade"), reviewGrade, setReviewGrade],
+                                [t("common.load"), reviewLoad, setReviewLoad],
+                                [t("common.speech"), reviewSpeech, setReviewSpeech],
+                            ] as [
+                                string,
+                                ScoreEnum,
+                                Dispatch<SetStateAction<ScoreEnum>>,
+                            ][]
+                        ).map(([tag, currentState, DispatchFunction]) => (
+                            <FlexWrapper direction="row" gap={6} align="center" key={tag}>
+                                <Typography type="Normal" color="Text.default">
+                                    {tag}
+                                </Typography>
+                                <GradeWrap
+                                    score={currentState}
+                                    setScore={DispatchFunction}
+                                />
+                            </FlexWrapper>
+                        ))}
+                    </GradesWrapper>
+                    <Button
+                        type={
+                            reviewText && reviewGrade && reviewSpeech && reviewLoad
+                                ? "selected"
+                                : "disabled"
+                        }
+                        $paddingLeft={8}
+                        $paddingTop={8}
+                        onClick={submitReview}
+                    >
+                        <Typography type="Normal">
+                            {myReview ? t("writeReviews.write.edit") : t("common.upload")}
+                        </Typography>
+                    </Button>
+                </FlexWrapper>
+            </DisabledOverlay>
         </ReviewWrapper>
     )
 }
