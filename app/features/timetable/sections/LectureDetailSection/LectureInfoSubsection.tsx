@@ -37,6 +37,8 @@ const LectureInfoSubsection: React.FC<LectureInfoSubsectionProps> = ({
 }) => {
     const { t } = useTranslation()
 
+    if (!selectedLecture) return null
+
     return (
         <>
             <LectureInfo direction="column" gap={8}>
@@ -96,11 +98,14 @@ const LectureInfoSubsection: React.FC<LectureInfoSubsectionProps> = ({
                 align={"center"}
             >
                 {[
-                    [selectedLecture?.classDuration, t("common.numClasses")],
-                    [selectedLecture?.expDuration, t("common.numLabs")],
-                    selectedLecture?.creditAU
-                        ? [selectedLecture?.creditAU, "AU"]
-                        : [selectedLecture?.credit, t("common.credit")],
+                    [selectedLecture.isEnglish ? "Eng" : "한", t("common.language")],
+                    [selectedLecture.credit, t("common.credit")],
+                    [
+                        (selectedLecture.numPeople / selectedLecture.limitPeople)
+                            .toFixed(2)
+                            .toString() + ":1",
+                        t("timetable.competitionRate"),
+                    ],
                 ].map(([value, label], index) => (
                     <NumberContent
                         key={index}

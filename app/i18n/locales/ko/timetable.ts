@@ -9,4 +9,5 @@ export const timetable = {
     addToWishlist: "찜목록에 추가",
     addToTimetable: "시간표에 추가",
     removeFromTimetable: "시간표에서 제거",
+    competitionRate: "경쟁률",
 }
