@@ -34,7 +34,7 @@ const GradesWrapper = styled(FlexWrapper)`
     flex-wrap: wrap;
 `
 
-const DisabledOverlay = styled.div<{ blur: boolean }>`
+const DisabledOverlay = styled(FlexWrapper)<{ blur: boolean }>`
     width: 100%;
     height: 100%;
     filter: ${(props) => (props.blur ? "blur(4px)" : "none")};
@@ -198,13 +198,18 @@ function ReviewWritingBlock({
     }
 
     return (
-        <ReviewWrapper direction="column" gap={8} align="stretch">
+        <ReviewWrapper direction="column" gap={0}>
             {!canWriteReview && (
                 <DisabledMessage type="BigBold" color="Text.default">
                     {t("common.review.notOpenYet")}
                 </DisabledMessage>
             )}
-            <DisabledOverlay blur={!canWriteReview}>
+            <DisabledOverlay
+                blur={!canWriteReview}
+                direction="column"
+                gap={8}
+                align="stretch"
+            >
                 <FlexWrapper direction="row" gap={6} align={"center"}>
                     <Typography type={"NormalBold"} color={"Text.default"}>
                         {name}
@@ -232,6 +237,7 @@ function ReviewWritingBlock({
                         value={reviewText}
                         handleChange={setReviewText}
                         area={true}
+                        disabled={!canWriteReview}
                     />
                 </ReviewBoxWrapper>
                 <FlexWrapper
@@ -240,7 +246,7 @@ function ReviewWritingBlock({
                     justify="space-between"
                     align="center"
                 >
-                    <GradesWrapper direction="row" gap={12}>
+                    <GradesWrapper direction="row" gap={12} inert={!canWriteReview}>
                         {(
                             [
                                 [t("common.grade"), reviewGrade, setReviewGrade],
