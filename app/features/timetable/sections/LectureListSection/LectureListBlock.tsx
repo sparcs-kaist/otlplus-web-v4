@@ -277,7 +277,9 @@ export default memo(LectureListBlock, (prev, next) => {
         prev.wishlist !== next.wishlist || // Assuming array ref changes if content changes, or use deep compare if necessary (usually ref change from state)
         prev.currentTimetableId !== next.currentTimetableId ||
         prev.timetableLectures !== next.timetableLectures ||
-        prev.isAddTimetablePending !== next.isAddTimetablePending
+        prev.isAddTimetablePending !== next.isAddTimetablePending ||
+        prev.selectedLecture !== next.selectedLecture ||
+        prev.hoveredLecture !== next.hoveredLecture
     ) {
         return false
     }
