@@ -75,8 +75,8 @@ const GradeLabel = styled.span`
 
 interface CreditScoreSubSectionProps {
     timetableLectures: Lecture[]
-    hover: Lecture[] | null
-    setHover: (lectures: Lecture[] | null) => void
+    hover: Lecture[]
+    setHover: (lectures: Lecture[]) => void
 }
 
 export default function CreditScoreSubSection({
@@ -137,8 +137,8 @@ export default function CreditScoreSubSection({
                     onMouseEnter={() =>
                         setHover(timetableLectures.filter((lec) => lec.credit > 0))
                     }
-                    onMouseLeave={() => setHover(null)}
-                    highlighted={hover !== null && hover.some((lec) => lec.credit > 0)}
+                    onMouseLeave={() => setHover([])}
+                    highlighted={hover.length > 0 && hover.some((lec) => lec.credit > 0)}
                 >
                     <TotalNumber>{timetableInfo.totalCredits}</TotalNumber>
                     <TotalLabel>{t("common.credit")}</TotalLabel>
@@ -147,8 +147,10 @@ export default function CreditScoreSubSection({
                     onMouseEnter={() =>
                         setHover(timetableLectures.filter((lec) => lec.creditAU > 0))
                     }
-                    onMouseLeave={() => setHover(null)}
-                    highlighted={hover !== null && hover.some((lec) => lec.creditAU > 0)}
+                    onMouseLeave={() => setHover([])}
+                    highlighted={
+                        hover.length > 0 && hover.some((lec) => lec.creditAU > 0)
+                    }
                 >
                     <TotalNumber>{timetableInfo.totalAU}</TotalNumber>
                     <TotalLabel>AU</TotalLabel>

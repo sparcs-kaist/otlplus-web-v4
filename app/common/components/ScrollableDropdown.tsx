@@ -241,4 +241,14 @@ const ScrollableDropdown: React.FC<ScrollableDropdownProps> = ({
     )
 }
 
-export default ScrollableDropdown
+const ScrollableDropdownMemo = React.memo(ScrollableDropdown, (prev, next) => {
+    return (
+        prev.options === next.options &&
+        prev.zindex === next.zindex &&
+        prev.disabledOptions === next.disabledOptions &&
+        prev.selectedOption === next.selectedOption &&
+        prev.isDetail === next.isDetail
+    )
+})
+
+export default ScrollableDropdownMemo

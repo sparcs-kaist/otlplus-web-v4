@@ -35,8 +35,8 @@ const InfoArea = styled.div`
 interface TimetableInfoSectionProps {
     timetableName: string
     timetableLectures: Lecture[]
-    hover: Lecture[] | null
-    setHover: React.Dispatch<React.SetStateAction<Lecture[] | null>>
+    hover: Lecture[]
+    setHover: React.Dispatch<React.SetStateAction<Lecture[]>>
     year: number
     semester: SemesterEnum
 }

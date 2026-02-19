@@ -43,6 +43,7 @@ export const colors = {
         divider: "#EDD1DC",
         block: "#D6D6D6",
         dark: "#D6D6D6",
+        darker: "#bebebeff",
     },
     Text: {
         bright: "#FFFFFF",
