@@ -1,4 +1,4 @@
-import { Fragment, memo, use, useCallback, useEffect, useRef, useState } from "react"
+import { Fragment, memo, useCallback, useEffect, useRef, useState } from "react"
 
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
@@ -170,7 +170,12 @@ const MemoizedLectureTiles = memo(
         )
     },
     (prevProps, nextProps) => {
-        return prevProps.lecture.id === nextProps.lecture.id
+        return (
+            prevProps.lecture.id === nextProps.lecture.id &&
+            prevProps.handleLectureTileHover === nextProps.handleLectureTileHover &&
+            prevProps.handleLectureTileSelect === nextProps.handleLectureTileSelect &&
+            prevProps.deleteLecture === nextProps.deleteLecture
+        )
     },
 )
 
@@ -467,7 +472,14 @@ function CustomTimeTableGrid({
                             handleLectureTileSelect={handleLectureTileSelectCallback}
                         />
                     ))}
-                    {ghostLecture && <MemoizedLectureTiles lecture={ghostLecture} />}
+                    {ghostLecture && (
+                        <MemoizedLectureTiles
+                            lecture={ghostLecture}
+                            deleteLecture={deleteLectureCallback}
+                            handleLectureTileHover={handleLectureTileHoverCallBack}
+                            handleLectureTileSelect={handleLectureTileSelectCallback}
+                        />
+                    )}
                 </OverlayGrid>
             </FlexWrapper>
         </FlexWrapper>
