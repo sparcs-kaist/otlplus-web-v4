@@ -20,6 +20,7 @@ const NoSchedulesPlaceholder = styled(Typography)`
 function ScheduleFeedSection() {
     const { t } = useTranslation()
 
+    const thisYear = new Date().getFullYear()
     const { query } = useAPI("GET", "/schedules")
 
     return (
@@ -35,22 +36,31 @@ function ScheduleFeedSection() {
                         {t("main.scheduleFeed.noSchedules")}
                     </NoSchedulesPlaceholder>
                 ) : null}
-                {query.data?.schedules.map((schedule, idx) => (
-                    <FlexWrapper key={idx} direction="column" align="stretch" gap={15}>
-                        <FlexWrapper direction="row" justify="space-between" gap={0}>
-                            <Typography type="BigBold" color="Highlight.default">
-                                {schedule.from.getMonth() + 1}/{schedule.from.getDate()} -{" "}
-                                {schedule.to.getMonth() + 1}/{schedule.to.getDate()}
-                            </Typography>
-                            <Typography type="BigBold" color="Text.default">
-                                {schedule.name}
-                            </Typography>
+                {query.data?.schedules.map((schedule, idx) => {
+                    if (schedule.year !== thisYear) return null
+                    return (
+                        <FlexWrapper
+                            key={idx}
+                            direction="column"
+                            align="stretch"
+                            gap={15}
+                        >
+                            <FlexWrapper direction="row" justify="space-between" gap={0}>
+                                <Typography type="BigBold" color="Highlight.default">
+                                    {schedule.from.getMonth() + 1}/
+                                    {schedule.from.getDate()} -{" "}
+                                    {schedule.to.getMonth() + 1}/{schedule.to.getDate()}
+                                </Typography>
+                                <Typography type="BigBold" color="Text.default">
+                                    {schedule.name}
+                                </Typography>
+                            </FlexWrapper>
+                            {idx < query.data.schedules.length - 1 ? (
+                                <Line height={1} color="Line.default" />
+                            ) : null}
                         </FlexWrapper>
-                        {idx < query.data.schedules.length - 1 ? (
-                            <Line height={1} color="Line.default" />
-                        ) : null}
-                    </FlexWrapper>
-                ))}
+                    )
+                })}
             </FlexWrapper>
         </Widget>
     )
