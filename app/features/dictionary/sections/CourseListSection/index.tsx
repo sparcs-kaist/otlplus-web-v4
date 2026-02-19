@@ -14,6 +14,7 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import CourseBlock from "@/features/dictionary/components/CourseBlock"
+import { trackEvent } from "@/libs/mixpanel"
 import type { getAPIResponseType } from "@/utils/api/getAPIType"
 import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
 import checkEmpty from "@/utils/search/checkEmpty"
@@ -158,6 +159,13 @@ function CourseListSection({
         }
         setParams(fullParam)
         setEnabled(true)
+        trackEvent("Search Courses", {
+            keyword: param.keyword ?? "",
+            department: param.department ?? "",
+            type: param.type ?? "",
+            level: param.level ?? "",
+            term: param.term ?? "",
+        })
     }
 
     return (

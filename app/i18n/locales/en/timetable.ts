@@ -6,4 +6,7 @@ export const timetable = {
     copyImage: "Copy as Image",
     exportImage: "Export as Image",
     exportICal: "Export as Calendar",
+    addToWishlist: "Add to Wishlist",
+    addToTimetable: "Add to Timetable",
+    removeFromTimetable: "Remove from Timetable",
 }

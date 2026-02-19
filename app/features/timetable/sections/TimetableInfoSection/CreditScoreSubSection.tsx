@@ -101,17 +101,25 @@ export default function CreditScoreSubSection({
         let avgGrade = 0
         let avgLoad = 0
         let avgSpeech = 0
+        let totalLecturesCount = timetableLectures.length
 
         timetableLectures.forEach((lec) => {
             avgGrade += lec.averageGrade
             avgLoad += lec.averageLoad
             avgSpeech += lec.averageSpeech
+            if (
+                lec.averageGrade === 0 &&
+                lec.averageLoad === 0 &&
+                lec.averageSpeech === 0
+            ) {
+                totalLecturesCount -= 1
+            }
         })
 
         // Average grades
-        avgGrade = avgGrade / timetableLectures.length
-        avgLoad = avgLoad / timetableLectures.length
-        avgSpeech = avgSpeech / timetableLectures.length
+        avgGrade = avgGrade / totalLecturesCount
+        avgLoad = avgLoad / totalLecturesCount
+        avgSpeech = avgSpeech / totalLecturesCount
 
         return {
             totalCredits,

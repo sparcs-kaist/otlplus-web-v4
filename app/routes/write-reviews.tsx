@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 
 import styled from "@emotion/styled"
 
@@ -7,6 +7,7 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import type { Professor } from "@/common/schemas/professor"
 import ReviewLeftSection from "@/features/write-reviews/sections/ReviewLeftSection"
 import ReviewRightSection from "@/features/write-reviews/sections/ReviewRightSection"
+import { trackEvent } from "@/libs/mixpanel"
 import { media } from "@/styles/themes/media"
 import useIsDevice from "@/utils/useIsDevice"
 
@@ -34,6 +35,10 @@ export default function WriteReviews() {
 
     const [selectedLecture, setSelectedLecture] =
         useState<WriteReviewsSelectedLectureType | null>(null)
+
+    useEffect(() => {
+        trackEvent("Page View", { page: "Write Reviews" })
+    }, [])
 
     return (
         <FlexWrapper

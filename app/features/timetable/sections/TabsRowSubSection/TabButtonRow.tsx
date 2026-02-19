@@ -330,7 +330,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                     >
                         {t("timetable.myTimetable")}
                     </Typography>
-                    {currentTimetableId === null && (
+                    {currentTimetableId === null && status === "success" && (
                         <IconButton
                             onClick={(e) => {
                                 e.stopPropagation()
@@ -352,81 +352,86 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                         </IconButton>
                     )}
                 </TabButton>
-                <TabRow direction="row" gap={3} flex="1 1 auto" onWheel={onWheel}>
-                    <DndContext
-                        sensors={sensors}
-                        collisionDetection={closestCenter}
-                        onDragStart={handleDragStart}
-                        onDragEnd={handleDragEnd}
-                        modifiers={[restrictToHorizontalAxis, restrictToParentElement]}
-                    >
-                        <SortableContext
-                            items={localTimetables.map((t) => t.id)}
-                            strategy={horizontalListSortingStrategy}
+                {status === "success" && (
+                    <TabRow direction="row" gap={3} flex="1 1 auto" onWheel={onWheel}>
+                        <DndContext
+                            sensors={sensors}
+                            collisionDetection={closestCenter}
+                            onDragStart={handleDragStart}
+                            onDragEnd={handleDragEnd}
+                            modifiers={[
+                                restrictToHorizontalAxis,
+                                restrictToParentElement,
+                            ]}
                         >
-                            {localTimetables.map((timetable) => (
-                                <SortableTimetableTab
-                                    key={timetable.id}
-                                    timetable={timetable}
-                                    isSelected={currentTimetableId === timetable.id}
-                                    isDragging={activeId === timetable.id}
-                                    onClick={() => {
-                                        setCurrentTimetableId(timetable.id)
-                                    }}
-                                    onCopy={(e) => {
-                                        e.stopPropagation()
-                                        addTimetable({
-                                            year: year,
-                                            semester: semester,
-                                            lectureIds: timeTableLectures.map(
-                                                (lec) => lec.id,
-                                            ),
-                                        })
-                                    }}
-                                    onDelete={(e) => {
-                                        e.stopPropagation()
-                                        deleteTimetable({ id: timetable.id })
-                                    }}
-                                    onNameChange={(id, newName) => {
-                                        setLocalTimetables((prev) =>
-                                            prev.map((t) =>
-                                                t.id === id
-                                                    ? {
-                                                          ...t,
-                                                          name: newName,
-                                                      }
-                                                    : t,
-                                            ),
-                                        )
-                                        changeTimetableMetaData({
-                                            id: id,
-                                            name: newName,
-                                        })
-                                    }}
-                                />
-                            ))}
-                        </SortableContext>
-                    </DndContext>
-                    <TabButton
-                        onClick={() => {
-                            addTimetable({
-                                year: year,
-                                semester: semester,
-                                lectureIds: [],
-                            })
-                        }}
-                    >
-                        <IconButton onClick={(e) => {}} styles={{ padding: 3.75 }}>
-                            <Icon
-                                size={17.5}
-                                color={theme.colors.Text.default}
-                                onClick={() => {}}
+                            <SortableContext
+                                items={localTimetables.map((t) => t.id)}
+                                strategy={horizontalListSortingStrategy}
                             >
-                                <AddIcon />
-                            </Icon>
-                        </IconButton>
-                    </TabButton>
-                </TabRow>
+                                {localTimetables.map((timetable) => (
+                                    <SortableTimetableTab
+                                        key={timetable.id}
+                                        timetable={timetable}
+                                        isSelected={currentTimetableId === timetable.id}
+                                        isDragging={activeId === timetable.id}
+                                        onClick={() => {
+                                            setCurrentTimetableId(timetable.id)
+                                        }}
+                                        onCopy={(e) => {
+                                            e.stopPropagation()
+                                            addTimetable({
+                                                year: year,
+                                                semester: semester,
+                                                lectureIds: timeTableLectures.map(
+                                                    (lec) => lec.id,
+                                                ),
+                                            })
+                                        }}
+                                        onDelete={(e) => {
+                                            e.stopPropagation()
+                                            deleteTimetable({ id: timetable.id })
+                                        }}
+                                        onNameChange={(id, newName) => {
+                                            setLocalTimetables((prev) =>
+                                                prev.map((t) =>
+                                                    t.id === id
+                                                        ? {
+                                                              ...t,
+                                                              name: newName,
+                                                          }
+                                                        : t,
+                                                ),
+                                            )
+                                            changeTimetableMetaData({
+                                                id: id,
+                                                name: newName,
+                                            })
+                                        }}
+                                    />
+                                ))}
+                            </SortableContext>
+                        </DndContext>
+                        <TabButton
+                            onClick={() => {
+                                addTimetable({
+                                    year: year,
+                                    semester: semester,
+                                    lectureIds: [],
+                                })
+                            }}
+                        >
+                            <IconButton onClick={(e) => {}} styles={{ padding: 3.75 }}>
+                                <Icon
+                                    size={17.5}
+                                    color={theme.colors.Text.default}
+                                    onClick={() => {}}
+                                >
+                                    <AddIcon />
+                                </Icon>
+                            </IconButton>
+                        </TabButton>
+                    </TabRow>
+                )}
             </FlexWrapper>
             <FlexWrapper direction="row" gap={0} align="center">
                 <SemesterButton

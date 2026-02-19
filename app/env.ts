@@ -18,6 +18,7 @@ const publicEnvSchema = z.object({
     VITE_CHANNELTALK_PLUGIN_KEY: z.string().optional(),
     VITE_GA_MEASUREMENT_ID: z.string().optional(),
     VITE_SENTRY_DSN: z.string().optional(),
+    VITE_MIXPANEL_TOKEN: z.string().optional(),
 })
 
 export const clientEnv = publicEnvSchema.parse(import.meta.env)

@@ -14,6 +14,7 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimeBlock } from "@/common/schemas/timeblock"
+import { trackEvent } from "@/libs/mixpanel"
 import { media } from "@/styles/themes/media"
 import type { getAPIResponseType } from "@/utils/api/getAPIType"
 import { useAPI } from "@/utils/api/useAPI"
@@ -150,6 +151,7 @@ interface LectureListSectionProps {
     timetableLectures: Lecture[]
     year: number
     semester: SemesterEnum
+    setNonLoginTimetable: React.Dispatch<React.SetStateAction<Lecture[]>>
     hoveredLecture: Lecture[]
     setHoveredLecture: React.Dispatch<React.SetStateAction<Lecture[]>>
     selectedLecture: Lecture | null
@@ -165,6 +167,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     timetableLectures,
     year,
     semester,
+    setNonLoginTimetable,
     hoveredLecture,
     setHoveredLecture,
     selectedLecture,
@@ -256,6 +259,14 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
             }
             setParams(fullParam)
             setEnabled(true)
+            trackEvent("Search Lectures", {
+                year,
+                semester,
+                keyword: param.keyword ?? "",
+                department: param.department ?? "",
+                type: param.type ?? "",
+                level: param.level ?? "",
+            })
         },
         [year, semester, sortOption],
     )
@@ -355,6 +366,12 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     const handleLikeClick = async (wish: boolean, lectureId: number) => {
         if (status === "idle") return
 
+        const action = wish ? "delete" : "add"
+        trackEvent("Update Wishlist", {
+            action,
+            lectureId,
+        })
+
         // Optimistic update
         if (wish) {
             setWishlist((prev) => prev.filter((id) => id !== lectureId))
@@ -365,7 +382,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
         try {
             patchUserWishlistFunction({
                 lectureId: lectureId,
-                mode: wish ? "delete" : "add",
+                mode: action,
             })
         } catch (error) {
             console.error("Failed to update wishlist:", error)
@@ -379,17 +396,45 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     }
 
     const handleAddToTimetable = async (lecture: Lecture) => {
-        if (!currentTimetableId) {
-            console.warn("No timetable selected")
-            return
-        } else if (
-            timetableLectures.some((lec) => checkOverlap(lec.classes, lecture.classes))
-        ) {
-            alert(t("timetable.addLectureConflict"))
-            return
-        }
+        if (status === "success") {
+            if (!currentTimetableId) {
+                console.warn("No timetable selected")
+                return
+            }
+            if (
+                timetableLectures.some((lec) =>
+                    checkOverlap(lec.classes, lecture.classes),
+                )
+            ) {
+                alert(t("timetable.addLectureConflict"))
+                return
+            }
 
-        addTimetableFunction({ action: "add", lectureId: lecture.id })
+            addTimetableFunction({ action: "add", lectureId: lecture.id })
+            trackEvent("Add Lecture to Timetable", {
+                lectureId: lecture.id,
+                lectureCode: lecture.code,
+                courseName: lecture.name,
+                timetableId: currentTimetableId,
+            })
+        } else {
+            if (
+                timetableLectures.some((lec) =>
+                    checkOverlap(lec.classes, lecture.classes),
+                )
+            ) {
+                alert(t("timetable.addLectureConflict"))
+                return
+            }
+            setNonLoginTimetable((prev) => [...prev, lecture])
+            trackEvent("Add Lecture to Timetable", {
+                lectureId: lecture.id,
+                lectureCode: lecture.code,
+                courseName: lecture.name,
+                timetableId: null,
+                isGuest: true,
+            })
+        }
     }
 
     const handleSetHoveredLecture = useCallback(

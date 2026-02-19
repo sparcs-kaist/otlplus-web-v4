@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 
 import { axiosClient } from "@/libs/axios"
+import { identifyUser, trackEvent } from "@/libs/mixpanel"
 import { clearQueryCache } from "@/libs/offline"
 
 export default function LoginSuccessPage() {
@@ -43,6 +44,28 @@ export default function LoginSuccessPage() {
                         return data
                     },
                 })
+
+                const userInfo = qc.getQueryData<{
+                    id: number
+                    mail: string
+                    name?: string
+                    studentNumber?: number
+                    degree?: string
+                }>(["/users/info", null, lang])
+                if (userInfo) {
+                    identifyUser({
+                        id: userInfo.id,
+                        email: userInfo.mail,
+                        name: userInfo.name,
+                        studentNumber: userInfo.studentNumber,
+                        degree: userInfo.degree,
+                    })
+                    trackEvent("Sign In", {
+                        user_id: userInfo.id,
+                        login_method: "sso",
+                        success: true,
+                    })
+                }
 
                 try {
                     const { data: semesterData } = await axiosClient.get(

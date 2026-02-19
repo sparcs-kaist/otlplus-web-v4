@@ -1,5 +1,6 @@
 import { clientEnv } from "@/env"
 import { axiosClient } from "@/libs/axios"
+import { resetUser, trackEvent } from "@/libs/mixpanel"
 import { clearQueryCache } from "@/libs/offline"
 import { removeLocalStorageItem } from "@/utils/localStorage"
 
@@ -9,6 +10,8 @@ export function handleLogin() {
 }
 
 export async function handleLogout() {
+    await trackEvent("Sign Out")
+    resetUser()
     await clearQueryCache()
 
     if (process.env.NODE_ENV === "production") {

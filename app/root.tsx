@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect } from "react"
 
 import styled from "@emotion/styled"
 import * as Sentry from "@sentry/react"
@@ -15,6 +15,7 @@ import {
 import Header from "@/common/components/guideline/Header"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import { clientEnv } from "@/env"
+import { initMixpanel } from "@/libs/mixpanel"
 import { useGoogleAnalytics } from "@/utils/googleAnalytics"
 
 import type { Route } from "./+types/root"
@@ -98,6 +99,11 @@ const OutletWrapper = styled(FlexWrapper)`
 
 export default function App() {
     useGoogleAnalytics()
+
+    useEffect(() => {
+        initMixpanel()
+    }, [])
+
     return (
         <AppWrapper
             direction="column"
@@ -127,7 +133,9 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
                 ? "The requested page could not be found."
                 : error.statusText || details
     } else if (error && error instanceof Error) {
-        Sentry.captureException(error)
+        if (Sentry.getClient()) {
+            Sentry.captureException(error)
+        }
         if (process.env.NODE_ENV === "development") {
             details = error.message
             stack = error.stack

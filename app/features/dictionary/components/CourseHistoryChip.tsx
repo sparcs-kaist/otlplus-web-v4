@@ -9,11 +9,11 @@ type ChipProps = {
 } & React.ComponentProps<"div">
 
 const ChipInner = styled.div`
-    width: 150px;
+    min-width: 150px;
     height: 28px;
     display: inline-flex;
     padding: 8px 16px;
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     border-radius: 16px;
     font-size: 14px;
@@ -48,6 +48,7 @@ const ChipContentWrapper = styled.div`
     width: 100%;
     height: 100%;
     align-items: center;
+    justify-content: flex-start;
 `
 
 const CourseHistoryChip = ({

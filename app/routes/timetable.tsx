@@ -19,9 +19,11 @@ import LectureListSection from "@/features/timetable/sections/LectureListSection
 import TabButtonRow from "@/features/timetable/sections/TabsRowSubSection/TabButtonRow"
 import TimetableInfoSection from "@/features/timetable/sections/TimetableInfoSection"
 import UtilButtonsSubSection from "@/features/timetable/sections/TimetableInfoSection/UtilButtonsSubSection"
+import { trackEvent } from "@/libs/mixpanel"
 import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
 import useIsDevice from "@/utils/useIsDevice"
+import useUserStore from "@/utils/zustand/useUserStore"
 
 const TimetableWrapper = styled(FlexWrapper)`
     min-height: 0;
@@ -172,12 +174,17 @@ const MobileControlBar = styled(FlexWrapper)`
 `
 
 export default function Timetable() {
+    const { status } = useUserStore()
     const queryClient = useQueryClient()
     const theme = useTheme()
 
     const isTablet = useIsDevice("tablet")
     const isLaptop = useIsDevice("laptop")
     const isDesktop = useIsDevice("desktop")
+
+    useEffect(() => {
+        trackEvent("Page View", { page: "Timetable" })
+    }, [])
 
     const searchAreaRef = useRef<HTMLDivElement>(null)
     const contentsAreaRef = useRef<HTMLDivElement>(null)
@@ -198,22 +205,25 @@ export default function Timetable() {
     // Mobile search modal state
     const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
 
+    const [nonLoginTimetable, setNonLoginTimetable] = useState<Lecture[]>([])
     const { query: timetable } = useAPI("GET", `/timetables/${currentTimetableId}`, {
-        enabled: currentTimetableId !== null,
+        enabled: currentTimetableId !== null && status === "success",
     })
 
     const { query: myTimetable, setParams: setMyTimetableParams } = useAPI(
         "GET",
         "/timetables/my-timetable",
         {
-            enabled: currentTimetableId === null,
+            enabled: currentTimetableId === null && status === "success",
         },
     )
 
     const currentTimetableLectures =
-        currentTimetableId === null
-            ? (myTimetable.data?.lectures ?? [])
-            : (timetable.data?.lectures ?? [])
+        status !== "success"
+            ? nonLoginTimetable
+            : currentTimetableId === null
+              ? (myTimetable.data?.lectures ?? [])
+              : (timetable.data?.lectures ?? [])
 
     const { requestFunction: removeLectureFunction } = useAPI(
         "PATCH",
@@ -232,14 +242,23 @@ export default function Timetable() {
         },
     )
 
+    const handleNonLoginRemoveLecture = useCallback((lectureId: number) => {
+        setNonLoginTimetable((prev) => prev.filter((lecture) => lecture.id !== lectureId))
+        setSelected(null)
+        setHover(null)
+    }, [])
     const handleRemoveLecture = useCallback(
         (lectureId: number) => {
             removeLectureFunction({
                 action: "delete",
                 lectureId: lectureId,
             })
+            trackEvent("Remove Lecture from Timetable", {
+                lectureId,
+                timetableId: currentTimetableId,
+            })
         },
-        [removeLectureFunction],
+        [removeLectureFunction, currentTimetableId],
     )
 
     useEffect(() => {
@@ -270,6 +289,7 @@ export default function Timetable() {
         if (year !== -1) {
             setMyTimetableParams({ year: year, semester: semesterEnum })
         }
+        setNonLoginTimetable([])
     }, [year, semesterEnum])
 
     useEffect(() => {
@@ -337,9 +357,11 @@ export default function Timetable() {
                                     selectedLecture={selected}
                                     setSelectedLecture={setSelected}
                                     deleteLecture={
-                                        currentTimetableId === null
-                                            ? undefined
-                                            : handleRemoveLecture
+                                        status === "success"
+                                            ? currentTimetableId === null
+                                                ? undefined
+                                                : handleRemoveLecture
+                                            : handleNonLoginRemoveLecture
                                     }
                                 />
                             </TimetableArea>
@@ -395,6 +417,7 @@ export default function Timetable() {
                                     timetableLectures={currentTimetableLectures}
                                     year={year}
                                     semester={semesterEnum}
+                                    setNonLoginTimetable={setNonLoginTimetable}
                                     hoveredLecture={hover}
                                     selectedLecture={selected}
                                     setSelectedLecture={setSelected}
@@ -416,6 +439,14 @@ export default function Timetable() {
                             header={false}
                         >
                             <LectureDetailSection
+                                setNonLoginTimetable={setNonLoginTimetable}
+                                handleRemoveFromTimetable={
+                                    status === "success"
+                                        ? currentTimetableId === null
+                                            ? undefined
+                                            : handleRemoveLecture
+                                        : handleNonLoginRemoveLecture
+                                }
                                 selectedLecture={
                                     selected
                                         ? selected
@@ -459,6 +490,7 @@ export default function Timetable() {
                                 timetableLectures={currentTimetableLectures}
                                 year={year}
                                 semester={semesterEnum}
+                                setNonLoginTimetable={setNonLoginTimetable}
                                 hoveredLecture={hover}
                                 selectedLecture={selected}
                                 setSelectedLecture={setSelected}
@@ -524,9 +556,11 @@ export default function Timetable() {
                                         selectedLecture={selected}
                                         setSelectedLecture={setSelected}
                                         deleteLecture={
-                                            currentTimetableId === null
-                                                ? undefined
-                                                : handleRemoveLecture
+                                            status === "success"
+                                                ? currentTimetableId === null
+                                                    ? undefined
+                                                    : handleRemoveLecture
+                                                : handleNonLoginRemoveLecture
                                         }
                                     />
                                 </TimetableArea>

@@ -1,4 +1,4 @@
-import { Suspense, lazy } from "react"
+import { Suspense, lazy, useEffect } from "react"
 
 import styled from "@emotion/styled"
 
@@ -6,6 +6,7 @@ import LoadingCircle from "@/common/components/LoadingCircle"
 import Footer from "@/common/components/guideline/Footer"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import SearchSection from "@/features/main/sections/SearchSection"
+import { trackEvent } from "@/libs/mixpanel"
 import { media } from "@/styles/themes/media"
 import useIsDevice from "@/utils/useIsDevice"
 
@@ -65,6 +66,10 @@ function SectionLoader() {
 export default function Home() {
     const isMobile = useIsDevice("mobile")
     const isLaptop = useIsDevice("laptop")
+
+    useEffect(() => {
+        trackEvent("Page View", { page: "Home" })
+    }, [])
 
     return (
         <>
