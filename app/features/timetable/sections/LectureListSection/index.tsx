@@ -508,6 +508,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                                 <LectureListBlock
                                     key={course.id}
                                     course={course}
+                                    hoveredLecture={hoveredLecture}
                                     selectedLecture={selectedLecture}
                                     wishlist={wishlist}
                                     currentTimetableId={currentTimetableId}

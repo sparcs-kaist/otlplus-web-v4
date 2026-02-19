@@ -80,6 +80,7 @@ interface LectureListBlockProps {
     timetableLectures: Lecture[]
     isAddTimetablePending: boolean
     selectedLecture: Lecture | null
+    hoveredLecture: Lecture[] | null
     handleSetHoveredLecture: (lecture: Lecture) => void
     handleClearHoveredLecture: () => void
     handleSetSelectedLecture: (lecture: Lecture) => void
@@ -98,6 +99,7 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
     handleClearHoveredLecture,
     handleSetSelectedLecture,
     selectedLecture,
+    hoveredLecture,
     handleLikeClick,
     handleAddToTimetable,
     t,
