@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react"
 
-import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
@@ -8,7 +7,7 @@ import { useInView } from "react-intersection-observer"
 
 import type { GETLecturesResponse } from "@/api/lectures"
 import LoadingCircle from "@/common/components/LoadingCircle"
-import SearchArea, { type SearchParamsType } from "@/common/components/search/SearchArea"
+import { type SearchParamsType } from "@/common/components/search/SearchArea"
 import type { SemesterEnum } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
@@ -508,6 +507,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                                 <LectureListBlock
                                     key={course.id}
                                     course={course}
+                                    hoveredLecture={hoveredLecture}
                                     selectedLecture={selectedLecture}
                                     wishlist={wishlist}
                                     currentTimetableId={currentTimetableId}
