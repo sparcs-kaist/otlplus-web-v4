@@ -158,6 +158,8 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
             <Divider />
             {course.lectures.map((lecture, idx) => {
                 const wish = wishlist.includes(lecture.id)
+                const isHovered = hoveredLecture?.some((lec) => lec.id === lecture.id)
+
                 return (
                     <React.Fragment key={lecture.id}>
                         <LectureItemWrapper
@@ -168,7 +170,7 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
                             lectureId={lecture.id}
                         >
                             <FlexWrapper direction="column" gap={0}>
-                                {isTablet && (
+                                {isTablet && isHovered && (
                                     <Typography
                                         type="Small"
                                         color="Text.placeholder"
@@ -191,7 +193,7 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
                                         {formatProfessorName(lecture.professors)}
                                     </Typography>
                                 </FlexWrapper>
-                                {isTablet && (
+                                {isTablet && isHovered && (
                                     <Typography
                                         type="Small"
                                         color="Text.placeholder"
@@ -231,10 +233,7 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
                                             <FavoriteBorderIcon />
                                         </Icon>
                                     ))}
-                                {(!isTablet ||
-                                    hoveredLecture?.some(
-                                        (lec) => lec.id === lecture.id,
-                                    )) && (
+                                {(!isTablet || isHovered) && (
                                     <span
                                         title={
                                             currentTimetableId == null &&
