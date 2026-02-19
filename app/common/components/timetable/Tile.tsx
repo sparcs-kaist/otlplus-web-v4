@@ -1,7 +1,6 @@
-import { type CSSProperties, memo, useCallback, useRef } from "react"
+import { type CSSProperties, memo } from "react"
 
-import { css } from "@emotion/react"
-import { type Theme } from "@emotion/react"
+import { type Theme, css } from "@emotion/react"
 import styled from "@emotion/styled"
 import { Close } from "@mui/icons-material"
 
@@ -185,6 +184,7 @@ function LectureTile({ lecture, classIdx, deleteLecture }: LectureTileProps) {
                             className="lecture-title"
                         >
                             {lecture.name}
+                            {lecture.subtitle}
                         </Typography>
                         <Typography
                             type="Small"
