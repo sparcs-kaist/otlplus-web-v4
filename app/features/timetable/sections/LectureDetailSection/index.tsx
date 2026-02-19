@@ -57,6 +57,7 @@ const LectureActionsWrapper = styled(FlexWrapper)`
     padding: 12px 0;
     background-color: ${({ theme }) => theme.colors.Background.Section.default};
     margin-top: auto;
+    z-index: 20;
 `
 
 const StyledLink = styled(Link)`

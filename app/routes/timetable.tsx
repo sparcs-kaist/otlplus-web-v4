@@ -293,8 +293,10 @@ export default function Timetable() {
     }, [year, semesterEnum])
 
     useEffect(() => {
-        setSelected(null)
-        setHover([])
+        if (!isTablet) {
+            setSelected(null)
+            setHover([])
+        }
     }, [currentTimetableId])
 
     useEffect(() => {
