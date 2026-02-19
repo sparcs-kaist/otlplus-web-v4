@@ -144,6 +144,7 @@ const MemoizedLectureTiles = memo(
         }, [handleLectureTileHover, lecture])
 
         const handleMouseClick = useCallback(() => {
+            console.log(handleLectureTileSelect, lecture)
             handleLectureTileSelect?.(lecture)
         }, [handleLectureTileSelect, lecture])
 
@@ -170,7 +171,16 @@ const MemoizedLectureTiles = memo(
         )
     },
     (prevProps, nextProps) => {
-        return prevProps.lecture.id === nextProps.lecture.id
+        console.log(
+            prevProps.handleLectureTileSelect === nextProps.handleLectureTileSelect,
+        )
+
+        return (
+            prevProps.lecture.id === nextProps.lecture.id &&
+            prevProps.handleLectureTileHover === nextProps.handleLectureTileHover &&
+            prevProps.handleLectureTileSelect === nextProps.handleLectureTileSelect &&
+            prevProps.deleteLecture === nextProps.deleteLecture
+        )
     },
 )
 
@@ -303,6 +313,7 @@ function CustomTimeTableGrid({
 
     const handleLectureTileSelectCallback = useCallback(
         (lecture: Lecture) => {
+            console.log(lecture)
             if (!needLectureInteraction) return
 
             setSelectedLecture?.((prev) => {
@@ -467,7 +478,14 @@ function CustomTimeTableGrid({
                             handleLectureTileSelect={handleLectureTileSelectCallback}
                         />
                     ))}
-                    {ghostLecture && <MemoizedLectureTiles lecture={ghostLecture} />}
+                    {ghostLecture && (
+                        <MemoizedLectureTiles
+                            lecture={ghostLecture}
+                            deleteLecture={deleteLectureCallback}
+                            handleLectureTileHover={handleLectureTileHoverCallBack}
+                            handleLectureTileSelect={handleLectureTileSelectCallback}
+                        />
+                    )}
                 </OverlayGrid>
             </FlexWrapper>
         </FlexWrapper>
