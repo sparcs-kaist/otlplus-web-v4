@@ -8,5 +8,6 @@ export const timetable = {
     exportICal: "Export as Calendar",
     addToWishlist: "Add to Wishlist",
     addToTimetable: "Add to Timetable",
+    removeFromWishlist: "Remove from Wishlist",
     removeFromTimetable: "Remove from Timetable",
 }

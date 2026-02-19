@@ -187,7 +187,7 @@ export default function Timetable() {
     }, [])
 
     const searchAreaRef = useRef<HTMLDivElement>(null)
-    const contentsAreaRef = useRef<HTMLDivElement>(null)
+    const timetableAreaRef = useRef<HTMLDivElement>(null)
     const outerRef = useRef<HTMLDivElement>(null)
 
     const [hover, setHover] = useState<Lecture[]>([])
@@ -271,8 +271,8 @@ export default function Timetable() {
             if (
                 searchAreaRef.current &&
                 !searchAreaRef.current.contains(event.target as Node) &&
-                contentsAreaRef.current &&
-                !contentsAreaRef.current.contains(event.target as Node) &&
+                timetableAreaRef.current &&
+                !timetableAreaRef.current.contains(event.target as Node) &&
                 outerRef.current &&
                 outerRef.current.contains(event.target as Node)
             ) {
@@ -318,6 +318,7 @@ export default function Timetable() {
                 <>
                     {/* 상단: TimetableArea */}
                     <ContentsAreaWrapper
+                        ref={timetableAreaRef}
                         direction="column"
                         gap={0}
                         align="stretch"
@@ -346,7 +347,6 @@ export default function Timetable() {
                             <TimetableArea
                                 direction="column"
                                 gap={0}
-                                ref={contentsAreaRef}
                                 align="stretch"
                                 flex="1 1 auto"
                             >
@@ -520,6 +520,7 @@ export default function Timetable() {
                     </SearchAreaWrapper>
                     <FlexWrapper direction="column" gap={0}>
                         <ContentsAreaWrapper
+                            ref={timetableAreaRef}
                             direction="column"
                             gap={0}
                             style={{ overflowX: "hidden" }}
@@ -543,11 +544,7 @@ export default function Timetable() {
                                 justify="flex-start"
                                 flex="1 0 0"
                             >
-                                <TimetableArea
-                                    direction="column"
-                                    gap={0}
-                                    ref={contentsAreaRef}
-                                >
+                                <TimetableArea direction="column" gap={0}>
                                     <CustomTimeTableGrid
                                         cellWidth="100px"
                                         lectures={currentTimetableLectures}
