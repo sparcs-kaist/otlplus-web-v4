@@ -11,6 +11,7 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
+import { media } from "@/styles/themes/media"
 import checkOverlap from "@/utils/timetable/checkOverlap"
 import useIsDevice from "@/utils/useIsDevice"
 import useUserStore from "@/utils/zustand/useUserStore"
@@ -33,7 +34,7 @@ const CourseItemWrapper = styled.div`
         opacity: 0.3;
     }
 
-    &: [data-is-selected= "true"] {
+    [data-is-selected="true"] {
         opacity: 1;
         transform: translateY(-2px);
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
@@ -63,6 +64,15 @@ const LectureItemWrapper = styled.div<{ lectureId: number }>`
     [data-selected-lecture="${({ lectureId }) => lectureId}"] &,
     [data-hovered-lectures~="${({ lectureId }) => lectureId}"]:not(:hover) & {
         background-color: ${({ theme }) => theme.colors.Background.Block.dark};
+    }
+
+    ${media.tablet} {
+        &:hover {
+            background-color: ${({ theme }) => theme.colors.Background.Block.default};
+        }
+        [data-hovered-lectures~="${({ lectureId }) => lectureId}"] & {
+            background-color: ${({ theme }) => theme.colors.Background.Block.dark};
+        }
     }
 `
 
