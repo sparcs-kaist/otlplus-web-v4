@@ -52,6 +52,7 @@ export const darkThemeColors: ThemeType["colors"] = {
         divider: "#2f2f2f",
         block: "#343434",
         dark: "#000000",
+        darker: "#000000",
     },
     Text: {
         bright: "#000000",

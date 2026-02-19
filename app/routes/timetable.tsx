@@ -245,7 +245,7 @@ export default function Timetable() {
     const handleNonLoginRemoveLecture = useCallback((lectureId: number) => {
         setNonLoginTimetable((prev) => prev.filter((lecture) => lecture.id !== lectureId))
         setSelected(null)
-        setHover(null)
+        setHover([])
     }, [])
     const handleRemoveLecture = useCallback(
         (lectureId: number) => {
