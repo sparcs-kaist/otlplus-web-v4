@@ -38,8 +38,8 @@ const LectureTextWrapper = styled(FlexWrapper)<{ highlighted?: boolean }>`
 
 interface ExamTimeSubSectionProps {
     timetableLectures: Lecture[]
-    hover: Lecture[] | null
-    setHover: React.Dispatch<React.SetStateAction<Lecture[] | null>>
+    hover: Lecture[]
+    setHover: React.Dispatch<React.SetStateAction<Lecture[]>>
 }
 
 const dayLabels = [
@@ -126,7 +126,7 @@ export default function ExamTimeSubSection({
                                     ),
                                 )
                             }}
-                            onMouseLeave={() => setHover(null)}
+                            onMouseLeave={() => setHover([])}
                         >
                             {weekdayToString(day, true)}
                         </DayLabel>
@@ -148,7 +148,7 @@ export default function ExamTimeSubSection({
                                                 ),
                                             )
                                         }
-                                        onMouseLeave={() => setHover(null)}
+                                        onMouseLeave={() => setHover([])}
                                     >
                                         <Typography type="NormalBold">
                                             {exam.lectureName}

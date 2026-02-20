@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef } from "react"
 
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
@@ -6,20 +6,20 @@ import LockIcon from "@mui/icons-material/Lock"
 import { Trans } from "react-i18next"
 
 import LoadingCircle from "@/common/components/LoadingCircle"
+import CustomTimeTableGrid from "@/common/components/timetable/CustomTimeTableGrid"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
-import type { Lecture } from "@/common/schemas/lecture"
 import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
 import { handleLogin } from "@/utils/handleLoginLogout"
 import useUserStore from "@/utils/zustand/useUserStore"
 
 import Widget from "../../../../common/primitives/Widget"
-import CustomTimeTableGrid from "../../components/CustomTimeTableGrid"
 
 const StyledWidget = styled(Widget)`
     width: 856px;
+    height: 1000px;
 
     ${media.laptop} {
         width: 100%;
@@ -31,10 +31,11 @@ const TimeTableInner = styled(FlexWrapper)`
     width: 100%;
 `
 
-const BlurWrapper = styled.div<{ blur: boolean }>`
+const BlurWrapper = styled(FlexWrapper)<{ blur: boolean }>`
     filter: ${(props) => (props.blur ? "blur(4px)" : "none")};
     width: 100%;
     height: 100%;
+    pointer-events: none;
 `
 
 const LoginWrapper = styled(FlexWrapper)`
@@ -66,10 +67,6 @@ const TimeTableSection = () => {
     const { user, status } = useUserStore()
 
     const totalRef = useRef<HTMLDivElement>(null)
-    const [width, setWidth] = useState(0)
-
-    const [selected, setSelected] = useState<Lecture | null>(null)
-    const [hover, setHover] = useState<Lecture[] | null>(null)
 
     const { query: myTimetable, setParams: setMyTimetableParams } = useAPI(
         "GET",
@@ -91,21 +88,6 @@ const TimeTableSection = () => {
             } as never)
         }
     }, [semesters.data, setMyTimetableParams])
-
-    useEffect(() => {
-        const handleResize = () => {
-            if (totalRef.current) {
-                setWidth(totalRef.current.clientWidth)
-            }
-        }
-
-        window.addEventListener("resize", handleResize)
-        handleResize()
-
-        return () => {
-            window.removeEventListener("resize", handleResize)
-        }
-    }, [totalRef, status])
 
     const lectures = myTimetable.data?.lectures ?? []
 
@@ -158,14 +140,17 @@ const TimeTableSection = () => {
                             />
                         </FlexWrapper>
                     )}
-                    <BlurWrapper blur={status === "idle"}>
+                    <BlurWrapper
+                        blur={status === "idle"}
+                        direction="column"
+                        gap={0}
+                        align="stretch"
+                    >
                         <CustomTimeTableGrid
-                            cellWidth={(width - 30) / 5}
-                            lectureSummary={lectures}
-                            hover={hover}
-                            setHover={setHover}
-                            selected={selected}
-                            setSelected={setSelected}
+                            lectures={lectures}
+                            needLectureDeletable={false}
+                            needTimeFilter={false}
+                            needLectureInteraction={false}
                         />
                     </BlurWrapper>
                 </TimeTableInner>

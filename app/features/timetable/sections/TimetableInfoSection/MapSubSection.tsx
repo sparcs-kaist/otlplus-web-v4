@@ -1,8 +1,9 @@
-import { type CSSProperties } from "react"
+import { type CSSProperties, useMemo } from "react"
 
 import styled from "@emotion/styled"
 
 import type { Lecture } from "@/common/schemas/lecture"
+import useThemeStore from "@/utils/zustand/useThemeStore"
 
 const flattenTimeTableColors = (timeTable: any): Array<CSSProperties["color"]> => {
     return [
@@ -24,7 +25,7 @@ const flattenTimeTableColors = (timeTable: any): Array<CSSProperties["color"]> =
     ].map((c) => c ?? "#CCCCCC")
 }
 
-const MapImage = styled.div`
+const MapContainer = styled.div`
     width: 100%;
     height: 220px;
     border-radius: 8px;
@@ -33,17 +34,17 @@ const MapImage = styled.div`
     justify-content: center;
     position: relative;
     overflow: hidden;
+`
 
-    &::before {
-        content: "";
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        background-image: url("/campus_map.png");
-        background-size: cover;
-        background-position: center;
-        opacity: 0.8;
-    }
+const MapBackground = styled.img<{ isDarkMode: boolean }>`
+    object-fit: cover;
+    object-position: center;
+    filter: ${({ isDarkMode }) =>
+        isDarkMode ? "invert(100%) sepia(100%) grayscale(100%) brightness(0.7)" : "none"};
+
+    /* Performance Optimization: Force GPU layer to prevent repaints on hover */
+    transform: translateZ(0);
+    will-change: filter;
 `
 
 const MapPinWrapper = styled.div<{ left: number; top: number; highlighted?: boolean }>`
@@ -87,24 +88,24 @@ const MapPin = styled.div<{ courseId: number; highlighted: boolean }>`
 `
 
 const POSITION_OF_LOCATIONS = new Map([
-    ["E2", { left: 52, top: 70 }],
-    ["E3", { left: 59, top: 64 }],
-    ["E6", { left: 60, top: 52 }],
-    ["E7", { left: 69, top: 50 }],
+    ["E2", { left: 50, top: 67 }],
+    ["E3", { left: 56, top: 61 }],
+    ["E6", { left: 57, top: 52 }],
+    ["E7", { left: 65, top: 50 }],
     ["E11", { left: 45, top: 47 }],
-    ["E16", { left: 45, top: 38 }],
-    ["N1", { left: 80, top: 28 }],
+    ["E16", { left: 45, top: 40 }],
+    ["N1", { left: 75, top: 30 }],
     ["N3", { left: 45, top: 34 }],
-    ["N4", { left: 54, top: 30 }],
-    ["N5", { left: 66, top: 28 }],
-    ["N7", { left: 25, top: 30 }],
-    ["N22", { left: 71, top: 24 }],
-    ["N24", { left: 68, top: 20 }],
-    ["N25", { left: 51, top: 25 }],
-    ["N27", { left: 49, top: 13 }],
-    ["W1", { left: 26, top: 73 }],
+    ["N4", { left: 53, top: 32 }],
+    ["N5", { left: 63, top: 28 }],
+    ["N7", { left: 27, top: 30 }],
+    ["N22", { left: 67, top: 26 }],
+    ["N24", { left: 65, top: 22 }],
+    ["N25", { left: 49, top: 26 }],
+    ["N27", { left: 47, top: 17 }],
+    ["W1", { left: 26, top: 68 }],
     ["W8", { left: 27, top: 44 }],
-    ["W16", { left: 35, top: 76 }],
+    ["W16", { left: 34, top: 73 }],
 ])
 
 export default function MapSubSection({
@@ -113,11 +114,26 @@ export default function MapSubSection({
     setHover,
 }: {
     timetableLectures: Lecture[]
-    hover: Lecture[] | null
-    setHover: React.Dispatch<React.SetStateAction<Lecture[] | null>>
+    hover: Lecture[]
+    setHover: React.Dispatch<React.SetStateAction<Lecture[]>>
 }) {
+    const { displayedTheme } = useThemeStore()
+
+    const mapBackground = useMemo(
+        () => (
+            <MapBackground
+                src="/campus_map.svg"
+                alt="Campus Map"
+                isDarkMode={displayedTheme === "dark"}
+                decoding="async"
+            />
+        ),
+        [displayedTheme],
+    )
+
     return (
-        <MapImage>
+        <MapContainer>
+            {mapBackground}
             {Array.from(POSITION_OF_LOCATIONS).map(([location, { left, top }]) => {
                 const lectures = timetableLectures.filter((l) =>
                     l.classes.some((c) => c.buildingCode.includes(location)),
@@ -138,7 +154,7 @@ export default function MapSubSection({
                             setHover(lectures)
                         }}
                         onMouseLeave={() => {
-                            setHover(null)
+                            setHover([])
                         }}
                         highlighted={hover?.some((l) => lectures.includes(l)) ?? false}
                     >
@@ -154,6 +170,6 @@ export default function MapSubSection({
                     </MapPinWrapper>
                 )
             })}
-        </MapImage>
+        </MapContainer>
     )
 }

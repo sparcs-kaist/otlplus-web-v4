@@ -7,13 +7,13 @@ import { useQueryClient } from "@tanstack/react-query"
 
 import Modal from "@/common/components/Modal"
 import StyledDivider from "@/common/components/StyledDivider"
+import CustomTimeTableGrid from "@/common/components/timetable/CustomTimeTableGrid"
 import { type SemesterEnum } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimeBlock } from "@/common/schemas/timeblock"
-import CustomTimeTableGrid from "@/features/timetable/components/CustomTimeTableGrid"
 import LectureDetailSection from "@/features/timetable/sections/LectureDetailSection"
 import LectureListSection from "@/features/timetable/sections/LectureListSection"
 import TabButtonRow from "@/features/timetable/sections/TabsRowSubSection/TabButtonRow"
@@ -43,11 +43,15 @@ const SearchAreaWrapper = styled(FlexWrapper)`
     padding: 16px;
     border-radius: 12px;
     align-self: stretch; /* 부모 Flex의 align-items: stretch에 맞춰 세로 길이 맞춤 */
+    box-shadow:
+        0px 1px 3px rgba(0, 0, 0, 0.1),
+        0px 1px 2px rgba(0, 0, 0, 0.06);
 
     ${media.desktop} {
         background-color: transparent;
         padding: 0;
         border-radius: 0;
+        box-shadow: none;
     }
 
     ${media.tablet} {
@@ -81,11 +85,15 @@ const Block = styled(FlexWrapper)`
     padding: 16px;
     flex: 1;
     min-height: 0;
+    box-shadow:
+        0px 1px 3px rgba(0, 0, 0, 0.1),
+        0px 1px 2px rgba(0, 0, 0, 0.06);
 
     ${media.laptop} {
         background-color: transparent;
         padding: 0;
         border-radius: 0;
+        box-shadow: none;
     }
 `
 
@@ -98,6 +106,9 @@ const LectureInfoArea = styled.div`
         background-color: ${({ theme }) => theme.colors.Background.Section.default};
         padding: 16px;
         border-radius: 12px;
+        box-shadow:
+            0px 1px 3px rgba(0, 0, 0, 0.1),
+            0px 1px 2px rgba(0, 0, 0, 0.06);
     }
 
     ${media.laptop} {
@@ -120,6 +131,9 @@ const LectureListArea = styled.div`
         background-color: ${({ theme }) => theme.colors.Background.Section.default};
         padding: 16px;
         border-radius: 12px;
+        box-shadow:
+            0px 1px 3px rgba(0, 0, 0, 0.1),
+            0px 1px 2px rgba(0, 0, 0, 0.06);
     }
 
     ${media.laptop} {
@@ -138,6 +152,9 @@ const UtilButtonsArea = styled.div`
         padding: 22px;
         border-radius: 12px;
         width: 100%;
+        box-shadow:
+            0px 1px 3px rgba(0, 0, 0, 0.1),
+            0px 1px 2px rgba(0, 0, 0, 0.06);
     }
 `
 
@@ -149,6 +166,9 @@ const TimetableArea = styled(FlexWrapper)`
         background-color: ${({ theme }) => theme.colors.Background.Section.default};
         padding: 16px;
         border-radius: 0 12px 12px 12px;
+        box-shadow:
+            0px 1px 3px rgba(0, 0, 0, 0.1),
+            0px 1px 2px rgba(0, 0, 0, 0.06);
     }
 `
 
@@ -158,6 +178,9 @@ const TimetableInfoArea = styled.div`
         background-color: ${({ theme }) => theme.colors.Background.Section.default};
         padding: 16px;
         border-radius: 12px;
+        box-shadow:
+            0px 1px 3px rgba(0, 0, 0, 0.1),
+            0px 1px 2px rgba(0, 0, 0, 0.06);
     }
 
     ${media.tablet} {
@@ -171,6 +194,9 @@ const MobileControlBar = styled(FlexWrapper)`
     padding: 8px;
     border-radius: 12px;
     white-space: nowrap;
+    box-shadow:
+        0px 1px 3px rgba(0, 0, 0, 0.1),
+        0px 1px 2px rgba(0, 0, 0, 0.06);
 `
 
 export default function Timetable() {
@@ -187,10 +213,10 @@ export default function Timetable() {
     }, [])
 
     const searchAreaRef = useRef<HTMLDivElement>(null)
-    const contentsAreaRef = useRef<HTMLDivElement>(null)
+    const timetableAreaRef = useRef<HTMLDivElement>(null)
     const outerRef = useRef<HTMLDivElement>(null)
 
-    const [hover, setHover] = useState<Lecture[] | null>(null)
+    const [hover, setHover] = useState<Lecture[]>([])
     const [selected, setSelected] = useState<Lecture | null>(null)
 
     // Time filter state for search area
@@ -201,10 +227,6 @@ export default function Timetable() {
     const [currentTimetableName, setCurrentTimetableName] = useState<string>("")
     const [year, setYear] = useState<number>(-1)
     const [semesterEnum, setSemesterEnum] = useState<SemesterEnum>(1)
-
-    // for timetable area size(temporary)
-    const [contentsAreaWidth, setContentsAreaWidth] = useState(0)
-    const [contentsAreaHeight, setContentsAreaHeight] = useState<number>(0)
 
     // Mobile search modal state
     const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
@@ -240,7 +262,7 @@ export default function Timetable() {
                     })
                     .then(() => {
                         setSelected(null)
-                        setHover(null)
+                        setHover([])
                     })
             },
         },
@@ -249,8 +271,9 @@ export default function Timetable() {
     const handleNonLoginRemoveLecture = useCallback((lectureId: number) => {
         setNonLoginTimetable((prev) => prev.filter((lecture) => lecture.id !== lectureId))
         setSelected(null)
-        setHover(null)
+        setHover([])
     }, [])
+
     const handleRemoveLecture = useCallback(
         (lectureId: number) => {
             removeLectureFunction({
@@ -266,21 +289,8 @@ export default function Timetable() {
     )
 
     useEffect(() => {
-        setHover(null)
+        setHover([])
         setSelected(null)
-    }, [mobileSearchOpen])
-
-    useEffect(() => {
-        function matchWidthHeight() {
-            if (contentsAreaRef.current) {
-                setContentsAreaWidth(contentsAreaRef.current.offsetWidth)
-                setContentsAreaHeight(contentsAreaRef.current.offsetHeight)
-            }
-        }
-
-        matchWidthHeight()
-        window.addEventListener("resize", matchWidthHeight)
-        return () => window.removeEventListener("resize", matchWidthHeight)
     }, [mobileSearchOpen])
 
     useEffect(() => {
@@ -288,8 +298,8 @@ export default function Timetable() {
             if (
                 searchAreaRef.current &&
                 !searchAreaRef.current.contains(event.target as Node) &&
-                contentsAreaRef.current &&
-                !contentsAreaRef.current.contains(event.target as Node) &&
+                timetableAreaRef.current &&
+                !timetableAreaRef.current.contains(event.target as Node) &&
                 outerRef.current &&
                 outerRef.current.contains(event.target as Node)
             ) {
@@ -302,7 +312,7 @@ export default function Timetable() {
 
     useEffect(() => {
         setSelected(null)
-        setHover(null)
+        setHover([])
         if (year !== -1) {
             setMyTimetableParams({ year: year, semester: semesterEnum })
         }
@@ -310,8 +320,10 @@ export default function Timetable() {
     }, [year, semesterEnum])
 
     useEffect(() => {
-        setSelected(null)
-        setHover(null)
+        if (!isTablet) {
+            setSelected(null)
+            setHover([])
+        }
     }, [currentTimetableId])
 
     useEffect(() => {
@@ -333,6 +345,7 @@ export default function Timetable() {
                 <>
                     {/* 상단: TimetableArea */}
                     <ContentsAreaWrapper
+                        ref={timetableAreaRef}
                         direction="column"
                         gap={0}
                         align="stretch"
@@ -361,18 +374,18 @@ export default function Timetable() {
                             <TimetableArea
                                 direction="column"
                                 gap={0}
-                                ref={contentsAreaRef}
+                                align="stretch"
+                                flex="1 1 auto"
                             >
                                 <CustomTimeTableGrid
-                                    cellWidth={(contentsAreaWidth - 60) / 5}
-                                    fullHeight={contentsAreaHeight - 60}
-                                    lectureSummary={currentTimetableLectures}
+                                    lectures={currentTimetableLectures}
                                     setTimeFilter={setTimeFilter}
-                                    hover={hover}
-                                    setHover={setHover}
-                                    selected={selected}
-                                    setSelected={setSelected}
-                                    removeFunction={
+                                    needLectureDeletable={currentTimetableId !== null}
+                                    hoveredLectures={hover}
+                                    setHoveredLectures={setHover}
+                                    selectedLecture={selected}
+                                    setSelectedLecture={setSelected}
+                                    deleteLecture={
                                         status === "success"
                                             ? currentTimetableId === null
                                                 ? undefined
@@ -473,7 +486,7 @@ export default function Timetable() {
                                 year={year}
                                 semester={semesterEnum}
                                 onMobileModalClose={() => {
-                                    setHover(null)
+                                    setHover([])
                                     setSelected(null)
                                 }}
                                 currentTimetableId={currentTimetableId}
@@ -532,8 +545,14 @@ export default function Timetable() {
                             />
                         </LectureInfoArea>
                     </SearchAreaWrapper>
-                    <FlexWrapper direction="row" gap={0}>
-                        <ContentsAreaWrapper direction="column" gap={0}>
+                    <FlexWrapper direction="column" gap={0}>
+                        <ContentsAreaWrapper
+                            ref={timetableAreaRef}
+                            direction="column"
+                            gap={0}
+                            style={{ overflowX: "hidden" }}
+                            flex="1 1 auto"
+                        >
                             {/* 시간표 탭 */}
                             <TabButtonRow
                                 timeTableLectures={currentTimetableLectures}
@@ -552,25 +571,17 @@ export default function Timetable() {
                                 justify="flex-start"
                                 flex="1 0 0"
                             >
-                                <TimetableArea
-                                    direction="column"
-                                    gap={0}
-                                    ref={contentsAreaRef}
-                                >
+                                <TimetableArea direction="column" gap={0}>
                                     <CustomTimeTableGrid
-                                        cellWidth={100}
-                                        fullHeight={
-                                            isLaptop
-                                                ? contentsAreaHeight - 60
-                                                : contentsAreaHeight - 36
-                                        }
-                                        lectureSummary={currentTimetableLectures}
+                                        cellWidth="100px"
+                                        lectures={currentTimetableLectures}
                                         setTimeFilter={setTimeFilter}
-                                        hover={hover}
-                                        setHover={setHover}
-                                        selected={selected}
-                                        setSelected={setSelected}
-                                        removeFunction={
+                                        needLectureDeletable={currentTimetableId !== null}
+                                        hoveredLectures={hover}
+                                        setHoveredLectures={setHover}
+                                        selectedLecture={selected}
+                                        setSelectedLecture={setSelected}
+                                        deleteLecture={
                                             status === "success"
                                                 ? currentTimetableId === null
                                                     ? undefined
