@@ -1,9 +1,8 @@
-import { type CSSProperties, memo, useEffect } from "react"
+import { type CSSProperties, memo } from "react"
 
 import { type Theme, ThemeProvider, css } from "@emotion/react"
 import styled from "@emotion/styled"
-import { Close, Visibility } from "@mui/icons-material"
-import { vi } from "vitest"
+import { Close } from "@mui/icons-material"
 
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
@@ -144,10 +143,6 @@ function LectureTile({ lecture, classIdx, deleteLecture }: LectureTileProps) {
     const cls = lecture.classes[classIdx]
 
     if (cls == null) return null
-
-    useEffect(() => {
-        console.log(deleteLecture)
-    }, [deleteLecture])
 
     return (
         <LectureTileWrapper
