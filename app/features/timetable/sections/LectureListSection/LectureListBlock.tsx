@@ -79,7 +79,7 @@ const LectureItemWrapper = styled.div<{ lectureId: number }>`
 const Divider = styled.div`
     width: 95%;
     height: 1px;
-    background-color: ${({ theme }) => theme.colors.Line.dark};
+    background-color: ${({ theme }) => theme.colors.Line.block};
     align-self: center;
 `
 

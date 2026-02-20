@@ -38,7 +38,8 @@ const MapContainer = styled.div`
 const MapBackground = styled.img`
     object-fit: cover;
     object-position: center;
-    opacity: 0.8;
+    // dark mode filter
+    filter: invert(100%) sepia(100%) grayscale(100%) brightness(0.7);
 `
 
 const MapPinWrapper = styled.div<{ left: number; top: number; highlighted?: boolean }>`
