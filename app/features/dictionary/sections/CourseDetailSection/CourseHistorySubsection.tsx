@@ -24,7 +24,6 @@ const CourseHistory = styled(motion.div)`
     display: flex;
     flex-direction: column;
     gap: 10px;
-    touch-action: pan-x;
     overscroll-behavior: auto;
 
     &::-webkit-scrollbar {
@@ -100,35 +99,6 @@ const CourseHistorySubsection: React.FC<CourseHistorySubsectionProps> = ({
 
         setIsHistoryFolded(shouldFold)
     }, [isMobile, courseDetail])
-
-    useEffect(() => {
-        const el = historyScroll.current
-        if (!el) return
-
-        const onWheelNative = (e: WheelEvent) => {
-            const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY
-            if (delta === 0) return
-
-            const maxLeft = el.scrollWidth - el.clientWidth
-            if (maxLeft <= 0) return
-
-            const nextLeft = el.scrollLeft + delta
-
-            const canMoveHorizontally =
-                (delta > 0 && el.scrollLeft < maxLeft) || (delta < 0 && el.scrollLeft > 0)
-
-            if (!canMoveHorizontally) return
-
-            e.preventDefault()
-            e.stopPropagation()
-            el.scrollLeft = Math.min(maxLeft, Math.max(0, nextLeft))
-        }
-
-        el.addEventListener("wheel", onWheelNative, { passive: false, capture: true })
-        return () => {
-            el.removeEventListener("wheel", onWheelNative, { capture: true })
-        }
-    }, [])
 
     return (
         <>

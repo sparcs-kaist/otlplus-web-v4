@@ -18,6 +18,7 @@ import { trackEvent } from "@/libs/mixpanel"
 import type { getAPIResponseType } from "@/utils/api/getAPIType"
 import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
 import checkEmpty from "@/utils/search/checkEmpty"
+import useIsDevice from "@/utils/useIsDevice"
 
 const CourseListSectionInner = styled(FlexWrapper)`
     width: 100%;
@@ -39,12 +40,13 @@ const NoResultText = styled(Typography)`
     justify-content: center;
 `
 
-const HeaderText = styled(Typography)`
+const HeaderText = styled(Typography)<{ direction: "row" | "column" }>`
     display: flex;
-    align-items: center;
+    flex-direction: ${({ direction }) => direction};
     gap: 1px;
     font-size: ${({ theme }) => theme.fonts.Normal.fontSize}px;
     flex-wrap: wrap;
+    white-space: nowrap;
 `
 
 const SortWrapper = styled(FlexWrapper)`
@@ -79,6 +81,7 @@ function CourseListSection({
 }: CourseListSectionProps) {
     const { t } = useTranslation()
     const theme = useTheme()
+    const isMobile = useIsDevice("mobile")
     const [searchParams] = useSearchParams()
 
     const [sortOption, setSortOption] = useState<number>(0)
@@ -189,28 +192,42 @@ function CourseListSection({
                         justify={"space-between"}
                         align={"center"}
                     >
-                        <HeaderText color={"Text.default"}>
-                            <Trans
-                                i18nKey="dictionary.courseCountInfo"
-                                count={data?.totalCount}
-                                components={{
-                                    bold: (
-                                        <Typography
-                                            type={"NormalBold"}
-                                            children={undefined}
-                                        />
-                                    ),
-                                    icon: (
-                                        <Icon
-                                            size={12}
-                                            color={theme.colors.Highlight.default}
-                                        >
-                                            <CircleIcon />
-                                        </Icon>
-                                    ),
-                                    space: <>&nbsp;</>,
-                                }}
-                            />
+                        <HeaderText
+                            color={"Text.default"}
+                            direction={isMobile ? "column" : "row"}
+                        >
+                            <FlexWrapper direction="row" gap={4} align="center">
+                                <Trans
+                                    i18nKey="dictionary.courseCountInfo1"
+                                    count={data?.totalCount}
+                                    components={{
+                                        bold: (
+                                            <Typography
+                                                type={"NormalBold"}
+                                                children={undefined}
+                                            />
+                                        ),
+                                        space: <>&nbsp;</>,
+                                    }}
+                                />
+                            </FlexWrapper>
+                            <FlexWrapper direction="row" gap={1} align="center">
+                                <Trans
+                                    i18nKey="dictionary.courseCountInfo2"
+                                    count={data?.totalCount}
+                                    components={{
+                                        icon: (
+                                            <Icon
+                                                size={12}
+                                                color={theme.colors.Highlight.default}
+                                            >
+                                                <CircleIcon />
+                                            </Icon>
+                                        ),
+                                        space: <>&nbsp;</>,
+                                    }}
+                                />
+                            </FlexWrapper>
                         </HeaderText>
                         <SortWrapper direction="row" gap={8} align={"center"}>
                             <Typography type={"NormalBold"} color={"Text.default"}>

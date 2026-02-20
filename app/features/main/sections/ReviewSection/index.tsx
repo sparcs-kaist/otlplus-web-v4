@@ -1,4 +1,4 @@
-import { type Dispatch, Fragment, type SetStateAction, use, useState } from "react"
+import { type Dispatch, Fragment, type SetStateAction, useState } from "react"
 
 import styled from "@emotion/styled"
 import { useQueryClient } from "@tanstack/react-query"
@@ -18,7 +18,7 @@ import Widget from "../../../../common/primitives/Widget"
 
 const ReviewBoxWrapper = styled(FlexWrapper)`
     height: 173px;
-    border-radius: 4px;
+    border-radius: 6px;
     background-color: ${({ theme }) => theme.colors.Background.Block.default};
 `
 

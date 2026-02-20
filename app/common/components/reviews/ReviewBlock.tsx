@@ -102,7 +102,7 @@ function ReviewBlock({
         return []
     }, [userReviewsQuery.data])
 
-    if (!review) return
+    if (!review) return null
 
     const likeReview = (e: React.MouseEvent) => {
         e.stopPropagation()
@@ -122,9 +122,7 @@ function ReviewBlock({
             clickable={linkToDictionary}
             onClick={() => {
                 if (linkToDictionary) {
-                    navigator(
-                        `/dictionary?courseId=${review.courseId}&professorId=${review.professors[0]?.id}`,
-                    )
+                    navigator(`/dictionary?courseId=${review.courseId}`)
                 }
             }}
         >

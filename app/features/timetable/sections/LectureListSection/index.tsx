@@ -1,20 +1,15 @@
 import React, { useCallback, useEffect, useRef, useState } from "react"
 
-import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
-import FavoriteIcon from "@mui/icons-material/Favorite"
-import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder"
 import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { useInView } from "react-intersection-observer"
 
 import type { GETLecturesResponse } from "@/api/lectures"
 import LoadingCircle from "@/common/components/LoadingCircle"
-import ScrollableDropdown from "@/common/components/ScrollableDropdown"
-import SearchArea, { type SearchParamsType } from "@/common/components/search/SearchArea"
+import { type SearchParamsType } from "@/common/components/search/SearchArea"
 import type { SemesterEnum } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
-import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimeBlock } from "@/common/schemas/timeblock"
@@ -29,17 +24,12 @@ import useIsDevice from "@/utils/useIsDevice"
 import useUserStore from "@/utils/zustand/useUserStore"
 
 import LectureListBlock from "./LectureListBlock"
+import LectureSearchSubSection from "./LectureSearchSubSection"
 
 const LectureListSectionInner = styled(FlexWrapper)`
     width: 100%;
     height: 100%;
     overflow: hidden;
-`
-
-const SearchSubSection = styled(FlexWrapper)`
-    border-radius: 6px;
-    border: 1px solid ${({ theme }) => theme.colors.Line.divider};
-    max-height: 100%;
 `
 
 const NoResultText = styled(Typography)`
@@ -50,14 +40,11 @@ const NoResultText = styled(Typography)`
     justify-content: center;
 `
 
-const DropDownWrapper = styled(FlexWrapper)`
-    height: 36px;
-`
-
 const CourseFadeOverlayWrapper = styled(FlexWrapper)`
     height: fit-content;
     overflow-y: auto;
     position: relative;
+    flex-grow: 1;
 
     scrollbar-width: none;
 
@@ -103,6 +90,7 @@ const CourseResultWrapper = styled(FlexWrapper)`
 `
 
 const CourseBlockWrapper = styled(FlexWrapper)`
+    width: 100%;
     height: 100%;
     flex-grow: 1;
 
@@ -123,30 +111,50 @@ const MobileLectureSelector = styled.div`
     transform: translateY(-50%);
 `
 
-const Chip = styled.div<{ isSelected: boolean }>`
-    display: flex;
-    align-items: center;
-    padding: 8px 12px;
-    flex-direction: row;
-    gap: 8px;
-    border-radius: 6px;
-    background-color: ${({ isSelected, theme }) =>
-        isSelected
-            ? theme.colors.Background.Button.highlightDark
-            : theme.colors.Background.Button.highlight};
-    cursor: pointer;
-    &:hover {
-        background-color: ${({ theme }) => theme.colors.Background.Button.highlightDark};
+const mergeCoursesById = (response?: GETLecturesResponse) => {
+    if (!response) return response
+
+    const courseMap = new Map<number, GETLecturesResponse["courses"][number]>()
+
+    response.courses.forEach((course) => {
+        const existing = courseMap.get(course.id)
+
+        if (!existing) {
+            courseMap.set(course.id, {
+                ...course,
+                lectures: [...course.lectures],
+            })
+            return
+        }
+
+        const lectureIds = new Set(existing.lectures.map((lecture) => lecture.id))
+        const mergedLectures = [...existing.lectures]
+
+        course.lectures.forEach((lecture) => {
+            if (lectureIds.has(lecture.id)) return
+            lectureIds.add(lecture.id)
+            mergedLectures.push(lecture)
+        })
+
+        courseMap.set(course.id, {
+            ...existing,
+            lectures: mergedLectures,
+        })
+    })
+
+    return {
+        ...response,
+        courses: Array.from(courseMap.values()),
     }
-`
+}
 
 interface LectureListSectionProps {
     timetableLectures: Lecture[]
     year: number
     semester: SemesterEnum
     setNonLoginTimetable: React.Dispatch<React.SetStateAction<Lecture[]>>
-    hoveredLecture: Lecture[] | null
-    setHoveredLecture: React.Dispatch<React.SetStateAction<Lecture[] | null>>
+    hoveredLecture: Lecture[]
+    setHoveredLecture: React.Dispatch<React.SetStateAction<Lecture[]>>
     selectedLecture: Lecture | null
     setSelectedLecture: React.Dispatch<React.SetStateAction<Lecture | null>>
     timeFilter: TimeBlock | null
@@ -170,68 +178,12 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     currentTimetableId,
 }) => {
     const { t } = useTranslation()
-    const theme = useTheme()
     const { user, status } = useUserStore()
     const queryClient = useQueryClient()
 
     const { ref, inView } = useInView({ threshold: 0 })
 
-    const [enabled, setEnabled] = useState(false)
-
     const isTablet = useIsDevice("tablet")
-
-    const mergeCoursesById = useCallback((response?: GETLecturesResponse) => {
-        if (!response) return response
-
-        const courseMap = new Map<number, GETLecturesResponse["courses"][number]>()
-
-        response.courses.forEach((course) => {
-            const existing = courseMap.get(course.id)
-
-            if (!existing) {
-                courseMap.set(course.id, {
-                    ...course,
-                    lectures: [...course.lectures],
-                })
-                return
-            }
-
-            const lectureIds = new Set(existing.lectures.map((lecture) => lecture.id))
-            const mergedLectures = [...existing.lectures]
-
-            course.lectures.forEach((lecture) => {
-                if (lectureIds.has(lecture.id)) return
-                lectureIds.add(lecture.id)
-                mergedLectures.push(lecture)
-            })
-
-            courseMap.set(course.id, {
-                ...existing,
-                lectures: mergedLectures,
-            })
-        })
-
-        return {
-            ...response,
-            courses: Array.from(courseMap.values()),
-        }
-    }, [])
-
-    const { query, setParams, data } = useInfiniteAPI("GET", "/lectures", {
-        infinites: ["courses"],
-        limit: SEARCH_LIMIT,
-        enabled: enabled,
-        gcTime: 0,
-        select: mergeCoursesById,
-        iterate: (data) => {
-            let n = 0
-            data.courses.forEach((course) => {
-                n += course.lectures.length
-            })
-            if (n < SEARCH_LIMIT) return 0
-            return n
-        },
-    })
 
     const { mutation: addTimetable, requestFunction: addTimetableFunction } = useAPI(
         "PATCH",
@@ -245,25 +197,9 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
         },
     )
 
-    const [searchResult, setSearchResult] = useState<
-        getAPIResponseType<"GET", "/lectures">
-    >({ courses: [] })
-    const [isInWish, setIsInWish] = useState<number[]>([])
-
-    const [sortOption, setSortOption] = useState<number>(0)
     const wrapperRef = useRef<HTMLDivElement>(null)
     const outerRef = useRef<HTMLDivElement>(null)
     const courseResultRef = useRef<HTMLDivElement>(null)
-
-    const [isWishlist, setIsWishlist] = useState<boolean>(false)
-
-    const { query: wishListQuery, setParams: setWishListQuery } = useAPI(
-        "GET",
-        `/users/${user?.id}/wishlist`,
-        {
-            enabled: status === "success" && year != -1,
-        },
-    )
 
     const { requestFunction: patchUserWishlistFunction } = useAPI(
         "PATCH",
@@ -277,34 +213,64 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
         },
     )
 
-    const handleSearch = (param: SearchParamsType) => {
-        if (checkEmpty(param)) {
-            alert(t("common.search.empty"))
-            return
-        }
-        setIsWishlist(false)
-        const fullParam = {
-            year: year,
-            semester: semester,
-            ...param,
-            order: (["code", "popular", "studentCount"] as const)[sortOption] ?? "code",
-            offset: 0,
-            limit: SEARCH_LIMIT,
-            day: param.time?.day ?? undefined,
-            begin: param.time?.begin ?? undefined,
-            end: param.time?.end ?? undefined,
-        }
-        setParams(fullParam)
-        setEnabled(true)
-        trackEvent("Search Lectures", {
-            year,
-            semester,
-            keyword: param.keyword ?? "",
-            department: param.department ?? "",
-            type: param.type ?? "",
-            level: param.level ?? "",
-        })
-    }
+    const [enabled, setEnabled] = useState(false)
+
+    const [searchResult, setSearchResult] = useState<
+        getAPIResponseType<"GET", "/lectures">
+    >({ courses: [] })
+    const [isWishlist, setIsWishlist] = useState<boolean>(false)
+    const [wishlist, setWishlist] = useState<number[]>([])
+
+    const [sortOption, setSortOption] = useState<number>(0)
+
+    const { query, setParams, data } = useInfiniteAPI("GET", "/lectures", {
+        infinites: ["courses"],
+        limit: SEARCH_LIMIT,
+        gcTime: 0,
+        select: mergeCoursesById,
+        enabled: enabled,
+        iterate: (data) => {
+            let n = 0
+            data.courses.forEach((course) => {
+                n += course.lectures.length
+            })
+            if (n < SEARCH_LIMIT) return 0
+            return n
+        },
+    })
+
+    const handleSearch = useCallback(
+        (param: SearchParamsType) => {
+            if (checkEmpty(param)) {
+                alert(t("common.search.empty"))
+                return
+            }
+            setIsWishlist(false)
+            const fullParam = {
+                year: year,
+                semester: semester,
+                ...param,
+                order:
+                    (["code", "popular", "studentCount"] as const)[sortOption] ?? "code",
+                offset: 0,
+                limit: SEARCH_LIMIT,
+                day: param.time?.day ?? undefined,
+                begin: param.time?.begin ?? undefined,
+                end: param.time?.end ?? undefined,
+            }
+            setParams(fullParam)
+            setEnabled(true)
+            trackEvent("Search Lectures", {
+                year,
+                semester,
+                keyword: param.keyword ?? "",
+                department: param.department ?? "",
+                type: param.type ?? "",
+                level: param.level ?? "",
+            })
+        },
+        [year, semester, sortOption],
+    )
 
     useEffect(() => {
         setIsWishlist(false)
@@ -313,52 +279,13 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
             order: (["code", "popular", "studentCount"] as const)[sortOption] ?? "code",
             offset: 0,
         }))
-        setEnabled(true)
     }, [sortOption])
-
-    useEffect(() => {
-        setSearchResult({ courses: [] })
-        if (year === -1) return
-        setWishListQuery({ year: year, semester: semester })
-    }, [year, semester])
 
     useEffect(() => {
         if (inView && query.hasNextPage && !query.isFetchingNextPage) {
             query.fetchNextPage()
         }
     }, [inView])
-
-    useEffect(() => {
-        if (data !== undefined) {
-            setSearchResult(data)
-            setIsWishlist(false)
-        }
-        if (!query.hasNextPage) {
-            setEnabled(false)
-        }
-    }, [data])
-
-    useEffect(() => {
-        if (wishListQuery.data === undefined) return
-
-        if (isWishlist) {
-            setSearchResult(wishListQuery.data)
-        } else setSearchResult(data ?? { courses: [] })
-    }, [isWishlist])
-
-    useEffect(() => {
-        if (wishListQuery.data === undefined) return
-
-        setIsInWish(
-            wishListQuery.data.courses
-                .flatMap((course) => course.lectures)
-                .map((lecture) => lecture.id),
-        )
-
-        if (isWishlist) {
-            setSearchResult(wishListQuery.data)
-        }
-    }, [wishListQuery.data])
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -382,7 +309,11 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
 
     // 태블릿에서 스크롤 시 MobileLectureSelector 위치의 lecture를 hoveredLecture로 설정
     const handleMobileScroll = useCallback(() => {
-        if (!isTablet || !courseResultRef.current) return
+        if (!isTablet) return
+        if (!courseResultRef.current) {
+            setHoveredLecture([])
+            return
+        }
 
         const container = courseResultRef.current
         const containerRect = container.getBoundingClientRect()
@@ -403,6 +334,8 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
             const lecture = allLectures.find((lec) => lec.id === lectureId)
             if (lecture) {
                 setHoveredLecture([lecture])
+            } else {
+                setHoveredLecture([])
             }
         }
     }, [isTablet, allLectures, setHoveredLecture, setSelectedLecture])
@@ -420,7 +353,8 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
 
     // 검색 결과가 로드되면 초기 감지 실행
     useEffect(() => {
-        if (!isTablet || searchResult.courses.length === 0) return
+        if (!isTablet || query.isFetching) return
+        if (selectedLecture) return
 
         // DOM이 렌더링된 후 실행되도록 requestAnimationFrame 두 번 사용
         let rafId2: number
@@ -435,7 +369,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
             cancelAnimationFrame(rafId1)
             cancelAnimationFrame(rafId2)
         }
-    }, [isTablet, searchResult.courses, handleMobileScroll])
+    }, [query.isFetching, isTablet, handleMobileScroll, selectedLecture])
 
     const handleLikeClick = async (wish: boolean, lectureId: number) => {
         if (status === "idle") return
@@ -448,9 +382,9 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
 
         // Optimistic update
         if (wish) {
-            setIsInWish((prev) => prev.filter((id) => id !== lectureId))
+            setWishlist((prev) => prev.filter((id) => id !== lectureId))
         } else {
-            setIsInWish((prev) => [...prev, lectureId])
+            setWishlist((prev) => [...prev, lectureId])
         }
 
         try {
@@ -462,9 +396,9 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
             console.error("Failed to update wishlist:", error)
             // Revert optimistic update on error
             if (wish) {
-                setIsInWish((prev) => [...prev, lectureId])
+                setWishlist((prev) => [...prev, lectureId])
             } else {
-                setIsInWish((prev) => prev.filter((id) => id !== lectureId))
+                setWishlist((prev) => prev.filter((id) => id !== lectureId))
             }
         }
     }
@@ -511,6 +445,44 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
         }
     }
 
+    const handleSetHoveredLecture = useCallback(
+        (lecture: Lecture) => {
+            if (isTablet) return
+            setHoveredLecture([lecture])
+        },
+        [isTablet, setHoveredLecture],
+    )
+
+    const handleClearHoveredLecture = useCallback(() => {
+        if (isTablet) return
+        setHoveredLecture([])
+    }, [isTablet, setHoveredLecture])
+
+    const handleSetSelectedLecture = useCallback(
+        (lecture: Lecture) => {
+            if (selectedLecture?.id === lecture.id) {
+                setSelectedLecture(null)
+                return
+            }
+            setSelectedLecture(lecture)
+        },
+        [setSelectedLecture, selectedLecture],
+    )
+
+    useEffect(() => {
+        courseResultRef.current?.setAttribute(
+            "data-hovered-lectures",
+            hoveredLecture.map((lec) => lec.id).join(" "),
+        )
+    }, [hoveredLecture, searchResult])
+
+    useEffect(() => {
+        courseResultRef.current?.setAttribute(
+            "data-selected-lecture",
+            selectedLecture ? selectedLecture.id.toString() : "",
+        )
+    }, [selectedLecture, searchResult])
+
     return (
         <LectureListSectionInner
             direction="column"
@@ -519,55 +491,28 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
             gap={8}
             ref={outerRef}
         >
-            <SearchSubSection direction="row" justify="stretch" gap={0}>
-                <SearchArea
-                    options={["type", "department", "level", "term", "time"]}
-                    timeFilter={timeFilter}
-                    setTimeFilter={setTimeFilter}
-                    onSearch={handleSearch}
-                />
-            </SearchSubSection>
-            <FlexWrapper
-                direction="row"
-                gap={0}
-                justify={status === "success" ? "space-between" : "flex-end"}
-                align={"center"}
-            >
-                {status === "success" && (
-                    <Chip
-                        isSelected={isWishlist}
-                        onClick={() => {
-                            setIsWishlist((prev) => !prev)
-                        }}
-                        style={{ paddingBlock: 10 }}
-                    >
-                        <Icon size={15} color={theme.colors.Highlight.default}>
-                            {isWishlist ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-                        </Icon>
-                        <Typography type={"Normal"} color={"Highlight.default"}>
-                            {t("common.wishlist")}
-                        </Typography>
-                    </Chip>
-                )}
-                {searchResult.courses.length !== 0 && (
-                    <DropDownWrapper direction="row" gap={0}>
-                        <ScrollableDropdown
-                            options={[
-                                t("dictionary.sortOptions.code"),
-                                t("dictionary.sortOptions.popularity"),
-                                t("dictionary.sortOptions.studentCount"),
-                            ]}
-                            setSelectedOption={setSortOption}
-                            selectedOption={sortOption}
-                        />
-                    </DropDownWrapper>
-                )}
-            </FlexWrapper>
+            <LectureSearchSubSection
+                year={year}
+                semester={semester}
+                timeFilter={timeFilter}
+                setTimeFilter={setTimeFilter}
+                sortOption={sortOption}
+                setSortOption={setSortOption}
+                data={data}
+                isWishlist={isWishlist}
+                setIsWishlist={setIsWishlist}
+                setWishlist={setWishlist}
+                setSearchResult={setSearchResult}
+                t={t}
+                handleSearch={handleSearch}
+            />
             {searchResult.courses.length !== 0 ? (
                 <CourseFadeOverlayWrapper
                     direction="column"
                     gap={0}
                     ref={courseResultRef}
+                    data-hovered-lectures=""
+                    data-selected-lecture=""
                 >
                     <CourseResultWrapper direction="row" gap={0}>
                         <CourseBlockWrapper direction="column" gap={12} ref={wrapperRef}>
@@ -575,15 +520,15 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                                 <LectureListBlock
                                     key={course.id}
                                     course={course}
-                                    selectedLecture={selectedLecture}
                                     hoveredLecture={hoveredLecture}
-                                    isInWish={isInWish}
-                                    isWishlist={isWishlist}
+                                    selectedLecture={selectedLecture}
+                                    wishlist={wishlist}
                                     currentTimetableId={currentTimetableId}
                                     timetableLectures={timetableLectures}
                                     isAddTimetablePending={addTimetable.isPending}
-                                    setHoveredLecture={setHoveredLecture}
-                                    setSelectedLecture={setSelectedLecture}
+                                    handleSetHoveredLecture={handleSetHoveredLecture}
+                                    handleClearHoveredLecture={handleClearHoveredLecture}
+                                    handleSetSelectedLecture={handleSetSelectedLecture}
                                     handleLikeClick={handleLikeClick}
                                     handleAddToTimetable={handleAddToTimetable}
                                     t={t}
@@ -606,4 +551,16 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     )
 }
 
-export default LectureListSection
+const LectureListSectionMemo = React.memo(LectureListSection, (prev, next) => {
+    return (
+        prev.year === next.year &&
+        prev.semester === next.semester &&
+        prev.timeFilter === next.timeFilter &&
+        prev.currentTimetableId === next.currentTimetableId &&
+        prev.hoveredLecture === next.hoveredLecture &&
+        prev.selectedLecture === next.selectedLecture &&
+        prev.timetableLectures === next.timetableLectures
+    )
+})
+
+export default LectureListSectionMemo
