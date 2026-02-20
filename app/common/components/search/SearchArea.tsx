@@ -266,5 +266,5 @@ const SearchAreaMemo = memo(SearchArea, (prev, next) => {
         prev.timeFilter === next.timeFilter &&
         prev.setTimeFilter === next.setTimeFilter
     )
-})
+}) as typeof SearchArea
 export default SearchAreaMemo

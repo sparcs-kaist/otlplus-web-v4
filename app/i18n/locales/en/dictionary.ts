@@ -1,8 +1,8 @@
 export const dictionary = {
     courseHistory: "Course History",
     notOffered: "Not offered",
-    courseCountInfo:
-        "Total<space/><bold>{{count}}</bold><space/>courses<space/>(<icon/>: offered this semester)",
+    courseCountInfo1: "Total<space/><bold>{{count}}</bold><space/>courses<space/>",
+    courseCountInfo2: "(<icon/>: Open this semester)",
     sort: "Sort",
     noResults: "No results",
     sortOptions: {

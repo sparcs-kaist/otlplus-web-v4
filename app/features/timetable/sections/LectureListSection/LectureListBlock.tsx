@@ -1,4 +1,4 @@
-import React, { memo, useCallback, useEffect } from "react"
+import React, { memo, useEffect } from "react"
 
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
@@ -11,6 +11,7 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
+import { media } from "@/styles/themes/media"
 import checkOverlap from "@/utils/timetable/checkOverlap"
 import useIsDevice from "@/utils/useIsDevice"
 import useUserStore from "@/utils/zustand/useUserStore"
@@ -33,20 +34,17 @@ const CourseItemWrapper = styled.div`
         opacity: 0.3;
     }
 
-    &: [data-is-selected= "true"] {
+    [data-is-selected="true"] {
         opacity: 1;
         transform: translateY(-2px);
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
     }
 `
 
-const CourseTitleWrapper = styled.div`
+const CourseTitleWrapper = styled(FlexWrapper)`
     width: 100%;
-    display: flex;
-    align-items: center;
     padding: 8px 12px;
-    flex-direction: row;
-    justify-content: space-between;
+    word-break: keep-all;
 `
 
 const LectureItemWrapper = styled.div<{ lectureId: number }>`
@@ -64,12 +62,21 @@ const LectureItemWrapper = styled.div<{ lectureId: number }>`
     [data-hovered-lectures~="${({ lectureId }) => lectureId}"]:not(:hover) & {
         background-color: ${({ theme }) => theme.colors.Background.Block.dark};
     }
+
+    ${media.tablet} {
+        &:hover {
+            background-color: ${({ theme }) => theme.colors.Background.Block.default};
+        }
+        [data-hovered-lectures~="${({ lectureId }) => lectureId}"] & {
+            background-color: ${({ theme }) => theme.colors.Background.Block.dark};
+        }
+    }
 `
 
 const Divider = styled.div`
     width: 95%;
     height: 1px;
-    background-color: ${({ theme }) => theme.colors.Line.dark};
+    background-color: ${({ theme }) => theme.colors.Line.block};
     align-self: center;
 `
 
@@ -122,10 +129,16 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
 
     return (
         <CourseItemWrapper ref={wrapperRef} data-is-selected="">
-            <CourseTitleWrapper>
+            <CourseTitleWrapper
+                direction="row"
+                gap={6}
+                align="center"
+                justify="space-between"
+            >
                 <FlexWrapper
                     direction="row"
                     gap={6}
+                    align="center"
                     style={{ opacity: course.completed ? 0.3 : 1 }}
                 >
                     <Typography type={"NormalBold"} color={"Text.default"}>
@@ -140,7 +153,11 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
                         {t("common.completedCourse")}
                     </Typography>
                 ) : (
-                    <Typography type={"Normal"} color={"Highlight.default"}>
+                    <Typography
+                        type={"Normal"}
+                        color={"Highlight.default"}
+                        style={{ whiteSpace: "nowrap" }}
+                    >
                         {course.type}
                     </Typography>
                 )}
@@ -148,6 +165,8 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
             <Divider />
             {course.lectures.map((lecture, idx) => {
                 const wish = wishlist.includes(lecture.id)
+                const isHovered = hoveredLecture?.some((lec) => lec.id === lecture.id)
+
                 return (
                     <React.Fragment key={lecture.id}>
                         <LectureItemWrapper
@@ -158,7 +177,7 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
                             lectureId={lecture.id}
                         >
                             <FlexWrapper direction="column" gap={0}>
-                                {isTablet && (
+                                {isTablet && isHovered && (
                                     <Typography
                                         type="Small"
                                         color="Text.placeholder"
@@ -181,7 +200,7 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
                                         {formatProfessorName(lecture.professors)}
                                     </Typography>
                                 </FlexWrapper>
-                                {isTablet && (
+                                {isTablet && isHovered && (
                                     <Typography
                                         type="Small"
                                         color="Text.placeholder"
@@ -221,10 +240,7 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
                                             <FavoriteBorderIcon />
                                         </Icon>
                                     ))}
-                                {(!isTablet ||
-                                    hoveredLecture?.some(
-                                        (lec) => lec.id === lecture.id,
-                                    )) && (
+                                {(!isTablet || isHovered) && (
                                     <span
                                         title={
                                             currentTimetableId == null &&
@@ -277,7 +293,9 @@ export default memo(LectureListBlock, (prev, next) => {
         prev.wishlist !== next.wishlist || // Assuming array ref changes if content changes, or use deep compare if necessary (usually ref change from state)
         prev.currentTimetableId !== next.currentTimetableId ||
         prev.timetableLectures !== next.timetableLectures ||
-        prev.isAddTimetablePending !== next.isAddTimetablePending
+        prev.isAddTimetablePending !== next.isAddTimetablePending ||
+        prev.selectedLecture !== next.selectedLecture ||
+        prev.hoveredLecture !== next.hoveredLecture
     ) {
         return false
     }

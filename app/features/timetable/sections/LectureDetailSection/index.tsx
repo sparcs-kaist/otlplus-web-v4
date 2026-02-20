@@ -48,6 +48,7 @@ const LectureTitle = styled(FlexWrapper)`
     background-color: ${({ theme }) => theme.colors.Background.Section.default};
     z-index: 10;
     padding-bottom: 10px;
+    text-align: center;
 `
 
 const LectureActionsWrapper = styled(FlexWrapper)`
@@ -56,6 +57,8 @@ const LectureActionsWrapper = styled(FlexWrapper)`
     width: 100%;
     padding: 12px 0;
     background-color: ${({ theme }) => theme.colors.Background.Section.default};
+    margin-top: auto;
+    z-index: 20;
 `
 
 const StyledLink = styled(Link)`
@@ -301,25 +304,26 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                             gap={12}
                             justify="flex-end"
                         >
-                            {status === "success" &&
-                                !wishListIds.includes(selectedLecture.id) && (
-                                    <Button
-                                        onClick={() => {
-                                            handleLikeClick(
-                                                wishListIds.includes(selectedLecture.id),
-                                                selectedLecture.id,
-                                            )
-                                            if (onMobileModalClose) onMobileModalClose()
-                                        }}
-                                    >
-                                        <Icon size={15}>
-                                            <FavoriteIcon />
-                                        </Icon>
-                                        <Typography type="NormalBold">
-                                            {t("timetable.addToWishlist")}
-                                        </Typography>
-                                    </Button>
-                                )}
+                            {status === "success" && (
+                                <Button
+                                    onClick={() => {
+                                        handleLikeClick(
+                                            wishListIds.includes(selectedLecture.id),
+                                            selectedLecture.id,
+                                        )
+                                        if (onMobileModalClose) onMobileModalClose()
+                                    }}
+                                >
+                                    <Icon size={15}>
+                                        <FavoriteIcon />
+                                    </Icon>
+                                    <Typography type="NormalBold">
+                                        {wishListIds.includes(selectedLecture.id)
+                                            ? t("timetable.removeFromWishlist")
+                                            : t("timetable.addToWishlist")}
+                                    </Typography>
+                                </Button>
+                            )}
 
                             {(currentTimetableId || status !== "success") &&
                             !timetableLectures?.some(

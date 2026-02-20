@@ -1,4 +1,4 @@
-import { Fragment, memo, use, useCallback, useEffect, useRef, useState } from "react"
+import { Fragment, memo, useCallback, useEffect, useRef, useState } from "react"
 
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
@@ -171,10 +171,6 @@ const MemoizedLectureTiles = memo(
         )
     },
     (prevProps, nextProps) => {
-        console.log(
-            prevProps.handleLectureTileSelect === nextProps.handleLectureTileSelect,
-        )
-
         return (
             prevProps.lecture.id === nextProps.lecture.id &&
             prevProps.handleLectureTileHover === nextProps.handleLectureTileHover &&
@@ -339,18 +335,23 @@ function CustomTimeTableGrid({
     useEffect(() => {
         if (!needLectureInteraction) return
 
-        setGhostLecture?.(
-            hoveredLectures[0]
-                ? hoveredLectures.map((lec) => lec.id).includes(hoveredLectures[0]?.id)
-                    ? hoveredLectures[0]
-                    : null
-                : null,
-        )
+        if (
+            hoveredLectures[0] &&
+            !hoveredLectures.some((lec) => lec.id === selectedLecture?.id)
+        ) {
+            setGhostLecture?.(hoveredLectures[0])
+        }
 
         const hoveredIds = hoveredLectures.map((lec) => lec.id).join(" ")
 
         overlayRef.current?.setAttribute("data-hovered-lectures", hoveredIds)
-    }, [hoveredLectures, needLectureInteraction, lectures])
+    }, [
+        hoveredLectures,
+        selectedLecture,
+        setSelectedLecture,
+        needLectureInteraction,
+        lectures,
+    ])
 
     useEffect(() => {
         if (!needLectureInteraction) return

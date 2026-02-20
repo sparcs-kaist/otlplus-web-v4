@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from "react"
 
-import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
@@ -8,7 +7,7 @@ import { useInView } from "react-intersection-observer"
 
 import type { GETLecturesResponse } from "@/api/lectures"
 import LoadingCircle from "@/common/components/LoadingCircle"
-import SearchArea, { type SearchParamsType } from "@/common/components/search/SearchArea"
+import { type SearchParamsType } from "@/common/components/search/SearchArea"
 import type { SemesterEnum } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
@@ -45,6 +44,7 @@ const CourseFadeOverlayWrapper = styled(FlexWrapper)`
     height: fit-content;
     overflow-y: auto;
     position: relative;
+    flex-grow: 1;
 
     scrollbar-width: none;
 
@@ -90,6 +90,7 @@ const CourseResultWrapper = styled(FlexWrapper)`
 `
 
 const CourseBlockWrapper = styled(FlexWrapper)`
+    width: 100%;
     height: 100%;
     flex-grow: 1;
 
@@ -308,7 +309,11 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
 
     // 태블릿에서 스크롤 시 MobileLectureSelector 위치의 lecture를 hoveredLecture로 설정
     const handleMobileScroll = useCallback(() => {
-        if (!isTablet || !courseResultRef.current) return
+        if (!isTablet) return
+        if (!courseResultRef.current) {
+            setHoveredLecture([])
+            return
+        }
 
         const container = courseResultRef.current
         const containerRect = container.getBoundingClientRect()
@@ -329,6 +334,8 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
             const lecture = allLectures.find((lec) => lec.id === lectureId)
             if (lecture) {
                 setHoveredLecture([lecture])
+            } else {
+                setHoveredLecture([])
             }
         }
     }, [isTablet, allLectures, setHoveredLecture, setSelectedLecture])
@@ -346,7 +353,8 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
 
     // 검색 결과가 로드되면 초기 감지 실행
     useEffect(() => {
-        if (!isTablet || searchResult.courses.length === 0) return
+        if (!isTablet || query.isFetching) return
+        if (selectedLecture) return
 
         // DOM이 렌더링된 후 실행되도록 requestAnimationFrame 두 번 사용
         let rafId2: number
@@ -361,7 +369,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
             cancelAnimationFrame(rafId1)
             cancelAnimationFrame(rafId2)
         }
-    }, [isTablet, searchResult.courses, handleMobileScroll])
+    }, [query.isFetching, isTablet, handleMobileScroll, selectedLecture])
 
     const handleLikeClick = async (wish: boolean, lectureId: number) => {
         if (status === "idle") return

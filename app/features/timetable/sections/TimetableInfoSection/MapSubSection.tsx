@@ -3,6 +3,7 @@ import { type CSSProperties } from "react"
 import styled from "@emotion/styled"
 
 import type { Lecture } from "@/common/schemas/lecture"
+import useThemeStore from "@/utils/zustand/useThemeStore"
 
 const flattenTimeTableColors = (timeTable: any): Array<CSSProperties["color"]> => {
     return [
@@ -35,10 +36,11 @@ const MapContainer = styled.div`
     overflow: hidden;
 `
 
-const MapBackground = styled.img`
+const MapBackground = styled.img<{ isDarkMode: boolean }>`
     object-fit: cover;
     object-position: center;
-    opacity: 0.8;
+    filter: ${({ isDarkMode }) =>
+        isDarkMode ? "invert(100%) sepia(100%) grayscale(100%) brightness(0.7)" : "none"};
 `
 
 const MapPinWrapper = styled.div<{ left: number; top: number; highlighted?: boolean }>`
@@ -111,9 +113,15 @@ export default function MapSubSection({
     hover: Lecture[]
     setHover: React.Dispatch<React.SetStateAction<Lecture[]>>
 }) {
+    const { displayedTheme } = useThemeStore()
+
     return (
         <MapContainer>
-            <MapBackground src="/campus_map.svg" alt="Campus Map" />
+            <MapBackground
+                src="/campus_map.svg"
+                alt="Campus Map"
+                isDarkMode={displayedTheme === "dark"}
+            />
             {Array.from(POSITION_OF_LOCATIONS).map(([location, { left, top }]) => {
                 const lectures = timetableLectures.filter((l) =>
                     l.classes.some((c) => c.buildingCode.includes(location)),

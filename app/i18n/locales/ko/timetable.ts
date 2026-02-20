@@ -8,5 +8,6 @@ export const timetable = {
     exportICal: "캘린더로 내보내기",
     addToWishlist: "찜목록에 추가",
     addToTimetable: "시간표에 추가",
+    removeFromWishlist: "찜목록에서 제거",
     removeFromTimetable: "시간표에서 제거",
 }
