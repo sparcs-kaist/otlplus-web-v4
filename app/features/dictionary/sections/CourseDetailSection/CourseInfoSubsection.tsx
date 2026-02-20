@@ -37,9 +37,11 @@ const CourseInfoSubsection: React.FC<CourseInfoSubsectionProps> = ({ courseDetai
                 {[
                     [
                         t("common.class"),
-                        courseDetail?.department.name + ", " + courseDetail?.type,
+                        courseDetail
+                            ? courseDetail.department.name + ", " + courseDetail.type
+                            : "",
                     ],
-                    [t("common.description"), courseDetail?.summary],
+                    [t("common.description"), courseDetail?.summary || ""],
                 ].map(([label, value], index) => (
                     <FlexWrapper key={index} direction="row" gap={6}>
                         <DetailHeaderText type={"NormalBold"} color={"Text.default"}>
@@ -58,11 +60,11 @@ const CourseInfoSubsection: React.FC<CourseInfoSubsectionProps> = ({ courseDetai
                 align={"center"}
             >
                 {[
-                    [courseDetail?.classDuration, t("common.numClasses")],
-                    [courseDetail?.expDuration, t("common.numLabs")],
+                    [courseDetail?.classDuration ?? 0, t("common.numClasses")],
+                    [courseDetail?.expDuration ?? 0, t("common.numLabs")],
                     courseDetail?.creditAU
-                        ? [courseDetail?.creditAU, "AU"]
-                        : [courseDetail?.credit, t("common.credit")],
+                        ? [courseDetail.creditAU, "AU"]
+                        : [courseDetail?.credit ?? 0, t("common.credit")],
                 ].map(([value, label], index) => (
                     <NumberContent
                         key={index}

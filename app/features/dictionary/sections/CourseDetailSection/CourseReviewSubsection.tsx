@@ -100,7 +100,7 @@ const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
                     ))}
                 </FlexWrapper>
             </FlexWrapper>
-            {data === null && query.isLoading ? (
+            {(!data || data.reviews.length === 0) && query.isLoading ? (
                 <LoadingCircle />
             ) : (
                 <>

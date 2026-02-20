@@ -115,7 +115,7 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
             justify={selectedCourseId ? "start" : "center"}
         >
             {selectedCourseId ? (
-                query.isLoading ? (
+                query.isLoading || !query.data ? (
                     <LoadingCircle />
                 ) : (
                     <>
