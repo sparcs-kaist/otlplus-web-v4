@@ -9,4 +9,5 @@ export const timetable = {
     addToWishlist: "Add to Wishlist",
     addToTimetable: "Add to Timetable",
     removeFromTimetable: "Remove from Timetable",
+    competitionRate: "Competition",
 }
