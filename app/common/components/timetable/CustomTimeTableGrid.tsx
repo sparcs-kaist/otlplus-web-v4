@@ -172,7 +172,7 @@ const MemoizedLectureTiles = memo(
     },
     (prevProps, nextProps) => {
         return (
-            prevProps.lecture.id === nextProps.lecture.id &&
+            prevProps.lecture === nextProps.lecture &&
             prevProps.handleLectureTileHover === nextProps.handleLectureTileHover &&
             prevProps.handleLectureTileSelect === nextProps.handleLectureTileSelect &&
             prevProps.deleteLecture === nextProps.deleteLecture
@@ -309,7 +309,6 @@ function CustomTimeTableGrid({
 
     const handleLectureTileSelectCallback = useCallback(
         (lecture: Lecture) => {
-            console.log(lecture)
             if (!needLectureInteraction) return
 
             setSelectedLecture?.((prev) => {
@@ -335,23 +334,10 @@ function CustomTimeTableGrid({
     useEffect(() => {
         if (!needLectureInteraction) return
 
-        if (
-            hoveredLectures[0] &&
-            !hoveredLectures.some((lec) => lec.id === selectedLecture?.id)
-        ) {
-            setGhostLecture?.(hoveredLectures[0])
-        }
-
         const hoveredIds = hoveredLectures.map((lec) => lec.id).join(" ")
 
         overlayRef.current?.setAttribute("data-hovered-lectures", hoveredIds)
-    }, [
-        hoveredLectures,
-        selectedLecture,
-        setSelectedLecture,
-        needLectureInteraction,
-        lectures,
-    ])
+    }, [hoveredLectures, needLectureInteraction, lectures])
 
     useEffect(() => {
         if (!needLectureInteraction) return
@@ -361,7 +347,25 @@ function CustomTimeTableGrid({
         if (selectedId !== "")
             overlayRef.current?.setAttribute("data-selected-lecture", selectedId)
         else overlayRef.current?.setAttribute("data-selected-lecture", "")
-    }, [selectedLecture, needLectureInteraction])
+    }, [selectedLecture, needLectureInteraction, lectures])
+
+    useEffect(() => {
+        if (!needLectureInteraction) return
+
+        if (
+            hoveredLectures[0] &&
+            !lectures.some((lec) => lec.id === hoveredLectures[0]?.id)
+        ) {
+            setGhostLecture(hoveredLectures[0])
+        } else if (
+            selectedLecture &&
+            !lectures.some((lec) => lec.id === selectedLecture.id)
+        ) {
+            setGhostLecture(selectedLecture)
+        } else {
+            setGhostLecture(null)
+        }
+    }, [hoveredLectures, selectedLecture, lectures])
 
     return (
         <FlexWrapper
@@ -479,14 +483,7 @@ function CustomTimeTableGrid({
                             handleLectureTileSelect={handleLectureTileSelectCallback}
                         />
                     ))}
-                    {ghostLecture && (
-                        <MemoizedLectureTiles
-                            lecture={ghostLecture}
-                            deleteLecture={deleteLectureCallback}
-                            handleLectureTileHover={handleLectureTileHoverCallBack}
-                            handleLectureTileSelect={handleLectureTileSelectCallback}
-                        />
-                    )}
+                    {ghostLecture && <MemoizedLectureTiles lecture={ghostLecture} />}
                 </OverlayGrid>
             </FlexWrapper>
         </FlexWrapper>

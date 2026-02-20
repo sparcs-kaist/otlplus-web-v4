@@ -460,9 +460,13 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
 
     const handleSetSelectedLecture = useCallback(
         (lecture: Lecture) => {
+            if (selectedLecture?.id === lecture.id) {
+                setSelectedLecture(null)
+                return
+            }
             setSelectedLecture(lecture)
         },
-        [setSelectedLecture],
+        [setSelectedLecture, selectedLecture],
     )
 
     useEffect(() => {
