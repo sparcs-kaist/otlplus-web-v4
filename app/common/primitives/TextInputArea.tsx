@@ -9,9 +9,8 @@ import { type ThemeType } from "@/styles/themes"
 import FlexWrapper from "./FlexWrapper"
 
 // PhoneInput, RentalInput에서 사용하기 위해 export
-export interface TextInputProps extends InputHTMLAttributes<
-    HTMLInputElement | HTMLTextAreaElement
-> {
+export interface TextInputProps
+    extends InputHTMLAttributes<HTMLInputElement | HTMLTextAreaElement> {
     label?: string
     placeholder: string
     errorMessage?: string

@@ -164,7 +164,7 @@ const MemoizedLectureTiles = memo(
                         key={`${classIdx}-lecture`}
                         lecture={lecture}
                         classIdx={classIdx}
-                        deleteLecture={deleteLectureCallback}
+                        deleteLecture={deleteLecture ? deleteLectureCallback : undefined}
                     />
                 ))}
             </LectureTileWrapper>

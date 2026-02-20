@@ -273,6 +273,7 @@ export default function Timetable() {
         setSelected(null)
         setHover([])
     }, [])
+
     const handleRemoveLecture = useCallback(
         (lectureId: number) => {
             removeLectureFunction({
