@@ -113,14 +113,13 @@ function drawTile(options: DrawTileOptions) {
     const slicedProfessor = sliceTextToFitWidth(professor, width, font, fontSize)
     const slicedLocation = sliceTextToFitWidth(location, width, font, fontSize)
 
-    let textTotalHeight = 0
     const slices: string[] = [
         ...slicedTitle,
         ...slicedLocation,
         ...slicedProfessor,
     ].slice(0, 3)
 
-    textTotalHeight = slices.reduce((total, slice, _index) => {
+    const textTotalHeight = slices.reduce((total, slice, _index) => {
         if (slice === "") return total + 2
         return total + fontSize
     }, 0)
