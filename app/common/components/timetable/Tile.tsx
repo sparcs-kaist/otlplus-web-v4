@@ -1,6 +1,6 @@
 import { type CSSProperties, memo } from "react"
 
-import { type Theme, css } from "@emotion/react"
+import { type Theme, ThemeProvider, css } from "@emotion/react"
 import styled from "@emotion/styled"
 import { Close } from "@mui/icons-material"
 
@@ -9,6 +9,7 @@ import Icon from "@/common/primitives/Icon"
 import { IconButton } from "@/common/primitives/IconButton"
 import Typography from "@/common/primitives/Typography"
 import { type Lecture } from "@/common/schemas/lecture"
+import lightTheme from "@/styles/themes/light"
 
 const flattenTimeTableColors = (
     timeTable: Theme["colors"]["Tile"]["TimeTable"]["default"],
@@ -65,7 +66,7 @@ export const LectureTileHoverCss = (theme: Theme) => css`
     background: ${theme.colors.Highlight.default};
 
     .lecture-title {
-        color: ${theme.colors.Text.bright};
+        color: #ffffff;
     }
 
     .lecture-info {
@@ -178,30 +179,32 @@ function LectureTile({ lecture, classIdx, deleteLecture }: LectureTileProps) {
                         align="flex-start"
                         style={{ overflow: "hidden" }}
                     >
-                        <Typography
-                            type="Small"
-                            color="Text.dark"
-                            className="lecture-title"
-                        >
-                            {lecture.name}
-                            {lecture.subtitle}
-                        </Typography>
-                        <Typography
-                            type="Small"
-                            color="Text.lighter"
-                            className="lecture-info"
-                        >
-                            {lecture.professors
-                                .map((professor) => professor.name)
-                                .join(", ")}
-                        </Typography>
-                        <Typography
-                            type="Small"
-                            color="Text.lighter"
-                            className="lecture-info"
-                        >
-                            {`(${cls.buildingCode}) ${cls.roomName}`}
-                        </Typography>
+                        <ThemeProvider theme={lightTheme}>
+                            <Typography
+                                type="Small"
+                                color="Text.dark"
+                                className="lecture-title"
+                            >
+                                {lecture.name}
+                                {lecture.subtitle}
+                            </Typography>
+                            <Typography
+                                type="Small"
+                                color="Text.lighter"
+                                className="lecture-info"
+                            >
+                                {lecture.professors
+                                    .map((professor) => professor.name)
+                                    .join(", ")}
+                            </Typography>
+                            <Typography
+                                type="Small"
+                                color="Text.lighter"
+                                className="lecture-info"
+                            >
+                                {`(${cls.buildingCode}) ${cls.roomName}`}
+                            </Typography>
+                        </ThemeProvider>
                     </FlexWrapper>
                 </FlexWrapper>
 
