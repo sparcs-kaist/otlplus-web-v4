@@ -4,7 +4,7 @@ import {
     DndContext,
     type DragEndEvent,
     type DragStartEvent,
-    PointerSensor,
+    MouseSensor,
     TouchSensor,
     closestCenter,
     useSensor,
@@ -101,7 +101,7 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
     const style = {
         transform: getTransformString(transform),
         transition,
-        touchAction: "none" as const,
+        touchAction: "manipulation" as const,
         opacity: isDragging ? 0.5 : 1,
     }
 
@@ -222,7 +222,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
     const [activeId, setActiveId] = useState<number | null>(null)
 
     const sensors = useSensors(
-        useSensor(PointerSensor, {
+        useSensor(MouseSensor, {
             activationConstraint: {
                 distance: 8, // 8px 이동해야 드래그 시작 (클릭과 구분)
             },
