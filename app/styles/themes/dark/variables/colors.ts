@@ -16,22 +16,22 @@ export const darkThemeColors: ThemeType["colors"] = {
 
     Background: {
         Block: {
-            default: "#505050",
-            dark: "#2f2f2f",
-            darker: "#1e1e1e",
+            default: "#282828",
+            dark: "#1e1e1e",
+            darker: "#141414",
             highlight: "#000000",
         },
         Page: {
-            default: "#4b4b4b",
+            default: "#151515",
         },
         Section: {
-            default: "#414141",
+            default: "#1f1f1f",
             transparent: "#1C1C1CDD",
         },
         Tab: {
             default: "#000000",
-            dark: "#3f3f3f",
-            darker: "#565656",
+            dark: "#151515",
+            darker: "#1f1f1f",
         },
         Button: {
             default: "#333333",
