@@ -48,6 +48,7 @@ const LectureTitle = styled(FlexWrapper)`
     background-color: ${({ theme }) => theme.colors.Background.Section.default};
     z-index: 10;
     padding-bottom: 10px;
+    text-align: center;
 `
 
 const LectureActionsWrapper = styled(FlexWrapper)`

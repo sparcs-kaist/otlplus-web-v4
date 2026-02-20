@@ -41,13 +41,10 @@ const CourseItemWrapper = styled.div`
     }
 `
 
-const CourseTitleWrapper = styled.div`
+const CourseTitleWrapper = styled(FlexWrapper)`
     width: 100%;
-    display: flex;
-    align-items: center;
     padding: 8px 12px;
-    flex-direction: row;
-    justify-content: space-between;
+    word-break: keep-all;
 `
 
 const LectureItemWrapper = styled.div<{ lectureId: number }>`
@@ -132,10 +129,16 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
 
     return (
         <CourseItemWrapper ref={wrapperRef} data-is-selected="">
-            <CourseTitleWrapper>
+            <CourseTitleWrapper
+                direction="row"
+                gap={6}
+                align="center"
+                justify="space-between"
+            >
                 <FlexWrapper
                     direction="row"
                     gap={6}
+                    align="center"
                     style={{ opacity: course.completed ? 0.3 : 1 }}
                 >
                     <Typography type={"NormalBold"} color={"Text.default"}>
@@ -150,7 +153,11 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
                         {t("common.completedCourse")}
                     </Typography>
                 ) : (
-                    <Typography type={"Normal"} color={"Highlight.default"}>
+                    <Typography
+                        type={"Normal"}
+                        color={"Highlight.default"}
+                        style={{ whiteSpace: "nowrap" }}
+                    >
                         {course.type}
                     </Typography>
                 )}
