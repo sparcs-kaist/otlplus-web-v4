@@ -2,6 +2,7 @@ import { CanvasRenderingContext2D, createCanvas, loadImage } from "canvas"
 import ical, { ICalAlarmType, ICalEventRepeatingFreq } from "ical-generator"
 
 import type { Lecture } from "@/common/schemas/lecture"
+import { colors } from "@/styles/themes/_base/variables/colors"
 import professorName from "@/utils/professorName"
 
 interface RoundedRectangleOptions {
@@ -112,14 +113,13 @@ function drawTile(options: DrawTileOptions) {
     const slicedProfessor = sliceTextToFitWidth(professor, width, font, fontSize)
     const slicedLocation = sliceTextToFitWidth(location, width, font, fontSize)
 
-    let textTotalHeight = 0
     const slices: string[] = [
         ...slicedTitle,
         ...slicedLocation,
         ...slicedProfessor,
     ].slice(0, 3)
 
-    textTotalHeight = slices.reduce((total, slice, _index) => {
+    const textTotalHeight = slices.reduce((total, slice, _index) => {
         if (slice === "") return total + 2
         return total + fontSize
     }, 0)
@@ -155,24 +155,9 @@ async function timeTableImage(drawTimetableData: DrawTimetableDatas) {
         tileFontSize,
     } = drawTimetableData
 
-    const TIMETABLE_CELL_COLORS = [
-        "#F2CECE",
-        "#F4B3AE",
-        "#F2BCA0",
-        "#F0D3AB",
-        "#F1E1A9",
-        "#f4f2b3",
-        "#dbf4be",
-        "#beedd7",
-        "#b7e2de",
-        "#c9eaf4",
-        "#B4D3ED",
-        "#B9C5ED",
-        "#CCC6ED",
-        "#D8C1F0",
-        "#EBCAEF",
-        "#f4badb",
-    ]
+    const TIMETABLE_CELL_COLORS = Object.values(colors.Tile.TimeTable.default).flatMap(
+        (colorGroup) => Object.values(colorGroup),
+    ) as string[]
 
     const imageTemplatePath = `Image_template_${timetableType}.png`
 
@@ -200,7 +185,9 @@ async function timeTableImage(drawTimetableData: DrawTimetableDatas) {
     })
 
     for (const lecture of lectures) {
-        const color = TIMETABLE_CELL_COLORS[lecture.courseId % 16] || "#F2CECE"
+        const color =
+            TIMETABLE_CELL_COLORS[lecture.courseId % TIMETABLE_CELL_COLORS.length] ||
+            "#F2CECE"
 
         for (const classtime of lecture.classes) {
             const { day, begin, end } = classtime

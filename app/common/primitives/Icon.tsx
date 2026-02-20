@@ -9,6 +9,7 @@ interface IconProps {
     size: number
     onClick?: (e: React.MouseEvent) => void
     color?: string
+    [key: string]: any // Allow additional properties
 }
 
 const theme = createTheme()
@@ -32,6 +33,7 @@ const Icon: React.FC<IconProps> = ({
     size,
     onClick = undefined,
     color = "inherit",
+    ...rest
 }) => {
     if (!children) {
         return (
@@ -40,6 +42,7 @@ const Icon: React.FC<IconProps> = ({
                 size={`${size}px`}
                 clickable={!!onClick}
                 color={color}
+                {...rest}
             >
                 <ThemeProvider theme={theme}>
                     <ErrorOutlineIcon style={{ fontSize: `${size}px`, color }} />
@@ -54,6 +57,7 @@ const Icon: React.FC<IconProps> = ({
             size={`${size}px`}
             clickable={!!onClick}
             color={color}
+            {...rest}
         >
             <ThemeProvider theme={theme}>{children}</ThemeProvider>
         </IconWrapper>

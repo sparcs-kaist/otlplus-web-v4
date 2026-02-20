@@ -75,8 +75,8 @@ type TypeKeys =
     | "etc"
 
 interface CreditGridSectionProps {
-    hover: Lecture[] | null
-    setHover: React.Dispatch<React.SetStateAction<Lecture[] | null>>
+    hover: Lecture[]
+    setHover: React.Dispatch<React.SetStateAction<Lecture[]>>
     timetableLectures: Lecture[]
 }
 
@@ -164,7 +164,7 @@ export default function CreditGridSubSection({
         <CreditGrid>
             <CreditRow
                 onMouseEnter={() => setHover(lecturesByType.basicRequired)}
-                onMouseLeave={() => setHover(null)}
+                onMouseLeave={() => setHover([])}
             >
                 <CreditTypeLabel>{t("common.type.basicRequiredShort")}</CreditTypeLabel>
                 <CreditNumber>{creditsByType.basicRequired}</CreditNumber>
@@ -174,7 +174,7 @@ export default function CreditGridSubSection({
             </CreditRow>
             <CreditRow
                 onMouseEnter={() => setHover(lecturesByType.basicElective)}
-                onMouseLeave={() => setHover(null)}
+                onMouseLeave={() => setHover([])}
             >
                 <CreditTypeLabel>{t("common.type.basicElectiveShort")}</CreditTypeLabel>
                 <CreditNumber>{creditsByType.basicElective}</CreditNumber>
@@ -184,7 +184,7 @@ export default function CreditGridSubSection({
             </CreditRow>
             <CreditRow
                 onMouseEnter={() => setHover(lecturesByType.majorRequired)}
-                onMouseLeave={() => setHover(null)}
+                onMouseLeave={() => setHover([])}
             >
                 <CreditTypeLabel>{t("common.type.majorRequiredShort")}</CreditTypeLabel>
                 <CreditNumber>{creditsByType.majorRequired}</CreditNumber>
@@ -194,7 +194,7 @@ export default function CreditGridSubSection({
             </CreditRow>
             <CreditRow
                 onMouseEnter={() => setHover(lecturesByType.majorElective)}
-                onMouseLeave={() => setHover(null)}
+                onMouseLeave={() => setHover([])}
             >
                 <CreditTypeLabel>{t("common.type.majorElectiveShort")}</CreditTypeLabel>
                 <CreditNumber>{creditsByType.majorElective}</CreditNumber>
@@ -204,7 +204,7 @@ export default function CreditGridSubSection({
             </CreditRow>
             <CreditRow
                 onMouseEnter={() => setHover(lecturesByType.humanitiesSocial)}
-                onMouseLeave={() => setHover(null)}
+                onMouseLeave={() => setHover([])}
             >
                 <CreditTypeLabel>
                     {t("common.type.humanitiesSocialElectiveShort")}
@@ -216,7 +216,7 @@ export default function CreditGridSubSection({
             </CreditRow>
             <CreditRow
                 onMouseEnter={() => setHover(lecturesByType.etc)}
-                onMouseLeave={() => setHover(null)}
+                onMouseLeave={() => setHover([])}
             >
                 <CreditTypeLabel>{t("common.type.etcShort")}</CreditTypeLabel>
                 <CreditNumber>{creditsByType.etc}</CreditNumber>
