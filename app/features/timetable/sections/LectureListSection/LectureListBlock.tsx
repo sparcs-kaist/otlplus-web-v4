@@ -29,12 +29,13 @@ const CourseItemWrapper = styled.div`
     box-shadow: none;
     overflow: hidden;
     flex-shrink: 0;
+    opacity: 0.2;
 
-    :not([data-selected-lecture=""]) & {
-        opacity: 0.3;
+    [data-selected-lecture=""] & {
+        opacity: 1;
     }
 
-    [data-is-selected="true"] {
+    &[data-is-selected="true"] {
         opacity: 1;
         transform: translateY(-2px);
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
