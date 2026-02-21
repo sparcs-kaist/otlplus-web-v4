@@ -89,11 +89,17 @@ const LectureTileWrapper = styled(FlexWrapper)<{
     rowStart: number
     rowEnd: number
     col: number
+    lectureId: number
 }>`
     grid-column: ${({ col }) => col};
     grid-row: ${({ rowStart, rowEnd }) => `${rowStart} / ${rowEnd}`};
     overflow: hidden;
     pointer-events: none;
+
+    [data-selected-lecture="${({ lectureId }) => lectureId}"] & {
+        transform: translateY(-2px);
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    }
 `
 
 const LectureTileInner = styled(FlexWrapper)<{
@@ -121,6 +127,14 @@ const LectureTileInner = styled(FlexWrapper)<{
         }
     }
 
+    transition: opacity 0.2s ease;
+
+    opacity: 0.5;
+
+    [data-selected-lecture=""] & {
+        opacity: 1;
+    }
+
     [data-is-dragging="true"] & {
         pointer-events: none;
     }
@@ -130,6 +144,10 @@ const LectureTileInner = styled(FlexWrapper)<{
         &,
     [data-selected-lecture="${({ lectureId }) => lectureId}"] & {
         ${({ theme }) => LectureTileHoverCss(theme)}
+    }
+
+    [data-selected-lecture="${({ lectureId }) => lectureId}"] & {
+        opacity: 1;
     }
 `
 
@@ -164,6 +182,7 @@ function LectureTile({ lecture, classIdx, deleteLecture }: LectureTileProps) {
             col={cls.day + 1}
             rowStart={cls.begin / 30 - 14}
             rowEnd={cls.end / 30 - 14}
+            lectureId={lecture.id}
         >
             <LectureTileInner
                 direction="row"
