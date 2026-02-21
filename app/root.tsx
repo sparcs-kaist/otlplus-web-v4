@@ -33,7 +33,7 @@ export const meta: Route.MetaFunction = () => [
         property: "og:description",
         content: "OTL은 카이스트 학생들을 위한 시간표 만들기 및 후기 공유 서비스입니다.",
     },
-    { property: "og:image", content: "/static/favicon-192.png" },
+    { property: "og:image", content: "https://otl.kaist.ac.kr/static/favicon-192.png" },
     { property: "og:type", content: "website" },
 ]
 
