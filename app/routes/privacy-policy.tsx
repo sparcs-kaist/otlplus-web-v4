@@ -208,21 +208,6 @@ export default function PrivacyPolicy() {
                                 </li>
                             </ul>
                         </li>
-                        <li>
-                            Functional Software, Inc. (Sentry)
-                            <ul>
-                                <li>개인정보를 제공받는 자: Functional Software, Inc.</li>
-                                <li>
-                                    제공받는 자의 개인정보 이용목적: 서비스 오류 분석,
-                                    품질 개선 및 사용자 세션 리플레이를 통한 문제 해결
-                                </li>
-                                <li>
-                                    제공하는 개인정보 항목: 사용자 고유 식별자, 기기 및
-                                    브라우저 정보, 오류 로그, 서비스 이용 기록(세션
-                                    리플레이 포함)
-                                </li>
-                            </ul>
-                        </li>
                     </ul>
 
                     <h2>4. 정보주체와 법정대리인의 권리, 의무 및 행사방법</h2>
@@ -456,7 +441,8 @@ export default function PrivacyPolicy() {
                                 </li>
                                 <li>
                                     <strong>Sentry:</strong> 오류 로그 수집 및 세션
-                                    리플레이
+                                    리플레이 (자체 서버에서 운영하며, 수집된 정보는 외부에
+                                    제공되지 않습니다.)
                                     <ul>
                                         <li>
                                             거부 방법: 브라우저 쿠키를 차단하여 제한할 수
@@ -541,8 +527,8 @@ export default function PrivacyPolicy() {
                     <h2>12. 개인정보 처리방침 변경</h2>
 
                     <p>
-                        이 개인정보 처리방침은 2026년 2월 21일에 마지막으로 수정되었으며,
-                        2026년 2월 21일부터 적용됩니다.
+                        이 개인정보 처리방침은 2026년 2월 22일에 마지막으로 수정되었으며,
+                        2026년 2월 22일부터 적용됩니다.
                     </p>
                 </MarkdownContent>
             </StyledWidget>
