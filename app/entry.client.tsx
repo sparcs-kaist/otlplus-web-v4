@@ -14,12 +14,16 @@ if (clientEnv.VITE_SENTRY_DSN && clientEnv.VITE_SENTRY_DSN.trim() !== "") {
         sendDefaultPii: true,
         integrations: [
             Sentry.browserTracingIntegration(),
+            Sentry.browserProfilingIntegration(),
             Sentry.replayIntegration({
                 maskAllText: false,
                 blockAllMedia: false,
             }),
         ],
         tracesSampleRate: clientEnv.VITE_DEV_MODE ? 1.0 : 0.1,
+        // profilesSampleRate is relative to tracesSampleRate
+        // e.g. 0.1 traces * 1.0 profiles = 10% of transactions profiled in prod
+        profilesSampleRate: 1.0,
         tracePropagationTargets: [
             "localhost",
             /^https:\/\/otl\.sparcs\.org\/api/,

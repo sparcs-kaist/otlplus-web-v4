@@ -11,7 +11,7 @@ test.describe("License Page", () => {
         await page.goto("/license")
         await page.waitForLoadState("domcontentloaded")
 
-        const title = page.getByText("Licenses")
+        const title = page.getByText("이용약관")
         await expect(title).toBeVisible()
     })
 
