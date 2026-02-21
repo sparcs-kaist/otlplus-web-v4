@@ -91,7 +91,7 @@ export function useInfiniteAPI<
     )
 
     const query = useInfiniteQuery<Res>({
-        queryKey: [path, params],
+        queryKey: [path, params, i18n.resolvedLanguage],
         queryFn: async ({ pageParam = 0 }) => {
             const offset = initialOffset + (pageParam as number) * limit
 
@@ -153,10 +153,6 @@ export function useInfiniteAPI<
 
         setFlattenData(selectRef.current(merged))
     }, [query.data])
-
-    useEffect(() => {
-        if (query.isEnabled) query.refetch()
-    }, [i18n.resolvedLanguage])
 
     return { query, setParams, data: flattenData }
 }

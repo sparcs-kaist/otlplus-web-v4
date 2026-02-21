@@ -22,6 +22,21 @@ import type { Route } from "./+types/root"
 import Providers from "./Providers"
 import "./globals.css"
 
+export const meta: Route.MetaFunction = () => [
+    { title: "OTL - Online Timetable with Lectures" },
+    {
+        name: "description",
+        content: "OTL은 카이스트 학생들을 위한 시간표 만들기 및 후기 공유 서비스입니다.",
+    },
+    { property: "og:title", content: "OTL - Online Timetable with Lectures" },
+    {
+        property: "og:description",
+        content: "OTL은 카이스트 학생들을 위한 시간표 만들기 및 후기 공유 서비스입니다.",
+    },
+    { property: "og:image", content: "https://otl.kaist.ac.kr/static/favicon-192.png" },
+    { property: "og:type", content: "website" },
+]
+
 export const links: Route.LinksFunction = () => [
     { rel: "preconnect", href: "https://fonts.googleapis.com" },
     {
@@ -33,6 +48,15 @@ export const links: Route.LinksFunction = () => [
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap",
     },
+    { rel: "manifest", href: "/static/manifest.json" },
+    { rel: "icon", href: "/favicon.ico", sizes: "any" },
+    {
+        rel: "icon",
+        href: "/static/favicon-32.png",
+        type: "image/png",
+        sizes: "32x32",
+    },
+    { rel: "apple-touch-icon", href: "/static/favicon-180.png" },
 ]
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -41,6 +65,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <head>
                 <meta charSet="utf-8" />
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
+                <meta name="theme-color" content="#F9F0F0" />
                 <link
                     rel="stylesheet"
                     as="style"

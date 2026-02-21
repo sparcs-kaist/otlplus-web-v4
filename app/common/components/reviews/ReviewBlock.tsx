@@ -122,12 +122,14 @@ function ReviewBlock({
             clickable={linkToDictionary}
             onClick={() => {
                 if (linkToDictionary) {
-                    navigator(`/dictionary?courseId=${review.courseId}`)
+                    navigator(
+                        `/dictionary?courseId=${review.courseId}&professorId=${review.professors[0]?.id ?? ""}`,
+                    )
                 }
             }}
         >
             <FlexWrapper direction="column" gap={8}>
-                <FlexWrapper direction="row" gap={6}>
+                <FlexWrapper direction="row" gap={6} style={{ wordBreak: "keep-all" }}>
                     <Typography type="NormalBold" color="Text.default">
                         {review.courseName}
                     </Typography>

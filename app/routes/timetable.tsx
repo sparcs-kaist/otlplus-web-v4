@@ -379,6 +379,7 @@ export default function Timetable() {
                             >
                                 <CustomTimeTableGrid
                                     lectures={currentTimetableLectures}
+                                    timeFilter={timeFilter}
                                     setTimeFilter={setTimeFilter}
                                     needLectureDeletable={currentTimetableId !== null}
                                     hoveredLectures={hover}
@@ -575,6 +576,7 @@ export default function Timetable() {
                                     <CustomTimeTableGrid
                                         cellWidth="100px"
                                         lectures={currentTimetableLectures}
+                                        timeFilter={timeFilter}
                                         setTimeFilter={setTimeFilter}
                                         needLectureDeletable={currentTimetableId !== null}
                                         hoveredLectures={hover}

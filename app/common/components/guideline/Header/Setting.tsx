@@ -74,8 +74,9 @@ const Setting: React.FC<SettingProps> = ({
     }
 
     const changeLanguage = () => {
-        i18n.changeLanguage(i18n.resolvedLanguage === "ko" ? "en" : "ko")
-        axiosClient.defaults.headers.common["Accept-Language"] = i18n.resolvedLanguage
+        const newLanguage = i18n.resolvedLanguage === "ko" ? "en" : "ko"
+        i18n.changeLanguage(newLanguage)
+        axiosClient.defaults.headers.common["Accept-Language"] = newLanguage
     }
 
     useEffect(() => {

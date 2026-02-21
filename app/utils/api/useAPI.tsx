@@ -83,7 +83,7 @@ export function useAPI<
                     method,
                     url: "/api/v2" + path,
                     params,
-                    headers,
+                    headers: { "Accept-Language": i18n.resolvedLanguage, ...headers },
                 })
 
                 // return responseSchema.parse(data)
@@ -111,7 +111,10 @@ export function useAPI<
                     data: ["POST", "PUT", "PATCH", "DELETE"].includes(method)
                         ? params
                         : undefined,
-                    headers: headers || {},
+                    headers: {
+                        "Accept-Language": i18n.resolvedLanguage,
+                        ...(headers || {}),
+                    },
                 })
                 return data
             },

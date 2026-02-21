@@ -1,6 +1,6 @@
 export const credits = {
     credits: "Credits",
-    license: "License",
+    license: "Terms of Service",
     privacyPolicy: "Privacy Policy",
     contact: "Contact Us",
 }

@@ -1,5 +1,6 @@
 import styled from "@emotion/styled"
 import CloudOffIcon from "@mui/icons-material/CloudOff"
+import RefreshIcon from "@mui/icons-material/Refresh"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router-dom"
 
@@ -7,6 +8,7 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import { media } from "@/styles/themes/media"
+import useIsDevice from "@/utils/useIsDevice"
 import useBackendStatusStore from "@/utils/zustand/useBackendStatusStore"
 import useUserStore from "@/utils/zustand/useUserStore"
 
@@ -39,6 +41,14 @@ const StyledLink = styled(Link)`
     &:hover {
         color: ${({ theme }) => theme.colors.Highlight.default};
     }
+`
+
+const StyledHyperLink = styled.a`
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    color: ${({ theme }) => theme.colors.Highlight.default};
 `
 
 const DisabledLink = styled.span`
@@ -81,6 +91,7 @@ const Menu: React.FC<MenuProps> = ({ setMobileSidebarOpen }) => {
     const { t } = useTranslation()
     const isBackendReachable = useBackendStatusStore((state) => state.isBackendReachable)
     const { status } = useUserStore()
+    const isMobile = useIsDevice("mobile")
 
     const isOfflineMode = !isBackendReachable && status === "success"
 
@@ -97,9 +108,32 @@ const Menu: React.FC<MenuProps> = ({ setMobileSidebarOpen }) => {
 
     return (
         <MenuWrapper direction="row" justify="space-between" align="center" gap={0}>
-            <StyledLink to="/" onClick={setMobileSidebarOpen}>
-                <StyledImg src={`${import.meta.env.BASE_URL}headerIcon.png`} alt="Logo" />
-            </StyledLink>
+            <FlexWrapper direction="row" gap={20} align="center">
+                <StyledLink to="/" onClick={setMobileSidebarOpen}>
+                    <StyledImg
+                        src={`${import.meta.env.BASE_URL}headerIcon.png`}
+                        alt="Logo"
+                    />
+                </StyledLink>
+                {!isMobile && (
+                    <StyledHyperLink href="/__switch/v3">
+                        <Typography
+                            type="Big"
+                            color="Highlight.default"
+                            style={{ lineHeight: "1px" }}
+                        >
+                            {t("common.toOTLV3")}
+                        </Typography>
+                        <Icon
+                            size={20}
+                            color="Highlight.default"
+                            style={{ transform: "rotate(180deg)" }}
+                        >
+                            <RefreshIcon />
+                        </Icon>
+                    </StyledHyperLink>
+                )}
+            </FlexWrapper>
             <LinkWrapper direction="row" gap={24} align="center">
                 {renderNavLink("/dictionary", t("header.dictionary"))}
                 {renderNavLink("/write-reviews", t("header.writeReviews"))}

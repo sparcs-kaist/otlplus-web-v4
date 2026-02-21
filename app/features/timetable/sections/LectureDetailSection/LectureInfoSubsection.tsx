@@ -16,7 +16,8 @@ const LectureInfo = styled(FlexWrapper)`
 `
 
 const NumberWrapper = styled(FlexWrapper)`
-    width: 300px;
+    width: 100%;
+    max-width: 300px;
     padding: 10px;
 `
 
@@ -101,9 +102,11 @@ const LectureInfoSubsection: React.FC<LectureInfoSubsectionProps> = ({
                     [selectedLecture.isEnglish ? "Eng" : "한", t("common.language")],
                     [selectedLecture.credit, t("common.credit")],
                     [
-                        (selectedLecture.numPeople / selectedLecture.limitPeople)
-                            .toFixed(2)
-                            .toString() + ":1",
+                        selectedLecture.limitPeople === 0
+                            ? "0.00:1"
+                            : (
+                                  selectedLecture.numPeople / selectedLecture.limitPeople
+                              ).toFixed(2) + ":1",
                         t("timetable.competitionRate"),
                     ],
                 ].map(([value, label], index) => (

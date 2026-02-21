@@ -14,12 +14,18 @@ if (clientEnv.VITE_SENTRY_DSN && clientEnv.VITE_SENTRY_DSN.trim() !== "") {
         sendDefaultPii: true,
         integrations: [
             Sentry.browserTracingIntegration(),
+            Sentry.browserProfilingIntegration(),
             Sentry.replayIntegration({
                 maskAllText: false,
                 blockAllMedia: false,
             }),
         ],
         tracesSampleRate: clientEnv.VITE_DEV_MODE ? 1.0 : 0.1,
+        // Profile every session (decision made once on SDK init)
+        profileSessionSampleRate: 1.0,
+        // "trace" mode: profiler runs automatically with active spans
+        // (default "manual" mode requires explicit start/stop calls)
+        profileLifecycle: "trace",
         tracePropagationTargets: [
             "localhost",
             /^https:\/\/otl\.sparcs\.org\/api/,
