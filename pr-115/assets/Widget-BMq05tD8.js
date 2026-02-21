@@ -1,9 +1,0 @@
-import{j as o}from"./emotion-react-jsx-runtime.browser.esm-CnJN31gJ.js";import{s as t,F as a}from"./FlexWrapper-D5QfDfeM.js";(function(){try{var d=typeof window<"u"?window:typeof global<"u"?global:typeof globalThis<"u"?globalThis:typeof self<"u"?self:{};d.SENTRY_RELEASE={id:"a24d9b17e9f3225a7703434ad3caf6454bd6d0e4"};var e=new d.Error().stack;e&&(d._sentryDebugIds=d._sentryDebugIds||{},d._sentryDebugIds[e]="9d8fb3b0-c7bf-413b-b4ac-6b3d93d1ec39",d._sentryDebugIdIdentifier="sentry-dbid-9d8fb3b0-c7bf-413b-b4ac-6b3d93d1ec39")}catch{}})();const n=t(a)`
-    width: ${d=>d.width?`${d.width}px`:"auto"};
-    background: ${({theme:d})=>d.colors.Background.Section.default};
-    border-radius: ${d=>d.borderRadius}px;
-    box-shadow:
-        0px 1px 3px rgba(0, 0, 0, 0.1),
-        0px 1px 2px rgba(0, 0, 0, 0.06);
-`;function f({width:d=void 0,borderRadius:e=16,children:r=null,...b}){return o(n,{width:d,borderRadius:e,...b,children:r})}export{f as W};
-//# sourceMappingURL=Widget-BMq05tD8.js.map
