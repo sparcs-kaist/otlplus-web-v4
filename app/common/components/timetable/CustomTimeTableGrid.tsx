@@ -2,6 +2,7 @@ import { Fragment, memo, useCallback, useEffect, useRef, useState } from "react"
 
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
+import { set } from "zod"
 
 import { WeekdayEnum } from "@/common/enum/weekdayEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
@@ -211,6 +212,7 @@ interface CustomTimeTableGridProps {
     lectures: Lecture[]
     cellWidth?: string
     needTimeFilter?: boolean
+    timeFilter?: TimeBlock | null
     setTimeFilter?: React.Dispatch<React.SetStateAction<TimeBlock | null>>
     needLectureInteraction?: boolean
     needLectureDeletable?: boolean
@@ -225,6 +227,7 @@ function CustomTimeTableGrid({
     lectures,
     cellWidth,
     needTimeFilter = true,
+    timeFilter,
     setTimeFilter,
     needLectureInteraction = true,
     needLectureDeletable = true,
@@ -290,25 +293,37 @@ function CustomTimeTableGrid({
     }, [])
 
     const handlePointerLeave = useCallback(() => {
-        overlayRef.current?.setAttribute("data-is-dragging", "false")
-        backgroundRef.current?.setAttribute("data-is-dragging", "false")
-
-        if (
-            timeRef.current &&
-            dayRef.current !== null &&
-            timeRef.current[1] - timeRef.current[0] > 1
-        )
+        if (timeRef.current && dayRef.current !== null)
             setTimeFilter?.({
                 day: dayRef.current,
                 begin: (TIME_BEGIN + timeRef.current[0] * 0.5) * 60,
                 end: (TIME_BEGIN + timeRef.current[1] * 0.5) * 60,
             })
 
+        if (timeRef.current && timeRef.current[1] - timeRef.current[0] > 1) {
+            overlayRef.current?.setAttribute("data-is-dragging", "wait")
+            backgroundRef.current?.setAttribute("data-is-dragging", "wait")
+        } else if (
+            (timeRef.current && timeRef.current[1] - timeRef.current[0] <= 1) ||
+            !timeFilter
+        ) {
+            overlayRef.current?.setAttribute("data-is-dragging", "false")
+            backgroundRef.current?.setAttribute("data-is-dragging", "false")
+            setTimeFilter?.(null)
+        }
+
         draggingRef.current = false
         timeRef.current = null
         dayRef.current = null
         anchorRef.current = null
-    }, [setTimeFilter])
+    }, [timeFilter, setTimeFilter])
+
+    useEffect(() => {
+        if (!timeFilter) {
+            overlayRef.current?.setAttribute("data-is-dragging", "false")
+            backgroundRef.current?.setAttribute("data-is-dragging", "false")
+        }
+    }, [timeFilter])
 
     const handleMouseDown = useCallback(
         (e: React.PointerEvent<HTMLDivElement>) => {
@@ -569,6 +584,7 @@ export default memo(CustomTimeTableGrid, (prevProps, nextProps) => {
     return (
         prevProps.lectures === nextProps.lectures &&
         prevProps.cellWidth === nextProps.cellWidth &&
+        prevProps.timeFilter === nextProps.timeFilter &&
         prevProps.needTimeFilter === nextProps.needTimeFilter &&
         prevProps.needLectureInteraction === nextProps.needLectureInteraction &&
         prevProps.needLectureDeletable === nextProps.needLectureDeletable &&

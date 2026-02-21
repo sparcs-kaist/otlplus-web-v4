@@ -43,6 +43,12 @@ const HoverTileWrapper = styled(FlexWrapper)`
     [data-is-dragging="wait"] & {
         display: flex;
     }
+
+    transition: opacity 0.2s ease;
+
+    [data-is-dragging="wait"] & {
+        opacity: 0.5;
+    }
 `
 
 const HoverTileInner = styled(FlexWrapper)`
