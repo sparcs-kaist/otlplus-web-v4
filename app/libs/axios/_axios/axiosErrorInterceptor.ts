@@ -16,13 +16,20 @@ function isServerError(status: number | undefined): boolean {
     return status !== undefined && status >= 500 && status < 600
 }
 
+function isAuthError(status: number | undefined): boolean {
+    return status === HttpStatusCode.Unauthorized || status === HttpStatusCode.Forbidden
+}
+
 const errorInterceptor = {
     onFulfilled(values: AxiosResponse) {
         useBackendStatusStore.getState().setBackendReachable(true)
         return values
     },
     async onRejected(error: AxiosError) {
-        if (Sentry.getClient()) {
+        const status = error.response?.status
+
+        // Don't report 401/403 to Sentry — these are expected auth errors
+        if (Sentry.getClient() && !isAuthError(status)) {
             const originalUrl = error.config?.url
             const safeUrlPath = originalUrl ? originalUrl.split("?")[0] : undefined
             const safeError = new Error(error.message || "Axios request failed")
@@ -30,8 +37,7 @@ const errorInterceptor = {
             const tags: Record<string, string> = { type: "api_error" }
             if (safeUrlPath) tags.url = safeUrlPath
             if (error.config?.method) tags.method = error.config.method
-            if (error.response?.status !== undefined)
-                tags.status = String(error.response.status)
+            if (status !== undefined) tags.status = String(status)
 
             Sentry.captureException(safeError, {
                 tags,
@@ -44,8 +50,6 @@ const errorInterceptor = {
         } else if (error.response) {
             useBackendStatusStore.getState().setBackendReachable(true)
         }
-
-        const status = error.response?.status
 
         if (isServerError(status)) {
             if (typeof window !== "undefined") {
