@@ -127,7 +127,7 @@ function ReviewBlock({
             }}
         >
             <FlexWrapper direction="column" gap={8}>
-                <FlexWrapper direction="row" gap={6}>
+                <FlexWrapper direction="row" gap={6} style={{ wordBreak: "keep-all" }}>
                     <Typography type="NormalBold" color="Text.default">
                         {review.courseName}
                     </Typography>
