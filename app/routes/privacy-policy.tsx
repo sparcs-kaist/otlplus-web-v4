@@ -435,9 +435,12 @@ export default function PrivacyPolicy() {
                                     개선
                                     <ul>
                                         <li>
-                                            거부 방법: 웹 브라우저의 'Do Not Track' 설정을
-                                            활성화하거나, 브라우저 쿠키를 차단하여 제한할
-                                            수 있습니다.
+                                            거부 방법: Mixpanel은 쿠키뿐만 아니라
+                                            localStorage 등 브라우저 저장소를 활용할 수
+                                            있으므로, 웹 브라우저의 추적 방지(또는 'Do Not
+                                            Track') 기능을 활성화하고, 브라우저 설정에서
+                                            사이트 데이터(localStorage 포함)를 차단하거나
+                                            삭제하여 제한할 수 있습니다.
                                         </li>
                                     </ul>
                                 </li>
