@@ -2,7 +2,6 @@ import { Fragment, memo, useCallback, useEffect, useRef, useState } from "react"
 
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
-import { set } from "zod"
 
 import { WeekdayEnum } from "@/common/enum/weekdayEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
@@ -78,8 +77,10 @@ const BackgroundGridBlock = styled(FlexWrapper)`
         pointer-events: auto;
         cursor: pointer;
 
-        :hover div {
-            background: rgba(229, 76, 101, 0.2);
+        @media (hover: hover) {
+            :hover div {
+                background: rgba(229, 76, 101, 0.2);
+            }
         }
     }
 
