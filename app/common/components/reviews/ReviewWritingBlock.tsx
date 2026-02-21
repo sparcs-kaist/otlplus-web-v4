@@ -44,11 +44,12 @@ const DisabledOverlay = styled(FlexWrapper)<{ blur: boolean }>`
 
 const DisabledMessage = styled(Typography)`
     position: absolute;
+    padding: 0 20px 0 0;
+    width: 100%;
     top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translateY(-50%);
+    text-align: center;
     z-index: 10;
-    white-space: nowrap;
 `
 
 export interface ReviewWritingBlockProps {

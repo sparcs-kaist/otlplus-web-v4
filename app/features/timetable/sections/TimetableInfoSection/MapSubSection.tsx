@@ -1,4 +1,4 @@
-import { type CSSProperties } from "react"
+import { type CSSProperties, useMemo } from "react"
 
 import styled from "@emotion/styled"
 
@@ -41,6 +41,10 @@ const MapBackground = styled.img<{ isDarkMode: boolean }>`
     object-position: center;
     filter: ${({ isDarkMode }) =>
         isDarkMode ? "invert(100%) sepia(100%) grayscale(100%) brightness(0.7)" : "none"};
+
+    /* Performance Optimization: Force GPU layer to prevent repaints on hover */
+    transform: translateZ(0);
+    will-change: filter;
 `
 
 const MapPinWrapper = styled.div<{ left: number; top: number; highlighted?: boolean }>`
@@ -115,13 +119,21 @@ export default function MapSubSection({
 }) {
     const { displayedTheme } = useThemeStore()
 
-    return (
-        <MapContainer>
+    const mapBackground = useMemo(
+        () => (
             <MapBackground
                 src="/campus_map.svg"
                 alt="Campus Map"
                 isDarkMode={displayedTheme === "dark"}
+                decoding="async"
             />
+        ),
+        [displayedTheme],
+    )
+
+    return (
+        <MapContainer>
+            {mapBackground}
             {Array.from(POSITION_OF_LOCATIONS).map(([location, { left, top }]) => {
                 const lectures = timetableLectures.filter((l) =>
                     l.classes.some((c) => c.buildingCode.includes(location)),

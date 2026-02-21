@@ -25,8 +25,10 @@ const CreditRow = styled.div`
     padding-left: 16px;
     color: ${({ theme }) => theme.colors.Text.default};
 
-    &:hover {
-        color: ${({ theme }) => theme.colors.Highlight.default};
+    @media (hover: hover) {
+        &:hover {
+            color: ${({ theme }) => theme.colors.Highlight.default};
+        }
     }
 
     ${media.tablet} {

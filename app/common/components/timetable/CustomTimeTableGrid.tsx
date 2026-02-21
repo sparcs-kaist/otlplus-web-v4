@@ -3,6 +3,7 @@ import { Fragment, memo, useCallback, useEffect, useRef, useState } from "react"
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
 
+import { WeekdayEnum } from "@/common/enum/weekdayEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import GridWrapper from "@/common/primitives/GridWrapper"
 import Typography from "@/common/primitives/Typography"
@@ -14,6 +15,7 @@ import {
     LECTURE_TILE_CLASSNAME,
     LectureTile,
     LectureTileHoverCss,
+    OverlapTile,
 } from "./Tile"
 
 const TIME_BEGIN = 8
@@ -75,8 +77,10 @@ const BackgroundGridBlock = styled(FlexWrapper)`
         pointer-events: auto;
         cursor: pointer;
 
-        :hover div {
-            background: rgba(229, 76, 101, 0.2);
+        @media (hover: hover) {
+            :hover div {
+                background: rgba(229, 76, 101, 0.2);
+            }
         }
     }
 
@@ -130,6 +134,7 @@ interface LectureTilesProps {
     handleLectureTileHover?: (lecture: Lecture) => void
     handleLectureTileSelect?: (lecture: Lecture) => void
     deleteLecture?: (lecture: Lecture) => void
+    isGhost?: boolean
 }
 
 const MemoizedLectureTiles = memo(
@@ -138,13 +143,13 @@ const MemoizedLectureTiles = memo(
         handleLectureTileHover,
         handleLectureTileSelect,
         deleteLecture,
+        isGhost = false,
     }: LectureTilesProps) => {
         const handleMouseEnter = useCallback(() => {
             handleLectureTileHover?.(lecture)
         }, [handleLectureTileHover, lecture])
 
         const handleMouseClick = useCallback(() => {
-            console.log(handleLectureTileSelect, lecture)
             handleLectureTileSelect?.(lecture)
         }, [handleLectureTileSelect, lecture])
 
@@ -158,6 +163,7 @@ const MemoizedLectureTiles = memo(
                 onPointerEnter={handleMouseEnter}
                 onPointerDown={handleMouseClick}
                 onTouchMove={handleMouseEnter}
+                {...(isGhost ? { "data-ghost": true } : {})}
             >
                 {lecture.classes.map((_, classIdx) => (
                     <LectureTile
@@ -180,10 +186,34 @@ const MemoizedLectureTiles = memo(
     },
 )
 
+interface OverlapTileProps {
+    overlaps: {
+        day: WeekdayEnum
+        begin: number
+        end: number
+    }[]
+}
+
+const OverlapTileWrapper = styled.div`
+    display: contents;
+    z-index: 4;
+`
+
+const MemoizedOverlapTiles = memo(({ overlaps }: OverlapTileProps) => {
+    return (
+        <OverlapTileWrapper>
+            {overlaps.map((overlap, idx) => (
+                <OverlapTile key={idx} {...overlap} />
+            ))}
+        </OverlapTileWrapper>
+    )
+})
+
 interface CustomTimeTableGridProps {
     lectures: Lecture[]
     cellWidth?: string
     needTimeFilter?: boolean
+    timeFilter?: TimeBlock | null
     setTimeFilter?: React.Dispatch<React.SetStateAction<TimeBlock | null>>
     needLectureInteraction?: boolean
     needLectureDeletable?: boolean
@@ -198,6 +228,7 @@ function CustomTimeTableGrid({
     lectures,
     cellWidth,
     needTimeFilter = true,
+    timeFilter,
     setTimeFilter,
     needLectureInteraction = true,
     needLectureDeletable = true,
@@ -219,6 +250,13 @@ function CustomTimeTableGrid({
     const dayRef = useRef<number | null>(null)
 
     const [ghostLecture, setGhostLecture] = useState<Lecture | null>(null)
+    const [overlaps, setOverlaps] = useState<
+        {
+            day: WeekdayEnum
+            begin: number
+            end: number
+        }[]
+    >([])
 
     const handlePointerDown = useCallback((x: number, y: number) => {
         const target = document.elementFromPoint(x, y)
@@ -256,9 +294,6 @@ function CustomTimeTableGrid({
     }, [])
 
     const handlePointerLeave = useCallback(() => {
-        overlayRef.current?.setAttribute("data-is-dragging", "false")
-        backgroundRef.current?.setAttribute("data-is-dragging", "false")
-
         if (timeRef.current && dayRef.current !== null)
             setTimeFilter?.({
                 day: dayRef.current,
@@ -266,11 +301,30 @@ function CustomTimeTableGrid({
                 end: (TIME_BEGIN + timeRef.current[1] * 0.5) * 60,
             })
 
+        if (timeRef.current && timeRef.current[1] - timeRef.current[0] > 1) {
+            overlayRef.current?.setAttribute("data-is-dragging", "wait")
+            backgroundRef.current?.setAttribute("data-is-dragging", "wait")
+        } else if (
+            (timeRef.current && timeRef.current[1] - timeRef.current[0] <= 1) ||
+            !timeFilter
+        ) {
+            overlayRef.current?.setAttribute("data-is-dragging", "false")
+            backgroundRef.current?.setAttribute("data-is-dragging", "false")
+            setTimeFilter?.(null)
+        }
+
         draggingRef.current = false
         timeRef.current = null
         dayRef.current = null
         anchorRef.current = null
-    }, [setTimeFilter])
+    }, [timeFilter, setTimeFilter])
+
+    useEffect(() => {
+        if (!timeFilter) {
+            overlayRef.current?.setAttribute("data-is-dragging", "false")
+            backgroundRef.current?.setAttribute("data-is-dragging", "false")
+        }
+    }, [timeFilter])
 
     const handleMouseDown = useCallback(
         (e: React.PointerEvent<HTMLDivElement>) => {
@@ -366,6 +420,40 @@ function CustomTimeTableGrid({
             setGhostLecture(null)
         }
     }, [hoveredLectures, selectedLecture, lectures])
+
+    useEffect(() => {
+        if (!needLectureInteraction) return
+
+        const intervals: typeof overlaps = []
+
+        if (ghostLecture) {
+            ghostLecture.classes.forEach((gClass) => {
+                lectures.forEach((lecture) => {
+                    lecture.classes.forEach((lClass) => {
+                        if (gClass.day === lClass.day) {
+                            const gStart = gClass.begin
+                            const gEnd = gClass.end
+                            const lStart = lClass.begin
+                            const lEnd = lClass.end
+
+                            const overlapStart = Math.max(gStart, lStart)
+                            const overlapEnd = Math.min(gEnd, lEnd)
+
+                            if (overlapStart < overlapEnd) {
+                                intervals.push({
+                                    day: gClass.day,
+                                    begin: (overlapStart / 60 - TIME_BEGIN) * 2,
+                                    end: (overlapEnd / 60 - TIME_BEGIN) * 2,
+                                })
+                            }
+                        }
+                    })
+                })
+            })
+        }
+
+        setOverlaps(ghostLecture ? intervals : [])
+    }, [ghostLecture, lectures, needLectureInteraction])
 
     return (
         <FlexWrapper
@@ -483,7 +571,10 @@ function CustomTimeTableGrid({
                             handleLectureTileSelect={handleLectureTileSelectCallback}
                         />
                     ))}
-                    {ghostLecture && <MemoizedLectureTiles lecture={ghostLecture} />}
+                    {ghostLecture && (
+                        <MemoizedLectureTiles lecture={ghostLecture} isGhost={true} />
+                    )}
+                    {ghostLecture && <MemoizedOverlapTiles overlaps={overlaps} />}
                 </OverlayGrid>
             </FlexWrapper>
         </FlexWrapper>
@@ -494,6 +585,7 @@ export default memo(CustomTimeTableGrid, (prevProps, nextProps) => {
     return (
         prevProps.lectures === nextProps.lectures &&
         prevProps.cellWidth === nextProps.cellWidth &&
+        prevProps.timeFilter === nextProps.timeFilter &&
         prevProps.needTimeFilter === nextProps.needTimeFilter &&
         prevProps.needLectureInteraction === nextProps.needLectureInteraction &&
         prevProps.needLectureDeletable === nextProps.needLectureDeletable &&

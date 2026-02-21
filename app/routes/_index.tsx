@@ -10,6 +10,22 @@ import { trackEvent } from "@/libs/mixpanel"
 import { media } from "@/styles/themes/media"
 import useIsDevice from "@/utils/useIsDevice"
 
+import type { Route } from "./+types/_index"
+
+export function meta() {
+    return [
+        { title: "OTL PLUS" },
+        { name: "description", content: "과목사전 및 모의시간표 서비스 OTL PLUS" },
+        { property: "og:title", content: "OTL PLUS" },
+        {
+            property: "og:description",
+            content: "KAIST 과목사전 및 모의시간표 서비스 OTL PLUS",
+        },
+        { property: "og:type", content: "website" },
+        { property: "og:site_name", content: "OTL PLUS" },
+    ]
+}
+
 const HallOfFameFeedSection = lazy(
     () => import("@/features/main/sections/HallOfFameFeedSection"),
 )

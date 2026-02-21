@@ -2,8 +2,7 @@ import { type CSSProperties, memo, useEffect } from "react"
 
 import { type Theme, ThemeProvider, css } from "@emotion/react"
 import styled from "@emotion/styled"
-import { Close, Visibility } from "@mui/icons-material"
-import { vi } from "vitest"
+import { Close } from "@mui/icons-material"
 
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
@@ -43,6 +42,12 @@ const HoverTileWrapper = styled(FlexWrapper)`
     [data-is-dragging="true"] &,
     [data-is-dragging="wait"] & {
         display: flex;
+    }
+
+    transition: opacity 0.2s ease;
+
+    [data-is-dragging="wait"] & {
+        opacity: 0.5;
     }
 `
 
@@ -84,11 +89,17 @@ const LectureTileWrapper = styled(FlexWrapper)<{
     rowStart: number
     rowEnd: number
     col: number
+    lectureId: number
 }>`
     grid-column: ${({ col }) => col};
     grid-row: ${({ rowStart, rowEnd }) => `${rowStart} / ${rowEnd}`};
     overflow: hidden;
     pointer-events: none;
+
+    [data-selected-lecture="${({ lectureId }) => lectureId}"] & {
+        transform: translateY(-2px);
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    }
 `
 
 const LectureTileInner = styled(FlexWrapper)<{
@@ -104,12 +115,24 @@ const LectureTileInner = styled(FlexWrapper)<{
     overflow: hidden;
     pointer-events: none;
 
+    [data-ghost="true"] & {
+        opacity: 0.8;
+    }
+
     [data-interaction="true"] & {
         pointer-events: auto;
         cursor: pointer;
         &:hover {
             ${({ theme }) => LectureTileHoverCss(theme)}
         }
+    }
+
+    transition: opacity 0.2s ease;
+
+    opacity: 0.5;
+
+    [data-selected-lecture=""] & {
+        opacity: 1;
     }
 
     [data-is-dragging="true"] & {
@@ -121,6 +144,10 @@ const LectureTileInner = styled(FlexWrapper)<{
         &,
     [data-selected-lecture="${({ lectureId }) => lectureId}"] & {
         ${({ theme }) => LectureTileHoverCss(theme)}
+    }
+
+    [data-selected-lecture="${({ lectureId }) => lectureId}"] & {
+        opacity: 1;
     }
 `
 
@@ -145,10 +172,6 @@ function LectureTile({ lecture, classIdx, deleteLecture }: LectureTileProps) {
 
     if (cls == null) return null
 
-    useEffect(() => {
-        console.log(deleteLecture)
-    }, [deleteLecture])
-
     return (
         <LectureTileWrapper
             direction="column"
@@ -159,6 +182,7 @@ function LectureTile({ lecture, classIdx, deleteLecture }: LectureTileProps) {
             col={cls.day + 1}
             rowStart={cls.begin / 30 - 14}
             rowEnd={cls.end / 30 - 14}
+            lectureId={lecture.id}
         >
             <LectureTileInner
                 direction="row"
@@ -247,4 +271,41 @@ const MemoizedLectureTile = memo(LectureTile, (prevProps, nextProps) => {
     )
 })
 
-export { MemoizedHoverTile as HoverTile, MemoizedLectureTile as LectureTile }
+const OverlapTileWrapper = styled(FlexWrapper)<{
+    day: number
+    begin: number
+    end: number
+}>`
+    grid-column: ${({ day }) => day + 1};
+    grid-row: ${({ begin, end }) => `${begin + 2} / ${end + 2}`};
+    pointer-events: none;
+    backdrop-filter: grayscale(100%);
+`
+
+const OverlapTileInner = styled(FlexWrapper)`
+    border-radius: 2px;
+`
+
+interface OverlapTileProps {
+    day: number
+    begin: number
+    end: number
+}
+
+function OverlapTile({ day, begin, end }: OverlapTileProps) {
+    return (
+        <OverlapTileWrapper
+            direction="column"
+            gap={0}
+            day={day}
+            begin={begin}
+            end={end}
+            align="stretch"
+            justify="stretch"
+        >
+            <OverlapTileInner direction="column" gap={0} flex="1 1 auto" />
+        </OverlapTileWrapper>
+    )
+}
+
+export { MemoizedHoverTile as HoverTile, MemoizedLectureTile as LectureTile, OverlapTile }

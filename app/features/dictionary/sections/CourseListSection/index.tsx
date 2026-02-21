@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
@@ -82,6 +82,7 @@ function CourseListSection({
     const { t } = useTranslation()
     const theme = useTheme()
     const isMobile = useIsDevice("mobile")
+    const scrollRef = useRef<HTMLDivElement>(null)
     const [searchParams] = useSearchParams()
 
     const [sortOption, setSortOption] = useState<number>(0)
@@ -147,6 +148,7 @@ function CourseListSection({
             }
         })
         setEnabled(true)
+        scrollRef.current?.scrollTo(0, 0)
     }, [sortOption])
 
     const handleSearch = (param: SearchParamsType) => {
@@ -162,6 +164,7 @@ function CourseListSection({
         }
         setParams(fullParam)
         setEnabled(true)
+        scrollRef.current?.scrollTo(0, 0)
         trackEvent("Search Courses", {
             keyword: param.keyword ?? "",
             department: param.department ?? "",
@@ -246,7 +249,7 @@ function CourseListSection({
                             </DropDownWrapper>
                         </SortWrapper>
                     </FlexWrapper>
-                    <CourseBlockWrapper direction="column" gap={12}>
+                    <CourseBlockWrapper direction="column" gap={12} ref={scrollRef}>
                         {searchResult.courses.map((course, idx) => (
                             <CourseBlock
                                 key={idx}
