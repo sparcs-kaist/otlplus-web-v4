@@ -156,7 +156,7 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
                     <Typography
                         type={"Normal"}
                         color={"Highlight.default"}
-                        style={{ whiteSpace: "nowrap" }}
+                        style={{ textAlign: "end" }}
                     >
                         {course.type}
                     </Typography>
