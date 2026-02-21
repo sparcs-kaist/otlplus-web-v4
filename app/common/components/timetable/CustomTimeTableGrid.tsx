@@ -293,7 +293,11 @@ function CustomTimeTableGrid({
         overlayRef.current?.setAttribute("data-is-dragging", "false")
         backgroundRef.current?.setAttribute("data-is-dragging", "false")
 
-        if (timeRef.current && dayRef.current !== null)
+        if (
+            timeRef.current &&
+            dayRef.current !== null &&
+            timeRef.current[1] - timeRef.current[0] > 1
+        )
             setTimeFilter?.({
                 day: dayRef.current,
                 begin: (TIME_BEGIN + timeRef.current[0] * 0.5) * 60,
@@ -431,8 +435,6 @@ function CustomTimeTableGrid({
                 })
             })
         }
-
-        console.log(intervals)
 
         setOverlaps(ghostLecture ? intervals : [])
     }, [ghostLecture, lectures, needLectureInteraction])
