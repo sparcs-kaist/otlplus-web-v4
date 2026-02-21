@@ -1,4 +1,4 @@
-import { type CSSProperties, memo } from "react"
+import { type CSSProperties, memo, useEffect } from "react"
 
 import { type Theme, ThemeProvider, css } from "@emotion/react"
 import styled from "@emotion/styled"
@@ -102,6 +102,10 @@ const LectureTileInner = styled(FlexWrapper)<{
     border-radius: 2px;
     overflow: hidden;
     pointer-events: none;
+
+    [data-ghost="true"] & {
+        opacity: 0.8;
+    }
 
     [data-interaction="true"] & {
         pointer-events: auto;
@@ -242,4 +246,41 @@ const MemoizedLectureTile = memo(LectureTile, (prevProps, nextProps) => {
     )
 })
 
-export { MemoizedHoverTile as HoverTile, MemoizedLectureTile as LectureTile }
+const OverlapTileWrapper = styled(FlexWrapper)<{
+    day: number
+    begin: number
+    end: number
+}>`
+    grid-column: ${({ day }) => day + 1};
+    grid-row: ${({ begin, end }) => `${begin + 2} / ${end + 2}`};
+    pointer-events: none;
+    backdrop-filter: grayscale(100%);
+`
+
+const OverlapTileInner = styled(FlexWrapper)`
+    border-radius: 2px;
+`
+
+interface OverlapTileProps {
+    day: number
+    begin: number
+    end: number
+}
+
+function OverlapTile({ day, begin, end }: OverlapTileProps) {
+    return (
+        <OverlapTileWrapper
+            direction="column"
+            gap={0}
+            day={day}
+            begin={begin}
+            end={end}
+            align="stretch"
+            justify="stretch"
+        >
+            <OverlapTileInner direction="column" gap={0} flex="1 1 auto" />
+        </OverlapTileWrapper>
+    )
+}
+
+export { MemoizedHoverTile as HoverTile, MemoizedLectureTile as LectureTile, OverlapTile }
