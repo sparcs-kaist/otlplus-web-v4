@@ -144,7 +144,6 @@ const MemoizedLectureTiles = memo(
         }, [handleLectureTileHover, lecture])
 
         const handleMouseClick = useCallback(() => {
-            console.log(handleLectureTileSelect, lecture)
             handleLectureTileSelect?.(lecture)
         }, [handleLectureTileSelect, lecture])
 

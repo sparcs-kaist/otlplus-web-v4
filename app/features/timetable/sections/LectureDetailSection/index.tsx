@@ -326,41 +326,43 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                             )}
 
                             {(currentTimetableId || status !== "success") &&
-                            !timetableLectures?.some(
-                                (lec) => lec.id === selectedLecture.id,
-                            ) ? (
-                                <Button
-                                    type="selected"
-                                    onClick={() => {
-                                        handleAddToTimetable(selectedLecture)
-                                        if (onMobileModalClose) onMobileModalClose()
-                                    }}
-                                >
-                                    <Icon size={15}>
-                                        <AddIcon />
-                                    </Icon>
-                                    <Typography type="NormalBold">
-                                        {t("timetable.addToTimetable")}
-                                    </Typography>
-                                </Button>
-                            ) : (
-                                <Button
-                                    type="selected"
-                                    onClick={() => {
-                                        if (handleRemoveFromTimetable) {
-                                            handleRemoveFromTimetable(selectedLecture.id)
-                                        }
-                                        if (onMobileModalClose) onMobileModalClose()
-                                    }}
-                                >
-                                    <Icon size={15}>
-                                        <CloseIcon />
-                                    </Icon>
-                                    <Typography type="NormalBold">
-                                        {t("timetable.removeFromTimetable")}
-                                    </Typography>
-                                </Button>
-                            )}
+                                (!timetableLectures?.some(
+                                    (lec) => lec.id === selectedLecture.id,
+                                ) ? (
+                                    <Button
+                                        type="selected"
+                                        onClick={() => {
+                                            handleAddToTimetable(selectedLecture)
+                                            if (onMobileModalClose) onMobileModalClose()
+                                        }}
+                                    >
+                                        <Icon size={15}>
+                                            <AddIcon />
+                                        </Icon>
+                                        <Typography type="NormalBold">
+                                            {t("timetable.addToTimetable")}
+                                        </Typography>
+                                    </Button>
+                                ) : (
+                                    <Button
+                                        type="selected"
+                                        onClick={() => {
+                                            if (handleRemoveFromTimetable) {
+                                                handleRemoveFromTimetable(
+                                                    selectedLecture.id,
+                                                )
+                                            }
+                                            if (onMobileModalClose) onMobileModalClose()
+                                        }}
+                                    >
+                                        <Icon size={15}>
+                                            <CloseIcon />
+                                        </Icon>
+                                        <Typography type="NormalBold">
+                                            {t("timetable.removeFromTimetable")}
+                                        </Typography>
+                                    </Button>
+                                ))}
                         </LectureActionsWrapper>
                     )}
                 </>
