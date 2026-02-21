@@ -76,10 +76,10 @@ const errorInterceptor = {
 
         switch (status) {
             case HttpStatusCode.Unauthorized: {
-                if (typeof window !== "undefined") {
-                    const { handleLogout } = await import("@/utils/handleLoginLogout")
-                    await handleLogout()
-                }
+                // if (typeof window !== "undefined") {
+                //     const { handleLogout } = await import("@/utils/handleLoginLogout")
+                //     await handleLogout()
+                // }
                 return Promise.reject(error)
             }
             case HttpStatusCode.Forbidden: {
