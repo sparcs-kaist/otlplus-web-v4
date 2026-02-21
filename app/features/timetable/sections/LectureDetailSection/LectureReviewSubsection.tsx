@@ -12,7 +12,8 @@ import Typography from "@/common/primitives/Typography"
 import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
 
 const NumberWrapper = styled(FlexWrapper)`
-    width: 300px;
+    width: 100%;
+    max-width: 300px;
     padding: 10px;
 `
 
