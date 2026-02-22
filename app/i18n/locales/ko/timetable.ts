@@ -39,4 +39,15 @@ export const timetable = {
         etcSelectCancel: "선택 취소",
         etcShortcutInfo: "단축키 안내 보기",
     },
+    addCustomBlock: "커스텀 블록 추가",
+    customBlock: {
+        title: "커스텀 블록 추가",
+        name: "일정 이름",
+        place: "장소",
+        day: "요일",
+        begin: "시작 시간",
+        end: "종료 시간",
+        errorNameRequired: "일정 이름을 입력해주세요.",
+        errorTimeInvalid: "종료 시간은 시작 시간보다 늦어야 합니다.",
+    },
 }

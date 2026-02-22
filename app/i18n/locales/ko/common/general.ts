@@ -44,5 +44,9 @@ export const general = {
         description: "요청하신 페이지가 존재하지 않거나 이동되었습니다.",
         goHome: "홈으로 돌아가기",
     },
+    button: {
+        add: "추가",
+        adding: "추가 중...",
+    },
     toOTLV3: "이전 버전",
 }
