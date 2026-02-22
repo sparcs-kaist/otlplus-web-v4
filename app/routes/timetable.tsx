@@ -251,6 +251,19 @@ export default function Timetable() {
               ? (myTimetable.data?.lectures ?? [])
               : (timetable.data?.lectures ?? [])
 
+    const { query: customBlocksQuery } = useAPI(
+        "GET",
+        `/timetables/${currentTimetableId}/custom-blocks`,
+        {
+            enabled: currentTimetableId !== null && status === "success",
+        },
+    )
+
+    const currentTimetableCustomBlocks =
+        status === "success" && currentTimetableId !== null
+            ? (customBlocksQuery.data?.custom_blocks ?? [])
+            : []
+
     const { requestFunction: removeLectureFunction } = useAPI(
         "PATCH",
         `/timetables/${currentTimetableId}`,
@@ -286,6 +299,25 @@ export default function Timetable() {
             })
         },
         [removeLectureFunction, currentTimetableId],
+    )
+
+    const handleRemoveCustomBlock = useCallback(
+        async (blockId: number) => {
+            if (currentTimetableId === null) return
+            const { axiosClient } = await import("@/libs/axios")
+            await axiosClient.request({
+                method: "DELETE",
+                url: `/api/v2/timetables/${currentTimetableId}/custom-blocks/${blockId}`,
+            })
+            queryClient.invalidateQueries({
+                queryKey: [`/timetables/${currentTimetableId}/custom-blocks`],
+            })
+            trackEvent("Remove Custom Block from Timetable", {
+                blockId,
+                timetableId: currentTimetableId,
+            })
+        },
+        [currentTimetableId, queryClient],
     )
 
     useEffect(() => {
@@ -393,6 +425,13 @@ export default function Timetable() {
                                                 : handleRemoveLecture
                                             : handleNonLoginRemoveLecture
                                     }
+                                    customBlocks={currentTimetableCustomBlocks}
+                                    deleteCustomBlock={
+                                        status === "success" &&
+                                        currentTimetableId !== null
+                                            ? handleRemoveCustomBlock
+                                            : undefined
+                                    }
                                 />
                             </TimetableArea>
                         </Block>
@@ -407,6 +446,7 @@ export default function Timetable() {
                             setHover={setHover}
                             year={year}
                             semester={semesterEnum}
+                            currentTimetableId={currentTimetableId}
                         />
                     </TimetableInfoArea>
                     <MobileControlBar direction="row" gap={0}>
@@ -415,6 +455,7 @@ export default function Timetable() {
                             timetableLectures={currentTimetableLectures}
                             year={year}
                             semester={semesterEnum}
+                            currentTimetableId={currentTimetableId}
                         />
                         <FlexWrapper
                             direction="row"
@@ -511,6 +552,7 @@ export default function Timetable() {
                                     timetableLectures={currentTimetableLectures}
                                     year={year}
                                     semester={semesterEnum}
+                                    currentTimetableId={currentTimetableId}
                                 />
                             </UtilButtonsArea>
                         )}
@@ -590,6 +632,13 @@ export default function Timetable() {
                                                     : handleRemoveLecture
                                                 : handleNonLoginRemoveLecture
                                         }
+                                        customBlocks={currentTimetableCustomBlocks}
+                                        deleteCustomBlock={
+                                            status === "success" &&
+                                            currentTimetableId !== null
+                                                ? handleRemoveCustomBlock
+                                                : undefined
+                                        }
                                     />
                                 </TimetableArea>
                                 {!isLaptop && <StyledDivider direction="column" />}
@@ -602,6 +651,7 @@ export default function Timetable() {
                                         setHover={setHover}
                                         year={year}
                                         semester={semesterEnum}
+                                        currentTimetableId={currentTimetableId}
                                     />
                                 </TimetableInfoArea>
                             </Block>

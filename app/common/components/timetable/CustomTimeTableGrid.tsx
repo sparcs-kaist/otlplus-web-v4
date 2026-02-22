@@ -7,9 +7,11 @@ import { WeekdayEnum } from "@/common/enum/weekdayEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import GridWrapper from "@/common/primitives/GridWrapper"
 import Typography from "@/common/primitives/Typography"
+import { type CustomBlock } from "@/common/schemas/customBlock"
 import { type Lecture } from "@/common/schemas/lecture"
 import { type TimeBlock } from "@/common/schemas/timeblock"
 
+import { MemoizedCustomBlockTile } from "./CustomBlockTile"
 import {
     HoverTile,
     LECTURE_TILE_CLASSNAME,
@@ -211,6 +213,7 @@ const MemoizedOverlapTiles = memo(({ overlaps }: OverlapTileProps) => {
 
 interface CustomTimeTableGridProps {
     lectures: Lecture[]
+    customBlocks?: CustomBlock[]
     cellWidth?: string
     needTimeFilter?: boolean
     timeFilter?: TimeBlock | null
@@ -218,14 +221,18 @@ interface CustomTimeTableGridProps {
     needLectureInteraction?: boolean
     needLectureDeletable?: boolean
     deleteLecture?: (lectureId: number) => void
+    deleteCustomBlock?: (blockId: number) => void
     hoveredLectures?: Lecture[]
     setHoveredLectures?: React.Dispatch<React.SetStateAction<Lecture[]>>
     selectedLecture?: Lecture | null
     setSelectedLecture?: React.Dispatch<React.SetStateAction<Lecture | null>>
+    selectedCustomBlock?: CustomBlock | null
+    setSelectedCustomBlock?: React.Dispatch<React.SetStateAction<CustomBlock | null>>
 }
 
 function CustomTimeTableGrid({
     lectures,
+    customBlocks = [],
     cellWidth,
     needTimeFilter = true,
     timeFilter,
@@ -233,10 +240,13 @@ function CustomTimeTableGrid({
     needLectureInteraction = true,
     needLectureDeletable = true,
     deleteLecture,
+    deleteCustomBlock,
     hoveredLectures = [],
     setHoveredLectures,
     selectedLecture = null,
     setSelectedLecture,
+    selectedCustomBlock = null,
+    setSelectedCustomBlock,
 }: CustomTimeTableGridProps) {
     const { t } = useTranslation()
 
@@ -569,6 +579,25 @@ function CustomTimeTableGrid({
                             deleteLecture={deleteLectureCallback}
                             handleLectureTileHover={handleLectureTileHoverCallBack}
                             handleLectureTileSelect={handleLectureTileSelectCallback}
+                        />
+                    ))}
+                    {customBlocks.map((block, blockIdx) => (
+                        <MemoizedCustomBlockTile
+                            key={`${block.id}-custom-block-tile-${blockIdx}`}
+                            block={block}
+                            deleteBlock={
+                                needLectureDeletable && deleteCustomBlock
+                                    ? () => deleteCustomBlock(block.id)
+                                    : undefined
+                            }
+                            handleBlockTileSelect={
+                                needLectureInteraction && setSelectedCustomBlock
+                                    ? (b) =>
+                                          setSelectedCustomBlock((prev) =>
+                                              prev?.id === b.id ? null : b,
+                                          )
+                                    : undefined
+                            }
                         />
                     ))}
                     {ghostLecture && (

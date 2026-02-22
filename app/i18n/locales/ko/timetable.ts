@@ -11,4 +11,15 @@ export const timetable = {
     removeFromWishlist: "찜목록에서 제거",
     removeFromTimetable: "시간표에서 제거",
     competitionRate: "경쟁률",
+    addCustomBlock: "커스텀 블록 추가",
+    customBlock: {
+        title: "커스텀 블록 추가",
+        name: "일정 이름",
+        place: "장소",
+        day: "요일",
+        begin: "시작 시간",
+        end: "종료 시간",
+        errorNameRequired: "일정 이름을 입력해주세요.",
+        errorTimeInvalid: "종료 시간은 시작 시간보다 늦어야 합니다.",
+    },
 }
