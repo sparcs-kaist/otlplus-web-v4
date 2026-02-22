@@ -446,6 +446,7 @@ export default function Timetable() {
                             setHover={setHover}
                             year={year}
                             semester={semesterEnum}
+                            currentTimetableId={currentTimetableId}
                         />
                     </TimetableInfoArea>
                     <MobileControlBar direction="row" gap={0}>
@@ -650,6 +651,7 @@ export default function Timetable() {
                                         setHover={setHover}
                                         year={year}
                                         semester={semesterEnum}
+                                        currentTimetableId={currentTimetableId}
                                     />
                                 </TimetableInfoArea>
                             </Block>
