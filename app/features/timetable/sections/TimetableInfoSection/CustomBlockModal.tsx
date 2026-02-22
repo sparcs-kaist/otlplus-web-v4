@@ -88,18 +88,11 @@ export default function CustomBlockModal({
 
     const handleSubmit = async () => {
         if (!blockName.trim()) {
-            alert(
-                t("timetable.customBlock.errorNameRequired", "일정 이름을 입력해주세요."),
-            )
+            alert(t("timetable.customBlock.errorNameRequired"))
             return
         }
         if (begin >= end) {
-            alert(
-                t(
-                    "timetable.customBlock.errorTimeInvalid",
-                    "종료 시간은 시작 시간보다 늦어야 합니다.",
-                ),
-            )
+            alert(t("timetable.customBlock.errorTimeInvalid"))
             return
         }
 
@@ -113,11 +106,7 @@ export default function CustomBlockModal({
     }
 
     return (
-        <Modal
-            isOpen={isOpen}
-            onClose={onClose}
-            title={t("timetable.customBlock.title", "커스텀 블록 추가")}
-        >
+        <Modal isOpen={isOpen} onClose={onClose} title={t("timetable.customBlock.title")}>
             <FormWrapper direction="column" gap={16}>
                 <FlexWrapper
                     direction="column"
@@ -126,7 +115,7 @@ export default function CustomBlockModal({
                     style={{ width: "100%" }}
                 >
                     <Label type="NormalBold" color="Text.default">
-                        {t("timetable.customBlock.name", "일정 이름")}
+                        {t("timetable.customBlock.name")}
                     </Label>
                     <TextInputArea
                         value={blockName}
@@ -143,7 +132,7 @@ export default function CustomBlockModal({
                     style={{ width: "100%" }}
                 >
                     <Label type="NormalBold" color="Text.default">
-                        {t("timetable.customBlock.place", "장소")}
+                        {t("timetable.customBlock.place")}
                     </Label>
                     <TextInputArea
                         value={place}
@@ -160,7 +149,7 @@ export default function CustomBlockModal({
                     style={{ width: "100%" }}
                 >
                     <Label type="NormalBold" color="Text.default">
-                        {t("timetable.customBlock.day", "요일")}
+                        {t("timetable.customBlock.day")}
                     </Label>
                     <Select value={day} onChange={(e) => setDay(Number(e.target.value))}>
                         <option value={WeekdayEnum.Mon}>{t("common.days.monday")}</option>
@@ -190,7 +179,7 @@ export default function CustomBlockModal({
                         style={{ flex: 1 }}
                     >
                         <Label type="NormalBold" color="Text.default">
-                            {t("timetable.customBlock.begin", "시작 시간")}
+                            {t("timetable.customBlock.begin")}
                         </Label>
                         <Select
                             value={begin}
@@ -210,7 +199,7 @@ export default function CustomBlockModal({
                         style={{ flex: 1 }}
                     >
                         <Label type="NormalBold" color="Text.default">
-                            {t("timetable.customBlock.end", "종료 시간")}
+                            {t("timetable.customBlock.end")}
                         </Label>
                         <Select
                             value={end}
@@ -235,8 +224,8 @@ export default function CustomBlockModal({
                     style={{ padding: "12px" }}
                 >
                     {mutation.isPending
-                        ? t("common.button.adding", "추가 중...")
-                        : t("common.button.add", "추가")}
+                        ? t("common.button.adding")
+                        : t("common.button.add")}
                 </Button>
             </FormWrapper>
         </Modal>

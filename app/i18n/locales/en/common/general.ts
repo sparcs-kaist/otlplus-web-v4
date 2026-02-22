@@ -45,5 +45,9 @@ export const general = {
         description: "The page you are looking for does not exist or has been moved.",
         goHome: "Go Home",
     },
+    button: {
+        add: "Add",
+        adding: "Adding...",
+    },
     toOTLV3: "Previous",
 }

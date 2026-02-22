@@ -174,9 +174,7 @@ export default function UtilButtonsSubSection({
                 <Icon size={16} color={theme.colors.Highlight.default}>
                     <AddBoxIcon />
                 </Icon>
-                {!isTablet && (
-                    <span>{t("timetable.addCustomBlock", "커스텀 블록 추가")}</span>
-                )}
+                {!isTablet && <span>{t("timetable.addCustomBlock")}</span>}
             </ExportButton>
             <CustomBlockModal
                 isOpen={isCustomBlockModalOpen}

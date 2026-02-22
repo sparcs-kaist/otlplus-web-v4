@@ -11,4 +11,15 @@ export const timetable = {
     removeFromWishlist: "Remove from Wishlist",
     removeFromTimetable: "Remove from Timetable",
     competitionRate: "Competition",
+    addCustomBlock: "Add Custom Block",
+    customBlock: {
+        title: "Add Custom Block",
+        name: "Name",
+        place: "Place",
+        day: "Day",
+        begin: "Start Time",
+        end: "End Time",
+        errorNameRequired: "Please enter a name for the block.",
+        errorTimeInvalid: "End time must be later than start time.",
+    },
 }
