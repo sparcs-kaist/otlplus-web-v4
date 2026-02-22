@@ -88,19 +88,23 @@ export default function CustomBlockModal({
 
     const handleSubmit = async () => {
         if (!blockName.trim()) {
-            alert(t("timetable.customBlock.errorNameRequired", "일정 이름을 입력해주세요."))
+            alert(
+                t("timetable.customBlock.errorNameRequired", "일정 이름을 입력해주세요."),
+            )
             return
         }
         if (begin >= end) {
-            alert(t("timetable.customBlock.errorTimeInvalid", "종료 시간은 시작 시간보다 늦어야 합니다."))
+            alert(
+                t(
+                    "timetable.customBlock.errorTimeInvalid",
+                    "종료 시간은 시작 시간보다 늦어야 합니다.",
+                ),
+            )
             return
         }
 
-        // We use queryClient.fetchQuery as a workaround because useAPI doesn't allow dynamic URL effectively
-        // We use function cast because TS infers 'never' for dynamic paths
         ;(addCustomBlock as any)({
-            blockName: blockName.trim(), // Use camelCase to match Zod schema
-            block_name: blockName.trim(), // Provide both just in case backend enforces snake_case since we observed backend dto
+            block_name: blockName.trim(),
             place,
             day,
             begin,
@@ -115,7 +119,12 @@ export default function CustomBlockModal({
             title={t("timetable.customBlock.title", "커스텀 블록 추가")}
         >
             <FormWrapper direction="column" gap={16}>
-                <FlexWrapper direction="column" gap={0} align="stretch" style={{ width: "100%" }}>
+                <FlexWrapper
+                    direction="column"
+                    gap={0}
+                    align="stretch"
+                    style={{ width: "100%" }}
+                >
                     <Label type="NormalBold" color="Text.default">
                         {t("timetable.customBlock.name", "일정 이름")}
                     </Label>
@@ -127,7 +136,12 @@ export default function CustomBlockModal({
                     />
                 </FlexWrapper>
 
-                <FlexWrapper direction="column" gap={0} align="stretch" style={{ width: "100%" }}>
+                <FlexWrapper
+                    direction="column"
+                    gap={0}
+                    align="stretch"
+                    style={{ width: "100%" }}
+                >
                     <Label type="NormalBold" color="Text.default">
                         {t("timetable.customBlock.place", "장소")}
                     </Label>
@@ -139,25 +153,49 @@ export default function CustomBlockModal({
                     />
                 </FlexWrapper>
 
-                <FlexWrapper direction="column" gap={0} align="stretch" style={{ width: "100%" }}>
+                <FlexWrapper
+                    direction="column"
+                    gap={0}
+                    align="stretch"
+                    style={{ width: "100%" }}
+                >
                     <Label type="NormalBold" color="Text.default">
                         {t("timetable.customBlock.day", "요일")}
                     </Label>
                     <Select value={day} onChange={(e) => setDay(Number(e.target.value))}>
                         <option value={WeekdayEnum.Mon}>{t("common.days.monday")}</option>
-                        <option value={WeekdayEnum.Tue}>{t("common.days.tuesday")}</option>
-                        <option value={WeekdayEnum.Wed}>{t("common.days.wednesday")}</option>
-                        <option value={WeekdayEnum.Thu}>{t("common.days.thursday")}</option>
+                        <option value={WeekdayEnum.Tue}>
+                            {t("common.days.tuesday")}
+                        </option>
+                        <option value={WeekdayEnum.Wed}>
+                            {t("common.days.wednesday")}
+                        </option>
+                        <option value={WeekdayEnum.Thu}>
+                            {t("common.days.thursday")}
+                        </option>
                         <option value={WeekdayEnum.Fri}>{t("common.days.friday")}</option>
                     </Select>
                 </FlexWrapper>
 
-                <FlexWrapper direction="row" gap={12} align="stretch" style={{ width: "100%" }}>
-                    <FlexWrapper direction="column" gap={0} align="stretch" style={{ flex: 1 }}>
+                <FlexWrapper
+                    direction="row"
+                    gap={12}
+                    align="stretch"
+                    style={{ width: "100%" }}
+                >
+                    <FlexWrapper
+                        direction="column"
+                        gap={0}
+                        align="stretch"
+                        style={{ flex: 1 }}
+                    >
                         <Label type="NormalBold" color="Text.default">
                             {t("timetable.customBlock.begin", "시작 시간")}
                         </Label>
-                        <Select value={begin} onChange={(e) => setBegin(Number(e.target.value))}>
+                        <Select
+                            value={begin}
+                            onChange={(e) => setBegin(Number(e.target.value))}
+                        >
                             {BEGIN_OPTIONS.map((opt) => (
                                 <option key={`begin-${opt.value}`} value={opt.value}>
                                     {opt.label}
@@ -165,11 +203,19 @@ export default function CustomBlockModal({
                             ))}
                         </Select>
                     </FlexWrapper>
-                    <FlexWrapper direction="column" gap={0} align="stretch" style={{ flex: 1 }}>
+                    <FlexWrapper
+                        direction="column"
+                        gap={0}
+                        align="stretch"
+                        style={{ flex: 1 }}
+                    >
                         <Label type="NormalBold" color="Text.default">
                             {t("timetable.customBlock.end", "종료 시간")}
                         </Label>
-                        <Select value={end} onChange={(e) => setEnd(Number(e.target.value))}>
+                        <Select
+                            value={end}
+                            onChange={(e) => setEnd(Number(e.target.value))}
+                        >
                             {END_OPTIONS.map((opt) => (
                                 <option
                                     key={`end-${opt.value}`}
@@ -183,7 +229,11 @@ export default function CustomBlockModal({
                     </FlexWrapper>
                 </FlexWrapper>
 
-                <Button onClick={handleSubmit} type="highlighted" style={{ padding: "12px" }}>
+                <Button
+                    onClick={handleSubmit}
+                    type="highlighted"
+                    style={{ padding: "12px" }}
+                >
                     {mutation.isPending
                         ? t("common.button.adding", "추가 중...")
                         : t("common.button.add", "추가")}

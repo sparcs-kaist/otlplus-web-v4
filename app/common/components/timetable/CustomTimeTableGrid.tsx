@@ -7,12 +7,11 @@ import { WeekdayEnum } from "@/common/enum/weekdayEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import GridWrapper from "@/common/primitives/GridWrapper"
 import Typography from "@/common/primitives/Typography"
-import { type Lecture } from "@/common/schemas/lecture"
 import { type CustomBlock } from "@/common/schemas/customBlock"
+import { type Lecture } from "@/common/schemas/lecture"
 import { type TimeBlock } from "@/common/schemas/timeblock"
 
 import { MemoizedCustomBlockTile } from "./CustomBlockTile"
-
 import {
     HoverTile,
     LECTURE_TILE_CLASSNAME,
@@ -593,7 +592,10 @@ function CustomTimeTableGrid({
                             }
                             handleBlockTileSelect={
                                 needLectureInteraction && setSelectedCustomBlock
-                                    ? (b) => setSelectedCustomBlock((prev) => (prev?.id === b.id ? null : b))
+                                    ? (b) =>
+                                          setSelectedCustomBlock((prev) =>
+                                              prev?.id === b.id ? null : b,
+                                          )
                                     : undefined
                             }
                         />

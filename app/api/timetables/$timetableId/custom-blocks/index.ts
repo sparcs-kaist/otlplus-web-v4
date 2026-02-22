@@ -16,8 +16,8 @@ export const POSTRequest = z.object({
     block_name: z.string(),
     place: z.string(),
     day: z.number().int(),
-    begin: z.number().int().min(0).max(1439),
-    end: z.number().int().min(0).max(1439),
+    begin: z.number().int().min(0).max(1440),
+    end: z.number().int().min(0).max(1440),
 })
 
 export const POSTResponse = z.object({

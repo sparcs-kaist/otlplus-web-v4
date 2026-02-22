@@ -281,18 +281,6 @@ export default function Timetable() {
         },
     )
 
-    const { requestFunction: removeCustomBlockFunction } = useAPI(
-        "DELETE",
-        `/timetables/${currentTimetableId}/custom-blocks/:customblockId` as any,
-        {
-            onSuccess: () => {
-                queryClient.invalidateQueries({
-                    queryKey: [`/timetables/${currentTimetableId}/custom-blocks`],
-                })
-            },
-        },
-    )
-
     const handleNonLoginRemoveLecture = useCallback((lectureId: number) => {
         setNonLoginTimetable((prev) => prev.filter((lecture) => lecture.id !== lectureId))
         setSelected(null)
@@ -313,31 +301,17 @@ export default function Timetable() {
         [removeLectureFunction, currentTimetableId],
     )
 
-    const { mutation: deleteCustomBlockMutation } = useAPI(
-        "DELETE",
-        `/timetables/${currentTimetableId}/custom-blocks/:customblockId` as any, 
-        // Dummy usage, we override the request function directly below since path is dynamic
-        {}
-    )
-
-    // Workaround for dynamic path in mutation
     const handleRemoveCustomBlock = useCallback(
         async (blockId: number) => {
             if (currentTimetableId === null) return
-            await queryClient.fetchQuery({
-                queryKey: ['deleteCustomBlock', blockId],
-                queryFn: async () => {
-                    const { default: axios } = await import("axios")
-                    // We just use the global app axiosClient
-                    const { axiosClient } = await import("@/libs/axios")
-                    const { data } = await axiosClient.request({
-                        method: "DELETE",
-                        url: `/api/v2/timetables/${currentTimetableId}/custom-blocks/${blockId}`,
-                    })
-                    return data
-                }
+            const { axiosClient } = await import("@/libs/axios")
+            await axiosClient.request({
+                method: "DELETE",
+                url: `/api/v2/timetables/${currentTimetableId}/custom-blocks/${blockId}`,
             })
-            queryClient.invalidateQueries({ queryKey: [`/timetables/${currentTimetableId}/custom-blocks`] })
+            queryClient.invalidateQueries({
+                queryKey: [`/timetables/${currentTimetableId}/custom-blocks`],
+            })
             trackEvent("Remove Custom Block from Timetable", {
                 blockId,
                 timetableId: currentTimetableId,
@@ -453,7 +427,8 @@ export default function Timetable() {
                                     }
                                     customBlocks={currentTimetableCustomBlocks}
                                     deleteCustomBlock={
-                                        status === "success" && currentTimetableId !== null
+                                        status === "success" &&
+                                        currentTimetableId !== null
                                             ? handleRemoveCustomBlock
                                             : undefined
                                     }
@@ -479,6 +454,7 @@ export default function Timetable() {
                             timetableLectures={currentTimetableLectures}
                             year={year}
                             semester={semesterEnum}
+                            currentTimetableId={currentTimetableId}
                         />
                         <FlexWrapper
                             direction="row"
@@ -575,6 +551,7 @@ export default function Timetable() {
                                     timetableLectures={currentTimetableLectures}
                                     year={year}
                                     semester={semesterEnum}
+                                    currentTimetableId={currentTimetableId}
                                 />
                             </UtilButtonsArea>
                         )}
@@ -656,7 +633,8 @@ export default function Timetable() {
                                         }
                                         customBlocks={currentTimetableCustomBlocks}
                                         deleteCustomBlock={
-                                            status === "success" && currentTimetableId !== null
+                                            status === "success" &&
+                                            currentTimetableId !== null
                                                 ? handleRemoveCustomBlock
                                                 : undefined
                                         }
