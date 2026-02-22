@@ -223,7 +223,6 @@ export function CustomBlockTile({
                     <IconButton styles={{ padding: 3 }} onClick={deleteBlock}>
                         <Icon
                             size={12}
-                            onClick={() => {}}
                             style={{
                                 color: "rgba(255, 255, 255, 0.6)",
                                 opacity: deleteBlock ? 1 : 0,

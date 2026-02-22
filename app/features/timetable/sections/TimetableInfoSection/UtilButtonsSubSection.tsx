@@ -3,14 +3,12 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import { Check } from "@mui/icons-material"
+import AddBoxIcon from "@mui/icons-material/AddBox"
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth"
 import ContentCopyIcon from "@mui/icons-material/ContentCopy"
 import ImageIcon from "@mui/icons-material/Image"
-import AddBoxIcon from "@mui/icons-material/AddBox"
 import * as Sentry from "@sentry/react"
 import { useTranslation } from "react-i18next"
-
-import CustomBlockModal from "./CustomBlockModal"
 
 import { SemesterEnum, semesterToString } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
@@ -26,6 +24,8 @@ import { useAPI } from "@/utils/api/useAPI"
 import logger from "@/utils/logger"
 import useIsDevice from "@/utils/useIsDevice"
 import useThemeStore from "@/utils/zustand/useThemeStore"
+
+import CustomBlockModal from "./CustomBlockModal"
 
 const UtilButtonsWrapper = styled(FlexWrapper)`
     width: 100%;
@@ -73,11 +73,13 @@ export default function UtilButtonsSubSection({
     timetableLectures,
     year,
     semester,
+    currentTimetableId,
 }: {
     timetableName: string
     timetableLectures: Lecture[]
     year: number
     semester: SemesterEnum
+    currentTimetableId: number | null
 }) {
     const { t, i18n } = useTranslation()
     const theme = useTheme()
@@ -229,12 +231,14 @@ export default function UtilButtonsSubSection({
                 <Icon size={16} color={theme.colors.Highlight.default}>
                     <AddBoxIcon />
                 </Icon>
-                {!isTablet && <span>{t("timetable.addCustomBlock", "커스텀 블록 추가")}</span>}
+                {!isTablet && (
+                    <span>{t("timetable.addCustomBlock", "커스텀 블록 추가")}</span>
+                )}
             </ExportButton>
             <CustomBlockModal
                 isOpen={isCustomBlockModalOpen}
                 onClose={() => setIsCustomBlockModalOpen(false)}
-                timetableId={timetableLectures.length >= 0 ? (timetableLectures[0]?.id ? 0 : 0) : 0 /* We need timetableId, utilizing existing state */}
+                timetableId={currentTimetableId ?? 0}
             />
         </UtilButtonsWrapper>
     )
