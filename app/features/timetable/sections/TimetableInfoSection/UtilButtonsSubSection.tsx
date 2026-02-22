@@ -6,7 +6,10 @@ import { Check } from "@mui/icons-material"
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth"
 import ContentCopyIcon from "@mui/icons-material/ContentCopy"
 import ImageIcon from "@mui/icons-material/Image"
+import AddBoxIcon from "@mui/icons-material/AddBox"
 import { useTranslation } from "react-i18next"
+
+import CustomBlockModal from "./CustomBlockModal"
 
 import { SemesterEnum, semesterToString } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
@@ -74,6 +77,8 @@ export default function UtilButtonsSubSection({
     const [process, setProcess] = useState<
         "idle" | "successCopyImage" | "successDownloadImage" | "successDownloadCalendar"
     >("idle")
+
+    const [isCustomBlockModalOpen, setIsCustomBlockModalOpen] = useState(false)
 
     const currentSemester = useMemo(() => {
         if (!query) return null
@@ -159,6 +164,21 @@ export default function UtilButtonsSubSection({
                 </Icon>
                 {!isTablet && <span>{t("timetable.exportICal")}</span>}
             </ExportButton>
+            <ExportButton
+                onClick={() => {
+                    setIsCustomBlockModalOpen(true)
+                }}
+            >
+                <Icon size={16} color={theme.colors.Highlight.default}>
+                    <AddBoxIcon />
+                </Icon>
+                {!isTablet && <span>{t("timetable.addCustomBlock", "커스텀 블록 추가")}</span>}
+            </ExportButton>
+            <CustomBlockModal
+                isOpen={isCustomBlockModalOpen}
+                onClose={() => setIsCustomBlockModalOpen(false)}
+                timetableId={timetableLectures.length >= 0 ? (timetableLectures[0]?.id ? 0 : 0) : 0 /* We need timetableId, utilizing existing state */}
+            />
         </UtilButtonsWrapper>
     )
 }
