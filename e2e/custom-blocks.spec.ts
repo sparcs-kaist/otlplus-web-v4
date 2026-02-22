@@ -10,7 +10,7 @@ test.describe("Custom Block Feature", () => {
 
         // Wait for the button by finding the text
         const addCustomBlockButton = page
-            .locator("button", { hasText: "커스텀 블록 추가" })
+            .locator("button", { hasText: /커스텀 블록 추가|Add Custom Block/ })
             .first()
 
         // Ensure the button is visible
@@ -20,18 +20,18 @@ test.describe("Custom Block Feature", () => {
         await addCustomBlockButton.click()
 
         // Wait for modal to appear
-        const modalTitle = page.locator("text=커스텀 블록 추가").nth(1) // The modal header may contain the same text
+        const modalTitle = page.locator("text=/커스텀 블록 추가|Add Custom Block/").nth(1) // The modal header may contain the same text
         await expect(modalTitle).toBeVisible()
 
         // Check for modal form fields
-        await expect(page.locator("text=일정 이름")).toBeVisible()
-        await expect(page.locator("text=장소")).toBeVisible()
-        await expect(page.locator("text=요일")).toBeVisible()
-        await expect(page.locator("text=시작 시간")).toBeVisible()
-        await expect(page.locator("text=종료 시간")).toBeVisible()
+        await expect(page.locator("text=/일정 이름|Name/")).toBeVisible()
+        await expect(page.locator("text=/장소|Place/")).toBeVisible()
+        await expect(page.locator("text=/요일|Day/")).toBeVisible()
+        await expect(page.locator("text=/시작 시간|Start Time/")).toBeVisible()
+        await expect(page.locator("text=/종료 시간|End Time/")).toBeVisible()
 
         // Ensure Add button is present in the modal
-        const addButton = page.locator("button", { hasText: "추가" }).first()
+        const addButton = page.locator("text=/^(추가|Add)$/").first()
         await expect(addButton).toBeVisible()
     })
 })
