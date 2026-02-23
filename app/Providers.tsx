@@ -31,6 +31,16 @@ export const queryClient = new QueryClient({
     },
 })
 
+const QueryCacheRefresher: React.FC = () => {
+    React.useEffect(() => {
+        queryClient.invalidateQueries({
+            predicate: (query) => shouldPersistQuery(query.queryKey),
+        })
+    }, [])
+
+    return null
+}
+
 queryClient.setQueryDefaults(["/timetables"], {
     gcTime: Infinity,
     staleTime: 1000 * 60 * 5,
@@ -67,6 +77,7 @@ const Providers: React.FC<React.PropsWithChildren> = (props) => {
                 },
             }}
         >
+            <QueryCacheRefresher />
             <I18nextProvider i18n={i18n}>
                 <ThemeProvider theme={extractedTheme}>
                     <ChannelTalkProvider />
