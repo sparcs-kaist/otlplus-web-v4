@@ -58,16 +58,14 @@ const CustomBlockTileWrapper = styled(FlexWrapper)<{
     col: number
     blockId: number
 }>`
-    display: contents;
-
-    &:has(.${CUSTOM_BLOCK_TILE_CLASSNAME}:hover) .${CUSTOM_BLOCK_TILE_CLASSNAME} {
-        ${({ theme }) => CustomBlockTileHoverCss(theme)}
-    }
-
     grid-column: ${({ col }) => col};
     grid-row: ${({ rowStart, rowEnd }) => `${rowStart} / ${rowEnd}`};
     overflow: hidden;
     pointer-events: none;
+
+    &:has(.${CUSTOM_BLOCK_TILE_CLASSNAME}:hover) .${CUSTOM_BLOCK_TILE_CLASSNAME} {
+        ${({ theme }) => CustomBlockTileHoverCss(theme)}
+    }
 
     [data-selected-custom-block="${({ blockId }) => blockId}"] & {
         transform: translateY(-2px);
@@ -78,18 +76,13 @@ const CustomBlockTileWrapper = styled(FlexWrapper)<{
 const CustomBlockTileInner = styled(FlexWrapper)<{
     blockId: number
 }>`
-    background: ${({ theme, blockId }) =>
-        () => {
-            const flat = flattenTimeTableColors(theme.colors.Tile.TimeTable.default)
-            // Use blockId directly for unique-ish color, offset a bit so it looks different from course 0
-            return flat[(blockId * 3 + 7) % flat.length]
-        }};
+    background: ${({ theme, blockId }) => {
+        const flat = flattenTimeTableColors(theme.colors.Tile.TimeTable.default)
+        return flat[(blockId * 3 + 7) % flat.length]
+    }};
     border-radius: 2px;
     overflow: hidden;
     pointer-events: none;
-
-    grid-column: inherit;
-    grid-row: inherit;
 
     [data-ghost="true"] & {
         opacity: 0.8;
@@ -197,7 +190,7 @@ export function CustomBlockTile({
                                 color="Text.dark"
                                 className="block-title"
                             >
-                                {block.blockName}
+                                {block.block_name}
                             </Typography>
                             {block.place && (
                                 <Typography
