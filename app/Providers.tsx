@@ -33,9 +33,11 @@ export const queryClient = new QueryClient({
 
 const QueryCacheRefresher: React.FC = () => {
     React.useEffect(() => {
-        queryClient.invalidateQueries({
-            predicate: (query) => shouldPersistQuery(query.queryKey),
-        })
+        if (navigator.onLine) {
+            queryClient.invalidateQueries({
+                predicate: (query) => shouldPersistQuery(query.queryKey),
+            })
+        }
     }, [])
 
     return null
