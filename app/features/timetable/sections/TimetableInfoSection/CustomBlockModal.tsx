@@ -106,7 +106,7 @@ export default function CustomBlockModal({
                 schedules.map((schedule) =>
                     axiosClient.request({
                         method: "POST",
-                        url: `/timetables/${timetableId}/custom-blocks`,
+                        url: `/api/v2/timetables/${timetableId}/custom-blocks`,
                         data: {
                             block_name: blockName.trim(),
                             place,

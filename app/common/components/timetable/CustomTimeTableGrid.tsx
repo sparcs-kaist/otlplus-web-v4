@@ -568,6 +568,7 @@ function CustomTimeTableGrid({
                     data-is-dragging={false}
                     data-hovered-lectures=""
                     data-selected-lecture=""
+                    data-selected-custom-block=""
                     onPointerLeave={clearHoveredLecturesCallback}
                     onTouchEnd={clearHoveredLecturesCallback}
                 >
