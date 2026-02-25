@@ -56,6 +56,14 @@ const Providers: React.FC<React.PropsWithChildren> = (props) => {
         return themes[displayedTheme]
     }, [displayedTheme])
 
+    const handleRestoreSuccess = React.useCallback(() => {
+        if (navigator.onLine) {
+            queryClient.invalidateQueries({
+                predicate: (query) => shouldPersistQuery(query.queryKey),
+            })
+        }
+    }, [])
+
     return (
         <PersistQueryClientProvider
             client={queryClient}
@@ -66,6 +74,7 @@ const Providers: React.FC<React.PropsWithChildren> = (props) => {
                     shouldDehydrateQuery: (query) => shouldPersistQuery(query.queryKey),
                 },
             }}
+            onSuccess={handleRestoreSuccess}
         >
             <I18nextProvider i18n={i18n}>
                 <ThemeProvider theme={extractedTheme}>
