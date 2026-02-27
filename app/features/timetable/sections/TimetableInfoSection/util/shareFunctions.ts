@@ -3,6 +3,7 @@ import ical, { ICalAlarmType, ICalEventRepeatingFreq } from "ical-generator"
 
 import type { Lecture } from "@/common/schemas/lecture"
 import { colors } from "@/styles/themes/_base/variables/colors"
+import { darkThemeColors } from "@/styles/themes/dark/variables/colors"
 import professorName from "@/utils/professorName"
 
 interface RoundedRectangleOptions {
@@ -46,6 +47,8 @@ interface DrawTimetableDatas {
     semesterName: string
     semesterFontSize: number
     tileFontSize: number
+    displayMode: "dark" | "light"
+    language: "ko" | "en"
 }
 
 function drawRoundedRectangle(options: RoundedRectangleOptions) {
@@ -153,13 +156,17 @@ async function timeTableImage(drawTimetableData: DrawTimetableDatas) {
         semesterName,
         semesterFontSize,
         tileFontSize,
+        displayMode,
+        language,
     } = drawTimetableData
 
-    const TIMETABLE_CELL_COLORS = Object.values(colors.Tile.TimeTable.default).flatMap(
-        (colorGroup) => Object.values(colorGroup),
-    ) as string[]
+    const TIMETABLE_CELL_COLORS = Object.values(
+        displayMode === "dark"
+            ? darkThemeColors.Tile.TimeTable.default
+            : colors.Tile.TimeTable.default,
+    ).flatMap((colorGroup) => Object.values(colorGroup)) as string[]
 
-    const imageTemplatePath = `Image_template_${timetableType}.png`
+    const imageTemplatePath = `timetable_template/Image_template_${timetableType}_${displayMode}_${language}.png`
 
     const baseImg = new Image()
     baseImg.src = imageTemplatePath
