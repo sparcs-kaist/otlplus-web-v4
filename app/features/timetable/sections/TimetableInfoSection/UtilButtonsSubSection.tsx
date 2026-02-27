@@ -66,7 +66,7 @@ export default function UtilButtonsSubSection({
     year: number
     semester: SemesterEnum
 }) {
-    const { t } = useTranslation()
+    const { t, i18n } = useTranslation()
     const theme = useTheme()
     const isTablet = useIsDevice("tablet")
     const { displayedTheme } = useThemeStore()
@@ -113,6 +113,7 @@ export default function UtilButtonsSubSection({
                             semesterFontSize: 30,
                             tileFontSize: 20,
                             displayMode: displayedTheme,
+                            language: i18n.resolvedLanguage == "ko" ? "ko" : "en",
                         })
                         setProcess("successCopyImage")
                     }
@@ -134,6 +135,7 @@ export default function UtilButtonsSubSection({
                             semesterFontSize: 30,
                             tileFontSize: 20,
                             displayMode: displayedTheme,
+                            language: i18n.resolvedLanguage == "ko" ? "ko" : "en",
                         })
                         setProcess("successDownloadImage")
                     }

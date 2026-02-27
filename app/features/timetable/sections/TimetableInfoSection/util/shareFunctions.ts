@@ -48,6 +48,7 @@ interface DrawTimetableDatas {
     semesterFontSize: number
     tileFontSize: number
     displayMode: "dark" | "light"
+    language: "ko" | "en"
 }
 
 function drawRoundedRectangle(options: RoundedRectangleOptions) {
@@ -156,6 +157,7 @@ async function timeTableImage(drawTimetableData: DrawTimetableDatas) {
         semesterFontSize,
         tileFontSize,
         displayMode,
+        language,
     } = drawTimetableData
 
     const TIMETABLE_CELL_COLORS = Object.values(
@@ -164,7 +166,7 @@ async function timeTableImage(drawTimetableData: DrawTimetableDatas) {
             : colors.Tile.TimeTable.default,
     ).flatMap((colorGroup) => Object.values(colorGroup)) as string[]
 
-    const imageTemplatePath = `Image_template_${timetableType}_${displayMode}.png`
+    const imageTemplatePath = `timetable_template/Image_template_${timetableType}_${displayMode}_${language}.png`
 
     const baseImg = new Image()
     baseImg.src = imageTemplatePath
