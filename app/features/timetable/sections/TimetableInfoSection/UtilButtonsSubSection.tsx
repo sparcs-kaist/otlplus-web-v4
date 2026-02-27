@@ -20,6 +20,7 @@ import {
 import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
 import useIsDevice from "@/utils/useIsDevice"
+import useThemeStore from "@/utils/zustand/useThemeStore"
 
 const UtilButtonsWrapper = styled(FlexWrapper)`
     width: 100%;
@@ -68,6 +69,7 @@ export default function UtilButtonsSubSection({
     const { t } = useTranslation()
     const theme = useTheme()
     const isTablet = useIsDevice("tablet")
+    const { displayedTheme } = useThemeStore()
 
     const { query } = useAPI("GET", "/semesters")
 
@@ -82,6 +84,12 @@ export default function UtilButtonsSubSection({
                 sem.year === year && sem.semester === semester,
         )
     }, [query.data, year, semester])
+    const timetableType = useMemo(() => {
+        if (timetableLectures.some((lec) => lec.classes.some((cls) => cls.day >= 5))) {
+            return "7days"
+        }
+        return "5days"
+    }, [timetableLectures])
 
     useEffect(() => {
         if (process.startsWith("success")) {
@@ -100,10 +108,11 @@ export default function UtilButtonsSubSection({
                         copyTimetableImageToClipboard({
                             timetableName: timetableName,
                             lectures: timetableLectures,
-                            timetableType: "5days",
+                            timetableType: timetableType,
                             semesterName: year + " " + semesterToString(semester),
                             semesterFontSize: 30,
                             tileFontSize: 20,
+                            displayMode: displayedTheme,
                         })
                         setProcess("successCopyImage")
                     }
@@ -120,10 +129,11 @@ export default function UtilButtonsSubSection({
                         downloadTimetableImage({
                             timetableName: timetableName,
                             lectures: timetableLectures,
-                            timetableType: "5days",
+                            timetableType: timetableType,
                             semesterName: year + " " + semesterToString(semester),
                             semesterFontSize: 30,
                             tileFontSize: 20,
+                            displayMode: displayedTheme,
                         })
                         setProcess("successDownloadImage")
                     }
