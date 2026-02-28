@@ -77,7 +77,7 @@ function sliceTextToFitWidth(
     const canvas = document.createElement("canvas")
     const ctx = canvas.getContext("2d")
     if (!ctx) return []
-    ctx.font = `${fontSize}px '${font}'`
+    ctx.font = `${fontSize}px ${font}`
 
     let currentLine = ""
     const lines = []
@@ -104,7 +104,7 @@ function sliceTextToFitWidth(
 function drawText(options: TextOptions) {
     const { ctx, x, y, text, font, fontSize, color, align = "left" } = options
     ctx.fillStyle = color
-    ctx.font = `${fontSize}px '${font}'`
+    ctx.font = `${fontSize}px ${font}`
     ctx.textAlign = align || "left"
     ctx.fillText(text, x, y)
 }
@@ -185,7 +185,7 @@ async function timeTableImage(drawTimetableData: DrawTimetableDatas) {
         x: timetableType === "5days" ? 952 : 1302,
         y: 78,
         text: semesterName + " " + timetableName,
-        font: "NotoSansKR",
+        font: "'Noto Sans KR', Pretendard, sans-serif",
         fontSize: semesterFontSize,
         color: "#CCCCCC",
         align: "right",
@@ -225,7 +225,7 @@ async function timeTableImage(drawTimetableData: DrawTimetableDatas) {
                 title: lecture.name,
                 professor: professorName(lecture.professors) || "",
                 location: classtime.buildingCode + " " + classtime.roomName || "",
-                font: "NotoSansKR",
+                font: "'Noto Sans KR', Pretendard, sans-serif",
                 fontSize: tileFontSize,
             })
         }
