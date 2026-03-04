@@ -98,11 +98,12 @@ const Block = styled(FlexWrapper)`
 `
 
 const LectureInfoArea = styled.div`
-    width: 380px;
+    width: 360px;
     height: 100%;
     display: flex;
 
     ${media.desktop} {
+        width: 380px;
         background-color: ${({ theme }) => theme.colors.Background.Section.default};
         padding: 16px;
         border-radius: 12px;
@@ -117,7 +118,7 @@ const LectureInfoArea = styled.div`
 `
 
 const LectureListArea = styled.div`
-    width: 300px;
+    width: 270px;
     height: 100%;
     display: flex;
 
@@ -567,14 +568,14 @@ export default function Timetable() {
                             />
                             <Block
                                 direction={isLaptop ? "column" : "row"}
-                                gap={isLaptop ? 12 : 30}
+                                gap={isLaptop ? 12 : 16}
                                 align="stretch"
                                 justify="flex-start"
                                 flex="1 0 0"
                             >
                                 <TimetableArea direction="column" gap={0}>
                                     <CustomTimeTableGrid
-                                        cellWidth="100px"
+                                        cellWidth={isLaptop ? "113px" : "125px"}
                                         lectures={currentTimetableLectures}
                                         timeFilter={timeFilter}
                                         setTimeFilter={setTimeFilter}
