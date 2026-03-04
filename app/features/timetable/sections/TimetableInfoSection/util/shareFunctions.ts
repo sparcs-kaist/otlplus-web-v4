@@ -38,6 +38,7 @@ interface DrawTileOptions {
     location: string
     font: string
     fontSize: number
+    displayMode: "dark" | "light"
 }
 
 interface DrawTimetableDatas {
@@ -110,8 +111,19 @@ function drawText(options: TextOptions) {
 }
 
 function drawTile(options: DrawTileOptions) {
-    const { ctx, x, y, width, height, title, professor, location, font, fontSize } =
-        options
+    const {
+        ctx,
+        x,
+        y,
+        width,
+        height,
+        title,
+        professor,
+        location,
+        font,
+        fontSize,
+        displayMode,
+    } = options
     const slicedTitle = sliceTextToFitWidth(title, width, font, fontSize)
     const slicedProfessor = sliceTextToFitWidth(professor, width, font, fontSize)
     const slicedLocation = sliceTextToFitWidth(location, width, font, fontSize)
@@ -139,7 +151,12 @@ function drawTile(options: DrawTileOptions) {
                 text: slice,
                 font,
                 fontSize,
-                color: `rgba(0, 0, 0, ${index < slicedTitle.length ? 0.8 : 0.5})`,
+                color:
+                    index < slicedTitle.length
+                        ? "#000000"
+                        : displayMode === "dark"
+                          ? "#4C4C4C"
+                          : "#888888",
             })
             offsetY += fontSize + 5
         } else {
@@ -227,6 +244,7 @@ async function timeTableImage(drawTimetableData: DrawTimetableDatas) {
                 location: classtime.buildingCode + " " + classtime.roomName || "",
                 font: "'Noto Sans KR', Pretendard, sans-serif",
                 fontSize: tileFontSize,
+                displayMode,
             })
         }
     }
