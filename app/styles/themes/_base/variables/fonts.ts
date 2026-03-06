@@ -25,6 +25,11 @@ export const fonts = {
         lineHeight: 15,
         fontWeight: 400,
     },
+    SmallMedium: {
+        fontSize: 12,
+        lineHeight: 15,
+        fontWeight: 500,
+    },
     SmallBold: {
         fontSize: 12,
         lineHeight: 15,

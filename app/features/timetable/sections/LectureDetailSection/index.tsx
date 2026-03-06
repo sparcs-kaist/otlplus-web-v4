@@ -252,7 +252,11 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                             )}
                         </FlexWrapper>
                         <Typography type={"Big"} color={"Text.default"}>
-                            {selectedLecture.code}
+                            {selectedLecture.code +
+                                " " +
+                                (selectedLecture.classNo != ""
+                                    ? `(${selectedLecture.classNo})`
+                                    : "")}
                         </Typography>
                     </LectureTitle>
                     <FlexWrapper
