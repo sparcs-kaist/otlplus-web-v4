@@ -63,6 +63,10 @@ export const darkThemeColors: ThemeType["colors"] = {
         default: "#bdbdbd",
         dark: "#ffffff",
     },
+    TimeTable: {
+        title: "#000000",
+        detail: "#4C4C4C",
+    },
     Tile: {
         TimeTable: {
             default: {
