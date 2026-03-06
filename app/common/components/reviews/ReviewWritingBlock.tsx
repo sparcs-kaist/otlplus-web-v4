@@ -118,6 +118,9 @@ function ReviewWritingBlock({
         const currentSemester = semesterQuery.data.semesters.find(
             (sem) => sem.year === year && sem.semester === semester,
         )
+        if (semester === SemesterEnum.SUMMER || semester === SemesterEnum.WINTER) {
+            return true
+        }
         if (!currentSemester) return false
         return new Date(currentSemester.courseDropDeadline) < new Date()
     }, [semesterQuery.data])
