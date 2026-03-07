@@ -1,15 +1,17 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import LockIcon from "@mui/icons-material/Lock"
 import { Trans } from "react-i18next"
+import { useNavigate } from "react-router"
 
 import LoadingCircle from "@/common/components/LoadingCircle"
 import CustomTimeTableGrid from "@/common/components/timetable/CustomTimeTableGrid"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
+import type { Lecture } from "@/common/schemas/lecture"
 import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
 import { handleLogin } from "@/utils/handleLoginLogout"
@@ -63,9 +65,11 @@ const LoginButton = styled.div`
 `
 
 const TimeTableSection = () => {
+    const navigate = useNavigate()
     const theme = useTheme()
     const { user, status } = useUserStore()
 
+    const [selectedLecture, setSelectedLecture] = useState<Lecture | null>(null)
     const totalRef = useRef<HTMLDivElement>(null)
 
     const { query: myTimetable, setParams: setMyTimetableParams } = useAPI(
@@ -77,6 +81,21 @@ const TimeTableSection = () => {
     )
     const { query: semesters } = useAPI("GET", "/semesters")
 
+    useEffect(() => {
+        if (selectedLecture) {
+            const queryString = new URLSearchParams()
+            if (selectedLecture.courseId) {
+                queryString.append("courseId", selectedLecture.courseId.toString())
+            }
+            if (selectedLecture.professors) {
+                const firstProfessor = selectedLecture.professors[0]
+                if (firstProfessor) {
+                    queryString.append("professorId", firstProfessor.id.toString())
+                }
+            }
+            navigate(`/dictionary?${queryString.toString()}`)
+        }
+    }, [selectedLecture])
     useEffect(() => {
         if (semesters.data && semesters.data.semesters.length > 0) {
             const latestSemester =
@@ -150,7 +169,8 @@ const TimeTableSection = () => {
                             lectures={lectures}
                             needLectureDeletable={false}
                             needTimeFilter={false}
-                            needLectureInteraction={false}
+                            selectedLecture={null}
+                            setSelectedLecture={setSelectedLecture}
                         />
                     </BlurWrapper>
                 </TimeTableInner>
