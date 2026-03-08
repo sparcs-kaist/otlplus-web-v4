@@ -111,7 +111,7 @@ const TimeTableSection = () => {
     const lectures = myTimetable.data?.lectures ?? []
 
     return (
-        <StyledWidget direction="column" gap={0} padding="30px" flex="1 1 auto">
+        <StyledWidget direction="column" gap={0} padding="30px 23px" flex="1 1 auto">
             {status === "loading" ? (
                 <LoadingCircle />
             ) : (
