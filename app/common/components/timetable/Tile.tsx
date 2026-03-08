@@ -308,4 +308,24 @@ function OverlapTile({ day, begin, end }: OverlapTileProps) {
     )
 }
 
+const OverflowTileWrapper = styled(FlexWrapper)``
+
+const OverflowTileInner = styled(FlexWrapper)`
+    border-radius: 2px;
+`
+
+interface OverflowTileProps {
+    lecture: Lecture
+    classIdx: number
+}
+
+function OverflowTile({ lecture, classIdx }: OverflowTileProps) {
+    return (
+        <OverflowTileWrapper direction="column" gap={0} align="stretch" justify="stretch">
+            <Typography type="Smaller" color="Text.default"></Typography>
+            <OverflowTileInner direction="column" gap={0} flex="1 1 auto" />
+        </OverflowTileWrapper>
+    )
+}
+
 export { MemoizedHoverTile as HoverTile, MemoizedLectureTile as LectureTile, OverlapTile }
