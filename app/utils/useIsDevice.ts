@@ -10,13 +10,13 @@ const useIsDevice = (type: DeviceType): boolean => {
     const getIsMatch = (innerWidth: number) => {
         switch (type) {
             case "mobile":
-                return innerWidth < theme.breakpoints.mobile
+                return innerWidth <= theme.breakpoints.mobile
             case "tablet":
-                return innerWidth < theme.breakpoints.tablet
+                return innerWidth <= theme.breakpoints.tablet
             case "laptop":
-                return innerWidth < theme.breakpoints.laptop
+                return innerWidth <= theme.breakpoints.laptop
             case "desktop":
-                return innerWidth < theme.breakpoints.desktop
+                return innerWidth <= theme.breakpoints.desktop
             case "wide":
                 return innerWidth >= theme.breakpoints.desktop
             default:

@@ -54,6 +54,10 @@ export const colors = {
         default: "#333333",
         dark: "#000000",
     },
+    TimeTable: {
+        title: "#000000",
+        detail: "#888888",
+    },
     Tile: {
         TimeTable: {
             default: {

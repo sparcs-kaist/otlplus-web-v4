@@ -1,6 +1,6 @@
-import { type CSSProperties, memo, useEffect } from "react"
+import { type CSSProperties, memo } from "react"
 
-import { type Theme, ThemeProvider, css } from "@emotion/react"
+import { type Theme, css } from "@emotion/react"
 import styled from "@emotion/styled"
 import { Close } from "@mui/icons-material"
 
@@ -9,7 +9,6 @@ import Icon from "@/common/primitives/Icon"
 import { IconButton } from "@/common/primitives/IconButton"
 import Typography from "@/common/primitives/Typography"
 import { type Lecture } from "@/common/schemas/lecture"
-import lightTheme from "@/styles/themes/light"
 
 const flattenTimeTableColors = (
     timeTable: Theme["colors"]["Tile"]["TimeTable"]["default"],
@@ -95,6 +94,7 @@ const LectureTileWrapper = styled(FlexWrapper)<{
     grid-row: ${({ rowStart, rowEnd }) => `${rowStart} / ${rowEnd}`};
     overflow: hidden;
     pointer-events: none;
+    position: relative;
 
     [data-selected-lecture="${({ lectureId }) => lectureId}"] & {
         transform: translateY(-2px);
@@ -154,10 +154,14 @@ const LectureTileInner = styled(FlexWrapper)<{
 const LectureDeleteWrapper = styled(FlexWrapper)`
     pointer-events: none;
     visibility: hidden;
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    backdrop-filter: blur(16px);
 
     [data-lecture-deletable="false"] & {
         pointer-events: none !important;
-        visibility: hidden !important;
+        display: none !important;
     }
 `
 
@@ -200,7 +204,7 @@ function LectureTile({ lecture, classIdx, deleteLecture }: LectureTileProps) {
                     justify="center"
                     flex="1 1 auto"
                     gap={0}
-                    padding="4px 0px 4px 4px"
+                    padding="4px"
                 >
                     <FlexWrapper
                         direction="column"
@@ -208,41 +212,36 @@ function LectureTile({ lecture, classIdx, deleteLecture }: LectureTileProps) {
                         align="flex-start"
                         style={{ overflow: "hidden" }}
                     >
-                        <ThemeProvider theme={lightTheme}>
-                            <Typography
-                                type="Small"
-                                color="Text.dark"
-                                className="lecture-title"
-                            >
-                                {lecture.name}
-                                {lecture.subtitle}
-                            </Typography>
-                            <Typography
-                                type="Small"
-                                color="Text.lighter"
-                                className="lecture-info"
-                            >
-                                {lecture.professors
-                                    .map((professor) => professor.name)
-                                    .join(", ")}
-                            </Typography>
-                            <Typography
-                                type="Small"
-                                color="Text.lighter"
-                                className="lecture-info"
-                            >
-                                {`(${cls.buildingCode}) ${cls.roomName}`}
-                            </Typography>
-                        </ThemeProvider>
+                        <Typography
+                            type="SmallMedium"
+                            className="lecture-title"
+                            color="TimeTable.title"
+                        >
+                            {lecture.name + " " + lecture.subtitle}
+                        </Typography>
+                        <Typography
+                            type="Small"
+                            className="lecture-info"
+                            color="TimeTable.detail"
+                        >
+                            {lecture.professors
+                                .map((professor) => professor.name)
+                                .join(", ")}
+                        </Typography>
+                        <Typography
+                            type="Small"
+                            className="lecture-info"
+                            color="TimeTable.detail"
+                        >
+                            {`(${cls.buildingCode}) ${cls.roomName}`}
+                        </Typography>
                     </FlexWrapper>
                 </FlexWrapper>
 
                 <LectureDeleteWrapper
                     direction="column"
-                    flex="0 1 0"
+                    flex="1 1 auto"
                     gap={0}
-                    align="flex-end"
-                    justify="flex-start"
                     className="lecture-delete-wrapper"
                 >
                     <IconButton styles={{ padding: 3 }} onClick={deleteLecture}>
