@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
@@ -64,13 +64,56 @@ const LoginButton = styled.div`
     user-select: none;
 `
 
+const TimeTableGridWrapper = styled.div`
+    position: relative;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+`
+
+const TIME_BEGIN = 8
+const TIME_END = 24
+const HEADER_HEIGHT = 20
+const HEADER_CALIBRATION = 0.8
+
+const CurrentTimeBar = styled.div<{ ratio: number; dayIndex: number }>`
+    position: absolute;
+    top: calc(
+        ${HEADER_HEIGHT}px + (100% - ${HEADER_HEIGHT * (2 - HEADER_CALIBRATION)}px) *
+            ${({ ratio }) => ratio}
+    );
+    left: calc(
+        (100% - 30px) / 5 * ${({ dayIndex }) => dayIndex} + 15px +
+            ${({ dayIndex }) => dayIndex * 3}px
+    );
+    width: calc((100% - 30px) / 5 + 3px);
+    height: 2px;
+    background-color: ${({ theme }) => theme.colors.Highlight.default};
+    z-index: 10;
+    pointer-events: none;
+
+    &::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 0;
+        transform: translateY(-50%);
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background-color: ${({ theme }) => theme.colors.Highlight.default};
+    }
+`
+
 const TimeTableSection = () => {
     const navigate = useNavigate()
     const theme = useTheme()
     const { user, status } = useUserStore()
 
     const [selectedLecture, setSelectedLecture] = useState<Lecture | null>(null)
-    const totalRef = useRef<HTMLDivElement>(null)
+    const [currentTimeRatio, setCurrentTimeRatio] = useState<number | null>(null)
+    const [currentDayIndex, setCurrentDayIndex] = useState<number>(-1)
 
     const { query: myTimetable, setParams: setMyTimetableParams } = useAPI(
         "GET",
@@ -79,7 +122,40 @@ const TimeTableSection = () => {
             enabled: status === "success",
         },
     )
-    const { query: semesters } = useAPI("GET", "/semesters")
+    const { query: currentSemester } = useAPI("GET", "/semesters/current")
+
+    const updateCurrentTime = useCallback(() => {
+        const now = new Date()
+        const jsDay = now.getDay() // 0=Sun, 1=Mon, ..., 6=Sat
+        const dayIndex = jsDay - 1 // 0=Mon, ..., 4=Fri
+        setCurrentDayIndex(dayIndex)
+
+        const currentHour = now.getHours() + now.getMinutes() / 60
+        if (
+            currentHour < TIME_BEGIN ||
+            currentHour > TIME_END ||
+            dayIndex < 0 ||
+            dayIndex > 4
+        ) {
+            setCurrentTimeRatio(null)
+            return
+        }
+
+        const totalHours = TIME_END - TIME_BEGIN
+        const elapsedHours = currentHour - TIME_BEGIN
+        const ratio = elapsedHours / totalHours
+        setCurrentTimeRatio(ratio)
+    }, [])
+
+    useEffect(() => {
+        updateCurrentTime()
+        const interval = setInterval(updateCurrentTime, 60 * 1000)
+        return () => clearInterval(interval)
+    }, [updateCurrentTime])
+    useEffect(() => {
+        window.addEventListener("resize", updateCurrentTime)
+        return () => window.removeEventListener("resize", updateCurrentTime)
+    }, [updateCurrentTime])
 
     useEffect(() => {
         if (selectedLecture) {
@@ -97,16 +173,13 @@ const TimeTableSection = () => {
         }
     }, [selectedLecture])
     useEffect(() => {
-        if (semesters.data && semesters.data.semesters.length > 0) {
-            const latestSemester =
-                semesters.data.semesters[semesters.data.semesters.length - 1]
-            if (!latestSemester) return
+        if (currentSemester.data) {
             setMyTimetableParams({
-                year: latestSemester.year,
-                semester: latestSemester.semester,
-            } as never)
+                year: currentSemester.data.year,
+                semester: currentSemester.data.semester,
+            })
         }
-    }, [semesters.data, setMyTimetableParams])
+    }, [currentSemester.data, setMyTimetableParams])
 
     const lectures = myTimetable.data?.lectures ?? []
 
@@ -115,12 +188,7 @@ const TimeTableSection = () => {
             {status === "loading" ? (
                 <LoadingCircle />
             ) : (
-                <TimeTableInner
-                    direction="column"
-                    align="stretch"
-                    gap={16}
-                    ref={totalRef}
-                >
+                <TimeTableInner direction="column" align="stretch" gap={16}>
                     {status === "idle" ? (
                         <LoginWrapper direction="column" gap={12} align="center">
                             <LockIconWrapper>
@@ -165,13 +233,21 @@ const TimeTableSection = () => {
                         gap={0}
                         align="stretch"
                     >
-                        <CustomTimeTableGrid
-                            lectures={lectures}
-                            needLectureDeletable={false}
-                            needTimeFilter={false}
-                            selectedLecture={null}
-                            setSelectedLecture={setSelectedLecture}
-                        />
+                        <TimeTableGridWrapper>
+                            <CustomTimeTableGrid
+                                lectures={lectures}
+                                needLectureDeletable={false}
+                                needTimeFilter={false}
+                                selectedLecture={null}
+                                setSelectedLecture={setSelectedLecture}
+                            />
+                            {currentTimeRatio !== null && (
+                                <CurrentTimeBar
+                                    ratio={currentTimeRatio}
+                                    dayIndex={currentDayIndex}
+                                />
+                            )}
+                        </TimeTableGridWrapper>
                     </BlurWrapper>
                 </TimeTableInner>
             )}
