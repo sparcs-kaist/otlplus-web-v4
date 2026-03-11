@@ -309,12 +309,20 @@ function OverlapTile({ day, begin, end }: OverlapTileProps) {
 
 const OverflowTileWrapper = styled(FlexWrapper)<{ lectureId: number }>`
     overflow: hidden;
+    min-width: 0;
+    min-height: 0;
+    width: 100%;
+    height: 100%;
 `
 
 const OverflowTileInner = styled(FlexWrapper)<{ courseId: number; lectureId: number }>`
     border-radius: 2px;
     overflow: hidden;
     opacity: 0.5;
+    min-width: 0;
+    min-height: 0;
+    width: 100%;
+    height: 100%;
     background: ${({ theme, courseId }) =>
         () => {
             const flat = flattenTimeTableColors(theme.colors.Tile.TimeTable.default)

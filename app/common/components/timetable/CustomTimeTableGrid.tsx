@@ -43,7 +43,7 @@ const BackgroundGrid = styled(GridWrapper)`
 `
 
 const TimetableGridWrapper = styled(FlexWrapper)`
-    grid-row: 1 / ${SLOT_COUNT + 4};
+    grid-row: 1 / ${SLOT_COUNT + 5};
     user-select: none;
     overflow: hidden;
     grid-template-rows: subgrid;
@@ -56,12 +56,14 @@ const TimetableGridWrapper = styled(FlexWrapper)`
 const OverflowGridWrapper = styled(FlexWrapper)`
     overflow: hidden;
     user-select: none;
+    min-width: 0;
+    min-height: 0;
     grid-row: -1 / -1;
     display: none;
     grid-template-rows: subgrid;
 
     &.has-overflow {
-        grid-row: ${SLOT_COUNT + 2} / ${SLOT_COUNT + 4};
+        grid-row: ${SLOT_COUNT + 2} / ${SLOT_COUNT + 5};
         display: flex;
     }
 `
@@ -605,8 +607,8 @@ function CustomTimeTableGrid({
         >
             <GridWrapper
                 columns="1fr"
-                rows={`${HEADER_HEIGHT}px repeat(${SLOT_COUNT + 2}, 1fr)`}
-                gap={`${LINE_HEIGHT * 2}px ${ROW_GAP * 2}px`}
+                rows={`${HEADER_HEIGHT}px repeat(${SLOT_COUNT + 3}, 1fr)`}
+                gap="0px"
                 alignItems="stretch"
                 justifyItems="stretch"
                 flow="column"
