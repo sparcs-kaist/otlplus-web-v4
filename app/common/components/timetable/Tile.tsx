@@ -3,12 +3,23 @@ import { type CSSProperties, memo } from "react"
 import { type Theme, css } from "@emotion/react"
 import styled from "@emotion/styled"
 import { Close } from "@mui/icons-material"
+import { useTranslation } from "react-i18next"
 
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import { IconButton } from "@/common/primitives/IconButton"
 import Typography from "@/common/primitives/Typography"
 import { type Lecture } from "@/common/schemas/lecture"
+
+const DAYS = [
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+]
 
 const flattenTimeTableColors = (
     timeTable: Theme["colors"]["Tile"]["TimeTable"]["default"],
@@ -122,8 +133,10 @@ const LectureTileInner = styled(FlexWrapper)<{
     [data-interaction="true"] & {
         pointer-events: auto;
         cursor: pointer;
-        &:hover {
-            ${({ theme }) => LectureTileHoverCss(theme)}
+        @media (hover: hover) {
+            &:hover {
+                ${({ theme }) => LectureTileHoverCss(theme)}
+            }
         }
     }
 
@@ -139,11 +152,13 @@ const LectureTileInner = styled(FlexWrapper)<{
         pointer-events: none;
     }
 
-    .custom-timetable:not(:hover)[data-hovered-lectures~="${({ lectureId }) =>
-            lectureId}"]
-        &,
-    [data-selected-lecture="${({ lectureId }) => lectureId}"] & {
-        ${({ theme }) => LectureTileHoverCss(theme)}
+    @media (hover: hover) {
+        .custom-timetable:not(:hover)[data-hovered-lectures~="${({ lectureId }) =>
+                lectureId}"]
+            &,
+        [data-selected-lecture="${({ lectureId }) => lectureId}"] & {
+            ${({ theme }) => LectureTileHoverCss(theme)}
+        }
     }
 
     [data-selected-lecture="${({ lectureId }) => lectureId}"] & {
@@ -331,18 +346,22 @@ const OverflowTileInner = styled(FlexWrapper)<{ courseId: number; lectureId: num
 
     cursor: pointer;
 
-    .custom-timetable:not(:hover)[data-hovered-lectures~="${({ lectureId }) =>
-            lectureId}"]
-        &,
-    [data-selected-lecture="${({ lectureId }) => lectureId}"] & {
-        ${({ theme }) => LectureTileHoverCss(theme)}
+    @media (hover: hover) {
+        .custom-timetable:not(:hover)[data-hovered-lectures~="${({ lectureId }) =>
+                lectureId}"]
+            &,
+        [data-selected-lecture="${({ lectureId }) => lectureId}"] & {
+            ${({ theme }) => LectureTileHoverCss(theme)}
+        }
     }
 
     [data-interaction="true"] & {
         pointer-events: auto;
         cursor: pointer;
-        &:hover {
-            ${({ theme }) => LectureTileHoverCss(theme)}
+        @media (hover: hover) {
+            &:hover {
+                ${({ theme }) => LectureTileHoverCss(theme)}
+            }
         }
     }
 
@@ -367,19 +386,33 @@ interface OverflowTileProps {
 
 function OverflowTile({ lecture, classIdx, deleteLecture }: OverflowTileProps) {
     const cls = lecture.classes[classIdx]
+    const { t } = useTranslation()
 
     if (cls == null) return null
 
     return (
         <OverflowTileWrapper
             direction="column"
-            gap={0}
+            gap={2}
             align="stretch"
             justify="stretch"
             padding="2px"
             flex="1 1 auto"
             lectureId={lecture.id}
         >
+            <FlexWrapper direction="column" gap={0} align="center">
+                {DAYS[cls.day] && cls.begin != null && cls.end != null ? (
+                    <Typography type="Smaller" color="Text.light">
+                        {t(`common.days.${DAYS[cls.day]}`)} {Math.floor(cls.begin / 60)}:
+                        {cls.begin % 60 === 0 ? "00" : "30"} - {Math.floor(cls.end / 60)}:
+                        {cls.end % 60 === 0 ? "00" : "30"}
+                    </Typography>
+                ) : (
+                    <Typography type="Smaller" color="Text.light">
+                        {t("timetable.noTimeInfo")}
+                    </Typography>
+                )}
+            </FlexWrapper>
             <OverflowTileInner
                 direction="column"
                 gap={0}

@@ -268,6 +268,7 @@ const OverflowTileWrapper = styled.div<{ lectureId: number }>`
     display: contents;
     z-index: 3;
     overflow: hidden;
+    pointer-events: auto;
 
     .custom-timetable:has(
             [data-lecture-id="${({ lectureId }) => lectureId}"]
@@ -283,10 +284,26 @@ interface OverflowTileProps {
     lecture: Lecture
     isGhost?: boolean
     deleteLecture?: (lecture: Lecture) => void
+    handleLectureTileHover?: (lecture: Lecture) => void
+    handleLectureTileSelect?: (lecture: Lecture) => void
 }
 
 const MemoizedOverflowTiles = memo(
-    ({ lecture, isGhost, deleteLecture }: OverflowTileProps) => {
+    ({
+        lecture,
+        isGhost,
+        deleteLecture,
+        handleLectureTileHover,
+        handleLectureTileSelect,
+    }: OverflowTileProps) => {
+        const handleMouseEnter = useCallback(() => {
+            handleLectureTileHover?.(lecture)
+        }, [handleLectureTileHover, lecture])
+
+        const handleMouseClick = useCallback(() => {
+            handleLectureTileSelect?.(lecture)
+        }, [handleLectureTileSelect, lecture])
+
         const deleteLectureCallback = useCallback(() => {
             deleteLecture?.(lecture)
         }, [deleteLecture, lecture])
@@ -296,6 +313,9 @@ const MemoizedOverflowTiles = memo(
                 lectureId={lecture.id}
                 data-lecture-id={lecture.id}
                 data-ghost={isGhost ? true : undefined}
+                onPointerEnter={handleMouseEnter}
+                onPointerDown={handleMouseClick}
+                onTouchMove={handleMouseEnter}
             >
                 {lecture.classes.map((cls, idx) => {
                     const { day, begin, end } = cls
@@ -604,6 +624,8 @@ function CustomTimeTableGrid({
             data-selected-lecture=""
             data-interaction={needLectureInteraction}
             data-lecture-deletable={needLectureDeletable}
+            onPointerLeave={clearHoveredLecturesCallback}
+            onTouchEnd={clearHoveredLecturesCallback}
         >
             <GridWrapper
                 columns="1fr"
@@ -722,8 +744,6 @@ function CustomTimeTableGrid({
                             padding={`0 0 ${HEADER_HEIGHT * (1 - HEADER_CALIBRATION)}px 0`}
                             ref={overlayRef}
                             data-is-dragging={false}
-                            onPointerLeave={clearHoveredLecturesCallback}
-                            onTouchEnd={clearHoveredLecturesCallback}
                         >
                             {needTimeFilter && <HoverTile />}
                             {lectures.map((lecture, lectureIdx) => (
@@ -780,6 +800,8 @@ function CustomTimeTableGrid({
                                     selectedLecture?.id === lecture.id
                                 }
                                 deleteLecture={deleteLectureCallback}
+                                handleLectureTileHover={handleLectureTileHoverCallBack}
+                                handleLectureTileSelect={handleLectureTileSelectCallback}
                             />
                         ))}
                     </GridWrapper>
