@@ -1,4 +1,4 @@
-import { Fragment, memo, useCallback, useEffect, useRef, useState } from "react"
+import { Fragment, memo, useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
@@ -15,6 +15,7 @@ import {
     LECTURE_TILE_CLASSNAME,
     LectureTile,
     LectureTileHoverCss,
+    OverflowTile,
     OverlapTile,
 } from "./Tile"
 
@@ -41,6 +42,30 @@ const BackgroundGrid = styled(GridWrapper)`
     z-index: 1;
 `
 
+const TimetableGridWrapper = styled(FlexWrapper)`
+    grid-row: 1 / ${SLOT_COUNT + 4};
+    user-select: none;
+    overflow: hidden;
+    grid-template-rows: subgrid;
+
+    &.has-overflow {
+        grid-row: 1 / ${SLOT_COUNT + 2};
+    }
+`
+
+const OverflowGridWrapper = styled(FlexWrapper)`
+    overflow: hidden;
+    user-select: none;
+    grid-row: -1 / -1;
+    display: none;
+    grid-template-rows: subgrid;
+
+    &.has-overflow {
+        grid-row: ${SLOT_COUNT + 2} / ${SLOT_COUNT + 4};
+        display: flex;
+    }
+`
+
 const OverlayGrid = styled(GridWrapper)`
     position: absolute;
     z-index: 2;
@@ -49,10 +74,6 @@ const OverlayGrid = styled(GridWrapper)`
     --hover-day: 0;
     --hover-start: 0;
     --hover-end: 0;
-`
-
-const OverflowGrid = styled(GridWrapper)`
-    height: auto;
 `
 
 const BackgroundGridBlock = styled(FlexWrapper)`
@@ -128,7 +149,12 @@ const MemoizedBackgroundGridBlock = memo(
 const LectureTileWrapper = styled.div<{ lectureId: number }>`
     display: contents;
 
-    &:has(.${LECTURE_TILE_CLASSNAME}:hover) .${LECTURE_TILE_CLASSNAME} {
+    .custom-timetable:has(
+            [data-lecture-id="${({ lectureId }) => lectureId}"]
+                .${LECTURE_TILE_CLASSNAME}:hover
+        )
+        &
+        .${LECTURE_TILE_CLASSNAME} {
         ${({ theme }) => LectureTileHoverCss(theme)}
     }
 `
@@ -164,19 +190,28 @@ const MemoizedLectureTiles = memo(
         return (
             <LectureTileWrapper
                 lectureId={lecture.id}
+                data-lecture-id={lecture.id}
                 onPointerEnter={handleMouseEnter}
                 onPointerDown={handleMouseClick}
                 onTouchMove={handleMouseEnter}
                 {...(isGhost ? { "data-ghost": true } : {})}
             >
-                {lecture.classes.map((_, classIdx) => (
-                    <LectureTile
-                        key={`${classIdx}-lecture`}
-                        lecture={lecture}
-                        classIdx={classIdx}
-                        deleteLecture={deleteLecture ? deleteLectureCallback : undefined}
-                    />
-                ))}
+                {lecture.classes.map((cls, classIdx) =>
+                    validTime({
+                        day: cls.day,
+                        begin: cls.begin,
+                        end: cls.end,
+                    }) ? (
+                        <LectureTile
+                            key={`${classIdx}-lecture`}
+                            lecture={lecture}
+                            classIdx={classIdx}
+                            deleteLecture={
+                                deleteLecture ? deleteLectureCallback : undefined
+                            }
+                        />
+                    ) : null,
+                )}
             </LectureTileWrapper>
         )
     },
@@ -201,6 +236,10 @@ interface OverlapTileProps {
 const OverlapTileWrapper = styled.div`
     display: contents;
     z-index: 4;
+
+    .custom-timetable:has(.${LECTURE_TILE_CLASSNAME}:hover) .${LECTURE_TILE_CLASSNAME} {
+        ${({ theme }) => LectureTileHoverCss(theme)}
+    }
 `
 
 const MemoizedOverlapTiles = memo(({ overlaps }: OverlapTileProps) => {
@@ -220,34 +259,65 @@ function validTime(time: TimeBlock | null) {
 
     const { day } = time
 
-    return WeekdayEnum.Mon < day && day < WeekdayEnum.Fri && end - begin >= 0.5
+    return WeekdayEnum.Mon <= day && day <= WeekdayEnum.Fri && end - begin >= 0.5
 }
+
+const OverflowTileWrapper = styled.div<{ lectureId: number }>`
+    display: contents;
+    z-index: 3;
+    overflow: hidden;
+
+    .custom-timetable:has(
+            [data-lecture-id="${({ lectureId }) => lectureId}"]
+                .${LECTURE_TILE_CLASSNAME}:hover
+        )
+        &
+        .${LECTURE_TILE_CLASSNAME} {
+        ${({ theme }) => LectureTileHoverCss(theme)}
+    }
+`
 
 interface OverflowTileProps {
     lecture: Lecture
+    isGhost?: boolean
+    deleteLecture?: (lecture: Lecture) => void
 }
 
-const MemoizedOverflowTiles = memo(({ lecture }: OverflowTileProps) => {
-    return lecture.classes.map((cls, idx) => {
-        const { day, begin, end } = cls
-        const time = {
-            day,
-            begin,
-            end,
-        }
+const MemoizedOverflowTiles = memo(
+    ({ lecture, isGhost, deleteLecture }: OverflowTileProps) => {
+        const deleteLectureCallback = useCallback(() => {
+            deleteLecture?.(lecture)
+        }, [deleteLecture, lecture])
 
-        if (validTime(time)) return null
+        return lecture.classes.filter((cls) => !validTime({ ...cls })).length > 0 ? (
+            <OverflowTileWrapper
+                lectureId={lecture.id}
+                data-lecture-id={lecture.id}
+                data-ghost={isGhost ? true : undefined}
+            >
+                {lecture.classes.map((cls, idx) => {
+                    const { day, begin, end } = cls
+                    const time = {
+                        day,
+                        begin,
+                        end,
+                    }
 
-        return (
-            <OverlapTile
-                key={idx}
-                day={cls.day}
-                begin={(cls.begin / 60 - TIME_BEGIN) * 2}
-                end={(cls.end / 60 - TIME_BEGIN) * 2}
-            />
-        )
-    })
-})
+                    if (validTime(time)) return null
+
+                    return (
+                        <OverflowTile
+                            key={idx}
+                            lecture={lecture}
+                            classIdx={idx}
+                            deleteLecture={deleteLectureCallback}
+                        />
+                    )
+                })}
+            </OverflowTileWrapper>
+        ) : null
+    },
+)
 
 interface CustomTimeTableGridProps {
     lectures: Lecture[]
@@ -280,6 +350,8 @@ function CustomTimeTableGrid({
 }: CustomTimeTableGridProps) {
     const { t } = useTranslation()
 
+    const customTimeTableRef = useRef<HTMLDivElement>(null)
+
     const backgroundRef = useRef<HTMLDivElement>(null)
     const overlayRef = useRef<HTMLDivElement>(null)
 
@@ -297,6 +369,21 @@ function CustomTimeTableGrid({
             end: number
         }[]
     >([])
+
+    const [hasOverflow, setHasOverflow] = useState<boolean>(false)
+
+    const overflowLectures = useMemo(() => {
+        const mergedLectures = [...lectures, ...hoveredLectures, selectedLecture].filter(
+            (lecture): lecture is Lecture => lecture != null,
+        )
+
+        const lectureMap = new Map<number, Lecture>()
+        mergedLectures.forEach((lecture) => {
+            lectureMap.set(lecture.id, lecture)
+        })
+
+        return Array.from(lectureMap.values())
+    }, [lectures, hoveredLectures, selectedLecture])
 
     const handlePointerDown = useCallback((x: number, y: number) => {
         const target = document.elementFromPoint(x, y)
@@ -430,7 +517,7 @@ function CustomTimeTableGrid({
 
         const hoveredIds = hoveredLectures.map((lec) => lec.id).join(" ")
 
-        overlayRef.current?.setAttribute("data-hovered-lectures", hoveredIds)
+        customTimeTableRef.current?.setAttribute("data-hovered-lectures", hoveredIds)
     }, [hoveredLectures, needLectureInteraction, lectures])
 
     useEffect(() => {
@@ -439,8 +526,8 @@ function CustomTimeTableGrid({
         const selectedId = selectedLecture ? selectedLecture.id.toString() : ""
 
         if (selectedId !== "")
-            overlayRef.current?.setAttribute("data-selected-lecture", selectedId)
-        else overlayRef.current?.setAttribute("data-selected-lecture", "")
+            customTimeTableRef.current?.setAttribute("data-selected-lecture", selectedId)
+        else customTimeTableRef.current?.setAttribute("data-selected-lecture", "")
     }, [selectedLecture, needLectureInteraction, lectures])
 
     useEffect(() => {
@@ -459,7 +546,13 @@ function CustomTimeTableGrid({
         } else {
             setGhostLecture(null)
         }
-    }, [hoveredLectures, selectedLecture, lectures])
+
+        setHasOverflow(
+            overflowLectures.some((lecture) =>
+                lecture.classes.some((cls) => !validTime({ ...cls })),
+            ),
+        )
+    }, [hoveredLectures, selectedLecture, lectures, overflowLectures])
 
     useEffect(() => {
         if (!needLectureInteraction) return
@@ -502,145 +595,194 @@ function CustomTimeTableGrid({
             align="stretch"
             justify="stretch"
             flex="1 1 auto"
+            style={{ overflow: "hidden" }}
+            className="custom-timetable"
+            ref={customTimeTableRef}
+            data-hovered-lectures=""
+            data-selected-lecture=""
+            data-interaction={needLectureInteraction}
+            data-lecture-deletable={needLectureDeletable}
         >
-            <FlexWrapper
-                direction="row"
-                gap={ROW_GAP * 2}
-                align="stretch"
-                justify="stretch"
-                flex="1 1 auto"
-                style={{ userSelect: "none" }}
+            <GridWrapper
+                columns="1fr"
+                rows={`${HEADER_HEIGHT}px repeat(${SLOT_COUNT + 2}, 1fr)`}
+                gap={`${LINE_HEIGHT * 2}px ${ROW_GAP * 2}px`}
+                alignItems="stretch"
+                justifyItems="stretch"
+                flow="column"
             >
-                <FlexWrapper
-                    direction="column"
-                    gap={0}
+                <TimetableGridWrapper
+                    direction="row"
+                    gap={ROW_GAP * 2}
                     align="stretch"
-                    padding={`${HEADER_HEIGHT * HEADER_CALIBRATION}px 0 0 0`}
+                    justify="stretch"
+                    flex="1 1 auto"
+                    className={hasOverflow ? "has-overflow" : ""}
                 >
                     <FlexWrapper
                         direction="column"
                         gap={0}
-                        align="end"
-                        justify="space-between"
-                        flex="1 1 auto"
-                        style={{ fontSize: "8px" }}
+                        align="stretch"
+                        padding={`${HEADER_HEIGHT * HEADER_CALIBRATION}px 0 0 0`}
                     >
-                        {TIMES.map((time, idx) => (
-                            <Typography key={idx} color="Text.dark">
-                                {time}
-                            </Typography>
-                        ))}
+                        <FlexWrapper
+                            direction="column"
+                            gap={0}
+                            align="end"
+                            justify="space-between"
+                            flex="1 1 auto"
+                            style={{ fontSize: "8px" }}
+                        >
+                            {TIMES.map((time, idx) => (
+                                <Typography key={idx} color="Text.dark">
+                                    {time}
+                                </Typography>
+                            ))}
+                        </FlexWrapper>
                     </FlexWrapper>
-                </FlexWrapper>
-                <FlexWrapper
+                    <FlexWrapper
+                        direction="column"
+                        gap={0}
+                        align="stretch"
+                        justify="stretch"
+                        flex="1 1 auto"
+                        padding={`0 0 ${HEADER_HEIGHT * (1 - HEADER_CALIBRATION)}px 0`}
+                        className="timetable-grid-wrapper"
+                    >
+                        <BackgroundGrid
+                            columns={`repeat(${DAYS.length}, ${cellWidth || "1fr"})`}
+                            rows={`${HEADER_HEIGHT}px repeat(${SLOT_COUNT}, 1fr)`}
+                            flow="column"
+                            gap={`0px ${ROW_GAP}px`}
+                            alignItems="stretch"
+                            justifyItems="stretch"
+                            ref={backgroundRef}
+                            data-is-dragging="false"
+                            data-need-time-filter={needTimeFilter}
+                            {...(needTimeFilter
+                                ? {
+                                      onPointerDown: handleMouseDown,
+                                      onPointerMove: handleMouseMove,
+                                      onPointerUp: handlePointerLeave,
+                                      onPointerLeave: handlePointerLeave,
+                                      onTouchMove: handleTouchMove,
+                                      onTouchEnd: handlePointerLeave,
+                                  }
+                                : {})}
+                        >
+                            {DAYS.map((day, dayIdx) => (
+                                <Fragment key={`${day}-${dayIdx}`}>
+                                    <FlexWrapper
+                                        direction="column"
+                                        gap={0}
+                                        align="center"
+                                    >
+                                        <Typography type="Small" color="Text.dark">
+                                            {t(`common.days.${day}`)}
+                                        </Typography>
+                                    </FlexWrapper>
+
+                                    {Array.from({ length: SLOT_COUNT }).map(
+                                        (_, timeIdx) => (
+                                            <MemoizedBackgroundGridBlock
+                                                key={`${day}-${timeIdx}-memo`}
+                                                dayIdx={dayIdx}
+                                                timeIdx={timeIdx}
+                                                className={[
+                                                    "background-grid-block",
+                                                    timeIdx % 2 === 0 ? "hour" : "half",
+                                                    timeIdx === SLOT_COUNT - 1
+                                                        ? "last"
+                                                        : "",
+                                                    timeIdx % 2 == 0 &&
+                                                    (TIMES24[Math.floor(timeIdx / 2)] ||
+                                                        0) %
+                                                        6 ===
+                                                        0
+                                                        ? "bold"
+                                                        : "",
+                                                ].join(" ")}
+                                                data-day-idx={dayIdx}
+                                                data-time-idx={timeIdx}
+                                            />
+                                        ),
+                                    )}
+                                </Fragment>
+                            ))}
+                        </BackgroundGrid>
+                        <OverlayGrid
+                            columns={`repeat(${DAYS.length}, ${cellWidth || "1fr"})`}
+                            rows={`${HEADER_HEIGHT}px repeat(${SLOT_COUNT}, 1fr)`}
+                            flow="column"
+                            gap={`${LINE_HEIGHT}px ${ROW_GAP}px`}
+                            alignItems="stretch"
+                            justifyItems="stretch"
+                            padding={`0 0 ${HEADER_HEIGHT * (1 - HEADER_CALIBRATION)}px 0`}
+                            ref={overlayRef}
+                            data-is-dragging={false}
+                            onPointerLeave={clearHoveredLecturesCallback}
+                            onTouchEnd={clearHoveredLecturesCallback}
+                        >
+                            {needTimeFilter && <HoverTile />}
+                            {lectures.map((lecture, lectureIdx) => (
+                                <MemoizedLectureTiles
+                                    key={`${lecture.id}-lecture-tile-${lectureIdx}`}
+                                    lecture={lecture}
+                                    deleteLecture={deleteLectureCallback}
+                                    handleLectureTileHover={
+                                        handleLectureTileHoverCallBack
+                                    }
+                                    handleLectureTileSelect={
+                                        handleLectureTileSelectCallback
+                                    }
+                                />
+                            ))}
+                            {ghostLecture && (
+                                <MemoizedLectureTiles
+                                    lecture={ghostLecture}
+                                    isGhost={true}
+                                />
+                            )}
+                            {ghostLecture && <MemoizedOverlapTiles overlaps={overlaps} />}
+                        </OverlayGrid>
+                    </FlexWrapper>
+                </TimetableGridWrapper>
+
+                <OverflowGridWrapper
                     direction="column"
                     gap={0}
                     align="stretch"
                     justify="stretch"
                     flex="1 1 auto"
-                    padding={`0 0 ${HEADER_HEIGHT * (1 - HEADER_CALIBRATION)}px 0`}
-                    className="timetable-grid-wrapper"
+                    padding={`0 0 0 18px`}
+                    className={
+                        "overflow-grid-wrapper" + (hasOverflow ? " has-overflow" : "")
+                    }
                 >
-                    <BackgroundGrid
+                    <GridWrapper
                         columns={`repeat(${DAYS.length}, ${cellWidth || "1fr"})`}
-                        rows={`${HEADER_HEIGHT}px repeat(${SLOT_COUNT}, 1fr)`}
-                        flow="column"
+                        rows={`1fr`}
                         gap={`0px ${ROW_GAP}px`}
-                        alignItems="stretch"
-                        justifyItems="stretch"
-                        ref={backgroundRef}
-                        data-is-dragging="false"
-                        data-need-time-filter={needTimeFilter}
-                        {...(needTimeFilter
-                            ? {
-                                  onPointerDown: handleMouseDown,
-                                  onPointerMove: handleMouseMove,
-                                  onPointerUp: handlePointerLeave,
-                                  onPointerLeave: handlePointerLeave,
-                                  onTouchMove: handleTouchMove,
-                                  onTouchEnd: handlePointerLeave,
-                              }
-                            : {})}
+                        flow="row"
+                        style={{ overflow: "hidden" }}
                     >
-                        {DAYS.map((day, dayIdx) => (
-                            <Fragment key={`${day}-${dayIdx}`}>
-                                <FlexWrapper direction="column" gap={0} align="center">
-                                    <Typography type="Small" color="Text.dark">
-                                        {t(`common.days.${day}`)}
-                                    </Typography>
-                                </FlexWrapper>
-
-                                {Array.from({ length: SLOT_COUNT }).map((_, timeIdx) => (
-                                    <MemoizedBackgroundGridBlock
-                                        key={`${day}-${timeIdx}-memo`}
-                                        dayIdx={dayIdx}
-                                        timeIdx={timeIdx}
-                                        className={[
-                                            "background-grid-block",
-                                            timeIdx % 2 === 0 ? "hour" : "half",
-                                            timeIdx === SLOT_COUNT - 1 ? "last" : "",
-                                            timeIdx % 2 == 0 &&
-                                            (TIMES24[Math.floor(timeIdx / 2)] || 0) %
-                                                6 ===
-                                                0
-                                                ? "bold"
-                                                : "",
-                                        ].join(" ")}
-                                        data-day-idx={dayIdx}
-                                        data-time-idx={timeIdx}
-                                    />
-                                ))}
-                            </Fragment>
-                        ))}
-                    </BackgroundGrid>
-                    <OverlayGrid
-                        columns={`repeat(${DAYS.length}, ${cellWidth || "1fr"})`}
-                        rows={`${HEADER_HEIGHT}px repeat(${SLOT_COUNT}, 1fr)`}
-                        flow="column"
-                        gap={`${LINE_HEIGHT}px ${ROW_GAP}px`}
-                        alignItems="stretch"
-                        justifyItems="stretch"
-                        padding={`0 0 ${HEADER_HEIGHT * (1 - HEADER_CALIBRATION)}px 0`}
-                        ref={overlayRef}
-                        data-interaction={needLectureInteraction}
-                        data-lecture-deletable={needLectureDeletable}
-                        data-is-dragging={false}
-                        data-hovered-lectures=""
-                        data-selected-lecture=""
-                        onPointerLeave={clearHoveredLecturesCallback}
-                        onTouchEnd={clearHoveredLecturesCallback}
-                    >
-                        {needTimeFilter && <HoverTile />}
-                        {lectures.map((lecture, lectureIdx) => (
-                            <MemoizedLectureTiles
-                                key={`${lecture.id}-lecture-tile-${lectureIdx}`}
+                        {overflowLectures.map((lecture, lectureIdx) => (
+                            <MemoizedOverflowTiles
+                                key={`${lecture.id}-overflow-${lectureIdx}`}
                                 lecture={lecture}
+                                isGhost={
+                                    (lectures.every((lec) => lec.id !== lecture.id) &&
+                                        hoveredLectures.some(
+                                            (lec) => lec.id === lecture.id,
+                                        )) ||
+                                    selectedLecture?.id === lecture.id
+                                }
                                 deleteLecture={deleteLectureCallback}
-                                handleLectureTileHover={handleLectureTileHoverCallBack}
-                                handleLectureTileSelect={handleLectureTileSelectCallback}
                             />
                         ))}
-                        {ghostLecture && (
-                            <MemoizedLectureTiles lecture={ghostLecture} isGhost={true} />
-                        )}
-                        {ghostLecture && <MemoizedOverlapTiles overlaps={overlaps} />}
-                    </OverlayGrid>
-                </FlexWrapper>
-            </FlexWrapper>
-
-            <OverflowGrid
-                columns={`repeat(${DAYS.length}, ${cellWidth || "1fr"})`}
-                rows={`1fr`}
-                gap={`0px ${ROW_GAP}px`}
-                flow="row"
-            >
-                {lectures.map((lecture, idx) => (
-                    <MemoizedOverflowTiles
-                        key={`${lecture.id}-${idx}`}
-                        lecture={lecture}
-                    />
-                ))}
-            </OverflowGrid>
+                    </GridWrapper>
+                </OverflowGridWrapper>
+            </GridWrapper>
         </FlexWrapper>
     )
 }

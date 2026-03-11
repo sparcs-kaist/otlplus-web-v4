@@ -139,8 +139,8 @@ const LectureTileInner = styled(FlexWrapper)<{
         pointer-events: none;
     }
 
-    .timetable-grid-wrapper:not(:hover)
-        [data-hovered-lectures~="${({ lectureId }) => lectureId}"]
+    .custom-timetable:not(:hover)[data-hovered-lectures~="${({ lectureId }) =>
+            lectureId}"]
         &,
     [data-selected-lecture="${({ lectureId }) => lectureId}"] & {
         ${({ theme }) => LectureTileHoverCss(theme)}
@@ -307,24 +307,131 @@ function OverlapTile({ day, begin, end }: OverlapTileProps) {
     )
 }
 
-const OverflowTileWrapper = styled(FlexWrapper)``
+const OverflowTileWrapper = styled(FlexWrapper)<{ lectureId: number }>`
+    overflow: hidden;
+`
 
-const OverflowTileInner = styled(FlexWrapper)`
+const OverflowTileInner = styled(FlexWrapper)<{ courseId: number; lectureId: number }>`
     border-radius: 2px;
+    overflow: hidden;
+    opacity: 0.5;
+    background: ${({ theme, courseId }) =>
+        () => {
+            const flat = flattenTimeTableColors(theme.colors.Tile.TimeTable.default)
+            return flat[courseId % flat.length]
+        }};
+
+    cursor: pointer;
+
+    .custom-timetable:not(:hover)[data-hovered-lectures~="${({ lectureId }) =>
+            lectureId}"]
+        &,
+    [data-selected-lecture="${({ lectureId }) => lectureId}"] & {
+        ${({ theme }) => LectureTileHoverCss(theme)}
+    }
+
+    [data-interaction="true"] & {
+        pointer-events: auto;
+        cursor: pointer;
+        &:hover {
+            ${({ theme }) => LectureTileHoverCss(theme)}
+        }
+    }
+
+    [data-selected-lecture="${({ lectureId }) => lectureId}"] & {
+        transform: translateY(-2px);
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        opacity: 1;
+    }
+
+    [data-selected-lecture=""] & {
+        transform: none;
+        box-shadow: none;
+        opacity: 1;
+    }
 `
 
 interface OverflowTileProps {
     lecture: Lecture
     classIdx: number
+    deleteLecture?: () => void
 }
 
-function OverflowTile({ lecture, classIdx }: OverflowTileProps) {
+function OverflowTile({ lecture, classIdx, deleteLecture }: OverflowTileProps) {
+    const cls = lecture.classes[classIdx]
+
+    if (cls == null) return null
+
     return (
-        <OverflowTileWrapper direction="column" gap={0} align="stretch" justify="stretch">
-            <Typography type="Smaller" color="Text.default"></Typography>
-            <OverflowTileInner direction="column" gap={0} flex="1 1 auto" />
+        <OverflowTileWrapper
+            direction="column"
+            gap={0}
+            align="stretch"
+            justify="stretch"
+            padding="2px"
+            flex="1 1 auto"
+            lectureId={lecture.id}
+        >
+            <OverflowTileInner
+                direction="column"
+                gap={0}
+                align="flex-start"
+                padding="6px"
+                courseId={lecture.courseId}
+                lectureId={lecture.id}
+                flex="1 1 auto"
+                className={LECTURE_TILE_CLASSNAME}
+            >
+                <Typography
+                    type="SmallMedium"
+                    className="lecture-title"
+                    color="TimeTable.title"
+                >
+                    {lecture.name + " " + lecture.subtitle}
+                </Typography>
+                <Typography
+                    type="Small"
+                    className="lecture-info"
+                    color="TimeTable.detail"
+                >
+                    {lecture.professors.map((professor) => professor.name).join(", ")}
+                </Typography>
+                <Typography
+                    type="Small"
+                    className="lecture-info"
+                    color="TimeTable.detail"
+                >
+                    {`(${cls.buildingCode}) ${cls.roomName}`}
+                </Typography>
+
+                <LectureDeleteWrapper
+                    direction="column"
+                    flex="1 1 auto"
+                    gap={0}
+                    className="lecture-delete-wrapper"
+                >
+                    <IconButton styles={{ padding: 3 }} onClick={deleteLecture}>
+                        <Icon
+                            size={12}
+                            onClick={() => {}}
+                            style={{
+                                color: "rgba(255, 255, 255, 0.6)",
+                                opacity: deleteLecture ? 1 : 0,
+                                pointerEvents: deleteLecture ? "auto" : "none",
+                            }}
+                        >
+                            <Close />
+                        </Icon>
+                    </IconButton>
+                </LectureDeleteWrapper>
+            </OverflowTileInner>
         </OverflowTileWrapper>
     )
 }
 
-export { MemoizedHoverTile as HoverTile, MemoizedLectureTile as LectureTile, OverlapTile }
+export {
+    MemoizedHoverTile as HoverTile,
+    MemoizedLectureTile as LectureTile,
+    OverlapTile,
+    OverflowTile,
+}
