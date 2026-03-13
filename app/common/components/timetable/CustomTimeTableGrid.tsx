@@ -567,6 +567,11 @@ function CustomTimeTableGrid({
     }, [selectedLecture, needLectureInteraction, lectures])
 
     useEffect(() => {
+        setHasOverflow(
+            overflowLectures.some((lecture) =>
+                lecture.classes.some((cls) => !validTime({ ...cls })),
+            ),
+        )
         if (!needLectureInteraction) return
 
         if (
@@ -582,12 +587,6 @@ function CustomTimeTableGrid({
         } else {
             setGhostLecture(null)
         }
-
-        setHasOverflow(
-            overflowLectures.some((lecture) =>
-                lecture.classes.some((cls) => !validTime({ ...cls })),
-            ),
-        )
     }, [hoveredLectures, selectedLecture, lectures, overflowLectures])
 
     useEffect(() => {
