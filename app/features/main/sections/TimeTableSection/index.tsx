@@ -99,8 +99,8 @@ const CurrentTimeBar = styled.div<{ ratio: number; dayIndex: number }>`
         top: 50%;
         left: 0;
         transform: translateY(-50%);
-        width: 14px;
-        height: 14px;
+        width: 8px;
+        height: 8px;
         border-radius: 50%;
         background-color: ${({ theme }) => theme.colors.Highlight.default};
     }
@@ -128,9 +128,10 @@ const TimeTableSection = () => {
         const now = new Date()
         const jsDay = now.getDay() // 0=Sun, 1=Mon, ..., 6=Sat
         const dayIndex = jsDay - 1 // 0=Mon, ..., 4=Fri
-        setCurrentDayIndex(dayIndex)
+        setCurrentDayIndex(2)
 
-        const currentHour = now.getHours() + now.getMinutes() / 60
+        const currentHour = 15 + 50 / 60
+        // const currentHour = now.getHours() + now.getMinutes() / 60
         if (
             currentHour < TIME_BEGIN ||
             currentHour > TIME_END ||
