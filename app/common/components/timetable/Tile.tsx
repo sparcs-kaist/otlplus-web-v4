@@ -253,26 +253,28 @@ function LectureTile({ lecture, classIdx, deleteLecture }: LectureTileProps) {
                     </FlexWrapper>
                 </FlexWrapper>
 
-                <LectureDeleteWrapper
-                    direction="column"
-                    flex="1 1 auto"
-                    gap={0}
-                    className="lecture-delete-wrapper"
-                >
-                    <IconButton styles={{ padding: 3 }} onClick={deleteLecture}>
-                        <Icon
-                            size={12}
-                            onClick={() => {}}
-                            style={{
-                                color: "rgba(255, 255, 255, 0.6)",
-                                opacity: deleteLecture ? 1 : 0,
-                                pointerEvents: deleteLecture ? "auto" : "none",
-                            }}
-                        >
-                            <Close />
-                        </Icon>
-                    </IconButton>
-                </LectureDeleteWrapper>
+                {deleteLecture && (
+                    <LectureDeleteWrapper
+                        direction="column"
+                        flex="1 1 auto"
+                        gap={0}
+                        className="lecture-delete-wrapper"
+                    >
+                        <IconButton styles={{ padding: 3 }} onClick={deleteLecture}>
+                            <Icon
+                                size={12}
+                                onClick={() => {}}
+                                style={{
+                                    color: "rgba(255, 255, 255, 0.6)",
+                                    opacity: 1,
+                                    pointerEvents: "auto",
+                                }}
+                            >
+                                <Close />
+                            </Icon>
+                        </IconButton>
+                    </LectureDeleteWrapper>
+                )}
             </LectureTileInner>
         </LectureTileWrapper>
     )
@@ -380,15 +382,13 @@ const OverflowTileInner = styled(FlexWrapper)<{ courseId: number; lectureId: num
 
 interface OverflowTileProps {
     lecture: Lecture
-    classIdx: number
+    classIdx?: number
     deleteLecture?: () => void
 }
 
 function OverflowTile({ lecture, classIdx, deleteLecture }: OverflowTileProps) {
-    const cls = lecture.classes[classIdx]
+    const cls = classIdx == null ? null : lecture.classes[classIdx]
     const { t } = useTranslation()
-
-    if (cls == null) return null
 
     return (
         <OverflowTileWrapper
@@ -401,7 +401,7 @@ function OverflowTile({ lecture, classIdx, deleteLecture }: OverflowTileProps) {
             lectureId={lecture.id}
         >
             <FlexWrapper direction="column" gap={0} align="center">
-                {DAYS[cls.day] && cls.begin != null && cls.end != null ? (
+                {cls != null && DAYS[cls.day] && cls.begin != null && cls.end != null ? (
                     <Typography type="Smaller" color="Text.light">
                         {t(`common.days.${DAYS[cls.day]}`)} {Math.floor(cls.begin / 60)}:
                         {cls.begin % 60 === 0 ? "00" : "30"} - {Math.floor(cls.end / 60)}:
@@ -442,29 +442,31 @@ function OverflowTile({ lecture, classIdx, deleteLecture }: OverflowTileProps) {
                     className="lecture-info"
                     color="TimeTable.detail"
                 >
-                    {`(${cls.buildingCode}) ${cls.roomName}`}
+                    {cls != null ? `(${cls.buildingCode}) ${cls.roomName}` : ""}
                 </Typography>
 
-                <LectureDeleteWrapper
-                    direction="column"
-                    flex="1 1 auto"
-                    gap={0}
-                    className="lecture-delete-wrapper"
-                >
-                    <IconButton styles={{ padding: 3 }} onClick={deleteLecture}>
-                        <Icon
-                            size={12}
-                            onClick={() => {}}
-                            style={{
-                                color: "rgba(255, 255, 255, 0.6)",
-                                opacity: deleteLecture ? 1 : 0,
-                                pointerEvents: deleteLecture ? "auto" : "none",
-                            }}
-                        >
-                            <Close />
-                        </Icon>
-                    </IconButton>
-                </LectureDeleteWrapper>
+                {deleteLecture && (
+                    <LectureDeleteWrapper
+                        direction="column"
+                        flex="1 1 auto"
+                        gap={0}
+                        className="lecture-delete-wrapper"
+                    >
+                        <IconButton styles={{ padding: 3 }} onClick={deleteLecture}>
+                            <Icon
+                                size={12}
+                                onClick={() => {}}
+                                style={{
+                                    color: "rgba(255, 255, 255, 0.6)",
+                                    opacity: 1,
+                                    pointerEvents: "auto",
+                                }}
+                            >
+                                <Close />
+                            </Icon>
+                        </IconButton>
+                    </LectureDeleteWrapper>
+                )}
             </OverflowTileInner>
         </OverflowTileWrapper>
     )

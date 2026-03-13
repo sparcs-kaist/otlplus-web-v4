@@ -308,7 +308,8 @@ const MemoizedOverflowTiles = memo(
             deleteLecture?.(lecture)
         }, [deleteLecture, lecture])
 
-        return lecture.classes.filter((cls) => !validTime({ ...cls })).length > 0 ? (
+        return lecture.classes.length == 0 ||
+            lecture.classes.filter((cls) => !validTime({ ...cls })).length > 0 ? (
             <OverflowTileWrapper
                 lectureId={lecture.id}
                 data-lecture-id={lecture.id}
@@ -317,27 +318,40 @@ const MemoizedOverflowTiles = memo(
                 onPointerDown={handleMouseClick}
                 onTouchMove={handleMouseEnter}
             >
-                {lecture.classes.map((cls, idx) => {
-                    const { day, begin, end } = cls
-                    const time = {
-                        day,
-                        begin,
-                        end,
-                    }
+                {lecture.classes.length == 0 ? (
+                    <OverflowTile
+                        key={lecture.id}
+                        lecture={lecture}
+                        deleteLecture={isGhost ? undefined : deleteLectureCallback}
+                    />
+                ) : (
+                    lecture.classes.map((cls, idx) => {
+                        const { day, begin, end } = cls
+                        const time = {
+                            day,
+                            begin,
+                            end,
+                        }
 
-                    if (validTime(time)) return null
+                        if (validTime(time)) return null
 
-                    return (
-                        <OverflowTile
-                            key={idx}
-                            lecture={lecture}
-                            classIdx={idx}
-                            deleteLecture={deleteLectureCallback}
-                        />
-                    )
-                })}
+                        return (
+                            <OverflowTile
+                                key={idx}
+                                lecture={lecture}
+                                classIdx={idx}
+                                deleteLecture={
+                                    isGhost ? undefined : deleteLectureCallback
+                                }
+                            />
+                        )
+                    })
+                )}
             </OverflowTileWrapper>
         ) : null
+    },
+    (prevProps, nextProps) => {
+        return prevProps.lecture === nextProps.lecture
     },
 )
 
@@ -792,13 +806,7 @@ function CustomTimeTableGrid({
                             <MemoizedOverflowTiles
                                 key={`${lecture.id}-overflow-${lectureIdx}`}
                                 lecture={lecture}
-                                isGhost={
-                                    (lectures.every((lec) => lec.id !== lecture.id) &&
-                                        hoveredLectures.some(
-                                            (lec) => lec.id === lecture.id,
-                                        )) ||
-                                    selectedLecture?.id === lecture.id
-                                }
+                                isGhost={lectures.every((lec) => lec.id !== lecture.id)}
                                 deleteLecture={deleteLectureCallback}
                                 handleLectureTileHover={handleLectureTileHoverCallBack}
                                 handleLectureTileSelect={handleLectureTileSelectCallback}
