@@ -101,6 +101,7 @@ const TimeTableSection = () => {
                     align="stretch"
                     gap={16}
                     ref={totalRef}
+                    style={{ overflow: "hidden" }}
                 >
                     {status === "idle" ? (
                         <LoginWrapper direction="column" gap={12} align="center">
@@ -145,6 +146,7 @@ const TimeTableSection = () => {
                         direction="column"
                         gap={0}
                         align="stretch"
+                        style={{ overflow: "hidden" }}
                     >
                         <CustomTimeTableGrid
                             lectures={lectures}
