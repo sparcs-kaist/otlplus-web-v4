@@ -11,4 +11,5 @@ export const timetable = {
     removeFromWishlist: "Remove from Wishlist",
     removeFromTimetable: "Remove from Timetable",
     competitionRate: "Competition",
+    noTimeInfo: "No Time Info",
 }
