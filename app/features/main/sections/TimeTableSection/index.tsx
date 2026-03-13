@@ -1,15 +1,17 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useState } from "react"
 
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import LockIcon from "@mui/icons-material/Lock"
 import { Trans } from "react-i18next"
+import { useNavigate } from "react-router"
 
 import LoadingCircle from "@/common/components/LoadingCircle"
 import CustomTimeTableGrid from "@/common/components/timetable/CustomTimeTableGrid"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
+import type { Lecture } from "@/common/schemas/lecture"
 import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
 import { handleLogin } from "@/utils/handleLoginLogout"
@@ -62,11 +64,20 @@ const LoginButton = styled.div`
     user-select: none;
 `
 
+const TimeTableGridWrapper = styled.div`
+    position: relative;
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+`
+
 const TimeTableSection = () => {
+    const navigate = useNavigate()
     const theme = useTheme()
     const { user, status } = useUserStore()
 
-    const totalRef = useRef<HTMLDivElement>(null)
+    const [selectedLecture, setSelectedLecture] = useState<Lecture | null>(null)
 
     const { query: myTimetable, setParams: setMyTimetableParams } = useAPI(
         "GET",
@@ -75,24 +86,36 @@ const TimeTableSection = () => {
             enabled: status === "success",
         },
     )
-    const { query: semesters } = useAPI("GET", "/semesters")
+    const { query: currentSemester } = useAPI("GET", "/semesters/current")
 
     useEffect(() => {
-        if (semesters.data && semesters.data.semesters.length > 0) {
-            const latestSemester =
-                semesters.data.semesters[semesters.data.semesters.length - 1]
-            if (!latestSemester) return
-            setMyTimetableParams({
-                year: latestSemester.year,
-                semester: latestSemester.semester,
-            } as never)
+        if (selectedLecture) {
+            const queryString = new URLSearchParams()
+            if (selectedLecture.courseId) {
+                queryString.append("courseId", selectedLecture.courseId.toString())
+            }
+            if (selectedLecture.professors) {
+                const firstProfessor = selectedLecture.professors[0]
+                if (firstProfessor) {
+                    queryString.append("professorId", firstProfessor.id.toString())
+                }
+            }
+            navigate(`/dictionary?${queryString.toString()}`)
         }
-    }, [semesters.data, setMyTimetableParams])
+    }, [selectedLecture])
+    useEffect(() => {
+        if (currentSemester.data) {
+            setMyTimetableParams({
+                year: currentSemester.data.year,
+                semester: currentSemester.data.semester,
+            })
+        }
+    }, [currentSemester.data, setMyTimetableParams])
 
     const lectures = myTimetable.data?.lectures ?? []
 
     return (
-        <StyledWidget direction="column" gap={0} padding="30px" flex="1 1 auto">
+        <StyledWidget direction="column" gap={0} padding="30px 23px" flex="1 1 auto">
             {status === "loading" ? (
                 <LoadingCircle />
             ) : (
@@ -100,7 +123,7 @@ const TimeTableSection = () => {
                     direction="column"
                     align="stretch"
                     gap={16}
-                    ref={totalRef}
+                    style={{ overflow: "hidden" }}
                 >
                     {status === "idle" ? (
                         <LoginWrapper direction="column" gap={12} align="center">
@@ -145,13 +168,18 @@ const TimeTableSection = () => {
                         direction="column"
                         gap={0}
                         align="stretch"
+                        style={{ overflow: "hidden" }}
                     >
-                        <CustomTimeTableGrid
-                            lectures={lectures}
-                            needLectureDeletable={false}
-                            needTimeFilter={false}
-                            needLectureInteraction={false}
-                        />
+                        <TimeTableGridWrapper style={{ overflow: "hidden" }}>
+                            <CustomTimeTableGrid
+                                lectures={lectures}
+                                needLectureDeletable={false}
+                                needTimeFilter={false}
+                                selectedLecture={null}
+                                setSelectedLecture={setSelectedLecture}
+                                needCurrentTimeBar={true}
+                            />
+                        </TimeTableGridWrapper>
                     </BlurWrapper>
                 </TimeTableInner>
             )}

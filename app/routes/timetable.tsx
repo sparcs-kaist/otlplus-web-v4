@@ -74,6 +74,7 @@ const ContentsAreaWrapper = styled(FlexWrapper)`
         width: 100%;
         max-width: none;
         flex: 1 0 0;
+        overflow: hidden;
     }
 `
 
@@ -162,6 +163,7 @@ const UtilButtonsArea = styled.div`
 const TimetableArea = styled(FlexWrapper)`
     flex: 1;
     min-height: 0;
+    overflow: hidden;
 
     ${media.laptop} {
         background-color: ${({ theme }) => theme.colors.Background.Section.default};

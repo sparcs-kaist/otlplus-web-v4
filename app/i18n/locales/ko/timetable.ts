@@ -11,4 +11,5 @@ export const timetable = {
     removeFromWishlist: "찜목록에서 제거",
     removeFromTimetable: "시간표에서 제거",
     competitionRate: "경쟁률",
+    noTimeInfo: "시간 정보 없음",
 }
