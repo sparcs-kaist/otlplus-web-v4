@@ -81,7 +81,7 @@ const TimeTableSection = () => {
 
     const { query: myTimetable, setParams: setMyTimetableParams } = useAPI(
         "GET",
-        "/timetables/330649",
+        "/timetables/my-timetable",
         {
             enabled: status === "success",
         },
