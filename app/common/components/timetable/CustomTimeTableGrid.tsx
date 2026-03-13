@@ -355,6 +355,33 @@ const MemoizedOverflowTiles = memo(
     },
 )
 
+const CurrentTimeBar = styled.div<{ ratio: number; dayIndex: number }>`
+    grid-column: ${({ dayIndex }) => dayIndex + 1};
+    grid-row: 1 / -1;
+    position: relative;
+    top: calc(
+        ${HEADER_HEIGHT}px + (100% - ${HEADER_HEIGHT * (2 - HEADER_CALIBRATION)}px) *
+            ${({ ratio }) => ratio}
+    );
+    width: 100%;
+    height: 2px;
+    background-color: ${({ theme }) => theme.colors.Highlight.default};
+    z-index: 10;
+    pointer-events: none;
+
+    &::before {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 0;
+        transform: translateY(-50%);
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: ${({ theme }) => theme.colors.Highlight.default};
+    }
+`
+
 interface CustomTimeTableGridProps {
     lectures: Lecture[]
     cellWidth?: string
@@ -368,6 +395,7 @@ interface CustomTimeTableGridProps {
     setHoveredLectures?: React.Dispatch<React.SetStateAction<Lecture[]>>
     selectedLecture?: Lecture | null
     setSelectedLecture?: React.Dispatch<React.SetStateAction<Lecture | null>>
+    needCurrentTimeBar?: boolean
 }
 
 function CustomTimeTableGrid({
@@ -383,6 +411,7 @@ function CustomTimeTableGrid({
     setHoveredLectures,
     selectedLecture = null,
     setSelectedLecture,
+    needCurrentTimeBar = false,
 }: CustomTimeTableGridProps) {
     const { t } = useTranslation()
 
@@ -407,6 +436,45 @@ function CustomTimeTableGrid({
     >([])
 
     const [hasOverflow, setHasOverflow] = useState<boolean>(false)
+
+    const [currentTimeRatio, setCurrentTimeRatio] = useState<number | null>(null)
+    const [currentDayIndex, setCurrentDayIndex] = useState<number>(-1)
+
+    const updateCurrentTime = useCallback(() => {
+        const now = new Date()
+        const jsDay = now.getDay() // 0=Sun, 1=Mon, ..., 6=Sat
+        const dayIndex = jsDay - 1 // 0=Mon, ..., 4=Fri
+
+        const currentHour = now.getHours() + now.getMinutes() / 60
+        if (
+            currentHour < TIME_BEGIN ||
+            currentHour > TIME_END ||
+            dayIndex < 0 ||
+            dayIndex > 4
+        ) {
+            setCurrentTimeRatio(null)
+            return
+        }
+
+        const totalHours = TIME_END - TIME_BEGIN
+        const elapsedHours = currentHour - TIME_BEGIN
+        const ratio = elapsedHours / totalHours
+        setCurrentTimeRatio(ratio)
+        setCurrentDayIndex(dayIndex)
+    }, [])
+
+    useEffect(() => {
+        if (!needCurrentTimeBar) return
+
+        updateCurrentTime()
+        const interval = setInterval(updateCurrentTime, 60 * 1000)
+        window.addEventListener("resize", updateCurrentTime)
+
+        return () => {
+            clearInterval(interval)
+            window.removeEventListener("resize", updateCurrentTime)
+        }
+    }, [needCurrentTimeBar, updateCurrentTime])
 
     const overflowLectures = useMemo(() => {
         const mergedLectures = [...lectures, ...hoveredLectures, selectedLecture].filter(
@@ -779,6 +847,12 @@ function CustomTimeTableGrid({
                                 />
                             )}
                             {ghostLecture && <MemoizedOverlapTiles overlaps={overlaps} />}
+                            {needCurrentTimeBar && currentTimeRatio !== null && (
+                                <CurrentTimeBar
+                                    ratio={currentTimeRatio}
+                                    dayIndex={currentDayIndex}
+                                />
+                            )}
                         </OverlayGrid>
                     </FlexWrapper>
                 </TimetableGridWrapper>
@@ -830,6 +904,7 @@ export default memo(CustomTimeTableGrid, (prevProps, nextProps) => {
         prevProps.hoveredLectures === nextProps.hoveredLectures &&
         prevProps.setHoveredLectures === nextProps.setHoveredLectures &&
         prevProps.selectedLecture === nextProps.selectedLecture &&
-        prevProps.setSelectedLecture === nextProps.setSelectedLecture
+        prevProps.setSelectedLecture === nextProps.setSelectedLecture &&
+        prevProps.needCurrentTimeBar === nextProps.needCurrentTimeBar
     )
 })
