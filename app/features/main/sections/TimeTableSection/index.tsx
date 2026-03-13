@@ -117,7 +117,7 @@ const TimeTableSection = () => {
 
     const { query: myTimetable, setParams: setMyTimetableParams } = useAPI(
         "GET",
-        "/timetables/330647",
+        "/timetables/330649",
         {
             enabled: status === "success",
         },
@@ -128,9 +128,10 @@ const TimeTableSection = () => {
         const now = new Date()
         const jsDay = now.getDay() // 0=Sun, 1=Mon, ..., 6=Sat
         const dayIndex = jsDay - 1 // 0=Mon, ..., 4=Fri
-        setCurrentDayIndex(dayIndex)
+        setCurrentDayIndex(2)
 
-        const currentHour = now.getHours() + now.getMinutes() / 60
+        const currentHour = 15 + 50 / 60
+        // const currentHour = now.getHours() + now.getMinutes() / 60
         if (
             currentHour < TIME_BEGIN ||
             currentHour > TIME_END ||
@@ -239,7 +240,7 @@ const TimeTableSection = () => {
                         align="stretch"
                         style={{ overflow: "hidden" }}
                     >
-                        <TimeTableGridWrapper>
+                        <TimeTableGridWrapper style={{ overflow: "hidden" }}>
                             <CustomTimeTableGrid
                                 lectures={lectures}
                                 needLectureDeletable={false}
