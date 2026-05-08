@@ -4,12 +4,11 @@ import styled from "@emotion/styled"
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline"
 import { ThemeProvider, createTheme } from "@mui/material"
 
-interface IconProps {
+interface IconProps extends React.HTMLAttributes<HTMLDivElement> {
     children: React.ReactNode
     size: number
     onClick?: (e: React.MouseEvent) => void
     color?: string
-    [key: string]: any // Allow additional properties
 }
 
 const theme = createTheme()

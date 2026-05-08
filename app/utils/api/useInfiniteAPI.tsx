@@ -7,6 +7,7 @@ import {
 } from "@tanstack/react-query"
 import { type AxiosHeaders } from "axios"
 import { useTranslation } from "react-i18next"
+import type { ZodType } from "zod"
 
 import { axiosClient } from "@/libs/axios"
 
@@ -21,7 +22,7 @@ import {
 } from "./getAPIType"
 
 type ArrayKeys<T> = {
-    [K in keyof T]-?: T[K] extends any[] ? K : never
+    [K in keyof T]-?: T[K] extends readonly unknown[] ? K : never
 }[keyof T]
 
 type NestedRes<Res> = ArrayKeys<Res>
@@ -56,7 +57,7 @@ export function useInfiniteAPI<
     ops: UseAPIQueryOptions<M, P, Res>,
 ): {
     query: UseInfiniteQueryResult<InfiniteData<Res, unknown>, Error>
-    setParams: Dispatch<SetStateAction<FReq>>
+    setParams: Dispatch<SetStateAction<FReq | null>>
     data: Res | undefined
 } {
     const { i18n } = useTranslation()
@@ -72,7 +73,7 @@ export function useInfiniteAPI<
         iterate = () => -1,
     } = ops
     const [flattenData, setFlattenData] = useState<Res | undefined>(undefined)
-    const [params, setParams] = useState<FReq>(null as unknown as FReq)
+    const [params, setParams] = useState<FReq | null>(null)
 
     const selectRef = useRef(select)
     const infinitesRef = useRef(infinites)
@@ -88,7 +89,7 @@ export function useInfiniteAPI<
     const requestSchema = getZodSchemaRequest<M, GetOriginalPath<P>>(
         method,
         getOriginalPathValue(path),
-    )
+    ) as ZodType
 
     const query = useInfiniteQuery<Res>({
         queryKey: [path, params, i18n.resolvedLanguage],
@@ -112,7 +113,7 @@ export function useInfiniteAPI<
             }
 
             for (const key of infinitesRef.current) {
-                const lastPageLength = (lastPage[key] as any[]).length
+                const lastPageLength = (lastPage[key] as readonly unknown[]).length
                 if (lastPageLength < limit) {
                     return undefined
                 }
@@ -124,10 +125,7 @@ export function useInfiniteAPI<
         staleTime,
         gcTime,
         enabled:
-            // TODO: fix ts-expect-error
-            // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-            // @ts-expect-error
-            enabled && (params !== null || requestSchema.safeParse({})?.success === true),
+            enabled && (params !== null || requestSchema.safeParse({}).success === true),
     })
 
     useEffect(() => {
@@ -147,8 +145,10 @@ export function useInfiniteAPI<
         const merged = { ...(latestPage as object) } as Res
 
         infinitesRef.current.forEach((key) => {
-            const aggregated = pages.flatMap((page) => page[key] as any[])
-            ;(merged[key] as any[]) = aggregated
+            const aggregated = pages.flatMap(
+                (page) => page[key] as readonly unknown[],
+            )
+            ;(merged as Record<PropertyKey, unknown>)[key as PropertyKey] = aggregated
         })
 
         setFlattenData(selectRef.current(merged))

@@ -274,11 +274,14 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
 
     useEffect(() => {
         setIsWishlist(false)
-        setParams((prev) => ({
-            ...prev,
-            order: (["code", "popular", "studentCount"] as const)[sortOption] ?? "code",
-            offset: 0,
-        }))
+        setParams((prev) => {
+            if (prev === null) return prev
+            return {
+                ...prev,
+                order: (["code", "popular", "studentCount"] as const)[sortOption] ?? "code",
+                offset: 0,
+            }
+        })
     }, [sortOption])
 
     useEffect(() => {

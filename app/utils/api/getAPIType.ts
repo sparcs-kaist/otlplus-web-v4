@@ -125,12 +125,20 @@ export function getZodSchemaRequest<M extends Method<P>, P extends Path>(
     method: M,
     path: P,
 ): (typeof requestMap)[P][Extract<M, keyof (typeof requestMap)[P]>] {
-    return (requestMap as any)[path][method]
+    const pathMap = requestMap[path] as Record<string, unknown>
+    return pathMap[method as string] as (typeof requestMap)[P][Extract<
+        M,
+        keyof (typeof requestMap)[P]
+    >]
 }
 
 export function getZodSchemaResponse<M extends Method<P>, P extends Path>(
     method: M,
     path: P,
-): (typeof responseMap)[P][any] {
-    return (responseMap as any)[path][method]
+): (typeof responseMap)[P][Extract<M, keyof (typeof responseMap)[P]>] {
+    const pathMap = responseMap[path] as Record<string, unknown>
+    return pathMap[method as string] as (typeof responseMap)[P][Extract<
+        M,
+        keyof (typeof responseMap)[P]
+    >]
 }

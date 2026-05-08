@@ -5,7 +5,12 @@ import styled from "@emotion/styled"
 import type { Lecture } from "@/common/schemas/lecture"
 import useThemeStore from "@/utils/zustand/useThemeStore"
 
-const flattenTimeTableColors = (timeTable: any): Array<CSSProperties["color"]> => {
+type TimeTableColorShades = Partial<Record<string | number, string>>
+type TimeTableColorPalette = Partial<Record<string, TimeTableColorShades>>
+
+const flattenTimeTableColors = (
+    timeTable: TimeTableColorPalette,
+): Array<CSSProperties["color"]> => {
     return [
         timeTable?.red?.[1],
         timeTable?.red?.[2],

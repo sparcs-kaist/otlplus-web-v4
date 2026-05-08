@@ -61,7 +61,10 @@ const CourseReviewSubSection: React.FC<CourseReviewSubSectionProps> = ({
 
     useEffect(() => {
         setParams((prevState) => {
-            const base = prevState ?? {}
+            const base = {
+                mode: "default" as const,
+                ...(prevState ?? {}),
+            }
             if (selectedProfessorId === null) delete base.professorId
             return {
                 ...base,

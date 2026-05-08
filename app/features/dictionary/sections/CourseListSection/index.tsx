@@ -140,6 +140,7 @@ function CourseListSection({
 
         setSearchResult({ courses: [], totalCount: 0 })
         setParams((prevState) => {
+            if (prevState === null) return prevState
             return {
                 ...prevState,
                 order:
