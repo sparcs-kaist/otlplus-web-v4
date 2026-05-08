@@ -12,7 +12,7 @@ import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 import { media } from "@/styles/themes/media"
-import checkOverlap from "@/utils/timetable/checkOverlap"
+import checkOverlap from "@/features/timetable/utils/checkOverlap"
 import useIsDevice from "@/utils/useIsDevice"
 import useUserStore from "@/utils/zustand/useUserStore"
 

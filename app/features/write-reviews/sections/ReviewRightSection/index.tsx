@@ -2,7 +2,7 @@ import { useEffect, useState } from "react"
 
 import styled from "@emotion/styled"
 
-import { type TabType } from "@/common/interface/ReviewWriteTabs"
+import { type TabType } from "@/features/write-reviews/types/ReviewWriteTabs"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Widget from "@/common/primitives/Widget"
 import type { WriteReviewsSelectedLectureType } from "@/routes/write-reviews"

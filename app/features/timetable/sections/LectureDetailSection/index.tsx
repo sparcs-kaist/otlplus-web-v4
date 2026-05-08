@@ -18,7 +18,7 @@ import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 import { trackEvent } from "@/libs/mixpanel"
 import { useAPI } from "@/utils/api/useAPI"
-import checkOverlap from "@/utils/timetable/checkOverlap"
+import checkOverlap from "@/features/timetable/utils/checkOverlap"
 import useIsDevice from "@/utils/useIsDevice"
 import useUserStore from "@/utils/zustand/useUserStore"
 

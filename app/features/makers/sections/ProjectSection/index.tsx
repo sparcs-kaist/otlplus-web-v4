@@ -2,7 +2,7 @@ import styled from "@emotion/styled"
 
 import Typography from "@/common/primitives/Typography"
 import ProjectCard from "@/features/makers/components/ProjectCard"
-import type { MakersWrapper } from "@/utils/makersList"
+import type { MakersWrapper } from "@/features/makers/makersList"
 
 const ProjectSessionWrapper = styled.div`
     max-width: 1280px;

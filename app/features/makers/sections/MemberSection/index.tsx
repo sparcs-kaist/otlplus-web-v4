@@ -2,7 +2,7 @@ import styled from "@emotion/styled"
 
 import Typography from "@/common/primitives/Typography"
 import MemberCard from "@/features/makers/components/MemberCard"
-import type { MemberField } from "@/utils/makersList"
+import type { MemberField } from "@/features/makers/makersList"
 
 const MemberSessionWrapper = styled.div`
     max-width: 1280px;

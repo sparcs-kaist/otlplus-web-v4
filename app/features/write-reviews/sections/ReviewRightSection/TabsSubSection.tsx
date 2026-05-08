@@ -14,7 +14,7 @@ import {
 } from "@mui/icons-material"
 import { useTranslation } from "react-i18next"
 
-import { type TabType, TabTypes } from "@/common/interface/ReviewWriteTabs"
+import { type TabType, TabTypes } from "@/features/write-reviews/types/ReviewWriteTabs"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
