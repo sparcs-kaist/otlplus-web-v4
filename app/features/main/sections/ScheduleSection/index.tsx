@@ -9,7 +9,7 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import { useAPI } from "@/utils/api/useAPI"
 
-import Widget from "../../../../common/primitives/Widget"
+import Widget from "@/common/primitives/Widget"
 
 const StyledLink = styled(Link)`
     color: ${({ theme }) => theme.colors.Highlight.default};

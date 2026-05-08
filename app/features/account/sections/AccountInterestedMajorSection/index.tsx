@@ -35,7 +35,7 @@ interface AccountInterestedMajorSectionProps {
     userInfo: GETUserInfoResponse | null
 }
 
-const Index: React.FC<AccountInterestedMajorSectionProps> = ({ userInfo }) => {
+const AccountInterestedMajorSection: React.FC<AccountInterestedMajorSectionProps> = ({ userInfo }) => {
     const { t, i18n } = useTranslation()
     const queryClient = useQueryClient()
 
@@ -122,4 +122,4 @@ const Index: React.FC<AccountInterestedMajorSectionProps> = ({ userInfo }) => {
     )
 }
 
-export default Index
+export default AccountInterestedMajorSection

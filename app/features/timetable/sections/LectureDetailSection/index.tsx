@@ -22,8 +22,8 @@ import checkOverlap from "@/features/timetable/utils/checkOverlap"
 import useIsDevice from "@/utils/useIsDevice"
 import useUserStore from "@/utils/zustand/useUserStore"
 
-import LectureInfoSubsection from "./LectureInfoSubsection"
-import LectureReviewSubsection from "./LectureReviewSubsection"
+import LectureInfoSubSection from "./LectureInfoSubSection"
+import LectureReviewSubSection from "./LectureReviewSubSection"
 
 const LectureDetailSectionInner = styled(FlexWrapper)`
     width: 100%;
@@ -290,14 +290,14 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                         </StyledAnchor>
                     </FlexWrapper>
                     <LectureDetailWrapper direction="column" gap={10} align="center">
-                        <LectureInfoSubsection selectedLecture={selectedLecture} />
+                        <LectureInfoSubSection selectedLecture={selectedLecture} />
                     </LectureDetailWrapper>
                     <LectureDetailWrapper
                         ref={reviewSectionRef}
                         direction="column"
                         gap={10}
                     >
-                        <LectureReviewSubsection
+                        <LectureReviewSubSection
                             selectedCourseId={selectedLecture.courseId}
                             selectedProfessorId={selectedLecture.professors[0]?.id ?? -1}
                         />

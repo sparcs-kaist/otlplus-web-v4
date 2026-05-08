@@ -13,9 +13,9 @@ import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import { useAPI } from "@/utils/api/useAPI"
 
-import CourseHistorySubsection from "./CourseHistorySubsection"
-import CourseInfoSubsection from "./CourseInfoSubsection"
-import CourseReviewSubsection from "./CourseReviewSubsection"
+import CourseHistorySubSection from "./CourseHistorySubSection"
+import CourseInfoSubSection from "./CourseInfoSubSection"
+import CourseReviewSubSection from "./CourseReviewSubSection"
 
 const CourseDetailSectionInner = styled(FlexWrapper)`
     width: 100%;
@@ -151,11 +151,11 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
                             </Typography>
                         </CourseTitle>
                         <CourseDetailWrapper direction="column" gap={10} align="center">
-                            <CourseInfoSubsection courseDetail={query.data} />
+                            <CourseInfoSubSection courseDetail={query.data} />
                         </CourseDetailWrapper>
                         <Divider />
                         <CourseDetailWrapper direction="column" gap={0}>
-                            <CourseHistorySubsection
+                            <CourseHistorySubSection
                                 courseDetail={query.data}
                                 selectedProfessorId={selectedProfessorId}
                                 setSelectedProfessorId={setSelectedProfessorId}
@@ -163,7 +163,7 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
                         </CourseDetailWrapper>
                         <Divider />
                         <CourseDetailWrapper direction="column" gap={10} flex="1 1 auto">
-                            <CourseReviewSubsection
+                            <CourseReviewSubSection
                                 selectedCourseId={selectedCourseId}
                                 selectedProfessorId={selectedProfessorId}
                                 writableReviewProps={writableReviewProps}

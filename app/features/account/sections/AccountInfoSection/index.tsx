@@ -18,7 +18,7 @@ interface AccountInfoSectionProps {
     userInfo: GETUserInfoResponse | null
 }
 
-const Index: React.FC<AccountInfoSectionProps> = ({ userInfo }) => {
+const AccountInfoSection: React.FC<AccountInfoSectionProps> = ({ userInfo }) => {
     const { t } = useTranslation()
 
     return (
@@ -93,4 +93,4 @@ const Index: React.FC<AccountInfoSectionProps> = ({ userInfo }) => {
     )
 }
 
-export default Index
+export default AccountInfoSection

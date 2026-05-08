@@ -17,7 +17,7 @@ import { useAPI } from "@/utils/api/useAPI"
 import { handleLogin } from "@/utils/handleLoginLogout"
 import useUserStore from "@/utils/zustand/useUserStore"
 
-import Widget from "../../../../common/primitives/Widget"
+import Widget from "@/common/primitives/Widget"
 
 const StyledWidget = styled(Widget)`
     width: 856px;

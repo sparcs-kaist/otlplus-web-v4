@@ -14,7 +14,7 @@ import { trackEvent } from "@/libs/mixpanel"
 import { useAPI } from "@/utils/api/useAPI"
 import useUserStore from "@/utils/zustand/useUserStore"
 
-import Widget from "../../../../common/primitives/Widget"
+import Widget from "@/common/primitives/Widget"
 
 const ReviewBoxWrapper = styled(FlexWrapper)`
     height: 173px;

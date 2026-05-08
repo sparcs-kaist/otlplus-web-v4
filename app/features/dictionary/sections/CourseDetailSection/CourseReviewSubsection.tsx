@@ -25,7 +25,7 @@ const NumberContent = styled(FlexWrapper)`
     flex: 1 0 0;
 `
 
-interface CourseReviewSubsectionProps {
+interface CourseReviewSubSectionProps {
     selectedCourseId: number | null
     selectedProfessorId: number | null
     writableReviewProps: ReviewWritingBlockProps[]
@@ -33,7 +33,7 @@ interface CourseReviewSubsectionProps {
 
 const LIMIT = 20
 
-const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
+const CourseReviewSubSection: React.FC<CourseReviewSubSectionProps> = ({
     selectedCourseId,
     selectedProfessorId,
     writableReviewProps,
@@ -182,4 +182,4 @@ const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
     )
 }
 
-export default CourseReviewSubsection
+export default CourseReviewSubSection
