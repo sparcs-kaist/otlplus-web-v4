@@ -2,9 +2,9 @@ import { useEffect, useState } from "react"
 
 import styled from "@emotion/styled"
 import { Trans, useTranslation } from "react-i18next"
-import { useInView } from "react-intersection-observer"
 
 import LoadingCircle from "@/common/components/LoadingCircle"
+import QueryState from "@/common/components/QueryState"
 import ScrollableDropdown from "@/common/components/ScrollableDropdown"
 import ReviewBlock from "@/common/components/reviews/ReviewBlock"
 import { SemesterEnum, semesterToString } from "@/common/enum/semesterEnum"
@@ -12,6 +12,7 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import { useAPI } from "@/utils/api/useAPI"
 import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
+import { useInfiniteScroll } from "@/utils/api/useInfiniteScroll"
 
 const DropDownWrapper = styled(FlexWrapper)`
     width: 225px;
@@ -36,13 +37,7 @@ function HallOfFameFeedSubSection() {
         limit: LIMIT,
     })
 
-    const { ref, inView } = useInView({ threshold: 0 })
-
-    useEffect(() => {
-        if (inView && query.hasNextPage && !query.isFetchingNextPage) {
-            query.fetchNextPage()
-        }
-    }, [inView])
+    const { ref } = useInfiniteScroll(query)
 
     const [selectedOption, setSelectedOption] = useState(0)
 
@@ -90,56 +85,52 @@ function HallOfFameFeedSubSection() {
                     />
                 </DropDownWrapper>
             </FlexWrapper>
-            {query.isLoading ? (
-                <LoadingCircle />
-            ) : (
-                <>
-                    <FlexWrapper direction="column" align="center" gap={12}>
-                        <Typography type="NormalBold" color="Text.default">
-                            {selectedOption === 0 ? (
-                                t("writeReviews.hallOfFameFeed.total")
-                            ) : (
-                                <Trans
-                                    i18nKey="writeReviews.hallOfFameFeed.title"
-                                    values={{
-                                        year:
-                                            serverSemesters.data?.semesters[
-                                                selectedOption - 1
-                                            ]?.year ?? "",
-                                        semester: serverSemesters.data?.semesters[
+            <QueryState query={query}>
+                <FlexWrapper direction="column" align="center" gap={12}>
+                    <Typography type="NormalBold" color="Text.default">
+                        {selectedOption === 0 ? (
+                            t("writeReviews.hallOfFameFeed.total")
+                        ) : (
+                            <Trans
+                                i18nKey="writeReviews.hallOfFameFeed.title"
+                                values={{
+                                    year:
+                                        serverSemesters.data?.semesters[
                                             selectedOption - 1
-                                        ]?.semester
-                                            ? semesterToString(
-                                                  serverSemesters.data.semesters[
-                                                      selectedOption - 1
-                                                  ]?.semester as SemesterEnum,
-                                              )
-                                            : "",
-                                    }}
-                                    components={{
-                                        space: <>&nbsp;</>,
-                                    }}
-                                />
-                            )}
+                                        ]?.year ?? "",
+                                    semester: serverSemesters.data?.semesters[
+                                        selectedOption - 1
+                                    ]?.semester
+                                        ? semesterToString(
+                                              serverSemesters.data.semesters[
+                                                  selectedOption - 1
+                                              ]?.semester as SemesterEnum,
+                                          )
+                                        : "",
+                                }}
+                                components={{
+                                    space: <>&nbsp;</>,
+                                }}
+                            />
+                        )}
+                    </Typography>
+                    <FlexWrapper direction="column" align="center" gap={0}>
+                        <Typography type="Bigger" color="Text.default">
+                            {data?.reviews.length}
                         </Typography>
-                        <FlexWrapper direction="column" align="center" gap={0}>
-                            <Typography type="Bigger" color="Text.default">
-                                {data?.reviews.length}
-                            </Typography>
-                            <Typography type="Smaller" color="Text.default">
-                                {t("writeReviews.hallOfFameFeed.total")}
-                            </Typography>
-                        </FlexWrapper>
+                        <Typography type="Smaller" color="Text.default">
+                            {t("writeReviews.hallOfFameFeed.total")}
+                        </Typography>
                     </FlexWrapper>
-                    <FlexWrapper direction="column" align="stretch" gap={12}>
-                        {data?.reviews.map((review) => (
-                            <ReviewBlock review={review} key={review.id} />
-                        ))}
+                </FlexWrapper>
+                <FlexWrapper direction="column" align="stretch" gap={12}>
+                    {data?.reviews.map((review) => (
+                        <ReviewBlock review={review} key={review.id} />
+                    ))}
 
-                        {query.hasNextPage && <LoadingCircle ref={ref} />}
-                    </FlexWrapper>
-                </>
-            )}
+                    {query.hasNextPage && <LoadingCircle ref={ref} />}
+                </FlexWrapper>
+            </QueryState>
         </FlexWrapper>
     )
 }

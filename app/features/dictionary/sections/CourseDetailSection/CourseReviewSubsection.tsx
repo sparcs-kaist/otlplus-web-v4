@@ -2,7 +2,6 @@ import React, { use, useEffect, useState } from "react"
 
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
-import { useInView } from "react-intersection-observer"
 import { de } from "zod/v4/locales"
 
 import LoadingCircle from "@/common/components/LoadingCircle"
@@ -15,6 +14,7 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import CourseReviewLanguageChip from "@/features/dictionary/components/CourseReviewLanguageChip"
 import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
+import { useInfiniteScroll } from "@/utils/api/useInfiniteScroll"
 
 const NumberWrapper = styled(FlexWrapper)`
     width: 300px;
@@ -49,7 +49,7 @@ const CourseReviewSubSection: React.FC<CourseReviewSubSectionProps> = ({
         enabled: enabled,
     })
 
-    const { ref, inView } = useInView()
+    const { ref } = useInfiniteScroll(query)
 
     useEffect(() => {
         setParams({
@@ -76,12 +76,6 @@ const CourseReviewSubSection: React.FC<CourseReviewSubSectionProps> = ({
         })
         setEnabled(selectedCourseId !== null)
     }, [selectedProfessorId, selectedCourseId])
-
-    useEffect(() => {
-        if (inView && query.hasNextPage && !query.isFetchingNextPage) {
-            query.fetchNextPage()
-        }
-    }, [inView])
 
     return (
         <>

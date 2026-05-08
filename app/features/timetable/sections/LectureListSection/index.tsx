@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useRef, useState } from "react"
 
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
-import { useInView } from "react-intersection-observer"
 
 import type { GETLecturesResponse } from "@/api/lectures"
 import LoadingCircle from "@/common/components/LoadingCircle"
@@ -21,6 +20,7 @@ import {
 } from "@/utils/api/invalidations"
 import { useAPI } from "@/utils/api/useAPI"
 import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
+import { useInfiniteScroll } from "@/utils/api/useInfiniteScroll"
 import checkEmpty from "@/utils/search/checkEmpty"
 import checkOverlap from "@/features/timetable/utils/checkOverlap"
 import useIsDevice from "@/utils/useIsDevice"
@@ -185,8 +185,6 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     const invalidateTimetable = useInvalidateTimetable(currentTimetableId)
     const invalidateWishlist = useInvalidateWishlist()
 
-    const { ref, inView } = useInView({ threshold: 0 })
-
     const isTablet = useIsDevice("tablet")
 
     const { mutation: addTimetable, requestFunction: addTimetableFunction } = useAPI(
@@ -235,6 +233,8 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
         },
     })
 
+    const { ref } = useInfiniteScroll(query)
+
     const handleSearch = useCallback(
         (param: SearchParamsType) => {
             if (checkEmpty(param)) {
@@ -279,12 +279,6 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
             }
         })
     }, [sortOption])
-
-    useEffect(() => {
-        if (inView && query.hasNextPage && !query.isFetchingNextPage) {
-            query.fetchNextPage()
-        }
-    }, [inView])
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {

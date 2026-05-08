@@ -4,7 +4,6 @@ import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import CircleIcon from "@mui/icons-material/Circle"
 import { Trans, useTranslation } from "react-i18next"
-import { useInView } from "react-intersection-observer"
 import { useSearchParams } from "react-router"
 
 import LoadingCircle from "@/common/components/LoadingCircle"
@@ -17,6 +16,7 @@ import CourseBlock from "@/features/dictionary/components/CourseBlock"
 import { trackEvent } from "@/libs/mixpanel"
 import type { getAPIResponseType } from "@/utils/api/getAPIType"
 import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
+import { useInfiniteScroll } from "@/utils/api/useInfiniteScroll"
 import checkEmpty from "@/utils/search/checkEmpty"
 import useIsDevice from "@/utils/useIsDevice"
 
@@ -102,15 +102,7 @@ function CourseListSection({
         enabled: enabled,
     })
 
-    const { inView, ref } = useInView({
-        threshold: 0,
-    })
-
-    useEffect(() => {
-        if (inView && query.hasNextPage && !query.isFetchingNextPage) {
-            query.fetchNextPage()
-        }
-    }, [inView])
+    const { ref } = useInfiniteScroll(query)
 
     useEffect(() => {
         const term = searchParams.get("term")
