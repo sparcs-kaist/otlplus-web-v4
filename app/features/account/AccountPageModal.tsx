@@ -2,12 +2,11 @@ import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
 
 import type { GETUserInfoResponse } from "@/api/users/info"
-import Modal from "@/common/components/Modal"
+import ResponsiveModal from "@/common/components/ResponsiveModal"
 import Typography from "@/common/primitives/Typography"
 import AccountInfoSection from "@/features/account/sections/AccountInfoSection"
 import AccountInterestedMajorSection from "@/features/account/sections/AccountInterestedMajorSection"
 import { handleLogout } from "@/utils/handleLoginLogout"
-import useIsDevice from "@/utils/useIsDevice"
 
 const LogoutButton = styled(Typography)`
     cursor: pointer;
@@ -24,23 +23,20 @@ const AccountPageModal: React.FC<AccountPageModalProps> = ({
     accountPageOpen,
     setAccountPageOpen,
 }) => {
-    const isTablet = useIsDevice("tablet")
-
     const { t } = useTranslation()
 
     return (
-        <Modal
+        <ResponsiveModal
             isOpen={accountPageOpen}
             onClose={() => setAccountPageOpen(false)}
             title={t("account.title")}
-            fullScreen={isTablet}
         >
             <AccountInfoSection userInfo={userInfo} />
             <AccountInterestedMajorSection userInfo={userInfo} />
             <LogoutButton type="Normal" color="Highlight.default" onClick={handleLogout}>
                 {t("account.logout")}
             </LogoutButton>
-        </Modal>
+        </ResponsiveModal>
     )
 }
 

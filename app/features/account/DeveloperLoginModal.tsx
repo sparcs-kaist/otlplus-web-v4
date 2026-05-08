@@ -3,10 +3,9 @@ import { useState } from "react"
 import styled from "@emotion/styled"
 
 import Button from "@/common/components/Button"
-import Modal from "@/common/components/Modal"
+import ResponsiveModal from "@/common/components/ResponsiveModal"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import { setLocalStorageItem } from "@/utils/localStorage"
-import useIsDevice from "@/utils/useIsDevice"
 
 const IdInput = styled.input`
     width: 100%;
@@ -32,8 +31,6 @@ const DeveloperLoginModal: React.FC<DeveloperLoginModalProps> = ({
     developerLoginModalOpen,
     setDeveloperLoginModalOpen,
 }) => {
-    const isTablet = useIsDevice("tablet")
-
     const [idInput, setIdInput] = useState<string>("")
 
     const handleLogin = () => {
@@ -50,11 +47,10 @@ const DeveloperLoginModal: React.FC<DeveloperLoginModalProps> = ({
     }
 
     return (
-        <Modal
+        <ResponsiveModal
             isOpen={developerLoginModalOpen}
             onClose={() => setDeveloperLoginModalOpen(false)}
             title={"DEV 로그인"}
-            fullScreen={isTablet}
         >
             <IdInput
                 type="text"
@@ -72,7 +68,7 @@ const DeveloperLoginModal: React.FC<DeveloperLoginModalProps> = ({
                     로그인
                 </Button>
             </FlexWrapper>
-        </Modal>
+        </ResponsiveModal>
     )
 }
 
