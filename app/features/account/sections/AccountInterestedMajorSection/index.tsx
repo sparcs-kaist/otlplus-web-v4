@@ -1,7 +1,6 @@
 import { useState } from "react"
 
 import styled from "@emotion/styled"
-import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 
 import type { GETUserInfoResponse } from "@/api/users/info"
@@ -10,6 +9,7 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import type { Department } from "@/common/schemas/department"
 import DepartmentSearchArea from "@/features/account/components/DepartmentSearchArea"
+import { useInvalidateUserInfo } from "@/utils/api/invalidations"
 import { useAPI } from "@/utils/api/useAPI"
 
 const AccountInterestedMajorSectionWrapper = styled(FlexWrapper)`
@@ -37,16 +37,14 @@ interface AccountInterestedMajorSectionProps {
 
 const AccountInterestedMajorSection: React.FC<AccountInterestedMajorSectionProps> = ({ userInfo }) => {
     const { t, i18n } = useTranslation()
-    const queryClient = useQueryClient()
+    const invalidateUserInfo = useInvalidateUserInfo()
 
     const { query } = useAPI("GET", "/department-options")
     const { requestFunction } = useAPI(
         "PUT",
         `/users/${userInfo?.id}/interested-departments`,
         {
-            onSuccess: () => {
-                queryClient.invalidateQueries({ queryKey: ["/users/info"] })
-            },
+            onSuccess: invalidateUserInfo,
         },
     )
 

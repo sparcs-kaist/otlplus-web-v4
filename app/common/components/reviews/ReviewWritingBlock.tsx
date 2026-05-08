@@ -1,7 +1,6 @@
 import { type Dispatch, type SetStateAction, useEffect, useMemo, useState } from "react"
 
 import styled from "@emotion/styled"
-import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 
 import Button from "@/common/components/Button"
@@ -14,6 +13,7 @@ import Typography from "@/common/primitives/Typography"
 import type { Professor } from "@/common/schemas/professor"
 import type { Review } from "@/common/schemas/review"
 import { trackEvent } from "@/libs/mixpanel"
+import { useInvalidateReviewCaches } from "@/utils/api/invalidations"
 import { useAPI } from "@/utils/api/useAPI"
 import professorName from "@/utils/professorName"
 import useUserStore from "@/utils/zustand/useUserStore"
@@ -69,43 +69,19 @@ function ReviewWritingBlock({
 }: ReviewWritingBlockProps) {
     const { t } = useTranslation()
     const { user, status } = useUserStore()
-    const queryClient = useQueryClient()
+    const invalidateReviewCaches = useInvalidateReviewCaches()
 
     const [myReview, setMyReview] = useState<Review | null>(null)
 
     const { requestFunction: requestCreateFunction } = useAPI("POST", "/reviews", {
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["/reviews"] })
-            queryClient.invalidateQueries({
-                queryKey: [`/users/${user?.id}/lectures`],
-            })
-            queryClient.invalidateQueries({
-                queryKey: ["/users/written-reviews"],
-            })
-            queryClient.invalidateQueries({
-                queryKey: ["/users/writable-review"],
-            })
-        },
+        onSuccess: invalidateReviewCaches,
     })
 
     const { requestFunction: requestEditFunction } = useAPI(
         "PUT",
         `/reviews/${myReview?.id}`,
         {
-            onSuccess: () => {
-                queryClient.invalidateQueries({
-                    queryKey: ["/reviews"],
-                })
-                queryClient.invalidateQueries({
-                    queryKey: [`/users/${user?.id}/lectures`],
-                })
-                queryClient.invalidateQueries({
-                    queryKey: ["/users/written-reviews"],
-                })
-                queryClient.invalidateQueries({
-                    queryKey: ["/users/writable-review"],
-                })
-            },
+            onSuccess: invalidateReviewCaches,
         },
     )
 

@@ -21,6 +21,7 @@ import TimetableInfoSection from "@/features/timetable/sections/TimetableInfoSec
 import UtilButtonsSubSection from "@/features/timetable/sections/TimetableInfoSection/UtilButtonsSubSection"
 import { trackEvent } from "@/libs/mixpanel"
 import { media } from "@/styles/themes/media"
+import { apiKeys } from "@/utils/api/apiKeys"
 import { useAPI } from "@/utils/api/useAPI"
 import useIsDevice from "@/utils/useIsDevice"
 import useUserStore from "@/utils/zustand/useUserStore"
@@ -261,7 +262,7 @@ export default function Timetable() {
             onSuccess: () => {
                 queryClient
                     .invalidateQueries({
-                        queryKey: [`/timetables/${currentTimetableId}`],
+                        queryKey: apiKeys.timetables.detail(currentTimetableId ?? ""),
                     })
                     .then(() => {
                         setSelected(null)

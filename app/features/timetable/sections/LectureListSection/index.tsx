@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from "react"
 
 import styled from "@emotion/styled"
-import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { useInView } from "react-intersection-observer"
 
@@ -16,6 +15,10 @@ import type { TimeBlock } from "@/common/schemas/timeblock"
 import { trackEvent } from "@/libs/mixpanel"
 import { media } from "@/styles/themes/media"
 import type { getAPIResponseType } from "@/utils/api/getAPIType"
+import {
+    useInvalidateTimetable,
+    useInvalidateWishlist,
+} from "@/utils/api/invalidations"
 import { useAPI } from "@/utils/api/useAPI"
 import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
 import checkEmpty from "@/utils/search/checkEmpty"
@@ -179,7 +182,8 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
 }) => {
     const { t } = useTranslation()
     const { user, status } = useUserStore()
-    const queryClient = useQueryClient()
+    const invalidateTimetable = useInvalidateTimetable(currentTimetableId)
+    const invalidateWishlist = useInvalidateWishlist()
 
     const { ref, inView } = useInView({ threshold: 0 })
 
@@ -189,11 +193,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
         "PATCH",
         `/timetables/${currentTimetableId}`,
         {
-            onSuccess: () => {
-                queryClient.invalidateQueries({
-                    queryKey: [`/timetables/${currentTimetableId}`],
-                })
-            },
+            onSuccess: invalidateTimetable,
         },
     )
 
@@ -205,11 +205,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
         "PATCH",
         `/users/${user?.id}/wishlist`,
         {
-            onSuccess: () => {
-                queryClient.invalidateQueries({
-                    queryKey: [`/users/${user?.id}/wishlist`],
-                })
-            },
+            onSuccess: invalidateWishlist,
         },
     )
 
