@@ -1,11 +1,11 @@
-import { type Dispatch, type SetStateAction, useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
 
 import Button from "@/common/components/Button"
-import GradeWrap from "@/common/components/GradeWrap"
-import { ScoreEnum } from "@/common/enum/scoreEnum"
+import ReviewScoreFields from "@/common/components/reviews/ReviewScoreFields"
+import { useReviewForm } from "@/common/components/reviews/useReviewForm"
 import { SemesterEnum, semesterToString } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import TextInputArea from "@/common/primitives/TextInputArea"
@@ -28,10 +28,6 @@ const ReviewWrapper = styled(FlexWrapper)`
 
 const ReviewBoxWrapper = styled(FlexWrapper)`
     height: 160px;
-`
-
-const GradesWrapper = styled(FlexWrapper)`
-    flex-wrap: wrap;
 `
 
 const DisabledOverlay = styled(FlexWrapper)<{ blur: boolean }>`
@@ -68,7 +64,7 @@ function ReviewWritingBlock({
     semester,
 }: ReviewWritingBlockProps) {
     const { t } = useTranslation()
-    const { user, status } = useUserStore()
+    const { status } = useUserStore()
     const invalidateReviewCaches = useInvalidateReviewCaches()
 
     const [myReview, setMyReview] = useState<Review | null>(null)
@@ -89,6 +85,7 @@ function ReviewWritingBlock({
         enabled: status === "success",
     })
     const { query: semesterQuery } = useAPI("GET", "/semesters")
+
     const canWriteReview = useMemo(() => {
         if (!semesterQuery.data) return false
         const currentSemester = semesterQuery.data.semesters.find(
@@ -106,73 +103,36 @@ function ReviewWritingBlock({
             const existingReview = userReviewsQuery.data.reviews.find(
                 (review) => review.lectureId === lectureId,
             )
-            if (existingReview) {
-                setMyReview(existingReview)
-            } else {
-                setMyReview(null)
-            }
+            setMyReview(existingReview ?? null)
         }
     }, [userReviewsQuery.data, lectureId])
 
-    const [reviewText, setReviewText] = useState<string>("")
-
-    const [reviewGrade, setReviewGrade] = useState<ScoreEnum>(0)
-    const [reviewLoad, setReviewLoad] = useState<ScoreEnum>(0)
-    const [reviewSpeech, setReviewSpeech] = useState<ScoreEnum>(0)
-
-    function resetReviewStates() {
-        setReviewText("")
-        setReviewGrade(0)
-        setReviewLoad(0)
-        setReviewSpeech(0)
-    }
-
-    useEffect(() => {
-        resetReviewStates()
-    }, [lectureId])
-
-    useEffect(() => {
-        if (myReview) {
-            setReviewText(myReview.content)
-            setReviewGrade(myReview.grade)
-            setReviewLoad(myReview.load)
-            setReviewSpeech(myReview.speech)
-        } else {
-            resetReviewStates()
-        }
-    }, [myReview])
+    const form = useReviewForm(myReview)
 
     function submitReview() {
-        if (!canWriteReview) return
+        if (!canWriteReview || !form.canSubmit) return
+        const payload = form.toPayload()
         if (myReview) {
-            requestEditFunction({
-                content: reviewText,
-                grade: reviewGrade,
-                load: reviewLoad,
-                speech: reviewSpeech,
-            })
+            requestEditFunction(payload)
             trackEvent("Edit Review", {
                 reviewId: myReview.id,
                 lectureId,
                 courseName: name,
-                grade: reviewGrade,
-                load: reviewLoad,
-                speech: reviewSpeech,
+                grade: payload.grade,
+                load: payload.load,
+                speech: payload.speech,
             })
         } else {
             requestCreateFunction({
                 lectureId: lectureId,
-                content: reviewText,
-                grade: reviewGrade,
-                load: reviewLoad,
-                speech: reviewSpeech,
+                ...payload,
             })
             trackEvent("Submit Review", {
                 lectureId,
                 courseName: name,
-                grade: reviewGrade,
-                load: reviewLoad,
-                speech: reviewSpeech,
+                grade: payload.grade,
+                load: payload.load,
+                speech: payload.speech,
             })
         }
     }
@@ -214,8 +174,8 @@ function ReviewWritingBlock({
                 >
                     <TextInputArea
                         placeholder={t("common.review.writingPlaceholder")}
-                        value={reviewText}
-                        handleChange={setReviewText}
+                        value={form.values.text}
+                        handleChange={form.setText}
                         area={true}
                         disabled={!canWriteReview}
                     />
@@ -226,35 +186,17 @@ function ReviewWritingBlock({
                     justify="space-between"
                     align="center"
                 >
-                    <GradesWrapper direction="row" gap={12} inert={!canWriteReview}>
-                        {(
-                            [
-                                [t("common.grade"), reviewGrade, setReviewGrade],
-                                [t("common.load"), reviewLoad, setReviewLoad],
-                                [t("common.speech"), reviewSpeech, setReviewSpeech],
-                            ] as [
-                                string,
-                                ScoreEnum,
-                                Dispatch<SetStateAction<ScoreEnum>>,
-                            ][]
-                        ).map(([tag, currentState, DispatchFunction]) => (
-                            <FlexWrapper direction="row" gap={6} align="center" key={tag}>
-                                <Typography type="Normal" color="Text.default">
-                                    {tag}
-                                </Typography>
-                                <GradeWrap
-                                    score={currentState}
-                                    setScore={DispatchFunction}
-                                />
-                            </FlexWrapper>
-                        ))}
-                    </GradesWrapper>
+                    <ReviewScoreFields
+                        grade={form.values.grade}
+                        load={form.values.load}
+                        speech={form.values.speech}
+                        setGrade={form.setGrade}
+                        setLoad={form.setLoad}
+                        setSpeech={form.setSpeech}
+                        disabled={!canWriteReview}
+                    />
                     <Button
-                        type={
-                            reviewText && reviewGrade && reviewSpeech && reviewLoad
-                                ? "selected"
-                                : "disabled"
-                        }
+                        type={form.canSubmit ? "selected" : "disabled"}
                         $paddingLeft={8}
                         $paddingTop={8}
                         onClick={submitReview}
