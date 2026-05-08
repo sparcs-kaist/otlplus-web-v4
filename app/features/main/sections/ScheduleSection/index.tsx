@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import styled from "@emotion/styled"
 import { Trans, useTranslation } from "react-i18next"
@@ -27,13 +27,6 @@ function ScheduleSection() {
     const [now, setNow] = useState(new Date())
     const [timeLeft, setTimeLeft] = useState<string>("")
 
-    const [yearSemester, setYearSemester] = useState<{
-        year: number
-        semester: SemesterEnum
-    } | null>(null)
-    const [contentKey, setContentKey] = useState<string>("")
-    const [dueDate, setDueDate] = useState<Date | null>(null)
-
     const { t } = useTranslation()
 
     useEffect(() => {
@@ -41,13 +34,13 @@ function ScheduleSection() {
         return () => clearInterval(timer)
     }, [])
 
-    useEffect(() => {
-        if (!query.data) return
+    const yearSemester = useMemo<{ year: number; semester: SemesterEnum } | null>(() => {
+        if (!query.data) return null
+        return { year: query.data.year, semester: query.data.semester }
+    }, [query.data])
 
-        setYearSemester({
-            year: query.data.year,
-            semester: query.data.semester,
-        })
+    const upcomingScheduleItem = useMemo<[string, Date] | null>(() => {
+        if (!query.data) return null
 
         const scheduleItems = (
             Object.entries(query.data).filter(
@@ -57,20 +50,16 @@ function ScheduleSection() {
             .map(([key, value]) => [key, new Date(value)] as [string, Date])
             .sort((a, b) => a[1].getTime() - b[1].getTime())
 
-        for (const [key, date] of scheduleItems) {
-            if (now.getTime() <= date.getTime()) {
-                setContentKey(key)
-                setDueDate(date)
-                return
+        for (const item of scheduleItems) {
+            if (now.getTime() <= item[1].getTime()) {
+                return item
             }
         }
+        return scheduleItems[scheduleItems.length - 1] ?? null
+    }, [query.data, now])
 
-        // If all dates have passed, show the last one
-        const lastItem = scheduleItems[scheduleItems.length - 1]
-        if (!lastItem) return
-        setContentKey(lastItem[0])
-        setDueDate(lastItem[1])
-    }, [query.data])
+    const contentKey = upcomingScheduleItem?.[0] ?? ""
+    const dueDate = upcomingScheduleItem?.[1] ?? null
 
     useEffect(() => {
         if (!dueDate) return
