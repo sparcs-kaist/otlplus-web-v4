@@ -9,12 +9,11 @@ import { ScoreEnum } from "@/common/enum/scoreEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import TextInputArea from "@/common/primitives/TextInputArea"
 import Typography from "@/common/primitives/Typography"
+import Widget from "@/common/primitives/Widget"
 import { trackEvent } from "@/libs/mixpanel"
 import { useInvalidateReviewCaches } from "@/utils/api/invalidations"
 import { useAPI } from "@/utils/api/useAPI"
 import useUserStore from "@/utils/zustand/useUserStore"
-
-import Widget from "@/common/primitives/Widget"
 
 const ReviewBoxWrapper = styled(FlexWrapper)`
     height: 173px;

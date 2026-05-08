@@ -16,9 +16,7 @@ export function useInvalidateReviewCaches() {
     }
 }
 
-export function useInvalidateTimetable(
-    timetableId: number | string | null | undefined,
-) {
+export function useInvalidateTimetable(timetableId: number | string | null | undefined) {
     const queryClient = useQueryClient()
 
     return () => {

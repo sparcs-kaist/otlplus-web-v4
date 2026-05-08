@@ -15,13 +15,10 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
-import { trackEvent } from "@/libs/mixpanel"
-import {
-    useInvalidateTimetable,
-    useInvalidateWishlist,
-} from "@/utils/api/invalidations"
-import { useAPI } from "@/utils/api/useAPI"
 import checkOverlap from "@/features/timetable/utils/checkOverlap"
+import { trackEvent } from "@/libs/mixpanel"
+import { useInvalidateTimetable, useInvalidateWishlist } from "@/utils/api/invalidations"
+import { useAPI } from "@/utils/api/useAPI"
 import useIsDevice from "@/utils/useIsDevice"
 import useUserStore from "@/utils/zustand/useUserStore"
 

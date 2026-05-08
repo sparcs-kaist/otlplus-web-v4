@@ -35,7 +35,9 @@ interface AccountInterestedMajorSectionProps {
     userInfo: GETUserInfoResponse | null
 }
 
-const AccountInterestedMajorSection: React.FC<AccountInterestedMajorSectionProps> = ({ userInfo }) => {
+const AccountInterestedMajorSection: React.FC<AccountInterestedMajorSectionProps> = ({
+    userInfo,
+}) => {
     const { t, i18n } = useTranslation()
     const invalidateUserInfo = useInvalidateUserInfo()
 

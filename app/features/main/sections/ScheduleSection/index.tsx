@@ -7,9 +7,8 @@ import { Link } from "react-router-dom"
 import { type SemesterEnum, semesterToString } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
-import { useAPI } from "@/utils/api/useAPI"
-
 import Widget from "@/common/primitives/Widget"
+import { useAPI } from "@/utils/api/useAPI"
 
 const StyledLink = styled(Link)`
     color: ${({ theme }) => theme.colors.Highlight.default};

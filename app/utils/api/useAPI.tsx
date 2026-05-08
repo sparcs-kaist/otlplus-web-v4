@@ -46,7 +46,10 @@ type UseAPIOptions<M, Req, Res> = Merge<
 >
 
 type UseAPIReturn<M, Req, Res> = M extends "GET"
-    ? { query: UseQueryResult<Res, Error>; setParams: Dispatch<SetStateAction<Req | null>> }
+    ? {
+          query: UseQueryResult<Res, Error>
+          setParams: Dispatch<SetStateAction<Req | null>>
+      }
     : {
           mutation: UseMutationResult<Res, Error, Req, unknown>
           requestFunction: UseMutateFunction<Res, Error, Req, unknown>
@@ -72,7 +75,10 @@ export function useAPI<
         ...mutationOps
     } = ops
 
-    const requestSchema = getZodSchemaRequest(method, getOriginalPathValue(path)) as ZodType
+    const requestSchema = getZodSchemaRequest(
+        method,
+        getOriginalPathValue(path),
+    ) as ZodType
     const responseSchema = getZodSchemaResponse(method, getOriginalPathValue(path))
 
     if (method === "GET") {

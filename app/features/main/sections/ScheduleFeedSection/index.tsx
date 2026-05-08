@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next"
 import Line from "@/common/components/Line"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
-
 import Widget from "@/common/primitives/Widget"
 
 const NoSchedulesPlaceholder = styled(Typography)`

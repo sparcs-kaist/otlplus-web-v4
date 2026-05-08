@@ -7,10 +7,8 @@ export const apiKeys = {
         info: () => ["/users/info"] as const,
         writableReview: () => ["/users/writable-review"] as const,
         writtenReviews: () => ["/users/written-reviews"] as const,
-        lectures: (userId: number | undefined) =>
-            [`/users/${userId}/lectures`] as const,
-        wishlist: (userId: number | undefined) =>
-            [`/users/${userId}/wishlist`] as const,
+        lectures: (userId: number | undefined) => [`/users/${userId}/lectures`] as const,
+        wishlist: (userId: number | undefined) => [`/users/${userId}/wishlist`] as const,
         likedReviews: (userId: number | undefined) =>
             [`/users/${userId}/reviews/liked`] as const,
     },
@@ -20,8 +18,7 @@ export const apiKeys = {
     timetables: {
         all: () => ["/timetables"] as const,
         myTimetable: () => ["/timetables/my-timetable"] as const,
-        detail: (timetableId: number | string) =>
-            [`/timetables/${timetableId}`] as const,
+        detail: (timetableId: number | string) => [`/timetables/${timetableId}`] as const,
     },
     semesters: {
         all: () => ["/semesters"] as const,

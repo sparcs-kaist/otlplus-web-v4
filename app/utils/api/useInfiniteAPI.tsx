@@ -145,9 +145,7 @@ export function useInfiniteAPI<
         const merged = { ...(latestPage as object) } as Res
 
         infinitesRef.current.forEach((key) => {
-            const aggregated = pages.flatMap(
-                (page) => page[key] as readonly unknown[],
-            )
+            const aggregated = pages.flatMap((page) => page[key] as readonly unknown[])
             ;(merged as Record<PropertyKey, unknown>)[key as PropertyKey] = aggregated
         })
 

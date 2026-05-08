@@ -11,18 +11,15 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimeBlock } from "@/common/schemas/timeblock"
+import checkOverlap from "@/features/timetable/utils/checkOverlap"
 import { trackEvent } from "@/libs/mixpanel"
 import { media } from "@/styles/themes/media"
 import type { getAPIResponseType } from "@/utils/api/getAPIType"
-import {
-    useInvalidateTimetable,
-    useInvalidateWishlist,
-} from "@/utils/api/invalidations"
+import { useInvalidateTimetable, useInvalidateWishlist } from "@/utils/api/invalidations"
 import { useAPI } from "@/utils/api/useAPI"
 import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
 import { useInfiniteScroll } from "@/utils/api/useInfiniteScroll"
 import checkEmpty from "@/utils/search/checkEmpty"
-import checkOverlap from "@/features/timetable/utils/checkOverlap"
 import useIsDevice from "@/utils/useIsDevice"
 import useUserStore from "@/utils/zustand/useUserStore"
 
@@ -274,7 +271,8 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
             if (prev === null) return prev
             return {
                 ...prev,
-                order: (["code", "popular", "studentCount"] as const)[sortOption] ?? "code",
+                order:
+                    (["code", "popular", "studentCount"] as const)[sortOption] ?? "code",
                 offset: 0,
             }
         })
