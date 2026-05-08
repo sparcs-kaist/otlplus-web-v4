@@ -18,6 +18,7 @@ import {
     OverflowTile,
     OverlapTile,
 } from "./Tile"
+import { useGhostLectureOverlaps } from "./useGhostLectureOverlaps"
 
 const TIME_BEGIN = 8
 const TIME_END = 24
@@ -486,58 +487,12 @@ function CustomTimeTableGrid({
         [overflowLectures],
     )
 
-    const ghostLecture = useMemo<Lecture | null>(() => {
-        if (!needLectureInteraction) return null
-        if (
-            hoveredLectures[0] &&
-            !lectures.some((lec) => lec.id === hoveredLectures[0]?.id)
-        ) {
-            return hoveredLectures[0]
-        }
-        if (selectedLecture && !lectures.some((lec) => lec.id === selectedLecture.id)) {
-            return selectedLecture
-        }
-        return null
-    }, [needLectureInteraction, hoveredLectures, selectedLecture, lectures])
-
-    const overlaps = useMemo<
-        {
-            day: WeekdayEnum
-            begin: number
-            end: number
-        }[]
-    >(() => {
-        if (!needLectureInteraction || !ghostLecture) return []
-        const intervals: {
-            day: WeekdayEnum
-            begin: number
-            end: number
-        }[] = []
-        ghostLecture.classes.forEach((gClass) => {
-            lectures.forEach((lecture) => {
-                lecture.classes.forEach((lClass) => {
-                    if (gClass.day === lClass.day) {
-                        const gStart = gClass.begin
-                        const gEnd = gClass.end
-                        const lStart = lClass.begin
-                        const lEnd = lClass.end
-
-                        const overlapStart = Math.max(gStart, lStart)
-                        const overlapEnd = Math.min(gEnd, lEnd)
-
-                        if (overlapStart < overlapEnd) {
-                            intervals.push({
-                                day: gClass.day,
-                                begin: (overlapStart / 60 - TIME_BEGIN) * 2,
-                                end: (overlapEnd / 60 - TIME_BEGIN) * 2,
-                            })
-                        }
-                    }
-                })
-            })
-        })
-        return intervals
-    }, [needLectureInteraction, ghostLecture, lectures])
+    const { ghostLecture, overlaps } = useGhostLectureOverlaps(
+        needLectureInteraction,
+        hoveredLectures,
+        selectedLecture,
+        lectures,
+    )
 
     const handlePointerDown = useCallback((x: number, y: number) => {
         const target = document.elementFromPoint(x, y)
