@@ -113,13 +113,13 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
                     if (key == "time") result[key] = value as TimeBlock
                     else {
                         if (isSingleSelectOption(key))
-                            result[key] = (value as [any, string])[0]
+                            result[key] = (value as [unknown, string])[0] as never
                         else
-                            result[key] = (value as [any, string][]).map(
+                            result[key] = (value as [unknown, string][]).map(
                                 (x) => x[0],
-                            ) as any
+                            ) as never
                         if (key == "department") {
-                            result[key] = result[key]?.map(
+                            result[key] = (result[key] as number[])?.map(
                                 (dept) =>
                                     query.data?.departments.find(
                                         (d) => d.code === dept.toString(),
