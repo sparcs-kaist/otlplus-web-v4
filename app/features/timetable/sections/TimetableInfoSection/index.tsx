@@ -39,6 +39,7 @@ interface TimetableInfoSectionProps {
     setHover: React.Dispatch<React.SetStateAction<Lecture[]>>
     year: number
     semester: SemesterEnum
+    currentTimetableId: number | null
 }
 
 export default function TimetableInfoSection({
@@ -48,6 +49,7 @@ export default function TimetableInfoSection({
     setHover,
     year,
     semester,
+    currentTimetableId,
 }: TimetableInfoSectionProps) {
     const isLaptop = useIsDevice("laptop")
 
@@ -97,6 +99,7 @@ export default function TimetableInfoSection({
                     timetableLectures={timetableLectures}
                     year={year}
                     semester={semester}
+                    currentTimetableId={currentTimetableId}
                 />
             )}
         </InfoArea>

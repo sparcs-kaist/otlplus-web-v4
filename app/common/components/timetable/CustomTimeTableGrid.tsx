@@ -7,9 +7,11 @@ import { WeekdayEnum } from "@/common/enum/weekdayEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import GridWrapper from "@/common/primitives/GridWrapper"
 import Typography from "@/common/primitives/Typography"
+import { type CustomBlock } from "@/common/schemas/customBlock"
 import { type Lecture } from "@/common/schemas/lecture"
 import { type TimeBlock } from "@/common/schemas/timeblock"
 
+import { MemoizedCustomBlockTile } from "./CustomBlockTile"
 import {
     HoverTile,
     LECTURE_TILE_CLASSNAME,
@@ -384,6 +386,7 @@ const CurrentTimeBar = styled.div<{ ratio: number; dayIndex: number }>`
 
 interface CustomTimeTableGridProps {
     lectures: Lecture[]
+    customBlocks?: CustomBlock[]
     cellWidth?: string
     needTimeFilter?: boolean
     timeFilter?: TimeBlock | null
@@ -391,15 +394,19 @@ interface CustomTimeTableGridProps {
     needLectureInteraction?: boolean
     needLectureDeletable?: boolean
     deleteLecture?: (lectureId: number) => void
+    deleteCustomBlock?: (blockId: number) => void
     hoveredLectures?: Lecture[]
     setHoveredLectures?: React.Dispatch<React.SetStateAction<Lecture[]>>
     selectedLecture?: Lecture | null
     setSelectedLecture?: React.Dispatch<React.SetStateAction<Lecture | null>>
+    selectedCustomBlock?: CustomBlock | null
+    setSelectedCustomBlock?: React.Dispatch<React.SetStateAction<CustomBlock | null>>
     needCurrentTimeBar?: boolean
 }
 
 function CustomTimeTableGrid({
     lectures,
+    customBlocks = [],
     cellWidth,
     needTimeFilter = true,
     timeFilter,
@@ -407,10 +414,13 @@ function CustomTimeTableGrid({
     needLectureInteraction = true,
     needLectureDeletable = true,
     deleteLecture,
+    deleteCustomBlock,
     hoveredLectures = [],
     setHoveredLectures,
     selectedLecture = null,
     setSelectedLecture,
+    selectedCustomBlock = null,
+    setSelectedCustomBlock,
     needCurrentTimeBar = false,
 }: CustomTimeTableGridProps) {
     const { t } = useTranslation()
@@ -787,6 +797,80 @@ function CustomTimeTableGrid({
                                         </Typography>
                                     </FlexWrapper>
 
+                            {Array.from({ length: SLOT_COUNT }).map((_, timeIdx) => (
+                                <MemoizedBackgroundGridBlock
+                                    key={`${day}-${timeIdx}-memo`}
+                                    dayIdx={dayIdx}
+                                    timeIdx={timeIdx}
+                                    className={[
+                                        "background-grid-block",
+                                        timeIdx % 2 === 0 ? "hour" : "half",
+                                        timeIdx === SLOT_COUNT - 1 ? "last" : "",
+                                        timeIdx % 2 == 0 &&
+                                        (TIMES24[Math.floor(timeIdx / 2)] || 0) % 6 === 0
+                                            ? "bold"
+                                            : "",
+                                    ].join(" ")}
+                                    data-day-idx={dayIdx}
+                                    data-time-idx={timeIdx}
+                                />
+                            ))}
+                        </Fragment>
+                    ))}
+                </BackgroundGrid>
+                <OverlayGrid
+                    columns={`repeat(${DAYS.length}, ${cellWidth || "1fr"})`}
+                    rows={`${HEADER_HEIGHT}px repeat(${SLOT_COUNT}, 1fr)`}
+                    flow="column"
+                    gap={`${LINE_HEIGHT}px ${ROW_GAP}px`}
+                    alignItems="stretch"
+                    justifyItems="stretch"
+                    padding={`0 0 ${HEADER_HEIGHT * (1 - HEADER_CALIBRATION)}px 0`}
+                    ref={overlayRef}
+                    data-interaction={needLectureInteraction}
+                    data-lecture-deletable={needLectureDeletable}
+                    data-is-dragging={false}
+                    data-hovered-lectures=""
+                    data-selected-lecture=""
+                    data-selected-custom-block=""
+                    onPointerLeave={clearHoveredLecturesCallback}
+                    onTouchEnd={clearHoveredLecturesCallback}
+                >
+                    {needTimeFilter && <HoverTile />}
+                    {lectures.map((lecture, lectureIdx) => (
+                        <MemoizedLectureTiles
+                            key={`${lecture.id}-lecture-tile-${lectureIdx}`}
+                            lecture={lecture}
+                            deleteLecture={deleteLectureCallback}
+                            handleLectureTileHover={handleLectureTileHoverCallBack}
+                            handleLectureTileSelect={handleLectureTileSelectCallback}
+                        />
+                    ))}
+                    {customBlocks.map((block, blockIdx) => (
+                        <MemoizedCustomBlockTile
+                            key={`${block.id}-custom-block-tile-${blockIdx}`}
+                            block={block}
+                            deleteBlock={
+                                needLectureDeletable && deleteCustomBlock
+                                    ? () => deleteCustomBlock(block.id)
+                                    : undefined
+                            }
+                            handleBlockTileSelect={
+                                needLectureInteraction && setSelectedCustomBlock
+                                    ? (b) =>
+                                          setSelectedCustomBlock((prev) =>
+                                              prev?.id === b.id ? null : b,
+                                          )
+                                    : undefined
+                            }
+                        />
+                    ))}
+                    {ghostLecture && (
+                        <MemoizedLectureTiles lecture={ghostLecture} isGhost={true} />
+                    )}
+                    {ghostLecture && <MemoizedOverlapTiles overlaps={overlaps} />}
+                </OverlayGrid>
+            </FlexWrapper>
                                     {Array.from({ length: SLOT_COUNT }).map(
                                         (_, timeIdx) => (
                                             <MemoizedBackgroundGridBlock
