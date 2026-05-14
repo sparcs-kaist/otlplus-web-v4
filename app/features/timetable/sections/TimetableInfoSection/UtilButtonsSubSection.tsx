@@ -111,7 +111,7 @@ export default function UtilButtonsSubSection({
                             timetableType: timetableType,
                             semesterName: year + " " + semesterToString(semester),
                             semesterFontSize: 30,
-                            tileFontSize: 20,
+                            tileFontSize: 18,
                             displayMode: displayedTheme,
                             language: i18n.resolvedLanguage == "ko" ? "ko" : "en",
                         })
@@ -133,7 +133,7 @@ export default function UtilButtonsSubSection({
                             timetableType: timetableType,
                             semesterName: year + " " + semesterToString(semester),
                             semesterFontSize: 30,
-                            tileFontSize: 20,
+                            tileFontSize: 18,
                             displayMode: displayedTheme,
                             language: i18n.resolvedLanguage == "ko" ? "ko" : "en",
                         })
