@@ -19,6 +19,7 @@ import useUserStore from "@/utils/zustand/useUserStore"
 const Content = styled(Typography)<{ overflow: boolean }>`
     line-height: 1.5;
     width: 100%;
+    white-space: pre-wrap;
 
     word-break: break-word;
     ${(props) =>
