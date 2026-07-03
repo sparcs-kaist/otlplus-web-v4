@@ -7,10 +7,9 @@ import StyledDivider from "@/common/components/StyledDivider"
 import ReviewBlock from "@/common/components/reviews/ReviewBlock"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
+import Widget from "@/common/primitives/Widget"
 import { useAPI } from "@/utils/api/useAPI"
 import useIsDevice from "@/utils/useIsDevice"
-
-import Widget from "../../../../common/primitives/Widget"
 
 function LikedMajorFeedSection() {
     const {} = useTranslation() // 없으면 새로고침 안했을때 언어가 안바껴!

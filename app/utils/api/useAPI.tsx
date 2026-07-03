@@ -10,6 +10,7 @@ import {
 } from "@tanstack/react-query"
 import { type AxiosHeaders } from "axios"
 import { useTranslation } from "react-i18next"
+import type { ZodType } from "zod"
 
 import { axiosClient } from "@/libs/axios"
 
@@ -45,7 +46,10 @@ type UseAPIOptions<M, Req, Res> = Merge<
 >
 
 type UseAPIReturn<M, Req, Res> = M extends "GET"
-    ? { query: UseQueryResult<Res, Error>; setParams: Dispatch<SetStateAction<Req>> }
+    ? {
+          query: UseQueryResult<Res, Error>
+          setParams: Dispatch<SetStateAction<Req | null>>
+      }
     : {
           mutation: UseMutationResult<Res, Error, Req, unknown>
           requestFunction: UseMutateFunction<Res, Error, Req, unknown>
@@ -71,11 +75,14 @@ export function useAPI<
         ...mutationOps
     } = ops
 
-    const requestSchema = getZodSchemaRequest(method, getOriginalPathValue(path))
+    const requestSchema = getZodSchemaRequest(
+        method,
+        getOriginalPathValue(path),
+    ) as ZodType
     const responseSchema = getZodSchemaResponse(method, getOriginalPathValue(path))
 
     if (method === "GET") {
-        const [params, setParams] = useState<Req>(null as Req)
+        const [params, setParams] = useState<Req | null>(null)
         const query = useQuery<Res>({
             queryKey: [path, params, i18n.resolvedLanguage],
             queryFn: async () => {
@@ -95,10 +102,7 @@ export function useAPI<
             gcTime,
             enabled:
                 enabled &&
-                // TODO: fix ts-expect-error
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-expect-error
-                (params !== null || requestSchema.safeParse({})?.success === true),
+                (params !== null || requestSchema.safeParse({}).success === true),
         })
 
         return { query, setParams } as unknown as UseAPIReturn<M, Req, Res>

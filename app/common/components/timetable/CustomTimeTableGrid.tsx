@@ -18,6 +18,7 @@ import {
     OverflowTile,
     OverlapTile,
 } from "./Tile"
+import { useGhostLectureOverlaps } from "./useGhostLectureOverlaps"
 
 const TIME_BEGIN = 8
 const TIME_END = 24
@@ -426,17 +427,6 @@ function CustomTimeTableGrid({
     const timeRef = useRef<[number, number] | null>(null)
     const dayRef = useRef<number | null>(null)
 
-    const [ghostLecture, setGhostLecture] = useState<Lecture | null>(null)
-    const [overlaps, setOverlaps] = useState<
-        {
-            day: WeekdayEnum
-            begin: number
-            end: number
-        }[]
-    >([])
-
-    const [hasOverflow, setHasOverflow] = useState<boolean>(false)
-
     const [currentTimeRatio, setCurrentTimeRatio] = useState<number | null>(null)
     const [currentDayIndex, setCurrentDayIndex] = useState<number>(-1)
 
@@ -488,6 +478,21 @@ function CustomTimeTableGrid({
 
         return Array.from(lectureMap.values())
     }, [lectures, hoveredLectures, selectedLecture])
+
+    const hasOverflow = useMemo(
+        () =>
+            overflowLectures.some((lecture) =>
+                lecture.classes.some((cls) => !validTime({ ...cls })),
+            ),
+        [overflowLectures],
+    )
+
+    const { ghostLecture, overlaps } = useGhostLectureOverlaps(
+        needLectureInteraction,
+        hoveredLectures,
+        selectedLecture,
+        lectures,
+    )
 
     const handlePointerDown = useCallback((x: number, y: number) => {
         const target = document.elementFromPoint(x, y)
@@ -633,63 +638,6 @@ function CustomTimeTableGrid({
             customTimeTableRef.current?.setAttribute("data-selected-lecture", selectedId)
         else customTimeTableRef.current?.setAttribute("data-selected-lecture", "")
     }, [selectedLecture, needLectureInteraction, lectures])
-
-    useEffect(() => {
-        setHasOverflow(
-            overflowLectures.some((lecture) =>
-                lecture.classes.some((cls) => !validTime({ ...cls })),
-            ),
-        )
-        if (!needLectureInteraction) return
-
-        if (
-            hoveredLectures[0] &&
-            !lectures.some((lec) => lec.id === hoveredLectures[0]?.id)
-        ) {
-            setGhostLecture(hoveredLectures[0])
-        } else if (
-            selectedLecture &&
-            !lectures.some((lec) => lec.id === selectedLecture.id)
-        ) {
-            setGhostLecture(selectedLecture)
-        } else {
-            setGhostLecture(null)
-        }
-    }, [hoveredLectures, selectedLecture, lectures, overflowLectures])
-
-    useEffect(() => {
-        if (!needLectureInteraction) return
-
-        const intervals: typeof overlaps = []
-
-        if (ghostLecture) {
-            ghostLecture.classes.forEach((gClass) => {
-                lectures.forEach((lecture) => {
-                    lecture.classes.forEach((lClass) => {
-                        if (gClass.day === lClass.day) {
-                            const gStart = gClass.begin
-                            const gEnd = gClass.end
-                            const lStart = lClass.begin
-                            const lEnd = lClass.end
-
-                            const overlapStart = Math.max(gStart, lStart)
-                            const overlapEnd = Math.min(gEnd, lEnd)
-
-                            if (overlapStart < overlapEnd) {
-                                intervals.push({
-                                    day: gClass.day,
-                                    begin: (overlapStart / 60 - TIME_BEGIN) * 2,
-                                    end: (overlapEnd / 60 - TIME_BEGIN) * 2,
-                                })
-                            }
-                        }
-                    })
-                })
-            })
-        }
-
-        setOverlaps(ghostLecture ? intervals : [])
-    }, [ghostLecture, lectures, needLectureInteraction])
 
     return (
         <FlexWrapper

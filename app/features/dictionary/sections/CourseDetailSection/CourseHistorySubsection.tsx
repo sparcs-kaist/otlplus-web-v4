@@ -64,13 +64,13 @@ const NoHistoryText = styled(Typography)`
     justify-content: center;
 `
 
-interface CourseHistorySubsectionProps {
+interface CourseHistorySubSectionProps {
     courseDetail: GETCourseDetailResponse | undefined
     selectedProfessorId: number | null
     setSelectedProfessorId: React.Dispatch<React.SetStateAction<number | null>>
 }
 
-const CourseHistorySubsection: React.FC<CourseHistorySubsectionProps> = ({
+const CourseHistorySubSection: React.FC<CourseHistorySubSectionProps> = ({
     courseDetail,
     selectedProfessorId,
     setSelectedProfessorId,
@@ -190,4 +190,4 @@ const CourseHistorySubsection: React.FC<CourseHistorySubsectionProps> = ({
     )
 }
 
-export default CourseHistorySubsection
+export default CourseHistorySubSection

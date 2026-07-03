@@ -1,14 +1,14 @@
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 
 import { useTranslation } from "react-i18next"
-import { useInView } from "react-intersection-observer"
 
 import LoadingCircle from "@/common/components/LoadingCircle"
+import QueryState from "@/common/components/QueryState"
 import ReviewBlock from "@/common/components/reviews/ReviewBlock"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
-import { useAPI } from "@/utils/api/useAPI"
 import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
+import { useInfiniteScroll } from "@/utils/api/useInfiniteScroll"
 
 function RecentFeedSubSection() {
     const { t } = useTranslation()
@@ -20,12 +20,7 @@ function RecentFeedSubSection() {
         limit: 10,
     })
 
-    const { ref, inView } = useInView({ threshold: 0 })
-
-    useEffect(() => {
-        if (inView && query.hasNextPage && !query.isFetchingNextPage)
-            query.fetchNextPage()
-    }, [inView])
+    const { ref } = useInfiniteScroll(query)
 
     useEffect(() => {
         setParams({
@@ -40,16 +35,14 @@ function RecentFeedSubSection() {
                     {t("writeReviews.tabs.recentFeed")}
                 </Typography>
             </FlexWrapper>
-            {query.isLoading ? (
-                <LoadingCircle />
-            ) : (
+            <QueryState query={query}>
                 <FlexWrapper direction="column" align="stretch" gap={12}>
                     {data?.reviews.map((review) => (
                         <ReviewBlock review={review} key={review.id} />
                     ))}
                     {query.hasNextPage && <LoadingCircle ref={ref} />}
                 </FlexWrapper>
-            )}
+            </QueryState>
         </FlexWrapper>
     )
 }

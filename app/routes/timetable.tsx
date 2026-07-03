@@ -14,6 +14,7 @@ import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimeBlock } from "@/common/schemas/timeblock"
+import { useTimetablePageState } from "@/features/timetable/hooks/useTimetablePageState"
 import LectureDetailSection from "@/features/timetable/sections/LectureDetailSection"
 import LectureListSection from "@/features/timetable/sections/LectureListSection"
 import TabButtonRow from "@/features/timetable/sections/TabsRowSubSection/TabButtonRow"
@@ -21,6 +22,7 @@ import TimetableInfoSection from "@/features/timetable/sections/TimetableInfoSec
 import UtilButtonsSubSection from "@/features/timetable/sections/TimetableInfoSection/UtilButtonsSubSection"
 import { trackEvent } from "@/libs/mixpanel"
 import { media } from "@/styles/themes/media"
+import { apiKeys } from "@/utils/api/apiKeys"
 import { useAPI } from "@/utils/api/useAPI"
 import useIsDevice from "@/utils/useIsDevice"
 import useUserStore from "@/utils/zustand/useUserStore"
@@ -219,20 +221,23 @@ export default function Timetable() {
     const timetableAreaRef = useRef<HTMLDivElement>(null)
     const outerRef = useRef<HTMLDivElement>(null)
 
-    const [hover, setHover] = useState<Lecture[]>([])
-    const [selected, setSelected] = useState<Lecture | null>(null)
-
-    // Time filter state for search area
-    const [timeFilter, setTimeFilter] = useState<TimeBlock | null>(null)
+    const {
+        hover,
+        setHover,
+        selected,
+        setSelected,
+        timeFilter,
+        setTimeFilter,
+        mobileSearchOpen,
+        setMobileSearchOpen,
+        clearSelection,
+    } = useTimetablePageState()
 
     // Current timetable
     const [currentTimetableId, setCurrentTimetableId] = useState<number | null>(null)
     const [currentTimetableName, setCurrentTimetableName] = useState<string>("")
     const [year, setYear] = useState<number>(-1)
     const [semesterEnum, setSemesterEnum] = useState<SemesterEnum>(1)
-
-    // Mobile search modal state
-    const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
 
     const [nonLoginTimetable, setNonLoginTimetable] = useState<Lecture[]>([])
     const { query: timetable } = useAPI("GET", `/timetables/${currentTimetableId}`, {
@@ -261,7 +266,7 @@ export default function Timetable() {
             onSuccess: () => {
                 queryClient
                     .invalidateQueries({
-                        queryKey: [`/timetables/${currentTimetableId}`],
+                        queryKey: apiKeys.timetables.detail(currentTimetableId ?? ""),
                     })
                     .then(() => {
                         setSelected(null)
@@ -273,8 +278,7 @@ export default function Timetable() {
 
     const handleNonLoginRemoveLecture = useCallback((lectureId: number) => {
         setNonLoginTimetable((prev) => prev.filter((lecture) => lecture.id !== lectureId))
-        setSelected(null)
-        setHover([])
+        clearSelection()
     }, [])
 
     const handleRemoveLecture = useCallback(

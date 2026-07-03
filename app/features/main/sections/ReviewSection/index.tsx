@@ -1,7 +1,6 @@
 import { type Dispatch, Fragment, type SetStateAction, useState } from "react"
 
 import styled from "@emotion/styled"
-import { useQueryClient } from "@tanstack/react-query"
 import { Trans, useTranslation } from "react-i18next"
 
 import Button from "@/common/components/Button"
@@ -10,11 +9,11 @@ import { ScoreEnum } from "@/common/enum/scoreEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import TextInputArea from "@/common/primitives/TextInputArea"
 import Typography from "@/common/primitives/Typography"
+import Widget from "@/common/primitives/Widget"
 import { trackEvent } from "@/libs/mixpanel"
+import { useInvalidateReviewCaches } from "@/utils/api/invalidations"
 import { useAPI } from "@/utils/api/useAPI"
 import useUserStore from "@/utils/zustand/useUserStore"
-
-import Widget from "../../../../common/primitives/Widget"
 
 const ReviewBoxWrapper = styled(FlexWrapper)`
     height: 173px;
@@ -31,8 +30,8 @@ const ScoreGrid = styled.div`
 `
 
 function ReviewSection() {
-    const { user, status } = useUserStore()
-    const queryClient = useQueryClient()
+    const { status } = useUserStore()
+    const invalidateReviewCaches = useInvalidateReviewCaches()
 
     const { query } = useAPI("GET", "/users/writable-review", {
         enabled: status === "success",
@@ -75,8 +74,7 @@ function ReviewSection() {
             speech: reviewSpeech,
             source: "Home",
         })
-        queryClient.invalidateQueries({ queryKey: [`/users/written-reviews`] })
-        queryClient.invalidateQueries({ queryKey: [`/users/${user?.id}/lectures`] })
+        invalidateReviewCaches()
     }
 
     if (!query.data) {

@@ -24,11 +24,11 @@ const DetailHeaderText = styled(Typography)`
     white-space: nowrap;
 `
 
-interface CourseInfoSubsectionProps {
+interface CourseInfoSubSectionProps {
     courseDetail: GETCourseDetailResponse | undefined
 }
 
-const CourseInfoSubsection: React.FC<CourseInfoSubsectionProps> = ({ courseDetail }) => {
+const CourseInfoSubSection: React.FC<CourseInfoSubSectionProps> = ({ courseDetail }) => {
     const { t } = useTranslation()
 
     return (
@@ -83,4 +83,4 @@ const CourseInfoSubsection: React.FC<CourseInfoSubsectionProps> = ({ courseDetai
     )
 }
 
-export default CourseInfoSubsection
+export default CourseInfoSubSection

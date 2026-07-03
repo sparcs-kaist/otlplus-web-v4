@@ -27,12 +27,12 @@ const Divider = styled.div`
     background-color: ${({ theme }) => theme.colors.Line.divider};
 `
 
-interface LectureReviewSubsectionProps {
+interface LectureReviewSubSectionProps {
     selectedCourseId: number | null
     selectedProfessorId: number | null
 }
 
-const LectureReviewSubsection: React.FC<LectureReviewSubsectionProps> = ({
+const LectureReviewSubSection: React.FC<LectureReviewSubSectionProps> = ({
     selectedCourseId,
     selectedProfessorId,
 }) => {
@@ -133,4 +133,4 @@ const LectureReviewSubsection: React.FC<LectureReviewSubsectionProps> = ({
     )
 }
 
-export default LectureReviewSubsection
+export default LectureReviewSubSection

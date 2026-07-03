@@ -5,7 +5,6 @@ import styled from "@emotion/styled"
 import AddIcon from "@mui/icons-material/Add"
 import CloseIcon from "@mui/icons-material/Close"
 import FavoriteIcon from "@mui/icons-material/Favorite"
-import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router"
 
@@ -16,14 +15,15 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
+import checkOverlap from "@/features/timetable/utils/checkOverlap"
 import { trackEvent } from "@/libs/mixpanel"
+import { useInvalidateTimetable, useInvalidateWishlist } from "@/utils/api/invalidations"
 import { useAPI } from "@/utils/api/useAPI"
-import checkOverlap from "@/utils/timetable/checkOverlap"
 import useIsDevice from "@/utils/useIsDevice"
 import useUserStore from "@/utils/zustand/useUserStore"
 
-import LectureInfoSubsection from "./LectureInfoSubsection"
-import LectureReviewSubsection from "./LectureReviewSubsection"
+import LectureInfoSubSection from "./LectureInfoSubSection"
+import LectureReviewSubSection from "./LectureReviewSubSection"
 
 const LectureDetailSectionInner = styled(FlexWrapper)`
     width: 100%;
@@ -90,21 +90,18 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
     currentTimetableId,
     timetableLectures,
 }) => {
-    const queryClient = useQueryClient()
     const theme = useTheme()
     const { t } = useTranslation()
     const { user, status } = useUserStore()
     const isTablet = useIsDevice("tablet")
+    const invalidateTimetable = useInvalidateTimetable(currentTimetableId)
+    const invalidateWishlist = useInvalidateWishlist()
 
     const { requestFunction: addTimetableFunction } = useAPI(
         "PATCH",
         `/timetables/${currentTimetableId}`,
         {
-            onSuccess: () => {
-                queryClient.invalidateQueries({
-                    queryKey: [`/timetables/${currentTimetableId}`],
-                })
-            },
+            onSuccess: invalidateTimetable,
         },
     )
 
@@ -136,11 +133,7 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
         "PATCH",
         `/users/${user?.id}/wishlist`,
         {
-            onSuccess: () => {
-                queryClient.invalidateQueries({
-                    queryKey: [`/users/${user?.id}/wishlist`],
-                })
-            },
+            onSuccess: invalidateWishlist,
         },
     )
 
@@ -290,14 +283,14 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                         </StyledAnchor>
                     </FlexWrapper>
                     <LectureDetailWrapper direction="column" gap={10} align="center">
-                        <LectureInfoSubsection selectedLecture={selectedLecture} />
+                        <LectureInfoSubSection selectedLecture={selectedLecture} />
                     </LectureDetailWrapper>
                     <LectureDetailWrapper
                         ref={reviewSectionRef}
                         direction="column"
                         gap={10}
                     >
-                        <LectureReviewSubsection
+                        <LectureReviewSubSection
                             selectedCourseId={selectedLecture.courseId}
                             selectedProfessorId={selectedLecture.professors[0]?.id ?? -1}
                         />

@@ -3,9 +3,9 @@ import { useState } from "react"
 import styled from "@emotion/styled"
 
 import FlexWrapper from "@/common/primitives/FlexWrapper"
+import { MakersList } from "@/features/makers/makersList"
 import MemberSection from "@/features/makers/sections/MemberSection"
 import ProjectSection from "@/features/makers/sections/ProjectSection"
-import { MakersList } from "@/utils/makersList"
 
 const MakersWrapper = styled(FlexWrapper)`
     flex: 1 0 auto;

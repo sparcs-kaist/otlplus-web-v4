@@ -1,9 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react"
 
 import styled from "@emotion/styled"
-import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
-import { useInView } from "react-intersection-observer"
 
 import type { GETLecturesResponse } from "@/api/lectures"
 import LoadingCircle from "@/common/components/LoadingCircle"
@@ -13,13 +11,15 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimeBlock } from "@/common/schemas/timeblock"
+import checkOverlap from "@/features/timetable/utils/checkOverlap"
 import { trackEvent } from "@/libs/mixpanel"
 import { media } from "@/styles/themes/media"
 import type { getAPIResponseType } from "@/utils/api/getAPIType"
+import { useInvalidateTimetable, useInvalidateWishlist } from "@/utils/api/invalidations"
 import { useAPI } from "@/utils/api/useAPI"
 import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
+import { useInfiniteScroll } from "@/utils/api/useInfiniteScroll"
 import checkEmpty from "@/utils/search/checkEmpty"
-import checkOverlap from "@/utils/timetable/checkOverlap"
 import useIsDevice from "@/utils/useIsDevice"
 import useUserStore from "@/utils/zustand/useUserStore"
 
@@ -179,9 +179,8 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
 }) => {
     const { t } = useTranslation()
     const { user, status } = useUserStore()
-    const queryClient = useQueryClient()
-
-    const { ref, inView } = useInView({ threshold: 0 })
+    const invalidateTimetable = useInvalidateTimetable(currentTimetableId)
+    const invalidateWishlist = useInvalidateWishlist()
 
     const isTablet = useIsDevice("tablet")
 
@@ -189,11 +188,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
         "PATCH",
         `/timetables/${currentTimetableId}`,
         {
-            onSuccess: () => {
-                queryClient.invalidateQueries({
-                    queryKey: [`/timetables/${currentTimetableId}`],
-                })
-            },
+            onSuccess: invalidateTimetable,
         },
     )
 
@@ -205,11 +200,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
         "PATCH",
         `/users/${user?.id}/wishlist`,
         {
-            onSuccess: () => {
-                queryClient.invalidateQueries({
-                    queryKey: [`/users/${user?.id}/wishlist`],
-                })
-            },
+            onSuccess: invalidateWishlist,
         },
     )
 
@@ -238,6 +229,8 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
             return n
         },
     })
+
+    const { ref } = useInfiniteScroll(query)
 
     const handleSearch = useCallback(
         (param: SearchParamsType) => {
@@ -274,18 +267,16 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
 
     useEffect(() => {
         setIsWishlist(false)
-        setParams((prev) => ({
-            ...prev,
-            order: (["code", "popular", "studentCount"] as const)[sortOption] ?? "code",
-            offset: 0,
-        }))
+        setParams((prev) => {
+            if (prev === null) return prev
+            return {
+                ...prev,
+                order:
+                    (["code", "popular", "studentCount"] as const)[sortOption] ?? "code",
+                offset: 0,
+            }
+        })
     }, [sortOption])
-
-    useEffect(() => {
-        if (inView && query.hasNextPage && !query.isFetchingNextPage) {
-            query.fetchNextPage()
-        }
-    }, [inView])
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {

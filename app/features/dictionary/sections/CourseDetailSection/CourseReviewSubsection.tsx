@@ -2,7 +2,6 @@ import React, { use, useEffect, useState } from "react"
 
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
-import { useInView } from "react-intersection-observer"
 import { de } from "zod/v4/locales"
 
 import LoadingCircle from "@/common/components/LoadingCircle"
@@ -15,6 +14,7 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import CourseReviewLanguageChip from "@/features/dictionary/components/CourseReviewLanguageChip"
 import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
+import { useInfiniteScroll } from "@/utils/api/useInfiniteScroll"
 
 const NumberWrapper = styled(FlexWrapper)`
     width: 300px;
@@ -25,7 +25,7 @@ const NumberContent = styled(FlexWrapper)`
     flex: 1 0 0;
 `
 
-interface CourseReviewSubsectionProps {
+interface CourseReviewSubSectionProps {
     selectedCourseId: number | null
     selectedProfessorId: number | null
     writableReviewProps: ReviewWritingBlockProps[]
@@ -33,7 +33,7 @@ interface CourseReviewSubsectionProps {
 
 const LIMIT = 20
 
-const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
+const CourseReviewSubSection: React.FC<CourseReviewSubSectionProps> = ({
     selectedCourseId,
     selectedProfessorId,
     writableReviewProps,
@@ -49,7 +49,7 @@ const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
         enabled: enabled,
     })
 
-    const { ref, inView } = useInView()
+    const { ref } = useInfiniteScroll(query)
 
     useEffect(() => {
         setParams({
@@ -61,7 +61,10 @@ const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
 
     useEffect(() => {
         setParams((prevState) => {
-            const base = prevState ?? {}
+            const base = {
+                mode: "default" as const,
+                ...(prevState ?? {}),
+            }
             if (selectedProfessorId === null) delete base.professorId
             return {
                 ...base,
@@ -73,12 +76,6 @@ const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
         })
         setEnabled(selectedCourseId !== null)
     }, [selectedProfessorId, selectedCourseId])
-
-    useEffect(() => {
-        if (inView && query.hasNextPage && !query.isFetchingNextPage) {
-            query.fetchNextPage()
-        }
-    }, [inView])
 
     return (
         <>
@@ -182,4 +179,4 @@ const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
     )
 }
 
-export default CourseReviewSubsection
+export default CourseReviewSubSection

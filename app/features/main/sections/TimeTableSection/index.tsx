@@ -11,13 +11,12 @@ import CustomTimeTableGrid from "@/common/components/timetable/CustomTimeTableGr
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
+import Widget from "@/common/primitives/Widget"
 import type { Lecture } from "@/common/schemas/lecture"
 import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
 import { handleLogin } from "@/utils/handleLoginLogout"
 import useUserStore from "@/utils/zustand/useUserStore"
-
-import Widget from "../../../../common/primitives/Widget"
 
 const StyledWidget = styled(Widget)`
     width: 856px;

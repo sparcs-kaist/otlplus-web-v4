@@ -84,7 +84,7 @@ export type ExportDataType = {
             ? [string, string]
             : (typeof SearchOptionsChipsDetail)[K][number][0] extends number
               ? [number, string]
-              : any
+              : [unknown, string]
     >
 } & { time?: TimeBlock }
 

@@ -24,13 +24,16 @@ const useIsDevice = (type: DeviceType): boolean => {
         }
     }
 
-    const [isMatch, setIsMatch] = useState(getIsMatch(window.innerWidth))
+    const [isMatch, setIsMatch] = useState(() =>
+        typeof window !== "undefined" ? getIsMatch(window.innerWidth) : false,
+    )
 
     useEffect(() => {
         const handleResize = () => {
             setIsMatch(getIsMatch(window.innerWidth))
         }
 
+        handleResize()
         window.addEventListener("resize", handleResize)
         return () => window.removeEventListener("resize", handleResize)
     }, [type, theme.breakpoints])

@@ -29,11 +29,11 @@ const DetailHeaderText = styled(Typography)`
     white-space: nowrap;
 `
 
-interface LectureInfoSubsectionProps {
+interface LectureInfoSubSectionProps {
     selectedLecture: Lecture | null
 }
 
-const LectureInfoSubsection: React.FC<LectureInfoSubsectionProps> = ({
+const LectureInfoSubSection: React.FC<LectureInfoSubSectionProps> = ({
     selectedLecture,
 }) => {
     const { t } = useTranslation()
@@ -129,4 +129,4 @@ const LectureInfoSubsection: React.FC<LectureInfoSubsectionProps> = ({
     )
 }
 
-export default LectureInfoSubsection
+export default LectureInfoSubSection
