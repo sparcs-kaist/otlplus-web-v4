@@ -917,7 +917,10 @@ export default memo(CustomTimeTableGrid, (prevProps, nextProps) => {
         prevProps.deleteLecture === nextProps.deleteLecture &&
         prevProps.onLectureSelect === nextProps.onLectureSelect &&
         prevProps.needCurrentTimeBar === nextProps.needCurrentTimeBar &&
-        JSON.stringify(prevProps.flashLectureIds) ===
-            JSON.stringify(nextProps.flashLectureIds)
+        (prevProps.flashLectureIds ?? []).length ===
+            (nextProps.flashLectureIds ?? []).length &&
+        (prevProps.flashLectureIds ?? []).every(
+            (id, index) => id === (nextProps.flashLectureIds ?? [])[index],
+        )
     )
 })
