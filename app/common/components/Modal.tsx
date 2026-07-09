@@ -68,6 +68,25 @@ const Modal: React.FC<ModalProps> = ({
 }) => {
     const mouseDownTargetRef = useRef<EventTarget | null>(null)
 
+    useEffect(() => {
+        const handleEsc = (event: KeyboardEvent) => {
+            const target = event.target as HTMLElement
+            if (
+                target.tagName === "INPUT" ||
+                target.tagName === "TEXTAREA" ||
+                target.isContentEditable
+            ) {
+                return
+            }
+            if (event.key === "Escape") {
+                onClose()
+            }
+        }
+        window.addEventListener("keydown", handleEsc)
+        return () => {
+            window.removeEventListener("keydown", handleEsc)
+        }
+    }, [])
     // 모달 밖 스크롤 방지
     useEffect(() => {
         if (isOpen) {
