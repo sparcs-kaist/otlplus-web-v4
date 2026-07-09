@@ -66,11 +66,11 @@ const Modal: React.FC<ModalProps> = ({
     header = true,
     fullScreen = false,
 }) => {
-    if (!isOpen) return null
-
     const mouseDownTargetRef = useRef<EventTarget | null>(null)
 
     useEffect(() => {
+        if (!isOpen) return
+
         const handleEsc = (event: KeyboardEvent) => {
             const target = event.target as HTMLElement
             if (
@@ -88,7 +88,8 @@ const Modal: React.FC<ModalProps> = ({
         return () => {
             window.removeEventListener("keydown", handleEsc)
         }
-    }, [])
+    }, [isOpen, onClose])
+
     // 모달 밖 스크롤 방지
     useEffect(() => {
         if (isOpen) {
@@ -101,6 +102,8 @@ const Modal: React.FC<ModalProps> = ({
             document.body.style.overflow = "auto"
         }
     }, [isOpen])
+
+    if (!isOpen) return null
 
     return ReactDOM.createPortal(
         <Overlay
