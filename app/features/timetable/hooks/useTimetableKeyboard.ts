@@ -368,7 +368,7 @@ export function useTimetableKeyboard({
             } else {
                 if (isLoggedIn && currentTimetableId !== null) {
                     e.preventDefault()
-                    if (window.confirm("현재 시간표를 삭제하시겠습니까?")) {
+                    if (window.confirm(t("timetable.timetableKeyboardDeleteConfirm"))) {
                         deleteTimetable(currentTimetableId)
                     }
                 }

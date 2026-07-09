@@ -5,6 +5,7 @@ export const timetable = {
     pasteLectureConflict:
         "시간이 겹치는 과목이 있습니다. 겹치는 기존 과목을 지우고 붙여넣으시겠습니까?",
     myTimeTableLectureAddWarning: "내 시간표에는 강의를 추가할 수 없습니다.",
+    timetableKeyboardDeleteConfirm: "현재 시간표를 삭제하시겠습니까?",
     copyImage: "이미지로 복사하기",
     exportImage: "이미지로 내보내기",
     exportICal: "캘린더로 내보내기",

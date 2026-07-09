@@ -5,6 +5,8 @@ export const timetable = {
     pasteLectureConflict:
         "There is a conflict with this lecture in the timetable. Would you like to replace it?",
     myTimeTableLectureAddWarning: "Cannot add lectures to My Timetable.",
+    timetableKeyboardDeleteConfirm:
+        "Are you sure you want to delete the current timetable?",
     copyImage: "Copy as Image",
     exportImage: "Export as Image",
     exportICal: "Export as Calendar",
