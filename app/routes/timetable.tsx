@@ -290,7 +290,6 @@ export default function Timetable() {
         if (year !== -1) {
             setMyTimetableParams({ year: year, semester: semesterEnum })
             setTimetablesParams({ year: year, semester: semesterEnum })
-            setTimetablesParams({ year: year, semester: semesterEnum })
         }
         setNonLoginTimetable([])
     }, [year, semesterEnum])
