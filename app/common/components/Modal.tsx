@@ -66,6 +66,8 @@ const Modal: React.FC<ModalProps> = ({
     header = true,
     fullScreen = false,
 }) => {
+    if (!isOpen) return null
+
     const mouseDownTargetRef = useRef<EventTarget | null>(null)
 
     useEffect(() => {
@@ -99,8 +101,6 @@ const Modal: React.FC<ModalProps> = ({
             document.body.style.overflow = "auto"
         }
     }, [isOpen])
-
-    if (!isOpen) return null
 
     return ReactDOM.createPortal(
         <Overlay
