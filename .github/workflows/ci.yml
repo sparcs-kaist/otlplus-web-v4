@@ -60,13 +60,27 @@ jobs:
               run: pnpm install --frozen-lockfile
 
             - name: Install Doppler CLI
+              if: ${{ env.DOPPLER_TOKEN != '' }}
               uses: dopplerhq/cli-action@v3
+              env:
+                  DOPPLER_TOKEN: ${{ secrets.DOPPLER_SECRET_DEV }}
 
-            - name: Build
+            - name: Build (with Doppler)
+              if: ${{ env.DOPPLER_TOKEN != '' }}
               run: doppler run -- pnpm build
               env:
                   DOPPLER_TOKEN: ${{ secrets.DOPPLER_SECRET_DEV }}
                   SENTRY_PROJECT: otl-front-v4-dev
+
+            - name: Build (without Doppler)
+              if: ${{ env.DOPPLER_TOKEN == '' }}
+              run: pnpm build
+              env:
+                  DOPPLER_TOKEN: ${{ secrets.DOPPLER_SECRET_DEV }}
+                  VITE_APP_API_URL: https://api.otl.dev.sparcs.org
+                  VITE_APP_LOG_LEVEL: info
+                  VITE_DEV_MODE: true
+                  VITE_APP_API_MOCK_MODE: false
 
             - name: Upload build artifact
               uses: actions/upload-artifact@v4
