@@ -561,6 +561,60 @@ function CustomTimeTableGrid({
         )
     }, [overflowLectures])
 
+    const [hasOverflow, setHasOverflow] = useState<boolean>(false)
+
+    const [currentTimeRatio, setCurrentTimeRatio] = useState<number | null>(null)
+    const [currentDayIndex, setCurrentDayIndex] = useState<number>(-1)
+
+    const updateCurrentTime = useCallback(() => {
+        const now = new Date()
+        const jsDay = now.getDay() // 0=Sun, 1=Mon, ..., 6=Sat
+        const dayIndex = jsDay - 1 // 0=Mon, ..., 4=Fri
+
+        const currentHour = now.getHours() + now.getMinutes() / 60
+        if (
+            currentHour < TIME_BEGIN ||
+            currentHour > TIME_END ||
+            dayIndex < 0 ||
+            dayIndex > 4
+        ) {
+            setCurrentTimeRatio(null)
+            return
+        }
+
+        const totalHours = TIME_END - TIME_BEGIN
+        const elapsedHours = currentHour - TIME_BEGIN
+        const ratio = elapsedHours / totalHours
+        setCurrentTimeRatio(ratio)
+        setCurrentDayIndex(dayIndex)
+    }, [])
+
+    useEffect(() => {
+        if (!needCurrentTimeBar) return
+
+        updateCurrentTime()
+        const interval = setInterval(updateCurrentTime, 60 * 1000)
+        window.addEventListener("resize", updateCurrentTime)
+
+        return () => {
+            clearInterval(interval)
+            window.removeEventListener("resize", updateCurrentTime)
+        }
+    }, [needCurrentTimeBar, updateCurrentTime])
+
+    const overflowLectures = useMemo(() => {
+        const mergedLectures = [...lectures, ...hoveredLectures, selectedLecture].filter(
+            (lecture): lecture is Lecture => lecture != null,
+        )
+
+        const lectureMap = new Map<number, Lecture>()
+        mergedLectures.forEach((lecture) => {
+            lectureMap.set(lecture.id, lecture)
+        })
+
+        return Array.from(lectureMap.values())
+    }, [lectures, hoveredLectures, selectedLecture])
+
     const handlePointerDown = useCallback((x: number, y: number) => {
         const target = document.elementFromPoint(x, y)
         if (target == null || !target.classList.contains("background-grid-block")) return
