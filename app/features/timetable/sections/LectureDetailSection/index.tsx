@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from "react"
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import AddIcon from "@mui/icons-material/Add"
+import CircleIcon from "@mui/icons-material/Circle"
 import CloseIcon from "@mui/icons-material/Close"
 import FavoriteIcon from "@mui/icons-material/Favorite"
 import { useQueryClient } from "@tanstack/react-query"
@@ -11,11 +12,12 @@ import { Link } from "react-router"
 
 import Button from "@/common/components/Button"
 import Credits from "@/common/components/Credits"
-import type { SemesterEnum } from "@/common/enum/semesterEnum"
+import { flattenTimeTableColors } from "@/common/components/timetable/Tile"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
+import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
 import { trackEvent } from "@/libs/mixpanel"
 import { useAPI } from "@/utils/api/useAPI"
 import checkOverlap from "@/utils/timetable/checkOverlap"
@@ -69,24 +71,29 @@ const StyledAnchor = styled.a`
     text-decoration: none;
 `
 
+const MultipleSelectWrapper = styled(FlexWrapper)`
+    width: 100%;
+    text-align: center;
+`
+const MultipleSelectLectureBlock = styled(FlexWrapper)`
+    padding: 12px 16px;
+    background-color: ${({ theme }) => theme.colors.Background.Block.default};
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+`
+
 interface LectureDetailSectionProps {
-    setNonLoginTimetable?: React.Dispatch<React.SetStateAction<Lecture[]>>
-    handleRemoveFromTimetable?: (lectureId: number) => void
-    selectedLecture: Lecture | undefined | null
+    addLectures: (lectures: Lecture[]) => void
+    removeLectures?: (lectureId: number) => void
     onMobileModalClose?: () => void
-    year: number
-    semester: SemesterEnum
     currentTimetableId?: number | null
-    timetableLectures?: Lecture[]
+    timetableLectures: Lecture[]
 }
 
 const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
-    setNonLoginTimetable,
-    handleRemoveFromTimetable,
-    selectedLecture,
+    addLectures,
+    removeLectures,
     onMobileModalClose,
-    year,
-    semester,
     currentTimetableId,
     timetableLectures,
 }) => {
@@ -96,17 +103,17 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
     const { user, status } = useUserStore()
     const isTablet = useIsDevice("tablet")
 
-    const { requestFunction: addTimetableFunction } = useAPI(
-        "PATCH",
-        `/timetables/${currentTimetableId}`,
-        {
-            onSuccess: () => {
-                queryClient.invalidateQueries({
-                    queryKey: [`/timetables/${currentTimetableId}`],
-                })
-            },
-        },
-    )
+    const selectedLectures = useTimetableUIStore((s) => s.selectedLectures)
+    const hoveredLectures = useTimetableUIStore((s) => s.hoveredLectures)
+    const year = useTimetableUIStore((s) => s.year)
+    const semester = useTimetableUIStore((s) => s.semesterEnum)
+
+    const selectedLecture =
+        selectedLectures.length === 1
+            ? selectedLectures[0]
+            : hoveredLectures.length === 1
+              ? hoveredLectures[0]
+              : null
 
     const [wishListIds, setWishListIds] = useState<number[]>([])
 
@@ -114,7 +121,7 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
         "GET",
         `/users/${user?.id}/wishlist`,
         {
-            enabled: status === "success" && year != -1,
+            enabled: status === "success" && year !== -1,
         },
     )
 
@@ -157,39 +164,13 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
         return `https://erp.kaist.ac.kr/com/lgin/SsoCtr/initExtPageWork.do?link=estblSubjt&params=${encodedLecture}`
     }
 
-    const handleAddToTimetable = async (lecture: Lecture) => {
+    const handleAddToTimetable = (lecture: Lecture) => {
         if (!timetableLectures) return
-        if (status !== "success" && setNonLoginTimetable !== undefined) {
-            if (
-                timetableLectures.some((lec) =>
-                    checkOverlap(lec.classes, lecture.classes),
-                )
-            ) {
-                alert(t("timetable.addLectureConflict"))
-                return
-            }
-            setNonLoginTimetable((prev) => [...prev, lecture])
-            trackEvent("Add Lecture to Timetable", {
-                lectureId: lecture.id,
-                lectureCode: lecture.code,
-                courseName: lecture.name,
-                timetableId: null,
-                isGuest: true,
-                source: "LectureDetail",
-            })
-            return
-        }
-        if (!currentTimetableId) {
-            console.warn("No timetable selected")
-            return
-        } else if (
-            timetableLectures.some((lec) => checkOverlap(lec.classes, lecture.classes))
-        ) {
+        if (timetableLectures.some((lec) => checkOverlap(lec.classes, lecture.classes))) {
             alert(t("timetable.addLectureConflict"))
             return
         }
-
-        addTimetableFunction({ action: "add", lectureId: lecture.id })
+        addLectures([lecture])
         trackEvent("Add Lecture to Timetable", {
             lectureId: lecture.id,
             lectureCode: lecture.code,
@@ -199,7 +180,7 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
         })
     }
 
-    const handleLikeClick = async (wish: boolean, lectureId: number) => {
+    const handleLikeClick = (wish: boolean, lectureId: number) => {
         if (status === "idle") return
 
         const action = wish ? "delete" : "add"
@@ -220,9 +201,52 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
             direction="column"
             gap={12}
             align={"center"}
-            justify={selectedLecture ? "start" : "center"}
+            justify={!selectedLecture && !selectedLectures.length ? "center" : "start"}
         >
-            {selectedLecture ? (
+            {selectedLectures.length > 1 ? (
+                <MultipleSelectWrapper
+                    direction="column"
+                    gap={16}
+                    align="stretch"
+                    justify="flex-start"
+                >
+                    <Typography type="Bigger" color="Text.default">
+                        {selectedLectures.length}
+                        {t("timetable.numSelected")}
+                    </Typography>
+                    {selectedLectures.map((l) => {
+                        const tileColors = flattenTimeTableColors(
+                            theme.colors.Tile.TimeTable.default,
+                        )
+                        const color = tileColors[l.courseId % tileColors.length]
+                        return (
+                            <MultipleSelectLectureBlock
+                                key={l.id}
+                                direction="row"
+                                gap={12}
+                                align="center"
+                            >
+                                <Icon size={14} color={color as string}>
+                                    <CircleIcon />
+                                </Icon>
+                                <FlexWrapper direction="column" gap={4} flex="1 1 auto">
+                                    <Typography type="BigBold" color="Text.default">
+                                        {l.name} {l.subtitle}
+                                    </Typography>
+                                    <Typography type="Small" color="Text.dark">
+                                        {l.professors[0]?.name}{" "}
+                                        {l.professors.length > 1
+                                            ? `${t("common.professors.over")} ${l.professors.length - 1}${t("common.professors.people")} `
+                                            : " "}
+                                        | {l.department.name} | {l.credit}
+                                        {t("common.credit")}
+                                    </Typography>
+                                </FlexWrapper>
+                            </MultipleSelectLectureBlock>
+                        )
+                    })}
+                </MultipleSelectWrapper>
+            ) : selectedLecture ? (
                 <>
                     <LectureTitle
                         direction="column"
@@ -254,7 +278,7 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                         <Typography type={"Big"} color={"Text.default"}>
                             {selectedLecture.code +
                                 " " +
-                                (selectedLecture.classNo != ""
+                                (selectedLecture.classNo !== ""
                                     ? `(${selectedLecture.classNo})`
                                     : "")}
                         </Typography>
@@ -351,10 +375,8 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                                     <Button
                                         type="selected"
                                         onClick={() => {
-                                            if (handleRemoveFromTimetable) {
-                                                handleRemoveFromTimetable(
-                                                    selectedLecture.id,
-                                                )
+                                            if (removeLectures) {
+                                                removeLectures(selectedLecture.id)
                                             }
                                             if (onMobileModalClose) onMobileModalClose()
                                         }}

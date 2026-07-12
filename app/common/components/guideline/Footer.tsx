@@ -7,7 +7,7 @@ import Line from "@/common/components/Line"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import { media } from "@/styles/themes/media"
-import { useDetectOS } from "@/utils/useDetectOS"
+import { getPlatform } from "@/utils/getPlatform"
 
 const FooterWrapper = styled(FlexWrapper)`
     width: 100%;
@@ -55,7 +55,7 @@ const FooterSection = styled(FlexWrapper)`
 
 function Footer() {
     const { t } = useTranslation()
-    const os = useDetectOS()
+    const os = getPlatform()
 
     function serviceLink(service: string) {
         const taxiIOSLink = "https://apps.apple.com/kr/app/taxi-for-kaist/id6447231158"
