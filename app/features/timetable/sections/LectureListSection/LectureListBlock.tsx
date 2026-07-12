@@ -31,7 +31,7 @@ const CourseItemWrapper = styled.div`
     flex-shrink: 0;
     opacity: 0.2;
 
-    [data-selected-lecture=""] & {
+    [data-selected-lectures=""] & {
         opacity: 1;
     }
 
@@ -59,16 +59,15 @@ const LectureItemWrapper = styled.div<{ lectureId: number }>`
     cursor: pointer;
 
     &:hover,
-    [data-selected-lecture="${({ lectureId }) => lectureId}"] &,
-    [data-hovered-lectures~="${({ lectureId }) => lectureId}"]:not(:hover) & {
+    &[data-is-hovered="true"],
+    &[data-is-selected="true"] {
         background-color: ${({ theme }) => theme.colors.Background.Block.dark};
     }
 
     ${media.tablet} {
-        &:hover {
-            background-color: ${({ theme }) => theme.colors.Background.Block.default};
-        }
-        [data-hovered-lectures~="${({ lectureId }) => lectureId}"] & {
+        &:hover,
+        &[data-is-hovered="true"],
+        &[data-is-selected="true"] {
             background-color: ${({ theme }) => theme.colors.Background.Block.dark};
         }
     }
@@ -86,12 +85,11 @@ interface LectureListBlockProps {
     wishlist: number[]
     currentTimetableId: number | null
     timetableLectures: Lecture[]
-    isAddTimetablePending: boolean
-    selectedLecture: Lecture | null
+    selectedLectures: Lecture[] | null
     hoveredLecture: Lecture[] | null
     handleSetHoveredLecture: (lecture: Lecture) => void
     handleClearHoveredLecture: () => void
-    handleSetSelectedLecture: (lecture: Lecture) => void
+    handleSetSelectedLecture: (lecture: Lecture, e?: React.MouseEvent) => void
     handleLikeClick: (wish: boolean, lectureId: number) => void
     handleAddToTimetable: (lecture: Lecture) => void
     t: (key: string) => string
@@ -102,11 +100,10 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
     wishlist,
     currentTimetableId,
     timetableLectures,
-    isAddTimetablePending,
     handleSetHoveredLecture,
     handleClearHoveredLecture,
     handleSetSelectedLecture,
-    selectedLecture,
+    selectedLectures,
     hoveredLecture,
     handleLikeClick,
     handleAddToTimetable,
@@ -121,12 +118,15 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
     useEffect(() => {
         wrapperRef.current?.setAttribute(
             "data-is-selected",
-            selectedLecture?.id != null &&
-                course.lectures.some((lec) => lec.id === selectedLecture.id)
+            selectedLectures != null &&
+                selectedLectures.length > 0 &&
+                course.lectures.some((lec) =>
+                    selectedLectures.some((sl) => sl.id === lec.id),
+                )
                 ? "true"
                 : "false",
         )
-    }, [selectedLecture, course])
+    }, [selectedLectures, course])
 
     return (
         <CourseItemWrapper ref={wrapperRef} data-is-selected="">
@@ -167,14 +167,18 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
             {course.lectures.map((lecture, idx) => {
                 const wish = wishlist.includes(lecture.id)
                 const isHovered = hoveredLecture?.some((lec) => lec.id === lecture.id)
+                const isSelected = selectedLectures?.some((lec) => lec.id === lecture.id)
 
                 return (
                     <React.Fragment key={lecture.id}>
                         <LectureItemWrapper
                             data-lecture-id={lecture.id}
-                            onMouseEnter={() => handleSetHoveredLecture(lecture)}
-                            onMouseLeave={handleClearHoveredLecture}
-                            onClick={() => handleSetSelectedLecture(lecture)}
+                            data-search-lecture-id={lecture.id}
+                            data-is-hovered={isHovered}
+                            data-is-selected={isSelected}
+                            onPointerEnter={() => handleSetHoveredLecture(lecture)}
+                            onPointerLeave={handleClearHoveredLecture}
+                            onClick={(e) => handleSetSelectedLecture(lecture, e)}
                             lectureId={lecture.id}
                         >
                             <FlexWrapper direction="column" gap={0}>
@@ -263,9 +267,6 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
                                                 )
                                                     ? 0.3
                                                     : 1,
-                                            cursor: isAddTimetablePending
-                                                ? "wait"
-                                                : "pointer",
                                         }}
                                     >
                                         <Icon
@@ -294,8 +295,7 @@ export default memo(LectureListBlock, (prev, next) => {
         prev.wishlist !== next.wishlist || // Assuming array ref changes if content changes, or use deep compare if necessary (usually ref change from state)
         prev.currentTimetableId !== next.currentTimetableId ||
         prev.timetableLectures !== next.timetableLectures ||
-        prev.isAddTimetablePending !== next.isAddTimetablePending ||
-        prev.selectedLecture !== next.selectedLecture ||
+        prev.selectedLectures !== next.selectedLectures ||
         prev.hoveredLecture !== next.hoveredLecture
     ) {
         return false

@@ -175,8 +175,7 @@ const TimeTableSection = () => {
                                 lectures={lectures}
                                 needLectureDeletable={false}
                                 needTimeFilter={false}
-                                selectedLecture={null}
-                                setSelectedLecture={setSelectedLecture}
+                                onLectureSelect={(lecture) => setSelectedLecture(lecture)}
                                 needCurrentTimeBar={true}
                             />
                         </TimeTableGridWrapper>

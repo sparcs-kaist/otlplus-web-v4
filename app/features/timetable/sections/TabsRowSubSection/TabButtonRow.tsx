@@ -24,7 +24,6 @@ import CloseIcon from "@mui/icons-material/Close"
 import ContentCopyIcon from "@mui/icons-material/ContentCopy"
 import { useTranslation } from "react-i18next"
 
-import { SemesterEnum } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import { IconButton } from "@/common/primitives/IconButton"
@@ -32,6 +31,7 @@ import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { Timetables } from "@/common/schemas/timetables"
 import SemesterButton from "@/features/timetable/sections/TabsRowSubSection/SemesterButton"
+import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
 import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
 import useUserStore from "@/utils/zustand/useUserStore"
@@ -172,30 +172,24 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
 
 interface TabButtonRowProps {
     timeTableLectures: Lecture[]
-    currentTimetableId: number | null
-    setCurrentTimetableId: React.Dispatch<React.SetStateAction<number | null>>
-    setCurrentTimetableName: React.Dispatch<React.SetStateAction<string>>
-    year: number
-    semester: SemesterEnum
-    setYear: React.Dispatch<React.SetStateAction<number>>
-    setSemester: React.Dispatch<React.SetStateAction<SemesterEnum>>
+    timetablesQuery: any
 }
 
 const TabButtonRow: React.FC<TabButtonRowProps> = ({
     timeTableLectures,
-    currentTimetableId,
-    setCurrentTimetableId,
-    setCurrentTimetableName,
-    year,
-    semester,
-    setYear,
-    setSemester,
+    timetablesQuery: timetables,
 }) => {
     const { t } = useTranslation()
     const { status } = useUserStore()
     const theme = useTheme()
 
-    const { query: timetables, setParams } = useAPI("GET", "/timetables")
+    const currentTimetableId = useTimetableUIStore((s) => s.currentTimetableId)
+    const setCurrentTimetableId = useTimetableUIStore((s) => s.setCurrentTimetableId)
+    const setCurrentTimetableName = useTimetableUIStore((s) => s.setCurrentTimetableName)
+    const year = useTimetableUIStore((s) => s.year)
+    const semester = useTimetableUIStore((s) => s.semesterEnum)
+    const setYear = useTimetableUIStore((s) => s.setYear)
+    const setSemester = useTimetableUIStore((s) => s.setSemesterEnum)
     const { requestFunction: addTimetable } = useAPI("POST", "/timetables", {
         onSuccess: (data) => {
             timetables.refetch()
@@ -237,28 +231,23 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
 
     useEffect(() => {
         let list = timetables.data?.timetables ?? []
-        list = list.filter((t) => t.year === year && t.semester === semester)
+        list = list.filter((t: Timetables) => t.year === year && t.semester === semester)
         setLocalTimetables(
-            list.slice().sort((a, b) => a.timeTableOrder - b.timeTableOrder),
+            list
+                .slice()
+                .sort(
+                    (a: Timetables, b: Timetables) => a.timeTableOrder - b.timeTableOrder,
+                ),
         )
 
         if (currentTimetableId != null) {
-            timetables.data?.timetables.forEach((timetable) => {
+            timetables.data?.timetables.forEach((timetable: Timetables) => {
                 if (timetable.id === currentTimetableId) {
                     setCurrentTimetableName(timetable.name)
                 }
             })
         }
     }, [timetables.data, year, semester])
-
-    useEffect(() => {
-        if (status === "success" && year !== -1 && semester > 0) {
-            setParams({
-                year: year,
-                semester: semester,
-            })
-        }
-    }, [year, semester, status])
 
     useEffect(() => {
         setCurrentTimetableName(
