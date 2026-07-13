@@ -3,6 +3,7 @@ import ical, { ICalAlarmType, ICalEventRepeatingFreq } from "ical-generator"
 
 import type { Lecture } from "@/common/schemas/lecture"
 import { colors } from "@/styles/themes/_base/variables/colors"
+import { darkThemeColors } from "@/styles/themes/dark/variables/colors"
 import professorName from "@/utils/professorName"
 
 interface RoundedRectangleOptions {
@@ -37,6 +38,7 @@ interface DrawTileOptions {
     location: string
     font: string
     fontSize: number
+    displayMode: "dark" | "light"
 }
 
 interface DrawTimetableDatas {
@@ -46,6 +48,8 @@ interface DrawTimetableDatas {
     semesterName: string
     semesterFontSize: number
     tileFontSize: number
+    displayMode: "dark" | "light"
+    language: "ko" | "en"
 }
 
 function drawRoundedRectangle(options: RoundedRectangleOptions) {
@@ -74,7 +78,7 @@ function sliceTextToFitWidth(
     const canvas = document.createElement("canvas")
     const ctx = canvas.getContext("2d")
     if (!ctx) return []
-    ctx.font = `${fontSize}px '${font}'`
+    ctx.font = `${fontSize}px ${font}`
 
     let currentLine = ""
     const lines = []
@@ -101,14 +105,25 @@ function sliceTextToFitWidth(
 function drawText(options: TextOptions) {
     const { ctx, x, y, text, font, fontSize, color, align = "left" } = options
     ctx.fillStyle = color
-    ctx.font = `${fontSize}px '${font}'`
+    ctx.font = `${fontSize}px ${font}`
     ctx.textAlign = align || "left"
     ctx.fillText(text, x, y)
 }
 
 function drawTile(options: DrawTileOptions) {
-    const { ctx, x, y, width, height, title, professor, location, font, fontSize } =
-        options
+    const {
+        ctx,
+        x,
+        y,
+        width,
+        height,
+        title,
+        professor,
+        location,
+        font,
+        fontSize,
+        displayMode,
+    } = options
     const slicedTitle = sliceTextToFitWidth(title, width, font, fontSize)
     const slicedProfessor = sliceTextToFitWidth(professor, width, font, fontSize)
     const slicedLocation = sliceTextToFitWidth(location, width, font, fontSize)
@@ -136,7 +151,12 @@ function drawTile(options: DrawTileOptions) {
                 text: slice,
                 font,
                 fontSize,
-                color: `rgba(0, 0, 0, ${index < slicedTitle.length ? 0.8 : 0.5})`,
+                color:
+                    index < slicedTitle.length
+                        ? "#000000"
+                        : displayMode === "dark"
+                          ? "#4C4C4C"
+                          : "#888888",
             })
             offsetY += fontSize + 5
         } else {
@@ -153,13 +173,17 @@ async function timeTableImage(drawTimetableData: DrawTimetableDatas) {
         semesterName,
         semesterFontSize,
         tileFontSize,
+        displayMode,
+        language,
     } = drawTimetableData
 
-    const TIMETABLE_CELL_COLORS = Object.values(colors.Tile.TimeTable.default).flatMap(
-        (colorGroup) => Object.values(colorGroup),
-    ) as string[]
+    const TIMETABLE_CELL_COLORS = Object.values(
+        displayMode === "dark"
+            ? darkThemeColors.Tile.TimeTable.default
+            : colors.Tile.TimeTable.default,
+    ).flatMap((colorGroup) => Object.values(colorGroup)) as string[]
 
-    const imageTemplatePath = `Image_template_${timetableType}.png`
+    const imageTemplatePath = `timetable_template/Image_template_${timetableType}_${displayMode}_${language}.png`
 
     const baseImg = new Image()
     baseImg.src = imageTemplatePath
@@ -178,7 +202,7 @@ async function timeTableImage(drawTimetableData: DrawTimetableDatas) {
         x: timetableType === "5days" ? 952 : 1302,
         y: 78,
         text: semesterName + " " + timetableName,
-        font: "NotoSansKR",
+        font: "'Noto Sans KR', Pretendard, sans-serif",
         fontSize: semesterFontSize,
         color: "#CCCCCC",
         align: "right",
@@ -218,8 +242,9 @@ async function timeTableImage(drawTimetableData: DrawTimetableDatas) {
                 title: lecture.name,
                 professor: professorName(lecture.professors) || "",
                 location: classtime.buildingCode + " " + classtime.roomName || "",
-                font: "NotoSansKR",
+                font: "'Noto Sans KR', Pretendard, sans-serif",
                 fontSize: tileFontSize,
+                displayMode,
             })
         }
     }

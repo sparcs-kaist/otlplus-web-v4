@@ -23,7 +23,7 @@ const StyledLink = styled(Link)`
 `
 
 function ScheduleSection() {
-    const { query } = useAPI("GET", "/semesters")
+    const { query } = useAPI("GET", "/semesters/current")
 
     const [now, setNow] = useState(new Date())
     const [timeLeft, setTimeLeft] = useState<string>("")
@@ -43,17 +43,15 @@ function ScheduleSection() {
     }, [])
 
     useEffect(() => {
-        if (!query.data?.semesters) return
-        const currentSemester = query.data.semesters[query.data.semesters.length - 1]
-        if (!currentSemester) return
+        if (!query.data) return
 
         setYearSemester({
-            year: currentSemester.year,
-            semester: currentSemester.semester,
+            year: query.data.year,
+            semester: query.data.semester,
         })
 
         const scheduleItems = (
-            Object.entries(currentSemester).filter(
+            Object.entries(query.data).filter(
                 ([key, value]) => key !== "year" && key !== "semester" && value !== null,
             ) as [string, string][]
         )

@@ -41,7 +41,6 @@ const LectureReviewSubsection: React.FC<LectureReviewSubsectionProps> = ({
     const [paramsFixed, setParamsFixed] = useState(false)
 
     const { query, setParams, data } = useInfiniteAPI("GET", "/reviews", {
-        gcTime: 0,
         infinites: ["reviews"],
         limit: 20,
     })

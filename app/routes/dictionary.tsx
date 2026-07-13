@@ -30,6 +30,10 @@ const SectionWrapper = styled(Widget)`
     height: 100%;
     overflow: hidden;
     padding: 16px;
+
+    ${media.mobile} {
+        padding: 16px 12px;
+    }
 `
 
 const CourseListSectionWrapper = styled(SectionWrapper)`

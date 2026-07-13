@@ -6,9 +6,23 @@ const stringToBoolean = (value: string) => {
     return possibleTrueValues.includes(value)
 }
 
+/**
+ * In production, the API is served from the same origin (like legacy OTL v3).
+ * Default to window.location.origin when VITE_APP_API_URL is not set.
+ */
+const getDefaultApiUrl = (): string => {
+    if (typeof window !== "undefined") {
+        return window.location.origin
+    }
+    return "http://localhost:8080"
+}
+
 const publicEnvSchema = z.object({
     VITE_APP_LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]),
-    VITE_APP_API_URL: z.url(),
+    VITE_APP_API_URL: z.preprocess(
+        (value) => (value && String(value).trim() !== "" ? value : getDefaultApiUrl()),
+        z.url(),
+    ),
     VITE_DEV_MODE: z.preprocess((value) => stringToBoolean(value as string), z.boolean()),
     VITE_APP_API_MOCK_MODE: z.preprocess(
         (value) => stringToBoolean(value as string),
