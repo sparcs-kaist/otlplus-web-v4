@@ -31,8 +31,8 @@ export const DELETEResponse = z.object({
     id: z.number().int(),
 })
 
-export type DELETECustomBlockBody = z.infer<typeof DELETERequest>
-export type DELETECustomBlockResponse = z.infer<typeof DELETEResponse>
+export type DELETECustomBlocksBody = z.infer<typeof DELETERequest>
+export type DELETECustomBlocksResponse = z.infer<typeof DELETEResponse>
 
-export type POSTCustomBlockBody = z.infer<typeof POSTRequest>
-export type POSTCustomBlockResponse = z.infer<typeof POSTResponse>
+export type POSTCustomBlocksBody = z.infer<typeof POSTRequest>
+export type POSTCustomBlocksResponse = z.infer<typeof POSTResponse>
