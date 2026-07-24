@@ -1,13 +1,13 @@
 import styled from "@emotion/styled"
 
 import StyledDivider from "@/common/components/StyledDivider"
-import { type SemesterEnum } from "@/common/enum/semesterEnum"
 import type { Lecture } from "@/common/schemas/lecture"
 import CreditGridSubSection from "@/features/timetable/sections/TimetableInfoSection/CreditGridSubSection"
 import CreditScoreSubSection from "@/features/timetable/sections/TimetableInfoSection/CreditScoreSubSection"
 import ExamTimeSubSection from "@/features/timetable/sections/TimetableInfoSection/ExamTimeSubSection"
 import MapSubSection from "@/features/timetable/sections/TimetableInfoSection/MapSubSection"
 import UtilButtonsSubSection from "@/features/timetable/sections/TimetableInfoSection/UtilButtonsSubSection"
+import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
 import { media } from "@/styles/themes/media"
 import useIsDevice from "@/utils/useIsDevice"
 
@@ -33,27 +33,28 @@ const InfoArea = styled.div`
 `
 
 interface TimetableInfoSectionProps {
-    timetableName: string
     timetableLectures: Lecture[]
-    hover: Lecture[]
-    setHover: React.Dispatch<React.SetStateAction<Lecture[]>>
-    year: number
-    semester: SemesterEnum
-    currentTimetableId: number | null
-    setIsCustomBlockSectionOpen: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 export default function TimetableInfoSection({
-    timetableName,
     timetableLectures,
-    hover,
-    setHover,
-    year,
-    semester,
-    currentTimetableId,
-    setIsCustomBlockSectionOpen,
 }: TimetableInfoSectionProps) {
     const isLaptop = useIsDevice("laptop")
+
+    const currentTimetableId = useTimetableUIStore((s) => s.currentTimetableId)
+    const timetableName = useTimetableUIStore((s) => s.currentTimetableName)
+    const year = useTimetableUIStore((s) => s.year)
+    const semester = useTimetableUIStore((s) => s.semesterEnum)
+
+    const selectedLectures = useTimetableUIStore((s) => s.selectedLectures)
+    const hoveredLectures = useTimetableUIStore((s) => s.hoveredLectures)
+    const setHover = useTimetableUIStore((s) => s.setHoveredLectures)
+
+    const hover = selectedLectures.length > 0 ? selectedLectures : hoveredLectures
+
+    const setIsCustomBlockSectionOpen = useTimetableUIStore(
+        (s) => s.setIsCustomBlockSectionOpen,
+    )
 
     return (
         <InfoArea>

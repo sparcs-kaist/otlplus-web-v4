@@ -1,26 +1,27 @@
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import SearchIcon from "@mui/icons-material/Search"
-import { useQueryClient } from "@tanstack/react-query"
 
 import Modal from "@/common/components/Modal"
 import StyledDivider from "@/common/components/StyledDivider"
 import CustomTimeTableGrid from "@/common/components/timetable/CustomTimeTableGrid"
-import { type SemesterEnum } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import type { CustomBlock } from "@/common/schemas/customBlock"
 import type { Lecture } from "@/common/schemas/lecture"
-import type { TimeBlock } from "@/common/schemas/timeblock"
+import KeyboardShortcutModal from "@/features/timetable/components/KeyboardShortcutModal"
+import { useTimetableEditor } from "@/features/timetable/hooks/useTimetableEditor"
+import { useTimetableKeyboard } from "@/features/timetable/hooks/useTimetableKeyboard"
 import CustomBlockSection from "@/features/timetable/sections/CustomBlockSection"
 import LectureDetailSection from "@/features/timetable/sections/LectureDetailSection"
 import LectureListSection from "@/features/timetable/sections/LectureListSection"
 import TabButtonRow from "@/features/timetable/sections/TabsRowSubSection/TabButtonRow"
 import TimetableInfoSection from "@/features/timetable/sections/TimetableInfoSection"
 import UtilButtonsSubSection from "@/features/timetable/sections/TimetableInfoSection/UtilButtonsSubSection"
+import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
 import { trackEvent } from "@/libs/mixpanel"
 import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
@@ -211,7 +212,6 @@ const MobileControlBar = styled(FlexWrapper)`
 
 export default function Timetable() {
     const { status } = useUserStore()
-    const queryClient = useQueryClient()
     const theme = useTheme()
 
     const isTablet = useIsDevice("tablet")
@@ -226,37 +226,42 @@ export default function Timetable() {
     const timetableAreaRef = useRef<HTMLDivElement>(null)
     const outerRef = useRef<HTMLDivElement>(null)
 
-    const [hover, setHover] = useState<Lecture[]>([])
-    const [selected, setSelected] = useState<Lecture | null>(null)
+    const hoveredLectures = useTimetableUIStore((s) => s.hoveredLectures)
+    const setHoveredLectures = useTimetableUIStore((s) => s.setHoveredLectures)
+    const selectedLectures = useTimetableUIStore((s) => s.selectedLectures)
+    const setSelectedLectures = useTimetableUIStore((s) => s.setSelectedLectures)
 
-    // Time filter state for search area
-    const [timeFilters, setTimeFilters] = useState<TimeBlock[] | null>(null)
+    const timeFilters = useTimetableUIStore((s) => s.timeFilters)
+    const setTimeFilters = useTimetableUIStore((s) => s.setTimeFilters)
 
-    const [timeBlocks, setTimeBlocks] = useState<TimeBlock[] | null>(null)
+    const currentTimetableId = useTimetableUIStore((s) => s.currentTimetableId)
+    const currentTimetableName = useTimetableUIStore((s) => s.currentTimetableName)
+    const year = useTimetableUIStore((s) => s.year)
+    const semesterEnum = useTimetableUIStore((s) => s.semesterEnum)
 
-    // Current timetable
-    const [currentTimetableId, setCurrentTimetableId] = useState<number | null>(null)
-    const [currentTimetableName, setCurrentTimetableName] = useState<string>("")
-    const [year, setYear] = useState<number>(-1)
-    const [semesterEnum, setSemesterEnum] = useState<SemesterEnum>(1)
+    const mobileSearchOpen = useTimetableUIStore((s) => s.mobileSearchOpen)
+    const setMobileSearchOpen = useTimetableUIStore((s) => s.setMobileSearchOpen)
 
-    const [currentCustomBlock, setCurrentCustomBlock] = useState<CustomBlock | null>(null)
+    const flashLectureIds = useTimetableUIStore((s) => s.flashLectureIds)
 
-    // Mobile search modal state
-    const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
+    const timeBlocks = useTimetableUIStore((s) => s.timeBlocks)
+    const setTimeBlocks = useTimetableUIStore((s) => s.setTimeBlocks)
+
+    const { query: timetables, setParams: setTimetablesParams } = useAPI(
+        "GET",
+        "/timetables",
+        { enabled: status === "success" },
+    )
     const [isCustomBlockSectionOpen, setIsCustomBlockSectionOpen] = useState(false)
 
     const [nonLoginTimetable, setNonLoginTimetable] = useState<Lecture[]>([])
     const { query: timetable } = useAPI("GET", `/timetables/${currentTimetableId}`, {
         enabled: currentTimetableId !== null && status === "success",
     })
-
     const { query: myTimetable, setParams: setMyTimetableParams } = useAPI(
         "GET",
         "/timetables/my-timetable",
-        {
-            enabled: currentTimetableId === null && status === "success",
-        },
+        { enabled: status === "success" },
     )
 
     const currentTimetableLectures =
@@ -266,7 +271,7 @@ export default function Timetable() {
               ? (myTimetable.data?.lectures ?? [])
               : (timetable.data?.lectures ?? [])
 
-    const { query: customBlocksQuery } = useAPI(
+    const { query: customBlocks } = useAPI(
         "GET",
         `/timetables/${currentTimetableId}/custom-blocks`,
         {
@@ -274,70 +279,31 @@ export default function Timetable() {
         },
     )
 
-    const currentTimetableCustomBlocks =
-        status === "success" && currentTimetableId !== null
-            ? (customBlocksQuery.data?.custom_blocks ?? [])
-            : []
-
-    const { requestFunction: removeLectureFunction } = useAPI(
-        "PATCH",
-        `/timetables/${currentTimetableId}`,
+    const { requestFunction: deleteCustomBlock } = useAPI(
+        "DELETE",
+        `/timetables/${currentTimetableId}/custom-blocks`,
         {
-            onSuccess: () => {
-                queryClient
-                    .invalidateQueries({
-                        queryKey: [`/timetables/${currentTimetableId}`],
-                    })
-                    .then(() => {
-                        setSelected(null)
-                        setHover([])
-                    })
-            },
+            enabled: currentTimetableId !== null && status === "success",
         },
     )
 
-    const handleNonLoginRemoveLecture = useCallback((lectureId: number) => {
-        setNonLoginTimetable((prev) => prev.filter((lecture) => lecture.id !== lectureId))
-        setSelected(null)
-        setHover([])
-    }, [])
-
-    const handleRemoveLecture = useCallback(
-        (lectureId: number) => {
-            removeLectureFunction({
-                action: "delete",
-                lectureId: lectureId,
-            })
-            trackEvent("Remove Lecture from Timetable", {
-                lectureId,
-                timetableId: currentTimetableId,
-            })
-        },
-        [removeLectureFunction, currentTimetableId],
-    )
+    const canDeleteLecture = status !== "success" || currentTimetableId !== null
 
     const handleRemoveCustomBlock = useCallback(
         async (blockId: number) => {
             if (currentTimetableId === null) return
-            const { axiosClient } = await import("@/libs/axios")
-            await axiosClient.request({
-                method: "DELETE",
-                url: `/api/v2/timetables/${currentTimetableId}/custom-blocks/${blockId}`,
-            })
-            queryClient.invalidateQueries({
-                queryKey: [`/timetables/${currentTimetableId}/custom-blocks`],
-            })
+            await deleteCustomBlock({ id: blockId })
             trackEvent("Remove Custom Block from Timetable", {
                 blockId,
                 timetableId: currentTimetableId,
             })
         },
-        [currentTimetableId, queryClient],
+        [currentTimetableId],
     )
 
     useEffect(() => {
-        setHover([])
-        setSelected(null)
+        setHoveredLectures([])
+        setSelectedLectures([])
     }, [mobileSearchOpen])
 
     useEffect(() => {
@@ -346,11 +312,10 @@ export default function Timetable() {
                 searchAreaRef.current &&
                 !searchAreaRef.current.contains(event.target as Node) &&
                 timetableAreaRef.current &&
-                !timetableAreaRef.current.contains(event.target as Node) &&
-                outerRef.current &&
-                outerRef.current.contains(event.target as Node)
+                !timetableAreaRef.current.contains(event.target as Node)
             ) {
-                setSelected(null)
+                setHoveredLectures([])
+                setSelectedLectures([])
             }
         }
         document.addEventListener("mousedown", handleClickOutside)
@@ -358,18 +323,20 @@ export default function Timetable() {
     }, [])
 
     useEffect(() => {
-        setSelected(null)
-        setHover([])
+        setSelectedLectures([])
+        setHoveredLectures([])
+
         if (year !== -1) {
             setMyTimetableParams({ year: year, semester: semesterEnum })
+            setTimetablesParams({ year: year, semester: semesterEnum })
         }
         setNonLoginTimetable([])
     }, [year, semesterEnum])
 
     useEffect(() => {
         if (!isTablet) {
-            setSelected(null)
-            setHover([])
+            setSelectedLectures([])
+            setHoveredLectures([])
         }
     }, [currentTimetableId])
 
@@ -378,6 +345,37 @@ export default function Timetable() {
             setMobileSearchOpen(true)
         }
     }, [timeFilters])
+
+    // 과목 추가, 삭제는 무조건 이걸 이용해야 undo, redo가 작동함.
+    const { addLectures, removeLectures, changeSemester, undo, redo, recordAction } =
+        useTimetableEditor({
+            currentTimetableLectures,
+            nonLoginTimetable,
+            setNonLoginTimetable,
+        })
+
+    const handleDeleteLecture = useMemo(
+        () => (canDeleteLecture ? (id: number) => removeLectures([id]) : undefined),
+        [canDeleteLecture, removeLectures],
+    )
+
+    // 과목을 선택할때는 반드시 onLectureSelect를 실행해줘야 다중선택이 작동함
+    const { onLectureSelect } = useTimetableKeyboard({
+        currentTimetableLectures,
+        undo,
+        redo,
+        addLectures,
+        removeLectures,
+        timetableIds: [
+            null,
+            ...(timetables.data?.timetables
+                .sort((a, b) => a.timeTableOrder - b.timeTableOrder)
+                .map((t) => t.id) || []),
+        ],
+        isLoggedIn: status === "success",
+        changeSemester,
+        recordAction,
+    })
 
     return (
         <TimetableWrapper
@@ -389,6 +387,7 @@ export default function Timetable() {
             ref={outerRef}
         >
             {isTablet ? (
+                // 모바일
                 <>
                     {/* 상단: TimetableArea */}
                     <ContentsAreaWrapper
@@ -403,13 +402,7 @@ export default function Timetable() {
                     >
                         <TabButtonRow
                             timeTableLectures={currentTimetableLectures}
-                            currentTimetableId={currentTimetableId}
-                            setCurrentTimetableId={setCurrentTimetableId}
-                            setCurrentTimetableName={setCurrentTimetableName}
-                            year={year}
-                            semester={semesterEnum}
-                            setYear={setYear}
-                            setSemester={setSemesterEnum}
+                            timetablesQuery={timetables}
                         />
                         <Block
                             direction="column"
@@ -426,23 +419,18 @@ export default function Timetable() {
                             >
                                 <CustomTimeTableGrid
                                     lectures={currentTimetableLectures}
+                                    needLectureDeletable={canDeleteLecture}
+                                    onLectureSelect={onLectureSelect}
+                                    flashLectureIds={flashLectureIds ?? undefined}
+                                    deleteLecture={handleDeleteLecture}
+                                    hoveredLectures={hoveredLectures}
+                                    setHoveredLectures={setHoveredLectures}
+                                    selectedLectures={selectedLectures}
                                     timeFilters={timeFilters}
                                     setTimeFilters={setTimeFilters}
                                     timeBlocks={timeBlocks}
                                     setTimeBlocks={setTimeBlocks}
-                                    needLectureDeletable={currentTimetableId !== null}
-                                    hoveredLectures={hover}
-                                    setHoveredLectures={setHover}
-                                    selectedLecture={selected}
-                                    setSelectedLecture={setSelected}
-                                    deleteLecture={
-                                        status === "success"
-                                            ? currentTimetableId === null
-                                                ? undefined
-                                                : handleRemoveLecture
-                                            : handleNonLoginRemoveLecture
-                                    }
-                                    customBlocks={currentTimetableCustomBlocks}
+                                    customBlocks={customBlocks.data?.custom_blocks ?? []}
                                     deleteCustomBlock={
                                         status === "success" &&
                                         currentTimetableId !== null
@@ -458,14 +446,7 @@ export default function Timetable() {
                     {/* 중간: MobileControlBar + TimetableInfoArea */}
                     <TimetableInfoArea>
                         <TimetableInfoSection
-                            timetableName={currentTimetableName}
                             timetableLectures={currentTimetableLectures}
-                            hover={hover}
-                            setHover={setHover}
-                            year={year}
-                            semester={semesterEnum}
-                            currentTimetableId={currentTimetableId}
-                            setIsCustomBlockSectionOpen={setIsCustomBlockSectionOpen}
                         />
                     </TimetableInfoArea>
                     <MobileControlBar direction="row" gap={0}>
@@ -506,69 +487,38 @@ export default function Timetable() {
                             <LectureListArea>
                                 <LectureListSection
                                     timetableLectures={currentTimetableLectures}
-                                    year={year}
-                                    semester={semesterEnum}
-                                    setNonLoginTimetable={setNonLoginTimetable}
-                                    hoveredLecture={hover}
-                                    selectedLecture={selected}
-                                    setSelectedLecture={setSelected}
-                                    setHoveredLecture={setHover}
-                                    timeFilters={timeFilters}
-                                    setTimeFilters={setTimeFilters}
-                                    currentTimetableId={currentTimetableId}
+                                    addLectures={addLectures}
+                                    onLectureSelect={onLectureSelect}
                                 />
                             </LectureListArea>
                         </SearchAreaWrapper>
                     )}
 
                     {/* 모달 */}
-                    {selected && (
+                    {selectedLectures.length > 0 && (
                         <Modal
-                            isOpen={Boolean(selected)}
+                            isOpen={selectedLectures.length > 0}
                             onClose={() => {}}
                             fullScreen={true}
                             header={false}
                         >
-                            {isCustomBlockSectionOpen ? (
-                                <CustomBlockSection
-                                    currentTimetableId={currentTimetableId}
-                                    currentTimetableName={currentTimetableName}
-                                    customBlock={currentCustomBlock}
-                                    timeBlocks={timeBlocks}
-                                    setTimeBlocks={setTimeBlocks}
-                                />
-                            ) : (
-                                <LectureDetailSection
-                                    setNonLoginTimetable={setNonLoginTimetable}
-                                    handleRemoveFromTimetable={
-                                        status === "success"
-                                            ? currentTimetableId === null
-                                                ? undefined
-                                                : handleRemoveLecture
-                                            : handleNonLoginRemoveLecture
-                                    }
-                                    selectedLecture={
-                                        selected
-                                            ? selected
-                                            : hover?.length == 1
-                                              ? hover[0]
-                                              : null
-                                    }
-                                    year={year}
-                                    semester={semesterEnum}
-                                    onMobileModalClose={() => {
-                                        setHover([])
-                                        setSelected(null)
-                                    }}
-                                    currentTimetableId={currentTimetableId}
-                                    timetableLectures={currentTimetableLectures}
-                                />
-                            )}
+                            <LectureDetailSection
+                                addLectures={addLectures}
+                                removeLectures={handleDeleteLecture}
+                                onMobileModalClose={() => {
+                                    setHoveredLectures([])
+                                    setSelectedLectures([])
+                                }}
+                                currentTimetableId={currentTimetableId}
+                                timetableLectures={currentTimetableLectures}
+                            />
                         </Modal>
                     )}
                 </>
             ) : (
+                // 태블릿 이상
                 <>
+                    <KeyboardShortcutModal />
                     <SearchAreaWrapper
                         direction={isDesktop ? "column-reverse" : "row"}
                         align="flex-start"
@@ -593,16 +543,8 @@ export default function Timetable() {
                         <LectureListArea style={{ overflow: "auto" }}>
                             <LectureListSection
                                 timetableLectures={currentTimetableLectures}
-                                year={year}
-                                semester={semesterEnum}
-                                setNonLoginTimetable={setNonLoginTimetable}
-                                hoveredLecture={hover}
-                                selectedLecture={selected}
-                                setSelectedLecture={setSelected}
-                                setHoveredLecture={setHover}
-                                timeFilters={timeFilters}
-                                setTimeFilters={setTimeFilters}
-                                currentTimetableId={currentTimetableId}
+                                addLectures={addLectures}
+                                onLectureSelect={onLectureSelect}
                             />
                         </LectureListArea>
                         {!isDesktop && <StyledDivider direction="column" />}
@@ -610,28 +552,21 @@ export default function Timetable() {
                         <LectureInfoArea style={{ overflow: "auto" }}>
                             {isCustomBlockSectionOpen ? (
                                 <CustomBlockSection
-                                    customBlock={currentCustomBlock}
-                                    setIsCustomBlockSectionOpen={
-                                        setIsCustomBlockSectionOpen
-                                    }
-                                    timeBlocks={timeBlocks}
-                                    setTimeBlocks={setTimeBlocks}
-                                    currentTimetableId={currentTimetableId}
-                                    currentTimetableName={currentTimetableName}
+                                    customBlocks={customBlocks.data?.custom_blocks ?? []}
                                 />
                             ) : (
                                 <LectureDetailSection
-                                    selectedLecture={
-                                        selected
-                                            ? selected
-                                            : hover?.length == 1
-                                              ? hover[0]
-                                              : null
-                                    }
-                                    year={year}
-                                    semester={semesterEnum}
+                                    addLectures={addLectures}
+                                    removeLectures={handleDeleteLecture}
+                                    currentTimetableId={currentTimetableId}
+                                    timetableLectures={currentTimetableLectures}
                                 />
                             )}
+                            <LectureDetailSection
+                                timetableLectures={currentTimetableLectures}
+                                addLectures={addLectures}
+                                removeLectures={handleDeleteLecture}
+                            />
                         </LectureInfoArea>
                     </SearchAreaWrapper>
                     <FlexWrapper direction="column" gap={0}>
@@ -645,13 +580,7 @@ export default function Timetable() {
                             {/* 시간표 탭 */}
                             <TabButtonRow
                                 timeTableLectures={currentTimetableLectures}
-                                currentTimetableId={currentTimetableId}
-                                setCurrentTimetableId={setCurrentTimetableId}
-                                setCurrentTimetableName={setCurrentTimetableName}
-                                year={year}
-                                semester={semesterEnum}
-                                setYear={setYear}
-                                setSemester={setSemesterEnum}
+                                timetablesQuery={timetables}
                             />
                             <Block
                                 direction={isLaptop ? "column" : "row"}
@@ -664,23 +593,20 @@ export default function Timetable() {
                                     <CustomTimeTableGrid
                                         cellWidth={isLaptop ? "113px" : "125px"}
                                         lectures={currentTimetableLectures}
+                                        needLectureDeletable={canDeleteLecture}
+                                        onLectureSelect={onLectureSelect}
+                                        flashLectureIds={flashLectureIds ?? undefined}
+                                        deleteLecture={handleDeleteLecture}
+                                        hoveredLectures={hoveredLectures}
+                                        setHoveredLectures={setHoveredLectures}
+                                        selectedLectures={selectedLectures}
                                         timeFilters={timeFilters}
                                         setTimeFilters={setTimeFilters}
                                         timeBlocks={timeBlocks}
                                         setTimeBlocks={setTimeBlocks}
-                                        needLectureDeletable={currentTimetableId !== null}
-                                        hoveredLectures={hover}
-                                        setHoveredLectures={setHover}
-                                        selectedLecture={selected}
-                                        setSelectedLecture={setSelected}
-                                        deleteLecture={
-                                            status === "success"
-                                                ? currentTimetableId === null
-                                                    ? undefined
-                                                    : handleRemoveLecture
-                                                : handleNonLoginRemoveLecture
+                                        customBlocks={
+                                            customBlocks.data?.custom_blocks ?? []
                                         }
-                                        customBlocks={currentTimetableCustomBlocks}
                                         deleteCustomBlock={
                                             status === "success" &&
                                             currentTimetableId !== null
@@ -696,16 +622,7 @@ export default function Timetable() {
                                 {/*시간표 정보 영역*/}
                                 <TimetableInfoArea>
                                     <TimetableInfoSection
-                                        timetableName={currentTimetableName}
                                         timetableLectures={currentTimetableLectures}
-                                        hover={hover}
-                                        setHover={setHover}
-                                        year={year}
-                                        semester={semesterEnum}
-                                        currentTimetableId={currentTimetableId}
-                                        setIsCustomBlockSectionOpen={
-                                            setIsCustomBlockSectionOpen
-                                        }
                                     />
                                 </TimetableInfoArea>
                             </Block>

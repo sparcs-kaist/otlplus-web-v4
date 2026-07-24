@@ -1,11 +1,4 @@
-import {
-    type Dispatch,
-    type SetStateAction,
-    memo,
-    useCallback,
-    useEffect,
-    useState,
-} from "react"
+import { memo, useCallback, useEffect, useState } from "react"
 
 import styled from "@emotion/styled"
 import { Close, Delete } from "@mui/icons-material"
@@ -19,7 +12,7 @@ import { IconButton } from "@/common/primitives/IconButton"
 import TextInputArea from "@/common/primitives/TextInputArea"
 import Typography from "@/common/primitives/Typography"
 import { type CustomBlock } from "@/common/schemas/customBlock"
-import { type TimeBlock } from "@/common/schemas/timeblock"
+import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
 import { useAPI } from "@/utils/api/useAPI"
 import useUserStore from "@/utils/zustand/useUserStore"
 
@@ -32,28 +25,24 @@ const CustomBlockSectionInner = styled(FlexWrapper)`
 
 interface CustomBlockSectionProps {
     customBlocks: CustomBlock[]
-    customBlock: CustomBlock | null
-    currentTimetableId: number | null
-    currentTimetableName: string
-    timeBlocks: TimeBlock[] | null
-    setTimeBlocks: Dispatch<SetStateAction<TimeBlock[] | null>>
-    setIsCustomBlockSectionOpen?: Dispatch<SetStateAction<boolean>>
 }
 
-function CustomBlockSection({
-    customBlocks,
-    customBlock,
-    currentTimetableId,
-    currentTimetableName,
-    timeBlocks,
-    setTimeBlocks,
-    setIsCustomBlockSectionOpen,
-}: CustomBlockSectionProps) {
+function CustomBlockSection({ customBlocks }: CustomBlockSectionProps) {
+    const customBlock = useTimetableUIStore((s) => s.selectedCustomBlock)
     const [title, setTitle] = useState(customBlock?.name ?? "")
     const [place, setPlace] = useState(customBlock?.place ?? "")
     const [description, setDescription] = useState("")
 
     const { status } = useUserStore()
+
+    const currentTimetableId = useTimetableUIStore((s) => s.currentTimetableId)
+    const currentTimetableName = useTimetableUIStore((s) => s.currentTimetableName)
+    const setIsCustomBlockSectionOpen = useTimetableUIStore(
+        (s) => s.setIsCustomBlockSectionOpen,
+    )
+
+    const timeBlocks = useTimetableUIStore((s) => s.timeBlocks)
+    const setTimeBlocks = useTimetableUIStore((s) => s.setTimeBlocks)
 
     const { requestFunction: postCustomBlock } = useAPI(
         "POST",
@@ -79,10 +68,6 @@ function CustomBlockSection({
         setPlace(customBlock?.place ?? "")
         setDescription("")
     }, [customBlock])
-
-    useEffect(() => {
-        console.log("timeBlocks", timeBlocks)
-    }, [timeBlocks])
 
     const handleDelete = useCallback(() => {
         setIsCustomBlockSectionOpen?.(false)
@@ -255,13 +240,7 @@ function CustomBlockSection({
 }
 
 const memoizedCustomBlockSection = memo(CustomBlockSection, (prevProps, nextProps) => {
-    return (
-        prevProps.customBlock === nextProps.customBlock &&
-        prevProps.currentTimetableId === nextProps.currentTimetableId &&
-        prevProps.currentTimetableName === nextProps.currentTimetableName &&
-        prevProps.timeBlocks === nextProps.timeBlocks &&
-        prevProps.setTimeBlocks === nextProps.setTimeBlocks
-    )
+    return prevProps.customBlocks === nextProps.customBlocks
 })
 
 export default memoizedCustomBlockSection

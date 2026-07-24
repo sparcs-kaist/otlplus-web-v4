@@ -1,6 +1,5 @@
 import styled from "@emotion/styled"
 import CloudOffIcon from "@mui/icons-material/CloudOff"
-import RefreshIcon from "@mui/icons-material/Refresh"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router-dom"
 
@@ -115,24 +114,6 @@ const Menu: React.FC<MenuProps> = ({ setMobileSidebarOpen }) => {
                         alt="Logo"
                     />
                 </StyledLink>
-                {!isMobile && (
-                    <StyledHyperLink href="/__switch/v3">
-                        <Typography
-                            type="Big"
-                            color="Highlight.default"
-                            style={{ lineHeight: "1px" }}
-                        >
-                            {t("common.toOTLV3")}
-                        </Typography>
-                        <Icon
-                            size={20}
-                            color="Highlight.default"
-                            style={{ transform: "rotate(180deg)" }}
-                        >
-                            <RefreshIcon />
-                        </Icon>
-                    </StyledHyperLink>
-                )}
             </FlexWrapper>
             <LinkWrapper direction="row" gap={24} align="center">
                 {renderNavLink("/dictionary", t("header.dictionary"))}

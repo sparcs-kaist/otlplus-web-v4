@@ -24,5 +24,15 @@ export const POSTResponse = z.object({
     id: z.number().int(),
 })
 
+// DELETE /api/timetables/:timetableId/custom-blocks
+export const DELETERequest = z.object({ id: z.number().int() })
+
+export const DELETEResponse = z.object({
+    id: z.number().int(),
+})
+
+export type DELETECustomBlockBody = z.infer<typeof DELETERequest>
+export type DELETECustomBlockResponse = z.infer<typeof DELETEResponse>
+
 export type POSTCustomBlockBody = z.infer<typeof POSTRequest>
 export type POSTCustomBlockResponse = z.infer<typeof POSTResponse>
