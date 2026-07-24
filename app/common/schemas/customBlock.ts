@@ -4,7 +4,7 @@ import { WeekdayEnum } from "@/common/enum/weekdayEnum"
 
 export const CustomBlockSchema = z.object({
     id: z.number().int(),
-    block_name: z.string(),
+    name: z.string(),
     place: z.string(),
     day: z.nativeEnum(WeekdayEnum).or(z.number().int()),
     begin: z.number().int().min(0).max(1440),

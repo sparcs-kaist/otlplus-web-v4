@@ -46,8 +46,8 @@ const Chip = styled.div<{ isSelected: boolean }>`
 interface LectureSearchSubSectionProps {
     year: number
     semester: SemesterEnum
-    timeFilter: TimeBlock | null
-    setTimeFilter: React.Dispatch<React.SetStateAction<TimeBlock | null>>
+    timeFilters: TimeBlock[] | null
+    setTimeFilters: React.Dispatch<React.SetStateAction<TimeBlock[] | null>>
     sortOption: number
     setSortOption: React.Dispatch<React.SetStateAction<number>>
     data: getAPIResponseType<"GET", "/lectures"> | undefined
@@ -64,8 +64,8 @@ interface LectureSearchSubSectionProps {
 function LectureSearchSubSection({
     year,
     semester,
-    timeFilter,
-    setTimeFilter,
+    timeFilters,
+    setTimeFilters,
     data,
     setSearchResult,
     isWishlist,
@@ -128,8 +128,8 @@ function LectureSearchSubSection({
             <SearchSubSection direction="row" justify="stretch" gap={0}>
                 <SearchArea
                     options={["type", "department", "level", "term", "time"]}
-                    timeFilter={timeFilter}
-                    setTimeFilter={setTimeFilter}
+                    timeFilters={timeFilters}
+                    setTimeFilters={setTimeFilters}
                     onSearch={handleSearch}
                 />
             </SearchSubSection>
@@ -173,7 +173,7 @@ const LectureSearchSubSectionMemo = memo(LectureSearchSubSection, (prev, next) =
     return (
         prev.year === next.year &&
         prev.semester === next.semester &&
-        prev.timeFilter === next.timeFilter &&
+        prev.timeFilters === next.timeFilters &&
         prev.sortOption === next.sortOption &&
         prev.isWishlist === next.isWishlist &&
         prev.data === next.data

@@ -71,7 +71,7 @@ type SearchOptionsChipsType = {
         (typeof SearchOptionsChipsDetail)[K][number]
     >
 }
-type SearchOptionsType = SearchOptionsChipsType & { time: TimeBlock }
+type SearchOptionsType = SearchOptionsChipsType & { time: TimeBlock[] }
 
 type ExportRule<K extends SearchOptions, T> = K extends SingleSelectOption
     ? T
@@ -86,14 +86,14 @@ export type ExportDataType = {
               ? [number, string]
               : any
     >
-} & { time?: TimeBlock }
+} & { time?: TimeBlock[] }
 
 type TimeProps<ops extends readonly SearchOptions[]> = "time" extends ops[number]
     ? {
-          timeFilter: TimeBlock | null
-          setTimeFilter: (timeFilter: TimeBlock | null) => void
+          timeFilters: TimeBlock[] | null
+          setTimeFilters: (timeFilters: TimeBlock[] | null) => void
       }
-    : { timeFilter?: never; setTimeFilter?: never }
+    : { timeFilters?: never; setTimeFilters?: never }
 
 export type SearchFilterAreaProps<ops extends readonly SearchOptions[]> = {
     options: ops
@@ -117,8 +117,8 @@ const SearchFilterAreaWrapper = styled(FlexWrapper)`
 function SearchFilterArea<ops extends readonly SearchOptions[]>({
     options,
     onChange,
-    timeFilter,
-    setTimeFilter,
+    timeFilters,
+    setTimeFilters,
     resetTrigger,
     onResetTriggerComplete,
 }: SearchFilterAreaProps<ops>) {
@@ -237,13 +237,13 @@ function SearchFilterArea<ops extends readonly SearchOptions[]>({
 
     useEffect(() => {
         const chipsList = makeSelectedOptions(chosenList)
-        const time = { time: timeFilter }
+        const time = { time: timeFilters }
 
         // 임시 방편
         setSelectedOptions(
             (isOptions("time") ? { ...chipsList, ...time } : chipsList) as any,
         )
-    }, [chosenList, timeFilter])
+    }, [chosenList, timeFilters])
 
     useEffect(() => {
         const data = makeExportData(selectedOptions)
@@ -254,7 +254,7 @@ function SearchFilterArea<ops extends readonly SearchOptions[]>({
     useEffect(() => {
         if (resetTrigger) {
             setChosenList(makeChosenList())
-            if (isOptions("time") && setTimeFilter) setTimeFilter(null)
+            if (isOptions("time") && setTimeFilters) setTimeFilters(null)
             onResetTriggerComplete()
         }
     }, [resetTrigger])
@@ -286,8 +286,8 @@ function SearchFilterArea<ops extends readonly SearchOptions[]>({
                             else if (option == "time")
                                 return (
                                     <TimeFilterArea
-                                        timeFilter={timeFilter}
-                                        setTimeFilter={setTimeFilter}
+                                        timeFilters={timeFilters}
+                                        setTimeFilters={setTimeFilters}
                                     />
                                 )
                         })()}
