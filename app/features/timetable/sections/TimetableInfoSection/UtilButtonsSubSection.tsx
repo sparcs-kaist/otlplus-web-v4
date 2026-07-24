@@ -23,6 +23,8 @@ import { useAPI } from "@/utils/api/useAPI"
 import useIsDevice from "@/utils/useIsDevice"
 import useThemeStore from "@/utils/zustand/useThemeStore"
 
+import { useTimetableUIStore } from "../../store/useTimetableUIStore"
+
 const UtilButtonsWrapper = styled(FlexWrapper)`
     width: 100%;
 
@@ -58,24 +60,22 @@ const ExportButton = styled.button<{ disabled?: boolean }>`
 `
 
 export default function UtilButtonsSubSection({
-    timetableName,
     timetableLectures,
-    year,
-    semester,
-    currentTimetableId,
-    setIsCustomBlockSectionOpen,
 }: {
-    timetableName: string
     timetableLectures: Lecture[]
-    year: number
-    semester: SemesterEnum
-    currentTimetableId: number | null
-    setIsCustomBlockSectionOpen: React.Dispatch<React.SetStateAction<boolean>>
 }) {
     const { t, i18n } = useTranslation()
     const theme = useTheme()
     const isTablet = useIsDevice("tablet")
     const { displayedTheme } = useThemeStore()
+
+    const currentTimetableId = useTimetableUIStore((s) => s.currentTimetableId)
+    const timetableName = useTimetableUIStore((s) => s.currentTimetableName)
+    const year = useTimetableUIStore((s) => s.year)
+    const semester = useTimetableUIStore((s) => s.semesterEnum)
+    const setIsCustomBlockSectionOpen = useTimetableUIStore(
+        (s) => s.setIsCustomBlockSectionOpen,
+    )
 
     const { query } = useAPI("GET", "/semesters")
 

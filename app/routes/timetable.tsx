@@ -251,7 +251,9 @@ export default function Timetable() {
         "/timetables",
         { enabled: status === "success" },
     )
-    const [isCustomBlockSectionOpen, setIsCustomBlockSectionOpen] = useState(false)
+    const isCustomBlockSectionOpen = useTimetableUIStore(
+        (s) => s.isCustomBlockSectionOpen,
+    )
 
     const [nonLoginTimetable, setNonLoginTimetable] = useState<Lecture[]>([])
     const { query: timetable } = useAPI("GET", `/timetables/${currentTimetableId}`, {
@@ -450,12 +452,7 @@ export default function Timetable() {
                     </TimetableInfoArea>
                     <MobileControlBar direction="row" gap={0}>
                         <UtilButtonsSubSection
-                            timetableName={currentTimetableName}
                             timetableLectures={currentTimetableLectures}
-                            year={year}
-                            semester={semesterEnum}
-                            currentTimetableId={currentTimetableId}
-                            setIsCustomBlockSectionOpen={setIsCustomBlockSectionOpen}
                         />
                         <FlexWrapper
                             direction="row"
@@ -527,14 +524,7 @@ export default function Timetable() {
                         {isLaptop && (
                             <UtilButtonsArea>
                                 <UtilButtonsSubSection
-                                    timetableName={currentTimetableName}
                                     timetableLectures={currentTimetableLectures}
-                                    year={year}
-                                    semester={semesterEnum}
-                                    currentTimetableId={currentTimetableId}
-                                    setIsCustomBlockSectionOpen={
-                                        setIsCustomBlockSectionOpen
-                                    }
                                 />
                             </UtilButtonsArea>
                         )}

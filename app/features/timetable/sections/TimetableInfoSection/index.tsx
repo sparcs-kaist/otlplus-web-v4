@@ -96,16 +96,7 @@ export default function TimetableInfoSection({
             {!isLaptop && <StyledDivider direction="row" />}
 
             {/* 내보내기 버튼들 */}
-            {!isLaptop && (
-                <UtilButtonsSubSection
-                    timetableName={timetableName}
-                    timetableLectures={timetableLectures}
-                    year={year}
-                    semester={semester}
-                    currentTimetableId={currentTimetableId}
-                    setIsCustomBlockSectionOpen={setIsCustomBlockSectionOpen}
-                />
-            )}
+            {!isLaptop && <UtilButtonsSubSection timetableLectures={timetableLectures} />}
         </InfoArea>
     )
 }
