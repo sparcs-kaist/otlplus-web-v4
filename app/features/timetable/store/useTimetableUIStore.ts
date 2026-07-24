@@ -1,6 +1,7 @@
 import { create } from "zustand"
 
 import { SemesterEnum } from "@/common/enum/semesterEnum"
+import type { CustomBlock } from "@/common/schemas/customBlock"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimeBlock } from "@/common/schemas/timeblock"
 
@@ -8,7 +9,7 @@ interface TimetableUIState {
     // 1. 시간표 & 리스트 상호작용
     hoveredLectures: Lecture[]
     selectedLectures: Lecture[]
-    timeFilter: TimeBlock | null
+    timeFilters: TimeBlock[] | null
 
     // 2. 검색 상태 (단축키 훅과 리스트 섹션 공유용)
     searchLectures: Lecture[]
@@ -27,6 +28,16 @@ interface TimetableUIState {
     // 5. Flash State (잘라내기, undo 등 효과)
     flashLectureIds: number[] | null
 
+    timeBlocks: TimeBlock[] | null
+    selectedCustomBlock: CustomBlock | null
+    setSelectedCustomBlock: (
+        blockOrUpdater:
+            | CustomBlock
+            | null
+            | ((prev: CustomBlock | null) => CustomBlock | null),
+    ) => void
+    isCustomBlockSectionOpen: boolean
+
     // Actions
     setHoveredLectures: (
         lecturesOrUpdater: Lecture[] | ((prev: Lecture[]) => Lecture[]),
@@ -34,11 +45,11 @@ interface TimetableUIState {
     setSelectedLectures: (
         lecturesOrUpdater: Lecture[] | ((prev: Lecture[]) => Lecture[]),
     ) => void
-    setTimeFilter: (
-        filterOrUpdater:
-            | TimeBlock
+    setTimeFilters: (
+        filtersOrUpdater:
+            | TimeBlock[]
             | null
-            | ((prev: TimeBlock | null) => TimeBlock | null),
+            | ((prev: TimeBlock[] | null) => TimeBlock[] | null),
     ) => void
     setSearchLectures: (
         lecturesOrUpdater: Lecture[] | ((prev: Lecture[]) => Lecture[]),
@@ -55,6 +66,13 @@ interface TimetableUIState {
     setSemesterEnum: (
         semesterOrUpdater: SemesterEnum | ((prev: SemesterEnum) => SemesterEnum),
     ) => void
+    setTimeBlocks: (
+        blocksOrUpdater:
+            | TimeBlock[]
+            | null
+            | ((prev: TimeBlock[] | null) => TimeBlock[] | null),
+    ) => void
+    setIsCustomBlockSectionOpen: (val: boolean | ((prev: boolean) => boolean)) => void
 
     // Flash Action
     triggerFlash: (ids: number[]) => void
@@ -64,7 +82,7 @@ export const useTimetableUIStore = create<TimetableUIState>((set) => ({
     // Initial States
     hoveredLectures: [],
     selectedLectures: [],
-    timeFilter: null,
+    timeFilters: null,
     searchLectures: [],
     isShortcutModalOpen: false,
     mobileSearchOpen: false,
@@ -77,6 +95,10 @@ export const useTimetableUIStore = create<TimetableUIState>((set) => ({
 
     flashLectureIds: null,
 
+    timeBlocks: null,
+    selectedCustomBlock: null,
+    isCustomBlockSectionOpen: false,
+
     // Actions
     setHoveredLectures: (val) =>
         set((state) => ({
@@ -87,9 +109,9 @@ export const useTimetableUIStore = create<TimetableUIState>((set) => ({
             selectedLectures:
                 typeof val === "function" ? val(state.selectedLectures) : val,
         })),
-    setTimeFilter: (val) =>
+    setTimeFilters: (val) =>
         set((state) => ({
-            timeFilter: typeof val === "function" ? val(state.timeFilter) : val,
+            timeFilters: typeof val === "function" ? val(state.timeFilters) : val,
         })),
     setSearchLectures: (val) =>
         set((state) => ({
@@ -128,6 +150,20 @@ export const useTimetableUIStore = create<TimetableUIState>((set) => ({
     setSemesterEnum: (val) =>
         set((state) => ({
             semesterEnum: typeof val === "function" ? val(state.semesterEnum) : val,
+        })),
+    setTimeBlocks: (val) =>
+        set((state) => ({
+            timeBlocks: typeof val === "function" ? val(state.timeBlocks) : val,
+        })),
+    setIsCustomBlockSectionOpen: (val) =>
+        set((state) => ({
+            isCustomBlockSectionOpen:
+                typeof val === "function" ? val(state.isCustomBlockSectionOpen) : val,
+        })),
+    setSelectedCustomBlock: (val) =>
+        set((state) => ({
+            selectedCustomBlock:
+                typeof val === "function" ? val(state.selectedCustomBlock) : val,
         })),
 
     triggerFlash: (ids) => {

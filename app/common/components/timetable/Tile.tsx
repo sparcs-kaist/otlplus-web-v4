@@ -61,15 +61,25 @@ const HoverTileWrapper = styled(FlexWrapper)`
     }
 `
 
-const HoverTileInner = styled(FlexWrapper)`
-    background: rgba(229, 76, 101, 0.4);
+const HoverTileInner = styled(FlexWrapper)<{ isCustomBlockSectionOpen: boolean }>`
+    background: ${({ isCustomBlockSectionOpen }) =>
+        isCustomBlockSectionOpen ? "rgba(255, 87, 249, 0.4)" : "rgba(229, 76, 101, 0.4)"};
     border-radius: 4px;
 `
 
-function HoverTile() {
+function HoverTile({
+    isCustomBlockSectionOpen,
+}: {
+    isCustomBlockSectionOpen: boolean | undefined
+}) {
     return (
         <HoverTileWrapper direction="column" gap={0} padding="1px 0px" align="stretch">
-            <HoverTileInner direction="column" gap={0} flex="1 1 auto" />
+            <HoverTileInner
+                direction="column"
+                gap={0}
+                flex="1 1 auto"
+                isCustomBlockSectionOpen={isCustomBlockSectionOpen || false}
+            />
         </HoverTileWrapper>
     )
 }

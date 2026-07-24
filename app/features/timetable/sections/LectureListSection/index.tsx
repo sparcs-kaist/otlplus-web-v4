@@ -171,8 +171,8 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     const setHoveredLecture = useTimetableUIStore((s) => s.setHoveredLectures)
     const selectedLectures = useTimetableUIStore((s) => s.selectedLectures)
     const setSelectedLectures = useTimetableUIStore((s) => s.setSelectedLectures)
-    const timeFilter = useTimetableUIStore((s) => s.timeFilter)
-    const setTimeFilter = useTimetableUIStore((s) => s.setTimeFilter)
+    const timeFilters = useTimetableUIStore((s) => s.timeFilters)
+    const setTimeFilters = useTimetableUIStore((s) => s.setTimeFilters)
     const onSearchLecturesChange = useTimetableUIStore((s) => s.setSearchLectures)
     const onClearSelection = useCallback(
         () => setSelectedLectures([]),
@@ -240,9 +240,9 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                     (["code", "popular", "studentCount"] as const)[sortOption] ?? "code",
                 offset: 0,
                 limit: SEARCH_LIMIT,
-                day: param.time?.day ?? undefined,
-                begin: param.time?.begin ?? undefined,
-                end: param.time?.end ?? undefined,
+                day: param.time?.[0]?.day ?? undefined,
+                begin: param.time?.[0]?.begin ?? undefined,
+                end: param.time?.[0]?.end ?? undefined,
             }
             setParams(fullParam)
             setEnabled(true)
@@ -486,8 +486,8 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
             <LectureSearchSubSection
                 year={year}
                 semester={semester}
-                timeFilter={timeFilter}
-                setTimeFilter={setTimeFilter}
+                timeFilters={timeFilters}
+                setTimeFilters={setTimeFilters}
                 sortOption={sortOption}
                 setSortOption={setSortOption}
                 data={data}
