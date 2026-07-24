@@ -95,7 +95,7 @@ export const useTimetableUIStore = create<TimetableUIState>((set) => ({
 
     flashLectureIds: null,
 
-    timeBlocks: [],
+    timeBlocks: null,
     selectedCustomBlock: null,
     isCustomBlockSectionOpen: false,
 
