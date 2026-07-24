@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest"
 
+import { WeekdayEnum } from "@/common/enum/weekdayEnum"
+
 import checkEmpty from "./checkEmpty"
 
 describe("checkEmpty", () => {
@@ -44,7 +46,10 @@ describe("checkEmpty", () => {
     })
 
     it("returns false when time is defined", () => {
-        const params = { keyword: "", time: { day: 1, begin: 540, end: 660 } }
+        const params = {
+            keyword: "",
+            time: [{ day: WeekdayEnum.Mon, begin: 540, end: 660 }],
+        }
         expect(checkEmpty(params)).toBe(false)
     })
 

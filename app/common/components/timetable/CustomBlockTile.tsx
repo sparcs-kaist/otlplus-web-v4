@@ -190,7 +190,7 @@ export function CustomBlockTile({
                                 color="Text.dark"
                                 className="block-title"
                             >
-                                {block.block_name}
+                                {block.name}
                             </Typography>
                             {block.place && (
                                 <Typography
