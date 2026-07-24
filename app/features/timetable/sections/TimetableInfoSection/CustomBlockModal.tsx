@@ -1,7 +1,7 @@
 import { useState } from "react"
 
 import styled from "@emotion/styled"
-import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline"
+import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutlined"
 import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 
