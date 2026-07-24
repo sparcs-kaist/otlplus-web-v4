@@ -1,7 +1,7 @@
 import { memo } from "react"
 
 import styled from "@emotion/styled"
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline"
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlined"
 import { ThemeProvider, createTheme } from "@mui/material"
 
 interface IconProps {

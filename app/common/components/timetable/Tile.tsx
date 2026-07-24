@@ -1,6 +1,6 @@
-import { type CSSProperties, memo } from "react"
+import { type CSSProperties, memo, useCallback } from "react"
 
-import { type Theme, css } from "@emotion/react"
+import { type Theme, css, keyframes } from "@emotion/react"
 import styled from "@emotion/styled"
 import { Close } from "@mui/icons-material"
 import { useTranslation } from "react-i18next"
@@ -21,7 +21,7 @@ const DAYS = [
     "sunday",
 ]
 
-const flattenTimeTableColors = (
+export const flattenTimeTableColors = (
     timeTable: Theme["colors"]["Tile"]["TimeTable"]["default"],
 ): Array<CSSProperties["color"]> => {
     return [
@@ -95,6 +95,14 @@ export const LectureTileHoverCss = (theme: Theme) => css`
     }
 `
 
+const tileFlashKeyframes = `
+    0% { filter: brightness(1) drop-shadow(0 0 0px transparent); transform: scale(1); }
+    50% { filter: brightness(1.8) drop-shadow(0 0 12px rgba(255, 255, 255, 0.8)); transform: scale(1.05) translateY(-2px); z-index: 10; }
+    100% { filter: brightness(1) drop-shadow(0 0 0px transparent); transform: scale(1); }
+`
+
+const tileFlash = keyframes`${tileFlashKeyframes}`
+
 const LectureTileWrapper = styled(FlexWrapper)<{
     rowStart: number
     rowEnd: number
@@ -107,9 +115,13 @@ const LectureTileWrapper = styled(FlexWrapper)<{
     pointer-events: none;
     position: relative;
 
-    [data-selected-lecture="${({ lectureId }) => lectureId}"] & {
+    [data-selected-lectures~="${({ lectureId }) => lectureId}"] & {
         transform: translateY(-2px);
         box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    [data-flash-lectures~="${({ lectureId }) => lectureId}"] & {
+        animation: ${tileFlash} 0.3s ease-out forwards;
     }
 `
 
@@ -144,7 +156,7 @@ const LectureTileInner = styled(FlexWrapper)<{
 
     opacity: 0.5;
 
-    [data-selected-lecture=""] & {
+    .custom-timetable[data-selected-lectures=""] & {
         opacity: 1;
     }
 
@@ -156,12 +168,12 @@ const LectureTileInner = styled(FlexWrapper)<{
         .custom-timetable:not(:hover)[data-hovered-lectures~="${({ lectureId }) =>
                 lectureId}"]
             &,
-        [data-selected-lecture="${({ lectureId }) => lectureId}"] & {
+        [data-selected-lectures~="${({ lectureId }) => lectureId}"] & {
             ${({ theme }) => LectureTileHoverCss(theme)}
         }
     }
 
-    [data-selected-lecture="${({ lectureId }) => lectureId}"] & {
+    [data-selected-lectures~="${({ lectureId }) => lectureId}"] & {
         opacity: 1;
     }
 `
@@ -183,13 +195,38 @@ const LectureDeleteWrapper = styled(FlexWrapper)`
 interface LectureTileProps {
     lecture: Lecture
     classIdx: number
-    deleteLecture?: () => void
+    handleLectureTileHover?: (lecture: Lecture) => void
+    handleLectureTileLeave?: () => void
+    handleLectureTileSelect?: (lecture: Lecture, e?: React.PointerEvent) => void
+    deleteLecture?: (lecture: Lecture) => void
 }
 
-function LectureTile({ lecture, classIdx, deleteLecture }: LectureTileProps) {
+function LectureTile({
+    lecture,
+    classIdx,
+    deleteLecture,
+    handleLectureTileSelect,
+    handleLectureTileHover,
+    handleLectureTileLeave,
+}: LectureTileProps) {
     const cls = lecture.classes[classIdx]
 
     if (cls == null) return null
+
+    const handleMouseClick = useCallback(
+        (e: React.PointerEvent) => {
+            handleLectureTileSelect?.(lecture, e)
+        },
+        [handleLectureTileSelect, lecture],
+    )
+
+    const handlePointerEnter = useCallback(() => {
+        handleLectureTileHover?.(lecture)
+    }, [handleLectureTileHover, lecture])
+
+    const handlePointerLeave = useCallback(() => {
+        handleLectureTileLeave?.()
+    }, [handleLectureTileLeave])
 
     return (
         <LectureTileWrapper
@@ -202,6 +239,10 @@ function LectureTile({ lecture, classIdx, deleteLecture }: LectureTileProps) {
             rowStart={cls.begin / 30 - 14}
             rowEnd={cls.end / 30 - 14}
             lectureId={lecture.id}
+            data-class-time={cls.day * 24 * 60 + cls.begin}
+            onPointerDown={handleMouseClick}
+            onPointerEnter={handlePointerEnter}
+            onPointerLeave={handlePointerLeave}
         >
             <LectureTileInner
                 direction="row"
@@ -259,11 +300,15 @@ function LectureTile({ lecture, classIdx, deleteLecture }: LectureTileProps) {
                         flex="1 1 auto"
                         gap={0}
                         className="lecture-delete-wrapper"
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onClick={(e) => e.stopPropagation()}
                     >
-                        <IconButton styles={{ padding: 3 }} onClick={deleteLecture}>
+                        <IconButton
+                            styles={{ padding: 3 }}
+                            onClick={() => deleteLecture(lecture)}
+                        >
                             <Icon
                                 size={12}
-                                onClick={() => {}}
                                 style={{
                                     color: "rgba(255, 255, 255, 0.6)",
                                     opacity: 1,
@@ -352,7 +397,7 @@ const OverflowTileInner = styled(FlexWrapper)<{ courseId: number; lectureId: num
         .custom-timetable:not(:hover)[data-hovered-lectures~="${({ lectureId }) =>
                 lectureId}"]
             &,
-        [data-selected-lecture="${({ lectureId }) => lectureId}"] & {
+        [data-selected-lectures~="${({ lectureId }) => lectureId}"] & {
             ${({ theme }) => LectureTileHoverCss(theme)}
         }
     }
@@ -367,16 +412,20 @@ const OverflowTileInner = styled(FlexWrapper)<{ courseId: number; lectureId: num
         }
     }
 
-    [data-selected-lecture="${({ lectureId }) => lectureId}"] & {
+    [data-selected-lectures~="${({ lectureId }) => lectureId}"] & {
         transform: translateY(-2px);
         box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
         opacity: 1;
     }
 
-    [data-selected-lecture=""] & {
+    .custom-timetable[data-selected-lectures=""] & {
         transform: none;
         box-shadow: none;
         opacity: 1;
+    }
+
+    [data-flash-lectures~="${({ lectureId }) => lectureId}"] & {
+        animation: ${tileFlash} 0.3s ease-out forwards;
     }
 `
 
@@ -451,11 +500,15 @@ function OverflowTile({ lecture, classIdx, deleteLecture }: OverflowTileProps) {
                         flex="1 1 auto"
                         gap={0}
                         className="lecture-delete-wrapper"
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onClick={(e) => e.stopPropagation()}
                     >
-                        <IconButton styles={{ padding: 3 }} onClick={deleteLecture}>
+                        <IconButton
+                            styles={{ padding: 3 }}
+                            onClick={() => deleteLecture()}
+                        >
                             <Icon
                                 size={12}
-                                onClick={() => {}}
                                 style={{
                                     color: "rgba(255, 255, 255, 0.6)",
                                     opacity: 1,
