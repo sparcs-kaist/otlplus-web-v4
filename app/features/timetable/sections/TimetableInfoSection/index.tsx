@@ -40,6 +40,7 @@ interface TimetableInfoSectionProps {
     year: number
     semester: SemesterEnum
     currentTimetableId: number | null
+    setIsCustomBlockSectionOpen: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 export default function TimetableInfoSection({
@@ -50,6 +51,7 @@ export default function TimetableInfoSection({
     year,
     semester,
     currentTimetableId,
+    setIsCustomBlockSectionOpen,
 }: TimetableInfoSectionProps) {
     const isLaptop = useIsDevice("laptop")
 
@@ -100,6 +102,7 @@ export default function TimetableInfoSection({
                     year={year}
                     semester={semester}
                     currentTimetableId={currentTimetableId}
+                    setIsCustomBlockSectionOpen={setIsCustomBlockSectionOpen}
                 />
             )}
         </InfoArea>

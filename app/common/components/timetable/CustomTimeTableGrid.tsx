@@ -389,8 +389,10 @@ interface CustomTimeTableGridProps {
     customBlocks?: CustomBlock[]
     cellWidth?: string
     needTimeFilter?: boolean
-    timeFilter?: TimeBlock | null
-    setTimeFilter?: React.Dispatch<React.SetStateAction<TimeBlock | null>>
+    timeFilters?: TimeBlock[] | null
+    setTimeFilters?: React.Dispatch<React.SetStateAction<TimeBlock[] | null>>
+    timeBlocks?: TimeBlock[] | null
+    setTimeBlocks?: React.Dispatch<React.SetStateAction<TimeBlock[] | null>>
     needLectureInteraction?: boolean
     needLectureDeletable?: boolean
     deleteLecture?: (lectureId: number) => void
@@ -402,6 +404,7 @@ interface CustomTimeTableGridProps {
     needCurrentTimeBar?: boolean
     selectedCustomBlock?: CustomBlock | null
     setSelectedCustomBlock?: React.Dispatch<React.SetStateAction<CustomBlock | null>>
+    isCustomBlockSectionOpen?: boolean
 }
 
 function CustomTimeTableGrid({
@@ -409,8 +412,10 @@ function CustomTimeTableGrid({
     customBlocks = [],
     cellWidth,
     needTimeFilter = true,
-    timeFilter,
-    setTimeFilter,
+    timeFilters,
+    setTimeFilters,
+    timeBlocks,
+    setTimeBlocks,
     needLectureInteraction = true,
     needLectureDeletable = true,
     deleteLecture,
@@ -422,6 +427,7 @@ function CustomTimeTableGrid({
     needCurrentTimeBar = false,
     selectedCustomBlock = null,
     setSelectedCustomBlock,
+    isCustomBlockSectionOpen,
 }: CustomTimeTableGridProps) {
     const { t } = useTranslation()
 
@@ -535,37 +541,53 @@ function CustomTimeTableGrid({
     }, [])
 
     const handlePointerLeave = useCallback(() => {
-        if (timeRef.current && dayRef.current !== null)
-            setTimeFilter?.({
-                day: dayRef.current,
-                begin: (TIME_BEGIN + timeRef.current[0] * 0.5) * 60,
-                end: (TIME_BEGIN + timeRef.current[1] * 0.5) * 60,
-            })
+        if (timeRef.current && dayRef.current !== null) {
+            const day = dayRef.current
+            const [start, end] = timeRef.current
+
+            if (isCustomBlockSectionOpen) {
+                setTimeBlocks?.([
+                    {
+                        day,
+                        begin: (TIME_BEGIN + start * 0.5) * 60,
+                        end: (TIME_BEGIN + end * 0.5) * 60,
+                    },
+                ])
+            } else {
+                setTimeFilters?.([
+                    {
+                        day,
+                        begin: (TIME_BEGIN + start * 0.5) * 60,
+                        end: (TIME_BEGIN + end * 0.5) * 60,
+                    },
+                ])
+            }
+        }
 
         if (timeRef.current && timeRef.current[1] - timeRef.current[0] > 1) {
             overlayRef.current?.setAttribute("data-is-dragging", "wait")
             backgroundRef.current?.setAttribute("data-is-dragging", "wait")
         } else if (
             (timeRef.current && timeRef.current[1] - timeRef.current[0] <= 1) ||
-            !timeFilter
+            !timeFilters
         ) {
             overlayRef.current?.setAttribute("data-is-dragging", "false")
             backgroundRef.current?.setAttribute("data-is-dragging", "false")
-            setTimeFilter?.(null)
+            setTimeFilters?.(null)
         }
 
         draggingRef.current = false
         timeRef.current = null
         dayRef.current = null
         anchorRef.current = null
-    }, [timeFilter, setTimeFilter])
+    }, [timeFilters, setTimeFilters, timeBlocks, setTimeBlocks, isCustomBlockSectionOpen])
 
     useEffect(() => {
-        if (!timeFilter) {
+        if (!timeFilters) {
             overlayRef.current?.setAttribute("data-is-dragging", "false")
             backgroundRef.current?.setAttribute("data-is-dragging", "false")
         }
-    }, [timeFilter])
+    }, [timeFilters])
 
     const handleMouseDown = useCallback(
         (e: React.PointerEvent<HTMLDivElement>) => {
@@ -836,7 +858,11 @@ function CustomTimeTableGrid({
                             ref={overlayRef}
                             data-is-dragging={false}
                         >
-                            {needTimeFilter && <HoverTile />}
+                            {needTimeFilter && (
+                                <HoverTile
+                                    isCustomBlockSectionOpen={isCustomBlockSectionOpen}
+                                />
+                            )}
                             {lectures.map((lecture, lectureIdx) => (
                                 <MemoizedLectureTiles
                                     key={`${lecture.id}-lecture-tile-${lectureIdx}`}
@@ -906,7 +932,7 @@ export default memo(CustomTimeTableGrid, (prevProps, nextProps) => {
     return (
         prevProps.lectures === nextProps.lectures &&
         prevProps.cellWidth === nextProps.cellWidth &&
-        prevProps.timeFilter === nextProps.timeFilter &&
+        prevProps.timeFilters === nextProps.timeFilters &&
         prevProps.needTimeFilter === nextProps.needTimeFilter &&
         prevProps.needLectureInteraction === nextProps.needLectureInteraction &&
         prevProps.needLectureDeletable === nextProps.needLectureDeletable &&
@@ -915,6 +941,9 @@ export default memo(CustomTimeTableGrid, (prevProps, nextProps) => {
         prevProps.setHoveredLectures === nextProps.setHoveredLectures &&
         prevProps.selectedLecture === nextProps.selectedLecture &&
         prevProps.setSelectedLecture === nextProps.setSelectedLecture &&
-        prevProps.needCurrentTimeBar === nextProps.needCurrentTimeBar
+        prevProps.needCurrentTimeBar === nextProps.needCurrentTimeBar &&
+        prevProps.selectedCustomBlock === nextProps.selectedCustomBlock &&
+        prevProps.setSelectedCustomBlock === nextProps.setSelectedCustomBlock &&
+        prevProps.isCustomBlockSectionOpen === nextProps.isCustomBlockSectionOpen
     )
 })

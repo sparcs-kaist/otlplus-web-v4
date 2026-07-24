@@ -157,8 +157,8 @@ interface LectureListSectionProps {
     setHoveredLecture: React.Dispatch<React.SetStateAction<Lecture[]>>
     selectedLecture: Lecture | null
     setSelectedLecture: React.Dispatch<React.SetStateAction<Lecture | null>>
-    timeFilter: TimeBlock | null
-    setTimeFilter: React.Dispatch<React.SetStateAction<TimeBlock | null>>
+    timeFilters: TimeBlock[] | null
+    setTimeFilters: React.Dispatch<React.SetStateAction<TimeBlock[] | null>>
     currentTimetableId: number | null
 }
 
@@ -173,8 +173,8 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     setHoveredLecture,
     selectedLecture,
     setSelectedLecture,
-    timeFilter,
-    setTimeFilter,
+    timeFilters,
+    setTimeFilters,
     currentTimetableId,
 }) => {
     const { t } = useTranslation()
@@ -254,9 +254,9 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                     (["code", "popular", "studentCount"] as const)[sortOption] ?? "code",
                 offset: 0,
                 limit: SEARCH_LIMIT,
-                day: param.time?.day ?? undefined,
-                begin: param.time?.begin ?? undefined,
-                end: param.time?.end ?? undefined,
+                day: param.time?.[0]?.day ?? undefined,
+                begin: param.time?.[0]?.begin ?? undefined,
+                end: param.time?.[0]?.end ?? undefined,
             }
             setParams(fullParam)
             setEnabled(true)
@@ -494,8 +494,8 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
             <LectureSearchSubSection
                 year={year}
                 semester={semester}
-                timeFilter={timeFilter}
-                setTimeFilter={setTimeFilter}
+                timeFilters={timeFilters}
+                setTimeFilters={setTimeFilters}
                 sortOption={sortOption}
                 setSortOption={setSortOption}
                 data={data}
@@ -555,7 +555,7 @@ const LectureListSectionMemo = React.memo(LectureListSection, (prev, next) => {
     return (
         prev.year === next.year &&
         prev.semester === next.semester &&
-        prev.timeFilter === next.timeFilter &&
+        prev.timeFilters === next.timeFilters &&
         prev.currentTimetableId === next.currentTimetableId &&
         prev.hoveredLecture === next.hoveredLecture &&
         prev.selectedLecture === next.selectedLecture &&

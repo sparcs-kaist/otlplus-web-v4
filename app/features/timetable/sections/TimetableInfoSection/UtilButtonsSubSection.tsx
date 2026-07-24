@@ -23,8 +23,6 @@ import { useAPI } from "@/utils/api/useAPI"
 import useIsDevice from "@/utils/useIsDevice"
 import useThemeStore from "@/utils/zustand/useThemeStore"
 
-import CustomBlockModal from "./CustomBlockModal"
-
 const UtilButtonsWrapper = styled(FlexWrapper)`
     width: 100%;
 
@@ -41,7 +39,7 @@ const UtilButtonsWrapper = styled(FlexWrapper)`
     }
 `
 
-const ExportButton = styled.button`
+const ExportButton = styled.button<{ disabled?: boolean }>`
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -50,7 +48,8 @@ const ExportButton = styled.button`
     border: none;
     cursor: pointer;
     padding: 4px 0;
-    color: ${({ theme }) => theme.colors.Highlight.default};
+    color: ${({ theme, disabled }) =>
+        disabled ? theme.colors.Text.disable : theme.colors.Highlight.default};
     font-size: 13px;
 
     &:hover {
@@ -64,12 +63,14 @@ export default function UtilButtonsSubSection({
     year,
     semester,
     currentTimetableId,
+    setIsCustomBlockSectionOpen,
 }: {
     timetableName: string
     timetableLectures: Lecture[]
     year: number
     semester: SemesterEnum
     currentTimetableId: number | null
+    setIsCustomBlockSectionOpen: React.Dispatch<React.SetStateAction<boolean>>
 }) {
     const { t, i18n } = useTranslation()
     const theme = useTheme()
@@ -81,8 +82,6 @@ export default function UtilButtonsSubSection({
     const [process, setProcess] = useState<
         "idle" | "successCopyImage" | "successDownloadImage" | "successDownloadCalendar"
     >("idle")
-
-    const [isCustomBlockModalOpen, setIsCustomBlockModalOpen] = useState(false)
 
     const currentSemester = useMemo(() => {
         if (!query) return null
@@ -180,19 +179,23 @@ export default function UtilButtonsSubSection({
             </ExportButton>
             <ExportButton
                 onClick={() => {
-                    setIsCustomBlockModalOpen(true)
+                    setIsCustomBlockSectionOpen(true)
                 }}
+                disabled={currentTimetableId === null}
             >
-                <Icon size={16} color={theme.colors.Highlight.default}>
+                <Icon
+                    size={16}
+                    color={
+                        currentTimetableId === null
+                            ? theme.colors.Text.disable
+                            : theme.colors.Highlight.default
+                    }
+                    disabled={currentTimetableId === null}
+                >
                     <AddBoxIcon />
                 </Icon>
                 {!isTablet && <span>{t("timetable.addCustomBlock")}</span>}
             </ExportButton>
-            <CustomBlockModal
-                isOpen={isCustomBlockModalOpen}
-                onClose={() => setIsCustomBlockModalOpen(false)}
-                timetableId={currentTimetableId ?? 0}
-            />
         </UtilButtonsWrapper>
     )
 }

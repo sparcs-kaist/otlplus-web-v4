@@ -21,43 +21,45 @@ const TimeFilterPlaceholder = styled(Typography)`
 `
 
 interface TimeFilterProps {
-    timeFilter: TimeBlock | undefined | null
-    setTimeFilter: ((timeFilter: TimeBlock | null) => void) | undefined
+    timeFilters: TimeBlock[] | undefined | null
+    setTimeFilters: ((timeFilter: TimeBlock[] | null) => void) | undefined
 }
 
-function TimeFilterArea({ timeFilter, setTimeFilter }: TimeFilterProps) {
+function TimeFilterArea({ timeFilters, setTimeFilters }: TimeFilterProps) {
     const { t } = useTranslation()
     const theme = useTheme()
 
     return (
         <FlexWrapper direction="column" gap={0} style={{ width: "100%" }}>
-            <TimeFilterInner direction="row" gap={0}>
-                {!timeFilter ? (
+            <TimeFilterInner direction="column" gap={0}>
+                {!timeFilters ? (
                     <TimeFilterPlaceholder color="Text.light" type="Normal">
                         {t("common.search.timeFilterPlaceholder")}
                     </TimeFilterPlaceholder>
                 ) : (
-                    <FlexWrapper
-                        direction="row"
-                        justify="space-between"
-                        gap={10}
-                        align="center"
-                    >
-                        <Typography
-                            color="Text.default"
-                            type="Normal"
-                        >{`${formatTimeAreaToString(timeFilter)}`}</Typography>
-                        <Icon
-                            size={15}
-                            onClick={() => {
-                                if (!setTimeFilter) return
-                                setTimeFilter(null)
-                            }}
-                            color={theme.colors.Text.default}
+                    timeFilters.map((timeFilter, index) => (
+                        <FlexWrapper
+                            direction="row"
+                            justify="space-between"
+                            gap={10}
+                            align="center"
                         >
-                            <Close />
-                        </Icon>
-                    </FlexWrapper>
+                            <Typography
+                                color="Text.default"
+                                type="Normal"
+                            >{`${formatTimeAreaToString(timeFilter)}`}</Typography>
+                            <Icon
+                                size={15}
+                                onClick={() => {
+                                    if (!setTimeFilters) return
+                                    setTimeFilters(null)
+                                }}
+                                color={theme.colors.Text.default}
+                            >
+                                <Close />
+                            </Icon>
+                        </FlexWrapper>
+                    ))
                 )}
             </TimeFilterInner>
         </FlexWrapper>

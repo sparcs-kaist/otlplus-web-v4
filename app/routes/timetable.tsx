@@ -12,8 +12,10 @@ import { type SemesterEnum } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
+import type { CustomBlock } from "@/common/schemas/customBlock"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimeBlock } from "@/common/schemas/timeblock"
+import CustomBlockSection from "@/features/timetable/sections/CustomBlockSection"
 import LectureDetailSection from "@/features/timetable/sections/LectureDetailSection"
 import LectureListSection from "@/features/timetable/sections/LectureListSection"
 import TabButtonRow from "@/features/timetable/sections/TabsRowSubSection/TabButtonRow"
@@ -102,6 +104,11 @@ const LectureInfoArea = styled.div`
     width: 360px;
     height: 100%;
     display: flex;
+
+    ::-webkit-scrollbar {
+        width: 0;
+        display: none;
+    }
 
     ${media.desktop} {
         width: 380px;
@@ -223,7 +230,9 @@ export default function Timetable() {
     const [selected, setSelected] = useState<Lecture | null>(null)
 
     // Time filter state for search area
-    const [timeFilter, setTimeFilter] = useState<TimeBlock | null>(null)
+    const [timeFilters, setTimeFilters] = useState<TimeBlock[] | null>(null)
+
+    const [timeBlocks, setTimeBlocks] = useState<TimeBlock[] | null>(null)
 
     // Current timetable
     const [currentTimetableId, setCurrentTimetableId] = useState<number | null>(null)
@@ -231,8 +240,11 @@ export default function Timetable() {
     const [year, setYear] = useState<number>(-1)
     const [semesterEnum, setSemesterEnum] = useState<SemesterEnum>(1)
 
+    const [currentCustomBlock, setCurrentCustomBlock] = useState<CustomBlock | null>(null)
+
     // Mobile search modal state
     const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
+    const [isCustomBlockSectionOpen, setIsCustomBlockSectionOpen] = useState(false)
 
     const [nonLoginTimetable, setNonLoginTimetable] = useState<Lecture[]>([])
     const { query: timetable } = useAPI("GET", `/timetables/${currentTimetableId}`, {
@@ -362,10 +374,10 @@ export default function Timetable() {
     }, [currentTimetableId])
 
     useEffect(() => {
-        if (timeFilter !== null && isTablet) {
+        if (timeFilters !== null && isTablet) {
             setMobileSearchOpen(true)
         }
-    }, [timeFilter])
+    }, [timeFilters])
 
     return (
         <TimetableWrapper
@@ -414,8 +426,10 @@ export default function Timetable() {
                             >
                                 <CustomTimeTableGrid
                                     lectures={currentTimetableLectures}
-                                    timeFilter={timeFilter}
-                                    setTimeFilter={setTimeFilter}
+                                    timeFilters={timeFilters}
+                                    setTimeFilters={setTimeFilters}
+                                    timeBlocks={timeBlocks}
+                                    setTimeBlocks={setTimeBlocks}
                                     needLectureDeletable={currentTimetableId !== null}
                                     hoveredLectures={hover}
                                     setHoveredLectures={setHover}
@@ -435,6 +449,7 @@ export default function Timetable() {
                                             ? handleRemoveCustomBlock
                                             : undefined
                                     }
+                                    isCustomBlockSectionOpen={isCustomBlockSectionOpen}
                                 />
                             </TimetableArea>
                         </Block>
@@ -450,6 +465,7 @@ export default function Timetable() {
                             year={year}
                             semester={semesterEnum}
                             currentTimetableId={currentTimetableId}
+                            setIsCustomBlockSectionOpen={setIsCustomBlockSectionOpen}
                         />
                     </TimetableInfoArea>
                     <MobileControlBar direction="row" gap={0}>
@@ -459,6 +475,7 @@ export default function Timetable() {
                             year={year}
                             semester={semesterEnum}
                             currentTimetableId={currentTimetableId}
+                            setIsCustomBlockSectionOpen={setIsCustomBlockSectionOpen}
                         />
                         <FlexWrapper
                             direction="row"
@@ -496,8 +513,8 @@ export default function Timetable() {
                                     selectedLecture={selected}
                                     setSelectedLecture={setSelected}
                                     setHoveredLecture={setHover}
-                                    timeFilter={timeFilter}
-                                    setTimeFilter={setTimeFilter}
+                                    timeFilters={timeFilters}
+                                    setTimeFilters={setTimeFilters}
                                     currentTimetableId={currentTimetableId}
                                 />
                             </LectureListArea>
@@ -512,31 +529,41 @@ export default function Timetable() {
                             fullScreen={true}
                             header={false}
                         >
-                            <LectureDetailSection
-                                setNonLoginTimetable={setNonLoginTimetable}
-                                handleRemoveFromTimetable={
-                                    status === "success"
-                                        ? currentTimetableId === null
-                                            ? undefined
-                                            : handleRemoveLecture
-                                        : handleNonLoginRemoveLecture
-                                }
-                                selectedLecture={
-                                    selected
-                                        ? selected
-                                        : hover?.length == 1
-                                          ? hover[0]
-                                          : null
-                                }
-                                year={year}
-                                semester={semesterEnum}
-                                onMobileModalClose={() => {
-                                    setHover([])
-                                    setSelected(null)
-                                }}
-                                currentTimetableId={currentTimetableId}
-                                timetableLectures={currentTimetableLectures}
-                            />
+                            {isCustomBlockSectionOpen ? (
+                                <CustomBlockSection
+                                    currentTimetableId={currentTimetableId}
+                                    currentTimetableName={currentTimetableName}
+                                    customBlock={currentCustomBlock}
+                                    timeBlocks={timeBlocks}
+                                    setTimeBlocks={setTimeBlocks}
+                                />
+                            ) : (
+                                <LectureDetailSection
+                                    setNonLoginTimetable={setNonLoginTimetable}
+                                    handleRemoveFromTimetable={
+                                        status === "success"
+                                            ? currentTimetableId === null
+                                                ? undefined
+                                                : handleRemoveLecture
+                                            : handleNonLoginRemoveLecture
+                                    }
+                                    selectedLecture={
+                                        selected
+                                            ? selected
+                                            : hover?.length == 1
+                                              ? hover[0]
+                                              : null
+                                    }
+                                    year={year}
+                                    semester={semesterEnum}
+                                    onMobileModalClose={() => {
+                                        setHover([])
+                                        setSelected(null)
+                                    }}
+                                    currentTimetableId={currentTimetableId}
+                                    timetableLectures={currentTimetableLectures}
+                                />
+                            )}
                         </Modal>
                     )}
                 </>
@@ -556,6 +583,9 @@ export default function Timetable() {
                                     year={year}
                                     semester={semesterEnum}
                                     currentTimetableId={currentTimetableId}
+                                    setIsCustomBlockSectionOpen={
+                                        setIsCustomBlockSectionOpen
+                                    }
                                 />
                             </UtilButtonsArea>
                         )}
@@ -570,25 +600,38 @@ export default function Timetable() {
                                 selectedLecture={selected}
                                 setSelectedLecture={setSelected}
                                 setHoveredLecture={setHover}
-                                timeFilter={timeFilter}
-                                setTimeFilter={setTimeFilter}
+                                timeFilters={timeFilters}
+                                setTimeFilters={setTimeFilters}
                                 currentTimetableId={currentTimetableId}
                             />
                         </LectureListArea>
                         {!isDesktop && <StyledDivider direction="column" />}
                         {/*과목 정보 영역*/}
                         <LectureInfoArea style={{ overflow: "auto" }}>
-                            <LectureDetailSection
-                                selectedLecture={
-                                    selected
-                                        ? selected
-                                        : hover?.length == 1
-                                          ? hover[0]
-                                          : null
-                                }
-                                year={year}
-                                semester={semesterEnum}
-                            />
+                            {isCustomBlockSectionOpen ? (
+                                <CustomBlockSection
+                                    customBlock={currentCustomBlock}
+                                    setIsCustomBlockSectionOpen={
+                                        setIsCustomBlockSectionOpen
+                                    }
+                                    timeBlocks={timeBlocks}
+                                    setTimeBlocks={setTimeBlocks}
+                                    currentTimetableId={currentTimetableId}
+                                    currentTimetableName={currentTimetableName}
+                                />
+                            ) : (
+                                <LectureDetailSection
+                                    selectedLecture={
+                                        selected
+                                            ? selected
+                                            : hover?.length == 1
+                                              ? hover[0]
+                                              : null
+                                    }
+                                    year={year}
+                                    semester={semesterEnum}
+                                />
+                            )}
                         </LectureInfoArea>
                     </SearchAreaWrapper>
                     <FlexWrapper direction="column" gap={0}>
@@ -621,8 +664,10 @@ export default function Timetable() {
                                     <CustomTimeTableGrid
                                         cellWidth={isLaptop ? "113px" : "125px"}
                                         lectures={currentTimetableLectures}
-                                        timeFilter={timeFilter}
-                                        setTimeFilter={setTimeFilter}
+                                        timeFilters={timeFilters}
+                                        setTimeFilters={setTimeFilters}
+                                        timeBlocks={timeBlocks}
+                                        setTimeBlocks={setTimeBlocks}
                                         needLectureDeletable={currentTimetableId !== null}
                                         hoveredLectures={hover}
                                         setHoveredLectures={setHover}
@@ -642,6 +687,9 @@ export default function Timetable() {
                                                 ? handleRemoveCustomBlock
                                                 : undefined
                                         }
+                                        isCustomBlockSectionOpen={
+                                            isCustomBlockSectionOpen
+                                        }
                                     />
                                 </TimetableArea>
                                 {!isLaptop && <StyledDivider direction="column" />}
@@ -655,6 +703,9 @@ export default function Timetable() {
                                         year={year}
                                         semester={semesterEnum}
                                         currentTimetableId={currentTimetableId}
+                                        setIsCustomBlockSectionOpen={
+                                            setIsCustomBlockSectionOpen
+                                        }
                                     />
                                 </TimetableInfoArea>
                             </Block>
