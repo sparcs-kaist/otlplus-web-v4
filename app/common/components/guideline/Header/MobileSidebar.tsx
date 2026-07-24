@@ -4,7 +4,6 @@ import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import CloudOffIcon from "@mui/icons-material/CloudOff"
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight"
-import RefreshIcon from "@mui/icons-material/Refresh"
 import { AnimatePresence, motion } from "framer-motion"
 import ReactDOM from "react-dom"
 import { useTranslation } from "react-i18next"
@@ -150,22 +149,6 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
                     >
                         <FlexWrapper direction="column" gap={35} align="flex-end">
                             {sidebarHeader}
-                            <StyledHyperLink href="/__switch/v3">
-                                <Typography
-                                    type="Big"
-                                    color="Highlight.default"
-                                    style={{ lineHeight: "1px" }}
-                                >
-                                    {t("common.toOTLV3")}
-                                </Typography>
-                                <Icon
-                                    size={20}
-                                    color="Highlight.default"
-                                    style={{ transform: "rotate(180deg)" }}
-                                >
-                                    <RefreshIcon />
-                                </Icon>
-                            </StyledHyperLink>
                             <FlexWrapper direction="column" gap={20} align="flex-end">
                                 {renderNavLink("/dictionary", t("header.dictionary"))}
                                 {renderNavLink(
