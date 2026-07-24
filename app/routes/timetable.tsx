@@ -10,7 +10,6 @@ import CustomTimeTableGrid from "@/common/components/timetable/CustomTimeTableGr
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
-import type { CustomBlock } from "@/common/schemas/customBlock"
 import type { Lecture } from "@/common/schemas/lecture"
 import KeyboardShortcutModal from "@/features/timetable/components/KeyboardShortcutModal"
 import { useTimetableEditor } from "@/features/timetable/hooks/useTimetableEditor"
@@ -562,11 +561,6 @@ export default function Timetable() {
                                     timetableLectures={currentTimetableLectures}
                                 />
                             )}
-                            <LectureDetailSection
-                                timetableLectures={currentTimetableLectures}
-                                addLectures={addLectures}
-                                removeLectures={handleDeleteLecture}
-                            />
                         </LectureInfoArea>
                     </SearchAreaWrapper>
                     <FlexWrapper direction="column" gap={0}>
