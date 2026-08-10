@@ -19,6 +19,7 @@ import SearchFilterArea, {
     isSingleSelectOption,
 } from "./SearchFilterArea"
 import TextInput from "./TextInput"
+import resolveDepartmentIds from "./resolveDepartmentIds"
 
 export type SearchParamsType = {
     type?: string[]
@@ -95,8 +96,17 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
     }
 
     function handleSubmit(chipsOptions: ExportDataType, textValue: string) {
+        const searchParams = getSearchParams(chipsOptions, textValue)
+        const selectedDepartmentCount = chipsOptions.department?.length ?? 0
+        const resolvedDepartmentCount = searchParams.department?.length ?? 0
+
+        if (selectedDepartmentCount !== resolvedDepartmentCount) {
+            alert(t("common.search.departmentUnavailable"))
+            return
+        }
+
         setOpen(false)
-        onSearch(getSearchParams(chipsOptions, textValue))
+        onSearch(searchParams)
     }
 
     function getSearchParams(
@@ -119,11 +129,10 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
                                 (x) => x[0],
                             ) as any
                         if (key == "department") {
-                            result[key] = result[key]?.map(
-                                (dept) =>
-                                    query.data?.departments.find(
-                                        (d) => d.code === dept.toString(),
-                                    )?.id as number,
+                            // 미해석 학과를 남기면 소비 측 val.toString()에서 크래시난다
+                            result[key] = resolveDepartmentIds(
+                                result[key] ?? [],
+                                query.data?.departments,
                             )
                         }
                     }
