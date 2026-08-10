@@ -345,6 +345,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                     key="my-timetable"
                     type={currentTimetableId == null ? "selected" : "default"}
                     onClick={() => {
+                        markSemesterAutoSelected(`${year}-${semester}`)
                         setCurrentTimetableId(null)
                     }}
                 >

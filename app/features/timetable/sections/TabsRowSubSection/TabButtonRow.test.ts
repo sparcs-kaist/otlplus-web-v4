@@ -74,6 +74,18 @@ describe("getTimetableAutoSelection", () => {
             }),
         ).toEqual({ semesterKey: "2026-3", timetableId: 42 })
     })
+
+    it("preserves My Timetable selected before timetable data arrives", () => {
+        expect(
+            getTimetableAutoSelection({
+                status: "success",
+                currentTimetableId: null,
+                semesterKey: "2026-3",
+                autoSelectedSemesterKeys: ["2026-3"],
+                timetables: [timetable],
+            }),
+        ).toBeNull()
+    })
 })
 
 describe("getSemesterTimetables", () => {
