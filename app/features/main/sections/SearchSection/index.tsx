@@ -6,6 +6,8 @@ import SearchArea, { type SearchParamsType } from "@/common/components/search/Se
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import checkEmpty from "@/utils/search/checkEmpty"
 
+import createDictionarySearchParams from "./createDictionarySearchParams"
+
 const SearchSectionInner = styled(FlexWrapper)`
     flex: 0 1 auto;
     width: 645px;
@@ -29,17 +31,7 @@ function SearchSection() {
             alert(t("common.search.empty"))
             return
         }
-        const queryString = new URLSearchParams()
-
-        Object.entries(params).forEach(([key, value]) => {
-            if (Array.isArray(value)) {
-                value.forEach((val) => {
-                    queryString.append(key, val.toString())
-                })
-            } else if (value !== undefined && value !== null && value !== "") {
-                queryString.append(key, value.toString())
-            }
-        })
+        const queryString = createDictionarySearchParams(params)
 
         navigate(`/dictionary?${queryString.toString()}`)
     }
