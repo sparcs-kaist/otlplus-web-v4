@@ -100,7 +100,7 @@ const Block = styled(FlexWrapper)`
 `
 
 const LectureInfoArea = styled.div`
-    width: 360px;
+    width: 330px;
     height: 100%;
     display: flex;
 
