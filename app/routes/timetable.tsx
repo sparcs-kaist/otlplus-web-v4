@@ -20,6 +20,7 @@ import TabButtonRow from "@/features/timetable/sections/TabsRowSubSection/TabBut
 import TimetableInfoSection from "@/features/timetable/sections/TimetableInfoSection"
 import UtilButtonsSubSection from "@/features/timetable/sections/TimetableInfoSection/UtilButtonsSubSection"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
+import isInvalidTimetableError from "@/features/timetable/utils/isInvalidTimetableError"
 import { trackEvent } from "@/libs/mixpanel"
 import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
@@ -228,6 +229,7 @@ export default function Timetable() {
     const setTimeFilter = useTimetableUIStore((s) => s.setTimeFilter)
 
     const currentTimetableId = useTimetableUIStore((s) => s.currentTimetableId)
+    const setCurrentTimetableId = useTimetableUIStore((s) => s.setCurrentTimetableId)
     const currentTimetableName = useTimetableUIStore((s) => s.currentTimetableName)
     const year = useTimetableUIStore((s) => s.year)
     const semesterEnum = useTimetableUIStore((s) => s.semesterEnum)
@@ -246,6 +248,8 @@ export default function Timetable() {
     const [nonLoginTimetable, setNonLoginTimetable] = useState<Lecture[]>([])
     const { query: timetable } = useAPI("GET", `/timetables/${currentTimetableId}`, {
         enabled: currentTimetableId !== null && status === "success",
+        retry: (failureCount, error) =>
+            !isInvalidTimetableError(error) && failureCount < 1,
     })
     const { query: myTimetable, setParams: setMyTimetableParams } = useAPI(
         "GET",
@@ -261,6 +265,15 @@ export default function Timetable() {
               : (timetable.data?.lectures ?? [])
 
     const canDeleteLecture = status !== "success" || currentTimetableId !== null
+    const refetchTimetables = timetables.refetch
+
+    useEffect(() => {
+        if (currentTimetableId === null || !isInvalidTimetableError(timetable.error))
+            return
+
+        setCurrentTimetableId(null)
+        void refetchTimetables()
+    }, [currentTimetableId, refetchTimetables, setCurrentTimetableId, timetable.error])
 
     useEffect(() => {
         setHoveredLectures([])
