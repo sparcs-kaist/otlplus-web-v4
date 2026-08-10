@@ -6,17 +6,20 @@ export default function getTimetableAutoSelection({
     currentTimetableId,
     semesterKey,
     autoSelectedSemesterKeys,
+    preserveMyTimetableSelection,
     timetables,
 }: {
     status: UserStatus
     currentTimetableId: number | null
     semesterKey: string
     autoSelectedSemesterKeys: readonly string[]
+    preserveMyTimetableSelection: boolean
     timetables: Timetables[]
 }): { semesterKey: string; timetableId: number | null } | null {
     if (
         status !== "success" ||
         timetables.length === 0 ||
+        preserveMyTimetableSelection ||
         autoSelectedSemesterKeys.includes(semesterKey)
     ) {
         return null
