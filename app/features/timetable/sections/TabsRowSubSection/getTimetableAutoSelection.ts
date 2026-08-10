@@ -19,7 +19,7 @@ export default function getTimetableAutoSelection({
     if (
         status !== "success" ||
         timetables.length === 0 ||
-        preserveMyTimetableSelection ||
+        (preserveMyTimetableSelection && currentTimetableId == null) ||
         autoSelectedSemesterKeys.includes(semesterKey)
     ) {
         return null

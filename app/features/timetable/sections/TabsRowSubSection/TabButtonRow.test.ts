@@ -105,6 +105,19 @@ describe("getTimetableAutoSelection", () => {
             }),
         ).toBeNull()
     })
+
+    it("does not suppress selection bookkeeping for an editable timetable", () => {
+        expect(
+            getTimetableAutoSelection({
+                status: "success",
+                currentTimetableId: 42,
+                semesterKey: "2026-1",
+                autoSelectedSemesterKeys: [],
+                preserveMyTimetableSelection: true,
+                timetables: [timetable],
+            }),
+        ).toEqual({ semesterKey: "2026-1", timetableId: null })
+    })
 })
 
 describe("getSemesterTimetables", () => {
