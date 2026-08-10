@@ -1,6 +1,6 @@
 import React from "react"
 
-import { describe, expect, it, vi } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
 import { fireEvent, render, screen } from "@/test/test-utils"
 
@@ -19,6 +19,10 @@ vi.mock("@/utils/api/useAPI", () => ({
         },
     }),
 }))
+
+afterEach(() => {
+    vi.unstubAllGlobals()
+})
 
 const departments = [
     { id: 9945, code: "CS" },
