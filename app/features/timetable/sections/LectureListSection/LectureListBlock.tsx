@@ -16,6 +16,7 @@ import checkOverlap from "@/utils/timetable/checkOverlap"
 import useIsDevice from "@/utils/useIsDevice"
 import useUserStore from "@/utils/zustand/useUserStore"
 
+import LectureLabel from "./LectureLabel"
 import formatProfessorName from "./formatProfessorName"
 
 const CourseItemWrapper = styled.div`
@@ -168,7 +169,6 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
                 const wish = wishlist.includes(lecture.id)
                 const isHovered = hoveredLecture?.some((lec) => lec.id === lecture.id)
                 const isSelected = selectedLectures?.some((lec) => lec.id === lecture.id)
-
                 return (
                     <React.Fragment key={lecture.id}>
                         <LectureItemWrapper
@@ -198,9 +198,10 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
                                         opacity: course.completed ? 0.3 : 1,
                                     }}
                                 >
-                                    <Typography type="NormalBold" color="Text.default">
-                                        {lecture.classNo} {lecture.subtitle}
-                                    </Typography>
+                                    <LectureLabel
+                                        classNo={lecture.classNo}
+                                        subtitle={lecture.subtitle}
+                                    />
                                     <Typography type="Normal" color="Text.default">
                                         {formatProfessorName(lecture.professors)}
                                     </Typography>
