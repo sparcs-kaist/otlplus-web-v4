@@ -5,7 +5,6 @@ import { useQueryClient } from "@tanstack/react-query"
 import { SemesterEnum } from "@/common/enum/semesterEnum"
 import type { Lecture } from "@/common/schemas/lecture"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
-import isInvalidTimetableError from "@/features/timetable/utils/isInvalidTimetableError"
 import { trackEvent } from "@/libs/mixpanel"
 import { useAPI } from "@/utils/api/useAPI"
 import useUserStore from "@/utils/zustand/useUserStore"
@@ -171,10 +170,6 @@ export function useTimetableEditor({
                     { queryKey: [`/timetables/${currentTimetableId}`] },
                     context?.previousTimetable,
                 )
-                if (isInvalidTimetableError(err)) {
-                    setCurrentTimetableId(null)
-                    void queryClient.invalidateQueries({ queryKey: ["/timetables"] })
-                }
             },
             onSettled: debounceInvalidate,
         },
@@ -212,10 +207,6 @@ export function useTimetableEditor({
                     { queryKey: [`/timetables/${currentTimetableId}`] },
                     context?.previousTimetable,
                 )
-                if (isInvalidTimetableError(err)) {
-                    setCurrentTimetableId(null)
-                    void queryClient.invalidateQueries({ queryKey: ["/timetables"] })
-                }
             },
             onSettled: debounceInvalidate,
         },
