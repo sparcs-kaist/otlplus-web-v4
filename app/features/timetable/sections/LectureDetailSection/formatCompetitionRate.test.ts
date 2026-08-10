@@ -7,6 +7,10 @@ describe("formatCompetitionRate", () => {
         expect(formatCompetitionRate(null, 30)).toBe("-")
     })
 
+    it("preserves zero-limit formatting when enrollment is unknown", () => {
+        expect(formatCompetitionRate(null, 0)).toBe("0.00:1")
+    })
+
     it("preserves existing zero-limit and ratio formatting", () => {
         expect(formatCompetitionRate(10, 0)).toBe("0.00:1")
         expect(formatCompetitionRate(45, 30)).toBe("1.50:1")
