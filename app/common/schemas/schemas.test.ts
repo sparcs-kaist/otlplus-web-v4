@@ -57,6 +57,7 @@ describe("Schema validations", () => {
             courseId: 100,
             classNo: "001",
             name: "Introduction to CS",
+            subtitle: "",
             code: "CS101",
             department: { id: 1, name: "CS", code: "CS" },
             type: "Major Required",
@@ -89,11 +90,23 @@ describe("Schema validations", () => {
             expect(result.success).toBe(true)
         })
 
-        it("rejects lecture with invalid average grade (> 5)", () => {
-            const invalidLecture = { ...validLecture, averageGrade: 6 }
-            const result = LectureSchema.safeParse(invalidLecture)
-            expect(result.success).toBe(false)
-        })
+        it.each(["averageGrade", "averageLoad", "averageSpeech"] as const)(
+            "accepts %s scores above 5 returned by the API",
+            (field) => {
+                const lecture = { ...validLecture, [field]: 15 }
+                const result = LectureSchema.safeParse(lecture)
+                expect(result.success).toBe(true)
+            },
+        )
+
+        it.each(["averageGrade", "averageLoad", "averageSpeech"] as const)(
+            "rejects %s scores above the 15-point scale",
+            (field) => {
+                const lecture = { ...validLecture, [field]: 16 }
+                const result = LectureSchema.safeParse(lecture)
+                expect(result.success).toBe(false)
+            },
+        )
 
         it("rejects lecture with negative average grade", () => {
             const invalidLecture = { ...validLecture, averageGrade: -1 }
@@ -104,6 +117,12 @@ describe("Schema validations", () => {
         it("validates lecture with empty classes array", () => {
             const lectureNoClasses = { ...validLecture, classes: [] }
             const result = LectureSchema.safeParse(lectureNoClasses)
+            expect(result.success).toBe(true)
+        })
+
+        it("validates lecture with unknown enrollment", () => {
+            const lecture = { ...validLecture, numPeople: null }
+            const result = LectureSchema.safeParse(lecture)
             expect(result.success).toBe(true)
         })
 
