@@ -24,6 +24,7 @@ interface TimetableUIState {
     year: number
     semesterEnum: SemesterEnum
     autoSelectedSemesterKeys: string[]
+    pendingMyTimetableSelection: boolean
 
     // 5. Flash State (잘라내기, undo 등 효과)
     flashLectureIds: number[] | null
@@ -58,6 +59,7 @@ interface TimetableUIState {
     ) => void
     markSemesterAutoSelected: (key: string) => void
     resetAutoSelectedSemesters: () => void
+    setPendingMyTimetableSelection: (pending: boolean) => void
 
     // Flash Action
     triggerFlash: (ids: number[]) => void
@@ -78,6 +80,7 @@ export const useTimetableUIStore = create<TimetableUIState>((set) => ({
     year: -1,
     semesterEnum: SemesterEnum.SPRING,
     autoSelectedSemesterKeys: [],
+    pendingMyTimetableSelection: false,
 
     flashLectureIds: null,
 
@@ -136,7 +139,7 @@ export const useTimetableUIStore = create<TimetableUIState>((set) => ({
     markSemesterAutoSelected: (key) =>
         set((state) =>
             state.autoSelectedSemesterKeys.includes(key)
-                ? {}
+                ? state
                 : {
                       autoSelectedSemesterKeys: [...state.autoSelectedSemesterKeys, key],
                   },
@@ -144,9 +147,11 @@ export const useTimetableUIStore = create<TimetableUIState>((set) => ({
     resetAutoSelectedSemesters: () =>
         set((state) =>
             state.autoSelectedSemesterKeys.length === 0
-                ? {}
+                ? state
                 : { autoSelectedSemesterKeys: [] },
         ),
+    setPendingMyTimetableSelection: (pending) =>
+        set({ pendingMyTimetableSelection: pending }),
 
     triggerFlash: (ids) => {
         set({ flashLectureIds: ids })

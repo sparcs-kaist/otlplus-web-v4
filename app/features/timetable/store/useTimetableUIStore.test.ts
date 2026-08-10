@@ -1,10 +1,13 @@
-import { beforeEach, describe, expect, it } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { useTimetableUIStore } from "./useTimetableUIStore"
 
 describe("timetable auto-selection state", () => {
     beforeEach(() => {
-        useTimetableUIStore.setState({ autoSelectedSemesterKeys: [] })
+        useTimetableUIStore.setState({
+            autoSelectedSemesterKeys: [],
+            pendingMyTimetableSelection: false,
+        })
     })
 
     it("marks a semester as auto-selected", () => {
@@ -24,6 +27,17 @@ describe("timetable auto-selection state", () => {
         expect(useTimetableUIStore.getState().autoSelectedSemesterKeys).toBe(previous)
     })
 
+    it("does not notify subscribers when marking an existing semester", () => {
+        useTimetableUIStore.getState().markSemesterAutoSelected("2026-1")
+        const subscriber = vi.fn()
+        const unsubscribe = useTimetableUIStore.subscribe(subscriber)
+
+        useTimetableUIStore.getState().markSemesterAutoSelected("2026-1")
+
+        expect(subscriber).not.toHaveBeenCalled()
+        unsubscribe()
+    })
+
     it("resets auto-selected semesters", () => {
         useTimetableUIStore.getState().markSemesterAutoSelected("2026-1")
         useTimetableUIStore.getState().resetAutoSelectedSemesters()
@@ -37,5 +51,15 @@ describe("timetable auto-selection state", () => {
         useTimetableUIStore.getState().resetAutoSelectedSemesters()
 
         expect(useTimetableUIStore.getState().autoSelectedSemesterKeys).toBe(previous)
+    })
+
+    it("does not notify subscribers when resetting an empty list", () => {
+        const subscriber = vi.fn()
+        const unsubscribe = useTimetableUIStore.subscribe(subscriber)
+
+        useTimetableUIStore.getState().resetAutoSelectedSemesters()
+
+        expect(subscriber).not.toHaveBeenCalled()
+        unsubscribe()
     })
 })
