@@ -62,4 +62,14 @@ describe("timetable auto-selection state", () => {
         expect(subscriber).not.toHaveBeenCalled()
         unsubscribe()
     })
+
+    it("does not notify subscribers when pending selection is unchanged", () => {
+        const subscriber = vi.fn()
+        const unsubscribe = useTimetableUIStore.subscribe(subscriber)
+
+        useTimetableUIStore.getState().setPendingMyTimetableSelection(false)
+
+        expect(subscriber).not.toHaveBeenCalled()
+        unsubscribe()
+    })
 })

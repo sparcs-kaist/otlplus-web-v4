@@ -151,7 +151,11 @@ export const useTimetableUIStore = create<TimetableUIState>((set) => ({
                 : { autoSelectedSemesterKeys: [] },
         ),
     setPendingMyTimetableSelection: (pending) =>
-        set({ pendingMyTimetableSelection: pending }),
+        set((state) =>
+            state.pendingMyTimetableSelection === pending
+                ? state
+                : { pendingMyTimetableSelection: pending },
+        ),
 
     triggerFlash: (ids) => {
         set({ flashLectureIds: ids })
