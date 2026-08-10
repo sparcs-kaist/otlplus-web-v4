@@ -11,5 +11,6 @@ export const search = {
     type: "Groups",
     placeholder: "Enter keywords",
     empty: "Please select at least one search filter",
+    departmentUnavailable: "The selected department cannot be searched right now.",
     timeFilterPlaceholder: "Drag on the timetable to select",
 }
