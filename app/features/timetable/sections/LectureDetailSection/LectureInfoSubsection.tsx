@@ -8,6 +8,7 @@ import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 
 import formatProfessorName from "../LectureListSection/formatProfessorName"
+import formatCompetitionRate from "./formatCompetitionRate"
 import formatExamTime from "./formatExamTime"
 import formatRoomName from "./formatRoomName"
 
@@ -39,6 +40,11 @@ const LectureInfoSubsection: React.FC<LectureInfoSubsectionProps> = ({
     const { t } = useTranslation()
 
     if (!selectedLecture) return null
+
+    const competitionRate = formatCompetitionRate(
+        selectedLecture.numPeople,
+        selectedLecture.limitPeople,
+    )
 
     return (
         <>
@@ -101,14 +107,7 @@ const LectureInfoSubsection: React.FC<LectureInfoSubsectionProps> = ({
                 {[
                     [selectedLecture.isEnglish ? "Eng" : "한", t("common.language")],
                     [selectedLecture.credit, t("common.credit")],
-                    [
-                        selectedLecture.limitPeople === 0
-                            ? "0.00:1"
-                            : (
-                                  selectedLecture.numPeople / selectedLecture.limitPeople
-                              ).toFixed(2) + ":1",
-                        t("timetable.competitionRate"),
-                    ],
+                    [competitionRate, t("timetable.competitionRate")],
                 ].map(([value, label], index) => (
                     <NumberContent
                         key={index}

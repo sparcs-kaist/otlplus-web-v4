@@ -5,9 +5,11 @@ type User = {
     name: string
 }
 
+export type UserStatus = "idle" | "loading" | "success"
+
 type UserStore = {
     user: User | null
-    status: "idle" | "loading" | "success"
+    status: UserStatus
     setUser: (user: User) => void
     clearUser: () => void
 }

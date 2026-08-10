@@ -37,6 +37,8 @@ import { useAPI } from "@/utils/api/useAPI"
 import useUserStore from "@/utils/zustand/useUserStore"
 
 import TabButton from "./TabButton"
+import getSemesterTimetables from "./getSemesterTimetables"
+import getTimetableAutoSelection from "./getTimetableAutoSelection"
 
 const TabButtonRowWrapper = styled(FlexWrapper)`
     width: 100%;
@@ -190,6 +192,15 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
     const semester = useTimetableUIStore((s) => s.semesterEnum)
     const setYear = useTimetableUIStore((s) => s.setYear)
     const setSemester = useTimetableUIStore((s) => s.setSemesterEnum)
+    const autoSelectedSemesterKeys = useTimetableUIStore(
+        (s) => s.autoSelectedSemesterKeys,
+    )
+    const markSemesterAutoSelected = useTimetableUIStore(
+        (s) => s.markSemesterAutoSelected,
+    )
+    const resetAutoSelectedSemesters = useTimetableUIStore(
+        (s) => s.resetAutoSelectedSemesters,
+    )
     const { requestFunction: addTimetable } = useAPI("POST", "/timetables", {
         onSuccess: (data) => {
             timetables.refetch()
@@ -230,15 +241,12 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
     )
 
     useEffect(() => {
-        let list = timetables.data?.timetables ?? []
-        list = list.filter((t: Timetables) => t.year === year && t.semester === semester)
-        setLocalTimetables(
-            list
-                .slice()
-                .sort(
-                    (a: Timetables, b: Timetables) => a.timeTableOrder - b.timeTableOrder,
-                ),
+        const semesterTimetables = getSemesterTimetables(
+            timetables.data?.timetables ?? [],
+            year,
+            semester,
         )
+        setLocalTimetables(semesterTimetables)
 
         if (currentTimetableId != null) {
             timetables.data?.timetables.forEach((timetable: Timetables) => {
@@ -247,7 +255,39 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                 }
             })
         }
-    }, [timetables.data, year, semester])
+
+        if (status !== "success") {
+            resetAutoSelectedSemesters()
+            return
+        }
+
+        const semesterKey = `${year}-${semester}`
+        const autoSelection = getTimetableAutoSelection({
+            status,
+            currentTimetableId,
+            semesterKey,
+            autoSelectedSemesterKeys,
+            timetables: semesterTimetables,
+        })
+        if (autoSelection == null) return
+
+        markSemesterAutoSelected(autoSelection.semesterKey)
+
+        // "나의 시간표"는 편집 불가라 기본 선택으로 두면 과목 추가가 조용히 실패한다
+        if (autoSelection.timetableId != null) {
+            setCurrentTimetableId(autoSelection.timetableId)
+        }
+    }, [
+        timetables.data,
+        year,
+        semester,
+        status,
+        currentTimetableId,
+        autoSelectedSemesterKeys,
+        markSemesterAutoSelected,
+        resetAutoSelectedSemesters,
+        setCurrentTimetableId,
+    ])
 
     useEffect(() => {
         setCurrentTimetableName(
@@ -305,6 +345,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                     key="my-timetable"
                     type={currentTimetableId == null ? "selected" : "default"}
                     onClick={() => {
+                        markSemesterAutoSelected(`${year}-${semester}`)
                         setCurrentTimetableId(null)
                     }}
                 >

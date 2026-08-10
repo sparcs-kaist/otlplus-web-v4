@@ -11,5 +11,7 @@ export const search = {
     type: "분류",
     placeholder: "과목명, 교수명을 등을 검색해보세요",
     empty: "검색 조건을 하나 이상 선택해주세요",
+    departmentUnavailable:
+        "선택한 학과를 검색할 수 없습니다. 잠시 후 다시 시도해 주세요.",
     timeFilterPlaceholder: "시간표에서 드래그하여 선택",
 }
