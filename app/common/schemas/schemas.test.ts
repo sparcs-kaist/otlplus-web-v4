@@ -99,6 +99,15 @@ describe("Schema validations", () => {
             },
         )
 
+        it.each(["averageGrade", "averageLoad", "averageSpeech"] as const)(
+            "rejects %s scores above the 15-point scale",
+            (field) => {
+                const lecture = { ...validLecture, [field]: 16 }
+                const result = LectureSchema.safeParse(lecture)
+                expect(result.success).toBe(false)
+            },
+        )
+
         it("rejects lecture with negative average grade", () => {
             const invalidLecture = { ...validLecture, averageGrade: -1 }
             const result = LectureSchema.safeParse(invalidLecture)
