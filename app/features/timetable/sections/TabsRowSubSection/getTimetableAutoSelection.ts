@@ -1,22 +1,23 @@
 import type { Timetables } from "@/common/schemas/timetables"
+import type { UserStatus } from "@/utils/zustand/useUserStore"
 
 export default function getTimetableAutoSelection({
     status,
     currentTimetableId,
     semesterKey,
-    autoSelectedSemesterKey,
+    autoSelectedSemesterKeys,
     timetables,
 }: {
-    status: string
+    status: UserStatus
     currentTimetableId: number | null
     semesterKey: string
-    autoSelectedSemesterKey: string | null
+    autoSelectedSemesterKeys: readonly string[]
     timetables: Timetables[]
 }): { semesterKey: string; timetableId: number | null } | null {
     if (
         status !== "success" ||
         timetables.length === 0 ||
-        autoSelectedSemesterKey === semesterKey
+        autoSelectedSemesterKeys.includes(semesterKey)
     ) {
         return null
     }

@@ -192,9 +192,14 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
     const semester = useTimetableUIStore((s) => s.semesterEnum)
     const setYear = useTimetableUIStore((s) => s.setYear)
     const setSemester = useTimetableUIStore((s) => s.setSemesterEnum)
-    const autoSelectedSemesterKey = useTimetableUIStore((s) => s.autoSelectedSemesterKey)
-    const setAutoSelectedSemesterKey = useTimetableUIStore(
-        (s) => s.setAutoSelectedSemesterKey,
+    const autoSelectedSemesterKeys = useTimetableUIStore(
+        (s) => s.autoSelectedSemesterKeys,
+    )
+    const markSemesterAutoSelected = useTimetableUIStore(
+        (s) => s.markSemesterAutoSelected,
+    )
+    const resetAutoSelectedSemesters = useTimetableUIStore(
+        (s) => s.resetAutoSelectedSemesters,
     )
     const { requestFunction: addTimetable } = useAPI("POST", "/timetables", {
         onSuccess: (data) => {
@@ -252,7 +257,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
         }
 
         if (status !== "success") {
-            setAutoSelectedSemesterKey(null)
+            resetAutoSelectedSemesters()
             return
         }
 
@@ -261,12 +266,12 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
             status,
             currentTimetableId,
             semesterKey,
-            autoSelectedSemesterKey,
+            autoSelectedSemesterKeys,
             timetables: semesterTimetables,
         })
         if (autoSelection == null) return
 
-        setAutoSelectedSemesterKey(autoSelection.semesterKey)
+        markSemesterAutoSelected(autoSelection.semesterKey)
 
         // "나의 시간표"는 편집 불가라 기본 선택으로 두면 과목 추가가 조용히 실패한다
         if (autoSelection.timetableId != null) {
@@ -278,8 +283,9 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
         semester,
         status,
         currentTimetableId,
-        autoSelectedSemesterKey,
-        setAutoSelectedSemesterKey,
+        autoSelectedSemesterKeys,
+        markSemesterAutoSelected,
+        resetAutoSelectedSemesters,
         setCurrentTimetableId,
     ])
 

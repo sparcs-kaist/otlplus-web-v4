@@ -21,7 +21,7 @@ describe("getTimetableAutoSelection", () => {
                 status: "success",
                 currentTimetableId: null,
                 semesterKey: "2026-1",
-                autoSelectedSemesterKey: null,
+                autoSelectedSemesterKeys: [],
                 timetables: [timetable],
             }),
         ).toEqual({ semesterKey: "2026-1", timetableId: 42 })
@@ -33,7 +33,7 @@ describe("getTimetableAutoSelection", () => {
                 status: "success",
                 currentTimetableId: null,
                 semesterKey: "2026-3",
-                autoSelectedSemesterKey: null,
+                autoSelectedSemesterKeys: [],
                 timetables: [],
             }),
         ).toBeNull()
@@ -45,10 +45,34 @@ describe("getTimetableAutoSelection", () => {
                 status: "success",
                 currentTimetableId: null,
                 semesterKey: "2026-1",
-                autoSelectedSemesterKey: "2026-1",
+                autoSelectedSemesterKeys: ["2026-1"],
                 timetables: [timetable],
             }),
         ).toBeNull()
+    })
+
+    it("preserves My Timetable after visiting another semester", () => {
+        expect(
+            getTimetableAutoSelection({
+                status: "success",
+                currentTimetableId: null,
+                semesterKey: "2026-1",
+                autoSelectedSemesterKeys: ["2026-1", "2026-3"],
+                timetables: [timetable],
+            }),
+        ).toBeNull()
+    })
+
+    it("auto-selects a semester that has not been visited", () => {
+        expect(
+            getTimetableAutoSelection({
+                status: "success",
+                currentTimetableId: null,
+                semesterKey: "2026-3",
+                autoSelectedSemesterKeys: ["2026-1"],
+                timetables: [timetable],
+            }),
+        ).toEqual({ semesterKey: "2026-3", timetableId: 42 })
     })
 })
 
