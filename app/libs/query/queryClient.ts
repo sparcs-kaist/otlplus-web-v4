@@ -23,7 +23,7 @@ queryClient.setQueryDefaults([queryKeys.semesters], {
 
 export function shouldPersistQuery(query: {
     queryKey: readonly unknown[]
-    state: { status: string }
+    state: { data: unknown }
 }): boolean {
-    return query.state.status === "success" && query.queryKey[0] === queryKeys.semesters
+    return query.queryKey[0] === queryKeys.semesters && query.state.data !== undefined
 }

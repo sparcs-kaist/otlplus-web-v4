@@ -35,4 +35,13 @@ describe("shouldPersistQuery", () => {
 
         expect(shouldPersistQuery(query)).toBe(false)
     })
+
+    it("retains successful semester data after a refetch error", () => {
+        expect(
+            shouldPersistQuery({
+                queryKey: [queryKeys.semesters],
+                state: { data: { semesters: [{ year: 2026 }] } },
+            }),
+        ).toBe(true)
+    })
 })
