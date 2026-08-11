@@ -14,11 +14,11 @@ function createAxiosError(status: number): AxiosError {
 }
 
 describe("resolveUserInfo", () => {
-    it("waits while authentication is disabled or loading", () => {
+    it("waits while authentication is disabled or pending", () => {
         expect(
             resolveUserInfo({
                 enabled: false,
-                isLoading: false,
+                isPending: false,
                 isError: false,
                 error: null,
                 data: undefined,
@@ -27,7 +27,7 @@ describe("resolveUserInfo", () => {
         expect(
             resolveUserInfo({
                 enabled: true,
-                isLoading: true,
+                isPending: true,
                 isError: false,
                 error: null,
                 data: undefined,
@@ -39,7 +39,7 @@ describe("resolveUserInfo", () => {
         expect(
             resolveUserInfo({
                 enabled: true,
-                isLoading: false,
+                isPending: false,
                 isError: true,
                 error: createAxiosError(HttpStatusCode.Unauthorized),
                 data: { id: 1 },
@@ -51,7 +51,7 @@ describe("resolveUserInfo", () => {
         expect(
             resolveUserInfo({
                 enabled: true,
-                isLoading: false,
+                isPending: false,
                 isError: true,
                 error: createAxiosError(HttpStatusCode.ServiceUnavailable),
                 data: { id: 1 },
@@ -65,7 +65,7 @@ describe("resolveUserInfo", () => {
         expect(
             resolveUserInfo({
                 enabled: true,
-                isLoading: false,
+                isPending: false,
                 isError: false,
                 error: null,
                 data: user,

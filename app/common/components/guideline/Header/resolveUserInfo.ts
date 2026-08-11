@@ -2,7 +2,7 @@ import { HttpStatusCode, isAxiosError } from "axios"
 
 interface UserInfoQueryState<T> {
     enabled: boolean
-    isLoading: boolean
+    isPending: boolean
     isError: boolean
     error: unknown
     data: T | undefined
@@ -10,12 +10,12 @@ interface UserInfoQueryState<T> {
 
 export default function resolveUserInfo<T>({
     enabled,
-    isLoading,
+    isPending,
     isError,
     error,
     data,
 }: UserInfoQueryState<T>): T | null | undefined {
-    if (!enabled || isLoading) return undefined
+    if (!enabled || isPending) return undefined
     if (isError) {
         return isAxiosError(error) &&
             error.response?.status === HttpStatusCode.Unauthorized

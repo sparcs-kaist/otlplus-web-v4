@@ -104,7 +104,7 @@ const Header: React.FC = () => {
     useEffect(() => {
         const resolvedUserInfo = resolveUserInfo({
             enabled,
-            isLoading: query.isLoading,
+            isPending: query.isPending,
             isError: query.isError,
             error: query.error,
             data: query.data,
@@ -126,7 +126,7 @@ const Header: React.FC = () => {
             clearUser()
             setEnabled(false)
         }
-    }, [clearUser, enabled, query.data, query.isError, query.isLoading, setUser])
+    }, [clearUser, enabled, query.data, query.isError, query.isPending, setUser])
 
     useEffect(() => {
         if (!isMobile) setMobileSidebarOpen(false)
