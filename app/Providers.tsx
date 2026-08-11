@@ -1,53 +1,20 @@
 import React from "react"
 
 import { ThemeProvider } from "@emotion/react"
-import { QueryClient } from "@tanstack/react-query"
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client"
 import { I18nextProvider } from "react-i18next"
 
 import ChannelTalkProvider from "@/libs/channeltalk"
 import i18n from "@/libs/i18n"
 import { idbPersister } from "@/libs/offline/queryPersister"
+import {
+    QUERY_CACHE_BUSTER,
+    QUERY_CACHE_MAX_AGE,
+    queryClient,
+    shouldPersistQuery,
+} from "@/libs/query/queryClient"
 import themes from "@/styles/themes"
 import useThemeStore from "@/utils/zustand/useThemeStore"
-
-const CACHE_TIME_24H = 1000 * 60 * 60 * 24
-
-const PERSISTABLE_QUERY_PREFIXES = ["/timetables", "/semesters", "/users/info"]
-
-function shouldPersistQuery(queryKey: readonly unknown[]): boolean {
-    const key = queryKey[0]
-    if (typeof key !== "string") return false
-    return PERSISTABLE_QUERY_PREFIXES.some((prefix) => key.startsWith(prefix))
-}
-
-export const queryClient = new QueryClient({
-    defaultOptions: {
-        queries: {
-            gcTime: CACHE_TIME_24H,
-            staleTime: 1000 * 30,
-            retry: 1,
-        },
-    },
-})
-
-queryClient.setQueryDefaults(["/timetables"], {
-    gcTime: Infinity,
-    staleTime: 1000 * 60 * 5,
-    networkMode: "offlineFirst",
-})
-
-queryClient.setQueryDefaults(["/semesters"], {
-    gcTime: CACHE_TIME_24H,
-    staleTime: 1000 * 60 * 60,
-    networkMode: "offlineFirst",
-})
-
-queryClient.setQueryDefaults(["/users/info"], {
-    gcTime: Infinity,
-    staleTime: 1000 * 60 * 5,
-    networkMode: "offlineFirst",
-})
 
 const Providers: React.FC<React.PropsWithChildren> = (props) => {
     const { displayedTheme } = useThemeStore()
@@ -59,7 +26,7 @@ const Providers: React.FC<React.PropsWithChildren> = (props) => {
     const handleRestoreSuccess = React.useCallback(() => {
         if (navigator.onLine) {
             queryClient.invalidateQueries({
-                predicate: (query) => shouldPersistQuery(query.queryKey),
+                predicate: shouldPersistQuery,
             })
         }
     }, [])
@@ -69,9 +36,10 @@ const Providers: React.FC<React.PropsWithChildren> = (props) => {
             client={queryClient}
             persistOptions={{
                 persister: idbPersister,
-                maxAge: Infinity,
+                maxAge: QUERY_CACHE_MAX_AGE,
+                buster: QUERY_CACHE_BUSTER,
                 dehydrateOptions: {
-                    shouldDehydrateQuery: (query) => shouldPersistQuery(query.queryKey),
+                    shouldDehydrateQuery: shouldPersistQuery,
                 },
             }}
             onSuccess={handleRestoreSuccess}
