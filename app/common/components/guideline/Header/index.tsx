@@ -106,6 +106,7 @@ const Header: React.FC = () => {
             enabled,
             isLoading: query.isLoading,
             isError: query.isError,
+            error: query.error,
             data: query.data,
         })
         if (resolvedUserInfo === undefined) return
