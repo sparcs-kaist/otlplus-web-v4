@@ -10,6 +10,7 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
+import isLectureAddDisabled from "@/features/timetable/utils/isLectureAddDisabled"
 import { media } from "@/styles/themes/media"
 import checkOverlap from "@/utils/timetable/checkOverlap"
 import useIsDevice from "@/utils/useIsDevice"
@@ -18,7 +19,6 @@ import useUserStore from "@/utils/zustand/useUserStore"
 import LectureAddButton from "./LectureAddButton"
 import LectureLabel from "./LectureLabel"
 import formatProfessorName from "./formatProfessorName"
-import isLectureAddDisabled from "./isLectureAddDisabled"
 
 const CourseItemWrapper = styled.div`
     width: 100%;
