@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom"
 import { axiosClient } from "@/libs/axios"
 import { identifyUser, trackEvent } from "@/libs/mixpanel"
 import { clearQueryCache } from "@/libs/offline"
+import { queryKeys } from "@/libs/query/queryKeys"
 
 export default function LoginSuccessPage() {
     const navigate = useNavigate()
@@ -32,11 +33,11 @@ export default function LoginSuccessPage() {
 
                 await clearQueryCache()
 
-                qc.removeQueries({ queryKey: ["/users/info"] })
-                qc.removeQueries({ queryKey: ["/timetables"] })
+                qc.removeQueries({ queryKey: [queryKeys.userInfo] })
+                qc.removeQueries({ queryKey: [queryKeys.timetables] })
 
                 await qc.prefetchQuery({
-                    queryKey: ["/users/info", null, lang],
+                    queryKey: [queryKeys.userInfo, null, lang],
                     queryFn: async () => {
                         const { data } = await axiosClient.get("/api/v2/users/info", {
                             headers: { "Cache-Control": "no-cache" },
@@ -51,7 +52,7 @@ export default function LoginSuccessPage() {
                     name?: string
                     studentNumber?: number
                     degree?: string
-                }>(["/users/info", null, lang])
+                }>([queryKeys.userInfo, null, lang])
                 if (userInfo) {
                     identifyUser({
                         id: userInfo.id,
@@ -80,7 +81,7 @@ export default function LoginSuccessPage() {
                         if (latestSemester) {
                             await qc.prefetchQuery({
                                 queryKey: [
-                                    "/timetables/my-timetable",
+                                    `${queryKeys.timetables}/my-timetable`,
                                     {
                                         year: latestSemester.year,
                                         semester: latestSemester.semester,
