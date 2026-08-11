@@ -22,7 +22,7 @@ import useUserStore from "@/utils/zustand/useUserStore"
 import Menu from "./Menu"
 import MobileSidebar from "./MobileSidebar"
 import Setting from "./Setting"
-import resolveUserInfo from "./resolveUserInfo"
+import resolveUserInfo, { selectAuthenticatedUserInfo } from "./resolveUserInfo"
 
 const HeaderWrapper = styled.div`
     width: 100%;
@@ -62,13 +62,14 @@ const Header: React.FC = () => {
     const isMobile = useIsDevice("mobile")
 
     const { displayedTheme } = useThemeStore()
-    const { setUser, clearUser } = useUserStore()
+    const { status: userStatus, setUser, clearUser } = useUserStore()
     const [enabled, setEnabled] = useState<boolean>(false)
 
     const [accountPageOpen, setAccountPageOpen] = useState<boolean>(false)
     const [developerLoginOpen, setDeveloperLoginOpen] = useState(false)
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false)
     const [userInfo, setUserInfo] = useState<GETUserInfoResponse | null>(null)
+    const authenticatedUserInfo = selectAuthenticatedUserInfo(userStatus, userInfo)
 
     const { query } = useAPI("GET", queryKeys.userInfo, {
         enabled,
@@ -76,7 +77,7 @@ const Header: React.FC = () => {
     })
 
     const handleAccountButtonClick = () => {
-        if (userInfo === null) {
+        if (authenticatedUserInfo === null) {
             if (process.env.NODE_ENV === "development") {
                 setDeveloperLoginOpen(true)
             } else {
@@ -126,7 +127,15 @@ const Header: React.FC = () => {
             clearUser()
             setEnabled(false)
         }
-    }, [clearUser, enabled, query.data, query.isError, query.isPending, setUser])
+    }, [
+        clearUser,
+        enabled,
+        query.data,
+        query.error,
+        query.isError,
+        query.isPending,
+        setUser,
+    ])
 
     useEffect(() => {
         if (!isMobile) setMobileSidebarOpen(false)
@@ -140,9 +149,9 @@ const Header: React.FC = () => {
                     setDeveloperLoginModalOpen={setDeveloperLoginOpen}
                 />
             )}
-            {accountPageOpen && (
+            {accountPageOpen && authenticatedUserInfo && (
                 <AccountPageModal
-                    userInfo={userInfo}
+                    userInfo={authenticatedUserInfo}
                     accountPageOpen={accountPageOpen}
                     setAccountPageOpen={setAccountPageOpen}
                 />
@@ -152,7 +161,7 @@ const Header: React.FC = () => {
                 <Menu setMobileSidebarOpen={() => setMobileSidebarOpen(false)} />
                 <Setting
                     handleAccountButtonClick={handleAccountButtonClick}
-                    userName={userInfo ? userInfo.name : "Sign in"}
+                    userName={authenticatedUserInfo?.name ?? "Sign in"}
                     mobileSidebar={false}
                     isLoading={query.isLoading}
                 />
@@ -168,7 +177,7 @@ const Header: React.FC = () => {
                 sidebarHeader={
                     <Setting
                         handleAccountButtonClick={handleAccountButtonClick}
-                        userName={userInfo ? userInfo.name : "Sign in"}
+                        userName={authenticatedUserInfo?.name ?? "Sign in"}
                         mobileSidebar={true}
                         isLoading={query.isLoading}
                     />

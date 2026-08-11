@@ -1,5 +1,7 @@
 import { HttpStatusCode, isAxiosError } from "axios"
 
+import type { UserStatus } from "@/utils/zustand/useUserStore"
+
 interface UserInfoQueryState<T> {
     enabled: boolean
     isPending: boolean
@@ -23,4 +25,11 @@ export default function resolveUserInfo<T>({
             : undefined
     }
     return data ?? null
+}
+
+export function selectAuthenticatedUserInfo<T>(
+    status: UserStatus,
+    userInfo: T | null,
+): T | null {
+    return status === "success" ? userInfo : null
 }

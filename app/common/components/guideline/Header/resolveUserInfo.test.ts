@@ -1,7 +1,7 @@
 import { AxiosError, AxiosHeaders, HttpStatusCode } from "axios"
 import { describe, expect, it } from "vitest"
 
-import resolveUserInfo from "./resolveUserInfo"
+import resolveUserInfo, { selectAuthenticatedUserInfo } from "./resolveUserInfo"
 
 function createAxiosError(status: number): AxiosError {
     return new AxiosError("request failed", undefined, undefined, undefined, {
@@ -71,5 +71,16 @@ describe("resolveUserInfo", () => {
                 data: user,
             }),
         ).toBe(user)
+    })
+})
+
+describe("selectAuthenticatedUserInfo", () => {
+    it("hides stale local user info after the global session is cleared", () => {
+        expect(selectAuthenticatedUserInfo("idle", { id: 1 })).toBeNull()
+    })
+
+    it("returns user info only for an authenticated session", () => {
+        const user = { id: 1 }
+        expect(selectAuthenticatedUserInfo("success", user)).toBe(user)
     })
 })
