@@ -214,6 +214,9 @@ export function useTimetableEditor({
 
     const addLectures = useCallback(
         (lectures: Lecture[], options: { record?: boolean } = { record: true }) => {
+            // 인증 확정 전에는 로그인/비로그인 저장소를 고를 수 없어 편집을 보류한다
+            if (status === "loading") return
+
             if (status !== "success") {
                 setNonLoginTimetable((prev) => {
                     const newLectures = lectures.filter(
