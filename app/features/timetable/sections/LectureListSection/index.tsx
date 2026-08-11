@@ -395,6 +395,8 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     }
 
     const handleAddToTimetable = (lecture: Lecture) => {
+        if (status === "loading") return
+
         if (status === "success") {
             if (currentTimetableId == null) {
                 alert(t("timetable.myTimeTableLectureAddWarning"))

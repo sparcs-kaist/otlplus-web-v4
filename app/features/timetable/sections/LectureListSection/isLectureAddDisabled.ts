@@ -11,5 +11,5 @@ export default function isLectureAddDisabled({
     currentTimetableId,
     hasOverlap,
 }: LectureAddAvailability): boolean {
-    return (status === "success" && currentTimetableId === null) || hasOverlap
+    return (status !== "idle" && currentTimetableId === null) || hasOverlap
 }

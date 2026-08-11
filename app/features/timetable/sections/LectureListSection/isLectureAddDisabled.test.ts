@@ -23,6 +23,16 @@ describe("isLectureAddDisabled", () => {
         ).toBe(true)
     })
 
+    it("disables add while authentication is unresolved", () => {
+        expect(
+            isLectureAddDisabled({
+                status: "loading",
+                currentTimetableId: null,
+                hasOverlap: false,
+            }),
+        ).toBe(true)
+    })
+
     it("allows anonymous local timetable edits", () => {
         expect(
             isLectureAddDisabled({
