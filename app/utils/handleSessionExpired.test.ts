@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
+import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
 import useUserStore from "@/utils/zustand/useUserStore"
 
 import { handleSessionExpired } from "./handleSessionExpired"
@@ -40,6 +41,21 @@ describe("handleSessionExpired", () => {
         expect(mocks.resetUser).not.toHaveBeenCalled()
         expect(mocks.clearQueryClient).not.toHaveBeenCalled()
         expect(mocks.clearPersistedCache).not.toHaveBeenCalled()
+    })
+
+    it("clears the account-scoped timetable selection", async () => {
+        useTimetableUIStore.setState({
+            currentTimetableId: 42,
+            currentTimetableName: "시간표 1",
+            autoSelectedSemesterKeys: ["2026-1"],
+        })
+
+        await handleSessionExpired()
+
+        const timetableState = useTimetableUIStore.getState()
+        expect(timetableState.currentTimetableId).toBeNull()
+        expect(timetableState.currentTimetableName).toBe("")
+        expect(timetableState.autoSelectedSemesterKeys).toEqual([])
     })
 
     it("clears legacy credentials during an authenticated cold start", async () => {

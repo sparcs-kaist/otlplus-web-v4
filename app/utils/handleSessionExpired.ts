@@ -1,3 +1,4 @@
+import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
 import { resetUser } from "@/libs/mixpanel"
 import { clearQueryCache } from "@/libs/offline"
 import { queryClient } from "@/libs/query/queryClient"
@@ -20,6 +21,7 @@ function hasStoredAuthCredentials(): boolean {
 export async function clearClientSession(): Promise<void> {
     resetUser()
     useUserStore.getState().clearUser()
+    useTimetableUIStore.getState().resetTimetableSelection()
     queryClient.clear()
 
     for (const key of AUTH_STORAGE_KEYS) {
