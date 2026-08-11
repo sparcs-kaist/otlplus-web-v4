@@ -6,6 +6,7 @@ import { I18nextProvider } from "react-i18next"
 
 import ChannelTalkProvider from "@/libs/channeltalk"
 import i18n from "@/libs/i18n"
+import useDocumentLanguage from "@/libs/i18n/useDocumentLanguage"
 import { idbPersister } from "@/libs/offline/queryPersister"
 import {
     QUERY_CACHE_BUSTER,
@@ -18,6 +19,8 @@ import useThemeStore from "@/utils/zustand/useThemeStore"
 
 const Providers: React.FC<React.PropsWithChildren> = (props) => {
     const { displayedTheme } = useThemeStore()
+
+    useDocumentLanguage()
 
     const extractedTheme = React.useMemo(() => {
         return themes[displayedTheme]
