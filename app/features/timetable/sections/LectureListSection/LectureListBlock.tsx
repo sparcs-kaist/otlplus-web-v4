@@ -2,7 +2,6 @@ import React, { memo, useEffect } from "react"
 
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
-import AddIcon from "@mui/icons-material/Add"
 import FavoriteIcon from "@mui/icons-material/Favorite"
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder"
 
@@ -16,8 +15,10 @@ import checkOverlap from "@/utils/timetable/checkOverlap"
 import useIsDevice from "@/utils/useIsDevice"
 import useUserStore from "@/utils/zustand/useUserStore"
 
+import LectureAddButton from "./LectureAddButton"
 import LectureLabel from "./LectureLabel"
 import formatProfessorName from "./formatProfessorName"
+import isLectureAddDisabled from "./isLectureAddDisabled"
 
 const CourseItemWrapper = styled.div`
     width: 100%;
@@ -169,6 +170,14 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
                 const wish = wishlist.includes(lecture.id)
                 const isHovered = hoveredLecture?.some((lec) => lec.id === lecture.id)
                 const isSelected = selectedLectures?.some((lec) => lec.id === lecture.id)
+                const hasOverlap = timetableLectures.some((timetableLecture) =>
+                    checkOverlap(timetableLecture.classes, lecture.classes),
+                )
+                const addDisabled = isLectureAddDisabled({
+                    status,
+                    currentTimetableId,
+                    hasOverlap,
+                })
                 return (
                     <React.Fragment key={lecture.id}>
                         <LectureItemWrapper
@@ -247,37 +256,21 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
                                         </Icon>
                                     ))}
                                 {(!isTablet || isHovered) && (
-                                    <span
+                                    <LectureAddButton
+                                        ariaLabel={t("timetable.addToTimetable")}
+                                        color={theme.colors.Text.default}
+                                        disabled={addDisabled}
+                                        onClick={() => handleAddToTimetable(lecture)}
+                                        size={isTablet ? 30 : 15}
                                         title={
                                             currentTimetableId == null &&
                                             status === "success"
                                                 ? t(
                                                       "timetable.myTimeTableLectureAddWarning",
                                                   )
-                                                : ""
+                                                : undefined
                                         }
-                                        style={{
-                                            opacity:
-                                                (currentTimetableId == null &&
-                                                    status === "success") ||
-                                                timetableLectures.some((lec) =>
-                                                    checkOverlap(
-                                                        lec.classes,
-                                                        lecture.classes,
-                                                    ),
-                                                )
-                                                    ? 0.3
-                                                    : 1,
-                                        }}
-                                    >
-                                        <Icon
-                                            size={isTablet ? 30 : 15}
-                                            color={theme.colors.Text.default}
-                                            onClick={() => handleAddToTimetable(lecture)}
-                                        >
-                                            <AddIcon />
-                                        </Icon>
-                                    </span>
+                                    />
                                 )}
                             </FlexWrapper>
                         </LectureItemWrapper>
