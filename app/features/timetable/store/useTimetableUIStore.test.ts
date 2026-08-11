@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { useTimetableUIStore } from "./useTimetableUIStore"
 
@@ -37,5 +37,40 @@ describe("timetable auto-selection state", () => {
         useTimetableUIStore.getState().resetAutoSelectedSemesters()
 
         expect(useTimetableUIStore.getState().autoSelectedSemesterKeys).toBe(previous)
+    })
+})
+
+describe("timetable selection reset", () => {
+    beforeEach(() => {
+        useTimetableUIStore.setState({
+            currentTimetableId: null,
+            currentTimetableName: "",
+            autoSelectedSemesterKeys: [],
+        })
+    })
+
+    it("clears account-scoped selection and metadata", () => {
+        useTimetableUIStore.setState({
+            currentTimetableId: 42,
+            currentTimetableName: "시간표 1",
+            autoSelectedSemesterKeys: ["2026-1"],
+        })
+
+        useTimetableUIStore.getState().resetTimetableSelection()
+
+        const state = useTimetableUIStore.getState()
+        expect(state.currentTimetableId).toBeNull()
+        expect(state.currentTimetableName).toBe("")
+        expect(state.autoSelectedSemesterKeys).toEqual([])
+    })
+
+    it("does not notify subscribers when the selection is already cleared", () => {
+        const subscriber = vi.fn()
+        const unsubscribe = useTimetableUIStore.subscribe(subscriber)
+
+        useTimetableUIStore.getState().resetTimetableSelection()
+
+        expect(subscriber).not.toHaveBeenCalled()
+        unsubscribe()
     })
 })
