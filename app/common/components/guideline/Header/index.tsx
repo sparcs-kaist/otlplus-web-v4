@@ -10,6 +10,7 @@ import AccountPageModal from "@/features/account/AccountPageModal"
 import DeveloperLoginModal from "@/features/account/DeveloperLoginModal"
 import { axiosClient } from "@/libs/axios"
 import { identifyUser } from "@/libs/mixpanel"
+import { queryKeys } from "@/libs/query/queryKeys"
 import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
 import { handleLogin } from "@/utils/handleLoginLogout"
@@ -21,6 +22,7 @@ import useUserStore from "@/utils/zustand/useUserStore"
 import Menu from "./Menu"
 import MobileSidebar from "./MobileSidebar"
 import Setting from "./Setting"
+import resolveUserInfo from "./resolveUserInfo"
 
 const HeaderWrapper = styled.div`
     width: 100%;
@@ -68,7 +70,10 @@ const Header: React.FC = () => {
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false)
     const [userInfo, setUserInfo] = useState<GETUserInfoResponse | null>(null)
 
-    const { query } = useAPI("GET", "/users/info", { enabled: enabled })
+    const { query } = useAPI("GET", queryKeys.userInfo, {
+        enabled,
+        staleTime: 0,
+    })
 
     const handleAccountButtonClick = () => {
         if (userInfo === null) {
@@ -97,23 +102,30 @@ const Header: React.FC = () => {
     }, [])
 
     useEffect(() => {
-        if (query.isLoading || !enabled) return
-        if (query.data) {
-            setUserInfo(query.data)
-            setUser({ id: query.data.id, name: query.data.name })
+        const resolvedUserInfo = resolveUserInfo({
+            enabled,
+            isLoading: query.isLoading,
+            isError: query.isError,
+            data: query.data,
+        })
+        if (resolvedUserInfo === undefined) return
+
+        if (resolvedUserInfo !== null) {
+            setUserInfo(resolvedUserInfo)
+            setUser({ id: resolvedUserInfo.id, name: resolvedUserInfo.name })
             identifyUser({
-                id: query.data.id,
-                email: query.data.mail,
-                name: query.data.name,
-                studentNumber: query.data.studentNumber,
-                degree: query.data.degree,
+                id: resolvedUserInfo.id,
+                email: resolvedUserInfo.mail,
+                name: resolvedUserInfo.name,
+                studentNumber: resolvedUserInfo.studentNumber,
+                degree: resolvedUserInfo.degree,
             })
         } else {
             setUserInfo(null)
             clearUser()
             setEnabled(false)
         }
-    }, [query.data, query.isLoading, enabled])
+    }, [clearUser, enabled, query.data, query.isError, query.isLoading, setUser])
 
     useEffect(() => {
         if (!isMobile) setMobileSidebarOpen(false)
