@@ -270,6 +270,7 @@ export default function Timetable() {
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
             if (
+                !isTablet &&
                 searchAreaRef.current &&
                 !searchAreaRef.current.contains(event.target as Node) &&
                 timetableAreaRef.current &&
@@ -281,7 +282,7 @@ export default function Timetable() {
         }
         document.addEventListener("mousedown", handleClickOutside)
         return () => document.removeEventListener("mousedown", handleClickOutside)
-    }, [])
+    }, [isTablet])
 
     useEffect(() => {
         setSelectedLectures([])
