@@ -4,7 +4,9 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router-dom"
 
+import type { GETUserInfoResponse } from "@/api/users/info"
 import { axiosClient } from "@/libs/axios"
+import { DEFAULT_DOCUMENT_LANGUAGE } from "@/libs/i18n/resolveDocumentLanguage"
 import { identifyUser, trackEvent } from "@/libs/mixpanel"
 import { clearQueryCache } from "@/libs/offline"
 import { queryKeys } from "@/libs/query/queryKeys"
@@ -23,7 +25,7 @@ export default function LoginSuccessPage() {
             const params = new URLSearchParams(hash)
             const accessToken = params.get("accessToken")
             const refreshToken = params.get("refreshToken")
-            const lang = i18n.resolvedLanguage || "ko"
+            const lang = i18n.resolvedLanguage || DEFAULT_DOCUMENT_LANGUAGE
 
             if (accessToken && refreshToken) {
                 if (navigator.userAgent.includes("otl-app")) {
@@ -46,13 +48,11 @@ export default function LoginSuccessPage() {
                     },
                 })
 
-                const userInfo = qc.getQueryData<{
-                    id: number
-                    mail: string
-                    name?: string
-                    studentNumber?: number
-                    degree?: string
-                }>([queryKeys.userInfo, null, lang])
+                const userInfo = qc.getQueryData<GETUserInfoResponse>([
+                    queryKeys.userInfo,
+                    null,
+                    lang,
+                ])
                 if (userInfo) {
                     identifyUser({
                         id: userInfo.id,
