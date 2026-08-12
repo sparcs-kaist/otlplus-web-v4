@@ -41,6 +41,7 @@ describe("handleSessionExpired", () => {
         expect(mocks.resetUser).not.toHaveBeenCalled()
         expect(mocks.clearQueryClient).not.toHaveBeenCalled()
         expect(mocks.clearPersistedCache).not.toHaveBeenCalled()
+        expect(mocks.removeLocalStorageItem).not.toHaveBeenCalled()
     })
 
     it("clears the account-scoped timetable selection", async () => {
@@ -68,6 +69,8 @@ describe("handleSessionExpired", () => {
 
         expect(mocks.clearQueryClient).toHaveBeenCalledOnce()
         expect(mocks.clearPersistedCache).toHaveBeenCalledOnce()
+        expect(mocks.removeLocalStorageItem).toHaveBeenCalledWith("accessToken")
+        expect(mocks.removeLocalStorageItem).toHaveBeenCalledWith("refreshToken")
     })
 
     it("clears authenticated client state once for concurrent 401 responses", async () => {
@@ -104,6 +107,7 @@ describe("handleSessionExpired", () => {
         await handleSessionExpired()
 
         expect(useUserStore.getState().status).toBe("idle")
+        expect(useUserStore.getState().user).toBeNull()
         expect(mocks.clearQueryClient).toHaveBeenCalledOnce()
         expect(mocks.clearPersistedCache).toHaveBeenCalledOnce()
         expect(mocks.removeLocalStorageItem).toHaveBeenCalledWith("accessToken")

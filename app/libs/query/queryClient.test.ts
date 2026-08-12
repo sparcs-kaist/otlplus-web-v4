@@ -26,6 +26,13 @@ describe("shouldPersistQuery", () => {
         },
     )
 
+    it("does not persist unrelated successful queries", () => {
+        const client = new QueryClient()
+        client.setQueryData(["/lectures"], { lectures: [] })
+
+        expect(shouldPersistQuery(getQuery(client, ["/lectures"])!)).toBe(false)
+    })
+
     it("does not persist pending semester queries", () => {
         const client = new QueryClient()
         const query = client.getQueryCache().build(client, {
