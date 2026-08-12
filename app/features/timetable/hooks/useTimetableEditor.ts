@@ -272,6 +272,8 @@ export function useTimetableEditor({
                 delay: false,
             },
         ) => {
+            if (status === "loading") return
+
             const removedNonLogin =
                 status !== "success"
                     ? nonLoginTimetable.filter((lec) => lectureIds.includes(lec.id))
@@ -364,6 +366,8 @@ export function useTimetableEditor({
     }
 
     const undo = useCallback(() => {
+        if (status === "loading") return null
+
         const currentStack = historyStacks[key] || { undo: [], redo: [] }
         if (currentStack.undo.length === 0) return null
 
@@ -388,9 +392,11 @@ export function useTimetableEditor({
         return reversedTransaction.flatMap((action: TimetableAction) =>
             action.lectures.map((l: any) => l.lectureId),
         )
-    }, [key, executeAction, historyStacks])
+    }, [key, executeAction, historyStacks, status])
 
     const redo = useCallback(() => {
+        if (status === "loading") return null
+
         const currentStack = historyStacks[key] || { undo: [], redo: [] }
         if (currentStack.redo.length === 0) return null
 
@@ -414,7 +420,7 @@ export function useTimetableEditor({
         return transactionToRedo.flatMap((action: TimetableAction) =>
             action.lectures.map((l: any) => l.lectureId),
         )
-    }, [key, executeAction, historyStacks])
+    }, [key, executeAction, historyStacks, status])
 
     return {
         addLectures,
