@@ -19,7 +19,12 @@ function hasStoredAuthCredentials(): boolean {
 }
 
 export async function clearClientSession(): Promise<void> {
-    await resetUser()
+    try {
+        await resetUser()
+    } catch (error) {
+        logger.warn("Failed to reset analytics identity", error)
+    }
+
     useUserStore.getState().clearUser()
     useTimetableUIStore.getState().resetTimetableSelection()
     queryClient.clear()

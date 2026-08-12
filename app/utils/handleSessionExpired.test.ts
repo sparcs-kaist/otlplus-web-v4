@@ -98,6 +98,18 @@ describe("handleSessionExpired", () => {
         expect(mocks.clearQueryClient).toHaveBeenCalledOnce()
     })
 
+    it("continues security cleanup when the analytics reset fails", async () => {
+        mocks.resetUser.mockRejectedValueOnce(new Error("mixpanel unavailable"))
+
+        await handleSessionExpired()
+
+        expect(useUserStore.getState().status).toBe("idle")
+        expect(mocks.clearQueryClient).toHaveBeenCalledOnce()
+        expect(mocks.clearPersistedCache).toHaveBeenCalledOnce()
+        expect(mocks.removeLocalStorageItem).toHaveBeenCalledWith("accessToken")
+        expect(mocks.removeLocalStorageItem).toHaveBeenCalledWith("refreshToken")
+    })
+
     it("clears a newly authenticated session after a previous expiration", async () => {
         await handleSessionExpired()
         useUserStore.getState().setUser({ id: 2, name: "Another User" })
