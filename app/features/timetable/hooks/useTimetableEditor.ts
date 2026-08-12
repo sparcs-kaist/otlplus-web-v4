@@ -189,12 +189,12 @@ export function useTimetableEditor({
 
                 queryClient.setQueriesData(
                     { queryKey: [`/timetables/${currentTimetableId}`] },
-                    (old: any) => {
+                    (old: { lectures: Lecture[] } | undefined) => {
                         if (!old) return old
                         return {
                             ...old,
                             lectures: old.lectures.filter(
-                                (l: any) => l.id !== variables.lectureId,
+                                (l) => l.id !== variables.lectureId,
                             ),
                         }
                     },
@@ -390,7 +390,7 @@ export function useTimetableEditor({
         isUndoRedoActionRef.current = false
 
         return reversedTransaction.flatMap((action: TimetableAction) =>
-            action.lectures.map((l: any) => l.lectureId),
+            action.lectures.map((l) => l.lectureId),
         )
     }, [key, executeAction, historyStacks, status])
 
@@ -418,7 +418,7 @@ export function useTimetableEditor({
         isUndoRedoActionRef.current = false
 
         return transactionToRedo.flatMap((action: TimetableAction) =>
-            action.lectures.map((l: any) => l.lectureId),
+            action.lectures.map((l) => l.lectureId),
         )
     }, [key, executeAction, historyStacks, status])
 
