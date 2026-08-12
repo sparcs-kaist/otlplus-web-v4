@@ -38,4 +38,26 @@ describe("LectureAddButton", () => {
 
         expect(onClick).toHaveBeenCalledOnce()
     })
+
+    it("does not expose an add activation path while disabled", () => {
+        const onClick = vi.fn()
+        render(
+            <LectureAddButton
+                ariaLabel="Add to timetable"
+                color="#000"
+                disabled
+                onClick={onClick}
+                size={15}
+            />,
+        )
+
+        const button = screen.getByRole("button", { name: "Add to timetable" })
+        expect(button).toBeDisabled()
+
+        fireEvent.keyDown(button, { key: "Enter" })
+        fireEvent.keyDown(button, { key: " " })
+        fireEvent.click(button)
+
+        expect(onClick).not.toHaveBeenCalled()
+    })
 })

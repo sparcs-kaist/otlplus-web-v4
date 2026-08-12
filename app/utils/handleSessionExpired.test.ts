@@ -124,4 +124,21 @@ describe("handleSessionExpired", () => {
         expect(mocks.clearQueryClient).toHaveBeenCalledTimes(2)
         expect(mocks.clearPersistedCache).toHaveBeenCalledTimes(2)
     })
+
+    it("does not re-run cleanup when the session is already cleared", async () => {
+        await handleSessionExpired()
+        mocks.resetUser.mockClear()
+        mocks.clearQueryClient.mockClear()
+        mocks.clearPersistedCache.mockClear()
+        mocks.removeLocalStorageItem.mockClear()
+
+        await handleSessionExpired()
+
+        expect(useUserStore.getState().status).toBe("idle")
+        expect(useUserStore.getState().user).toBeNull()
+        expect(mocks.resetUser).not.toHaveBeenCalled()
+        expect(mocks.clearQueryClient).not.toHaveBeenCalled()
+        expect(mocks.clearPersistedCache).not.toHaveBeenCalled()
+        expect(mocks.removeLocalStorageItem).not.toHaveBeenCalled()
+    })
 })

@@ -59,6 +59,18 @@ describe("resolveUserInfo", () => {
         ).toBeUndefined()
     })
 
+    it("preserves the current state after a non-HTTP failure", () => {
+        expect(
+            resolveUserInfo({
+                enabled: true,
+                isPending: false,
+                isError: true,
+                error: new TypeError("Failed to fetch"),
+                data: { id: 1 },
+            }),
+        ).toBeUndefined()
+    })
+
     it("returns authenticated user data on success", () => {
         const user = { id: 1 }
 
