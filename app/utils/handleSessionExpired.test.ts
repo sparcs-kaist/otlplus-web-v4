@@ -10,7 +10,7 @@ const mocks = vi.hoisted(() => ({
     clearQueryClient: vi.fn(),
     getLocalStorageItem: vi.fn(),
     removeLocalStorageItem: vi.fn(),
-    resetUser: vi.fn(),
+    resetUser: vi.fn(async () => {}),
 }))
 
 vi.mock("@/libs/mixpanel", () => ({ resetUser: mocks.resetUser }))
@@ -79,6 +79,23 @@ describe("handleSessionExpired", () => {
         expect(mocks.clearPersistedCache).toHaveBeenCalledOnce()
         expect(mocks.removeLocalStorageItem).toHaveBeenCalledWith("accessToken")
         expect(mocks.removeLocalStorageItem).toHaveBeenCalledWith("refreshToken")
+    })
+
+    it("waits for the analytics identity reset before clearing session state", async () => {
+        let finishReset: (() => void) | undefined
+        mocks.resetUser.mockImplementationOnce(
+            () =>
+                new Promise<void>((resolve) => {
+                    finishReset = resolve
+                }),
+        )
+
+        const expiration = handleSessionExpired()
+
+        expect(mocks.clearQueryClient).not.toHaveBeenCalled()
+        finishReset?.()
+        await expiration
+        expect(mocks.clearQueryClient).toHaveBeenCalledOnce()
     })
 
     it("clears a newly authenticated session after a previous expiration", async () => {

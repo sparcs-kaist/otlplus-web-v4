@@ -19,7 +19,7 @@ function hasStoredAuthCredentials(): boolean {
 }
 
 export async function clearClientSession(): Promise<void> {
-    resetUser()
+    await resetUser()
     useUserStore.getState().clearUser()
     useTimetableUIStore.getState().resetTimetableSelection()
     queryClient.clear()
