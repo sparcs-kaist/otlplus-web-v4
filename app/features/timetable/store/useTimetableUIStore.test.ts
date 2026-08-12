@@ -60,7 +60,7 @@ describe("timetable selection reset", () => {
 
         const state = useTimetableUIStore.getState()
         expect(state.currentTimetableId).toBeNull()
-        expect(state.currentTimetableName).toBe("")
+        expect(state.currentTimetableName).toBe("시간표 1")
         expect(state.autoSelectedSemesterKeys).toEqual([])
     })
 

@@ -129,12 +129,10 @@ export const useTimetableUIStore = create<TimetableUIState>((set) => ({
     resetTimetableSelection: () =>
         set((state) =>
             state.currentTimetableId === null &&
-            state.currentTimetableName === "" &&
             state.autoSelectedSemesterKeys.length === 0
                 ? state
                 : {
                       currentTimetableId: null,
-                      currentTimetableName: "",
                       autoSelectedSemesterKeys: [],
                   },
         ),

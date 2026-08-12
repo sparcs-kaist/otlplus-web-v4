@@ -54,7 +54,7 @@ describe("handleSessionExpired", () => {
 
         const timetableState = useTimetableUIStore.getState()
         expect(timetableState.currentTimetableId).toBeNull()
-        expect(timetableState.currentTimetableName).toBe("")
+        expect(timetableState.currentTimetableName).toBe("시간표 1")
         expect(timetableState.autoSelectedSemesterKeys).toEqual([])
     })
 
