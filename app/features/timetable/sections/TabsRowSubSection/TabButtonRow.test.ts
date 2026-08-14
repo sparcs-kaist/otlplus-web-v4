@@ -22,6 +22,7 @@ describe("getTimetableAutoSelection", () => {
                 currentTimetableId: null,
                 semesterKey: "2026-1",
                 autoSelectedSemesterKeys: [],
+                preserveMyTimetableSelection: false,
                 timetables: [timetable],
             }),
         ).toEqual({ semesterKey: "2026-1", timetableId: 42 })
@@ -34,6 +35,7 @@ describe("getTimetableAutoSelection", () => {
                 currentTimetableId: null,
                 semesterKey: "2026-3",
                 autoSelectedSemesterKeys: [],
+                preserveMyTimetableSelection: false,
                 timetables: [],
             }),
         ).toBeNull()
@@ -46,6 +48,7 @@ describe("getTimetableAutoSelection", () => {
                 currentTimetableId: null,
                 semesterKey: "2026-1",
                 autoSelectedSemesterKeys: ["2026-1"],
+                preserveMyTimetableSelection: false,
                 timetables: [timetable],
             }),
         ).toBeNull()
@@ -58,6 +61,7 @@ describe("getTimetableAutoSelection", () => {
                 currentTimetableId: null,
                 semesterKey: "2026-1",
                 autoSelectedSemesterKeys: ["2026-1", "2026-3"],
+                preserveMyTimetableSelection: false,
                 timetables: [timetable],
             }),
         ).toBeNull()
@@ -70,6 +74,7 @@ describe("getTimetableAutoSelection", () => {
                 currentTimetableId: null,
                 semesterKey: "2026-3",
                 autoSelectedSemesterKeys: ["2026-1"],
+                preserveMyTimetableSelection: false,
                 timetables: [timetable],
             }),
         ).toEqual({ semesterKey: "2026-3", timetableId: 42 })
@@ -82,9 +87,36 @@ describe("getTimetableAutoSelection", () => {
                 currentTimetableId: null,
                 semesterKey: "2026-3",
                 autoSelectedSemesterKeys: ["2026-3"],
+                preserveMyTimetableSelection: false,
                 timetables: [timetable],
             }),
         ).toBeNull()
+    })
+
+    it("preserves My Timetable while semester initialization is pending", () => {
+        expect(
+            getTimetableAutoSelection({
+                status: "success",
+                currentTimetableId: null,
+                semesterKey: "-1-1",
+                autoSelectedSemesterKeys: [],
+                preserveMyTimetableSelection: true,
+                timetables: [timetable],
+            }),
+        ).toBeNull()
+    })
+
+    it("does not suppress selection bookkeeping for an editable timetable", () => {
+        expect(
+            getTimetableAutoSelection({
+                status: "success",
+                currentTimetableId: 42,
+                semesterKey: "2026-1",
+                autoSelectedSemesterKeys: [],
+                preserveMyTimetableSelection: true,
+                timetables: [timetable],
+            }),
+        ).toEqual({ semesterKey: "2026-1", timetableId: null })
     })
 })
 
