@@ -60,4 +60,26 @@ describe("LectureAddButton", () => {
 
         expect(onClick).not.toHaveBeenCalled()
     })
+
+    it("exposes the disabled reason from a hoverable wrapper", () => {
+        const onClick = vi.fn()
+        render(
+            <LectureAddButton
+                ariaLabel="Add to timetable"
+                color="#000"
+                disabled
+                onClick={onClick}
+                size={15}
+                title="Cannot add lectures to My Timetable."
+            />,
+        )
+
+        const button = screen.getByRole("button", { name: "Add to timetable" })
+        const tooltipTarget = screen.getByTitle(
+            "Cannot add lectures to My Timetable.",
+        )
+
+        expect(tooltipTarget).not.toBe(button)
+        expect(tooltipTarget).toContainElement(button)
+    })
 })
