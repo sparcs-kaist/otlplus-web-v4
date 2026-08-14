@@ -75,9 +75,7 @@ describe("LectureAddButton", () => {
         )
 
         const button = screen.getByRole("button", { name: "Add to timetable" })
-        const tooltipTarget = screen.getByTitle(
-            "Cannot add lectures to My Timetable.",
-        )
+        const tooltipTarget = screen.getByTitle("Cannot add lectures to My Timetable.")
 
         expect(tooltipTarget).not.toBe(button)
         expect(tooltipTarget).toContainElement(button)
