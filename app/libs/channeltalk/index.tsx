@@ -22,6 +22,7 @@ import useUserStore from "@/utils/zustand/useUserStore"
 const ChannelTalkProvider = () => {
     const { user } = useUserStore()
     const pluginKey = clientEnv.VITE_CHANNELTALK_PLUGIN_KEY
+    const isChannelButtonHidden = clientEnv.VITE_CHANNELTALK_BUTTON_HIDDEN
     const isBootedRef = useRef(false)
 
     const bootChannelTalk = useCallback(() => {
@@ -31,6 +32,7 @@ const ChannelTalkProvider = () => {
 
         ChannelService.boot(
             {
+                hideChannelButtonOnBoot: isChannelButtonHidden,
                 pluginKey,
             },
             (error) => {
@@ -41,7 +43,7 @@ const ChannelTalkProvider = () => {
                 }
             },
         )
-    }, [pluginKey])
+    }, [isChannelButtonHidden, pluginKey])
 
     // Load and boot the SDK once on mount
     useEffect(() => {
