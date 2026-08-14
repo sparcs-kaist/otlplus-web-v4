@@ -18,6 +18,7 @@ import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
+import isLectureAddDisabled from "@/features/timetable/utils/isLectureAddDisabled"
 import { trackEvent } from "@/libs/mixpanel"
 import { useAPI } from "@/utils/api/useAPI"
 import checkOverlap from "@/utils/timetable/checkOverlap"
@@ -166,8 +167,17 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
 
     const handleAddToTimetable = (lecture: Lecture) => {
         if (!timetableLectures) return
-        if (timetableLectures.some((lec) => checkOverlap(lec.classes, lecture.classes))) {
-            alert(t("timetable.addLectureConflict"))
+        const hasOverlap = timetableLectures.some((lec) =>
+            checkOverlap(lec.classes, lecture.classes),
+        )
+        if (
+            isLectureAddDisabled({
+                status,
+                currentTimetableId: currentTimetableId ?? null,
+                hasOverlap,
+            })
+        ) {
+            if (hasOverlap) alert(t("timetable.addLectureConflict"))
             return
         }
         addLectures([lecture])
@@ -353,7 +363,7 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                                 </Button>
                             )}
 
-                            {(currentTimetableId || status !== "success") &&
+                            {(currentTimetableId != null || status === "idle") &&
                                 (!timetableLectures?.some(
                                     (lec) => lec.id === selectedLecture.id,
                                 ) ? (

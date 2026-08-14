@@ -52,6 +52,7 @@ interface TimetableUIState {
         idOrUpdater: number | null | ((prev: number | null) => number | null),
     ) => void
     setCurrentTimetableName: (nameOrUpdater: string | ((prev: string) => string)) => void
+    resetTimetableSelection: () => void
     setYear: (yearOrUpdater: number | ((prev: number) => number)) => void
     setSemesterEnum: (
         semesterOrUpdater: SemesterEnum | ((prev: SemesterEnum) => SemesterEnum),
@@ -125,6 +126,16 @@ export const useTimetableUIStore = create<TimetableUIState>((set) => ({
             currentTimetableName:
                 typeof val === "function" ? val(state.currentTimetableName) : val,
         })),
+    resetTimetableSelection: () =>
+        set((state) =>
+            state.currentTimetableId === null &&
+            state.autoSelectedSemesterKeys.length === 0
+                ? state
+                : {
+                      currentTimetableId: null,
+                      autoSelectedSemesterKeys: [],
+                  },
+        ),
     setYear: (val) =>
         set((state) => ({
             year: typeof val === "function" ? val(state.year) : val,

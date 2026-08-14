@@ -1,15 +1,17 @@
-import { memo } from "react"
+import { type HTMLAttributes, type MouseEventHandler, type ReactNode, memo } from "react"
 
 import styled from "@emotion/styled"
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlined"
 import { ThemeProvider, createTheme } from "@mui/material"
 
-interface IconProps {
-    children: React.ReactNode
+interface IconProps extends Omit<
+    HTMLAttributes<HTMLDivElement>,
+    "children" | "color" | "onClick"
+> {
+    children: ReactNode
     size: number
-    onClick?: (e: React.MouseEvent) => void
+    onClick?: MouseEventHandler<HTMLDivElement>
     color?: string
-    [key: string]: any // Allow additional properties
 }
 
 const theme = createTheme()

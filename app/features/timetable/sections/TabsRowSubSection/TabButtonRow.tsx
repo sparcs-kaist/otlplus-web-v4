@@ -295,7 +295,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                 ? t("timetable.myTimetable")
                 : localTimetables.find((t) => t.id === currentTimetableId)?.name || "",
         )
-    }, [currentTimetableId])
+    }, [currentTimetableId, localTimetables, setCurrentTimetableName, t])
 
     const handleDragStart = (event: DragStartEvent) => {
         setActiveId(event.active.id as number)

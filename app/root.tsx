@@ -15,6 +15,7 @@ import {
 import Header from "@/common/components/guideline/Header"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import { clientEnv } from "@/env"
+import { DEFAULT_DOCUMENT_LANGUAGE } from "@/libs/i18n/resolveDocumentLanguage"
 import { initMixpanel } from "@/libs/mixpanel"
 import { useGoogleAnalytics } from "@/utils/googleAnalytics"
 
@@ -61,7 +62,7 @@ export const links: Route.LinksFunction = () => [
 
 export function Layout({ children }: { children: React.ReactNode }) {
     return (
-        <html lang="en">
+        <html lang={DEFAULT_DOCUMENT_LANGUAGE}>
             <head>
                 <meta charSet="utf-8" />
                 <meta name="viewport" content="width=device-width, initial-scale=1" />

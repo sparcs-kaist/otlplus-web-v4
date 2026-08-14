@@ -20,7 +20,12 @@ export function createIDBPersister(): Persister {
         restoreClient: async () => {
             const cached = await get<string>(IDB_KEY)
             if (!cached) return undefined
-            return deserialize(cached)
+            try {
+                return deserialize(cached)
+            } catch {
+                await del(IDB_KEY)
+                return undefined
+            }
         },
         removeClient: async () => {
             await del(IDB_KEY)

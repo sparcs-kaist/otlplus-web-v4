@@ -189,12 +189,12 @@ export function useTimetableEditor({
 
                 queryClient.setQueriesData(
                     { queryKey: [`/timetables/${currentTimetableId}`] },
-                    (old: any) => {
+                    (old: { lectures: Lecture[] } | undefined) => {
                         if (!old) return old
                         return {
                             ...old,
                             lectures: old.lectures.filter(
-                                (l: any) => l.id !== variables.lectureId,
+                                (l) => l.id !== variables.lectureId,
                             ),
                         }
                     },
@@ -214,6 +214,9 @@ export function useTimetableEditor({
 
     const addLectures = useCallback(
         (lectures: Lecture[], options: { record?: boolean } = { record: true }) => {
+            // 인증 확정 전에는 로그인/비로그인 저장소를 고를 수 없어 편집을 보류한다
+            if (status === "loading") return
+
             if (status !== "success") {
                 setNonLoginTimetable((prev) => {
                     const newLectures = lectures.filter(
@@ -269,6 +272,8 @@ export function useTimetableEditor({
                 delay: false,
             },
         ) => {
+            if (status === "loading") return
+
             const removedNonLogin =
                 status !== "success"
                     ? nonLoginTimetable.filter((lec) => lectureIds.includes(lec.id))
@@ -361,6 +366,8 @@ export function useTimetableEditor({
     }
 
     const undo = useCallback(() => {
+        if (status === "loading") return null
+
         const currentStack = historyStacks[key] || { undo: [], redo: [] }
         if (currentStack.undo.length === 0) return null
 
@@ -383,11 +390,13 @@ export function useTimetableEditor({
         isUndoRedoActionRef.current = false
 
         return reversedTransaction.flatMap((action: TimetableAction) =>
-            action.lectures.map((l: any) => l.lectureId),
+            action.lectures.map((l) => l.lectureId),
         )
-    }, [key, executeAction, historyStacks])
+    }, [key, executeAction, historyStacks, status])
 
     const redo = useCallback(() => {
+        if (status === "loading") return null
+
         const currentStack = historyStacks[key] || { undo: [], redo: [] }
         if (currentStack.redo.length === 0) return null
 
@@ -409,9 +418,9 @@ export function useTimetableEditor({
         isUndoRedoActionRef.current = false
 
         return transactionToRedo.flatMap((action: TimetableAction) =>
-            action.lectures.map((l: any) => l.lectureId),
+            action.lectures.map((l) => l.lectureId),
         )
-    }, [key, executeAction, historyStacks])
+    }, [key, executeAction, historyStacks, status])
 
     return {
         addLectures,

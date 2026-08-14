@@ -30,7 +30,7 @@ export const general = {
             "Unable to connect to server. Please check your internet connection.",
         goHome: "Go Home",
         retry: "Retry",
-        banner: "You are offline. Timetable is available for viewing.",
+        banner: "You are offline. Only data loaded in this session is available.",
         navDisabled: "Not available in offline mode",
     },
     serverError: {

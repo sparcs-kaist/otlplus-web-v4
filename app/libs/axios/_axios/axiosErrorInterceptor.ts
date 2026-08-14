@@ -1,6 +1,7 @@
 import * as Sentry from "@sentry/react"
 import { AxiosError, type AxiosResponse, HttpStatusCode } from "axios"
 
+import { handleSessionExpired } from "@/utils/handleSessionExpired"
 import useBackendStatusStore from "@/utils/zustand/useBackendStatusStore"
 
 function isNetworkError(error: AxiosError): boolean {
@@ -80,10 +81,9 @@ const errorInterceptor = {
 
         switch (status) {
             case HttpStatusCode.Unauthorized: {
-                // if (typeof window !== "undefined") {
-                //     const { handleLogout } = await import("@/utils/handleLoginLogout")
-                //     await handleLogout()
-                // }
+                if (typeof window !== "undefined") {
+                    await handleSessionExpired()
+                }
                 return Promise.reject(error)
             }
             case HttpStatusCode.Forbidden: {
