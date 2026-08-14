@@ -4,6 +4,7 @@ import {
     type UseMutateFunction,
     type UseMutationOptions,
     type UseMutationResult,
+    type UseQueryOptions,
     type UseQueryResult,
     useMutation,
     useQuery,
@@ -29,6 +30,7 @@ type UseAPIQueryOptions<Res> = {
     enabled?: boolean
     staleTime?: number
     gcTime?: number
+    retry?: UseQueryOptions<Res, Error>["retry"]
     select?: (data: Res) => Res
 }
 
@@ -75,6 +77,7 @@ export function useAPI<
     const responseSchema = getZodSchemaResponse(method, getOriginalPathValue(path))
 
     if (method === "GET") {
+        const retry = (ops as UseAPIQueryOptions<Res>).retry ?? 1
         const [params, setParams] = useState<Req>(null as Req)
         const query = useQuery<Res>({
             queryKey: [path, params, i18n.resolvedLanguage],
@@ -90,7 +93,7 @@ export function useAPI<
                 return data
             },
             select: select,
-            retry: 1,
+            retry,
             staleTime,
             gcTime,
             enabled:
