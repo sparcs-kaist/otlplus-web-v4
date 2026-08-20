@@ -37,7 +37,7 @@ export async function clearClientSession(): Promise<void> {
         try {
             removeLocalStorageItem(key)
         } catch (error) {
-            logger.warn(`Failed to clear ${key}`, error)
+            logger.warn("Local storage cleanup failed", { key }, error)
         }
     }
 

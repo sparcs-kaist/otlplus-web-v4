@@ -1,41 +1,18 @@
-import { AxiosError, type InternalAxiosRequestConfig } from "axios"
-import log from "loglevel"
+import { type AxiosError, type InternalAxiosRequestConfig } from "axios"
 
 import { clientEnv } from "@/env"
 import logger from "@/utils/logger"
 
-export const BASE_URL = clientEnv.VITE_APP_API_URL ?? ""
-
 const mockInterceptor = {
-    async onFulfilled(config: InternalAxiosRequestConfig) {
-        const responseConfig = { ...config }
-        try {
-            const parsedUrl = new URL(config.url ?? "/", BASE_URL)
-
-            if (parsedUrl.host != null) {
-                return responseConfig
-            }
-        } catch (error) {
-            logger.error("Mock interceptor error", error)
-        }
-
+    onFulfilled(config: InternalAxiosRequestConfig) {
         if (clientEnv.VITE_APP_API_MOCK_MODE) {
-            const method = config?.method
-            const url = config?.url
-            const requestBody = config?.data || {}
-            const queryParams = config?.params || {}
-            log.debug(config)
-            log.debug(
-                `${method} ${url}\nbody: ${JSON.stringify(
-                    requestBody,
-                )}\nqueryParams: ${JSON.stringify(queryParams)}`,
-            )
-            return responseConfig
+            logger.debug("Mock API request", {
+                method: config.method,
+                url: config.url,
+            })
         }
 
-        responseConfig.baseURL = BASE_URL
-
-        return responseConfig
+        return config
     },
     onRejected(error: AxiosError) {
         return Promise.reject(error)
