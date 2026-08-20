@@ -10,6 +10,7 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import type { Department } from "@/common/schemas/department"
 import DepartmentSearchArea from "@/features/account/components/DepartmentSearchArea"
+import { queryKeys } from "@/libs/query/queryKeys"
 import { useAPI } from "@/utils/api/useAPI"
 
 const AccountInterestedMajorSectionWrapper = styled(FlexWrapper)`
@@ -45,7 +46,7 @@ const Index: React.FC<AccountInterestedMajorSectionProps> = ({ userInfo }) => {
         `/users/${userInfo?.id}/interested-departments`,
         {
             onSuccess: () => {
-                queryClient.invalidateQueries({ queryKey: ["/users/info"] })
+                queryClient.invalidateQueries({ queryKey: [queryKeys.userInfo] })
             },
         },
     )
