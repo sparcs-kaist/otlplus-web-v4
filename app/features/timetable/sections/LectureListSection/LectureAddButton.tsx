@@ -5,34 +5,42 @@ import AddIcon from "@mui/icons-material/Add"
 
 import Icon from "@/common/primitives/Icon"
 
-const Button = styled.button<{ iconSize: number }>`
-    width: ${({ iconSize }) => iconSize}px;
-    height: ${({ iconSize }) => iconSize}px;
+const Button = styled.button<{ iconSize: number; blocked: boolean }>`
+    width: ${({ iconSize }) => Math.max(iconSize, 28)}px;
+    height: ${({ iconSize }) => Math.max(iconSize, 28)}px;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 0;
     border: 0;
+    border-radius: 6px;
     background: transparent;
     color: inherit;
-    cursor: pointer;
+    cursor: ${({ blocked }) => (blocked ? "not-allowed" : "pointer")};
+    opacity: ${({ blocked }) => (blocked ? 0.55 : 1)};
+
+    &:focus-visible {
+        outline: 2px solid ${({ theme }) => theme.colors.Highlight.default};
+        outline-offset: 2px;
+    }
 
     &:disabled {
         cursor: default;
-        opacity: 0.3;
     }
 `
 
 interface LectureAddButtonProps {
-    ariaLabel: string
-    color: string
-    disabled: boolean
-    onClick: MouseEventHandler<HTMLButtonElement>
-    size: number
-    title?: string
+    readonly ariaDisabled?: boolean
+    readonly ariaLabel: string
+    readonly color: string
+    readonly disabled: boolean
+    readonly onClick: MouseEventHandler<HTMLButtonElement>
+    readonly size: number
+    readonly title?: string
 }
 
 export default function LectureAddButton({
+    ariaDisabled = false,
     ariaLabel,
     color,
     disabled,
@@ -43,7 +51,9 @@ export default function LectureAddButton({
     return (
         <Button
             type="button"
+            aria-disabled={ariaDisabled}
             aria-label={ariaLabel}
+            blocked={ariaDisabled || disabled}
             disabled={disabled}
             iconSize={size}
             onClick={onClick}
