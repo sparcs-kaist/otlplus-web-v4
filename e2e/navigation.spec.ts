@@ -19,6 +19,12 @@ test.describe("Navigation", () => {
         await expect(page).toHaveURL(/timetable/)
     })
 
+    test("should navigate to planner page", async ({ page }) => {
+        await page.goto("/planner")
+        await page.waitForLoadState("domcontentloaded")
+        await expect(page).toHaveURL(/planner/)
+    })
+
     test("should navigate to write-reviews page", async ({ page }) => {
         await page.goto("/write-reviews")
         await page.waitForLoadState("domcontentloaded")
