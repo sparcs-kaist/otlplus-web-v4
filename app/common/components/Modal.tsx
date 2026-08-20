@@ -1,9 +1,11 @@
-import { memo, useEffect, useRef } from "react"
+import { memo, useId, useRef } from "react"
 
 import styled from "@emotion/styled"
 import CloseIcon from "@mui/icons-material/Close"
 import ReactDOM from "react-dom"
+import { useTranslation } from "react-i18next"
 
+import useDialogFocusTrap from "@/common/components/guideline/Header/useDialogFocusTrap"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 
@@ -33,6 +35,10 @@ const ModalContainer = styled.div<{ fullScreen: boolean }>`
     gap: 20px;
     pointer-events: auto;
     overflow: auto;
+
+    &:focus {
+        outline: none;
+    }
 `
 
 const HeaderWrapper = styled.div`
@@ -42,23 +48,41 @@ const HeaderWrapper = styled.div`
     align-items: center;
 `
 
-interface ModalProps {
-    isOpen: boolean
-    onClose: () => void
-    children: React.ReactNode
-    title?: string
-    header?: boolean
-    fullScreen?: boolean
-}
-
-const CloseIconWrapper = styled.div`
+const CloseButton = styled.button`
     width: 32px;
     height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     padding: 4px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
     color: ${({ theme }) => theme.colors.Text.placeholder};
+    cursor: pointer;
+
+    &:hover {
+        background-color: ${({ theme }) => theme.colors.Background.Button.default};
+    }
+
+    &:focus-visible {
+        outline: 2px solid ${({ theme }) => theme.colors.Highlight.default};
+        outline-offset: 2px;
+    }
 `
 
+interface ModalProps {
+    readonly ariaLabel?: string
+    readonly isOpen: boolean
+    readonly onClose: () => void
+    readonly children: React.ReactNode
+    readonly title?: string
+    readonly header?: boolean
+    readonly fullScreen?: boolean
+}
+
 const Modal: React.FC<ModalProps> = ({
+    ariaLabel,
     isOpen,
     onClose,
     children,
@@ -66,70 +90,62 @@ const Modal: React.FC<ModalProps> = ({
     header = true,
     fullScreen = false,
 }) => {
+    const { t } = useTranslation()
+    const titleId = useId()
     const mouseDownTargetRef = useRef<EventTarget | null>(null)
+    const dialogRef = useRef<HTMLDivElement>(null)
+    const closeButtonRef = useRef<HTMLButtonElement>(null)
+    const hasTitle = header && title.length > 0
 
-    useEffect(() => {
-        if (!isOpen) return
-
-        const handleEsc = (event: KeyboardEvent) => {
-            const target = event.target as HTMLElement
-            if (
-                target.tagName === "INPUT" ||
-                target.tagName === "TEXTAREA" ||
-                target.isContentEditable
-            ) {
-                return
-            }
-            if (event.key === "Escape") {
-                onClose()
-            }
-        }
-        window.addEventListener("keydown", handleEsc)
-        return () => {
-            window.removeEventListener("keydown", handleEsc)
-        }
-    }, [isOpen, onClose])
-
-    // 모달 밖 스크롤 방지
-    useEffect(() => {
-        if (isOpen) {
-            document.body.style.overflow = "hidden"
-        } else {
-            document.body.style.overflow = "auto"
-        }
-
-        return () => {
-            document.body.style.overflow = "auto"
-        }
-    }, [isOpen])
+    useDialogFocusTrap({
+        dialogRef,
+        initialFocusRef: header ? closeButtonRef : dialogRef,
+        onClose,
+        open: isOpen,
+    })
 
     if (!isOpen) return null
 
     return ReactDOM.createPortal(
         <Overlay
-            onMouseDown={(e) => {
-                mouseDownTargetRef.current = e.target
+            onMouseDown={(event) => {
+                mouseDownTargetRef.current = event.target
             }}
-            onMouseUp={(e) => {
+            onMouseUp={(event) => {
                 if (
-                    mouseDownTargetRef.current === e.currentTarget &&
-                    e.target === e.currentTarget
+                    mouseDownTargetRef.current === event.currentTarget &&
+                    event.target === event.currentTarget
                 ) {
                     onClose()
                 }
             }}
         >
-            <ModalContainer onClick={(e) => e.stopPropagation()} fullScreen={fullScreen}>
+            <ModalContainer
+                ref={dialogRef}
+                aria-label={hasTitle ? undefined : ariaLabel}
+                aria-labelledby={hasTitle ? titleId : undefined}
+                aria-modal="true"
+                fullScreen={fullScreen}
+                role="dialog"
+                tabIndex={-1}
+                onClick={(event) => event.stopPropagation()}
+            >
                 {header && (
                     <HeaderWrapper>
-                        <Typography type="BigBold" color="Text.default">
+                        <Typography id={titleId} type="BigBold" color="Text.default">
                             {title}
                         </Typography>
-                        <CloseIconWrapper>
-                            <Icon onClick={onClose} size={24}>
+                        <CloseButton
+                            ref={closeButtonRef}
+                            type="button"
+                            aria-label={t("common.search.close")}
+                            title={t("common.search.close")}
+                            onClick={onClose}
+                        >
+                            <Icon size={24}>
                                 <CloseIcon />
                             </Icon>
-                        </CloseIconWrapper>
+                        </CloseButton>
                     </HeaderWrapper>
                 )}
                 {children}
