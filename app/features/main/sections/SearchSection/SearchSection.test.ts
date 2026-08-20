@@ -1,8 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import type { SearchParamsType } from "@/common/components/search/SearchArea"
-
-import createDictionarySearchParams from "./createDictionarySearchParams"
+import { createDictionarySearchParams } from "@/features/dictionary/utils/dictionarySearchParams"
 
 describe("createDictionarySearchParams", () => {
     it("omits unresolved array values", () => {
