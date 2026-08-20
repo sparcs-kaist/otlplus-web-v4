@@ -41,10 +41,6 @@ export default function TimetableInfoSection({
 }: TimetableInfoSectionProps) {
     const isLaptop = useIsDevice("laptop")
 
-    const timetableName = useTimetableUIStore((s) => s.currentTimetableName)
-    const year = useTimetableUIStore((s) => s.year)
-    const semester = useTimetableUIStore((s) => s.semesterEnum)
-
     const selectedLectures = useTimetableUIStore((s) => s.selectedLectures)
     const hoveredLectures = useTimetableUIStore((s) => s.hoveredLectures)
     const setHover = useTimetableUIStore((s) => s.setHoveredLectures)
@@ -91,14 +87,7 @@ export default function TimetableInfoSection({
             {!isLaptop && <StyledDivider direction="row" />}
 
             {/* 내보내기 버튼들 */}
-            {!isLaptop && (
-                <UtilButtonsSubSection
-                    timetableName={timetableName}
-                    timetableLectures={timetableLectures}
-                    year={year}
-                    semester={semester}
-                />
-            )}
+            {!isLaptop && <UtilButtonsSubSection timetableLectures={timetableLectures} />}
         </InfoArea>
     )
 }

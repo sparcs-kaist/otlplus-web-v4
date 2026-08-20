@@ -26,16 +26,16 @@ export type SearchParamsType = {
     department?: number[]
     level?: number[]
     term?: number
-    time?: TimeBlock[]
+    time?: TimeBlock
     keyword: string
 }
 
 type TimeProps<ops extends readonly SearchOptions[]> = "time" extends ops[number]
     ? {
-          timeFilters: TimeBlock[] | null
-          setTimeFilters: (timeFilters: TimeBlock[] | null) => void
+          timeFilter: TimeBlock | null
+          setTimeFilter: (timeFilter: TimeBlock | null) => void
       }
-    : { timeFilters?: never; setTimeFilters?: never }
+    : { timeFilter?: never; setTimeFilter?: never }
 
 type SearchAreaProps<ops extends readonly SearchOptions[]> = {
     options: ops
@@ -53,8 +53,8 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
     options,
     onSearch,
     SearchIcon,
-    timeFilters,
-    setTimeFilters,
+    timeFilter,
+    setTimeFilter,
 }: SearchAreaProps<ops>) {
     const { t } = useTranslation()
     const theme = useTheme()
@@ -69,9 +69,9 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
     const [resetTrigger, setResetTrigger] = useState(false)
 
     useEffect(() => {
-        if (!timeFilters) return
+        if (!timeFilter) return
         setOpen(true)
-    }, [timeFilters])
+    }, [timeFilter])
 
     const handleKeyDown = (
         event: React.KeyboardEvent<HTMLInputElement>,
@@ -120,7 +120,7 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
                 const value = chipsOptions[key]
 
                 if (value != undefined) {
-                    if (key == "time") result[key] = value as TimeBlock[]
+                    if (key == "time") result[key] = value as TimeBlock
                     else {
                         if (isSingleSelectOption(key))
                             result[key] = (value as [any, string])[0]
@@ -151,14 +151,14 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
 
     function withTimeFilter<T extends readonly SearchOptions[]>(
         options: T,
-        timeFilters?: TimeBlock[] | null,
-    ): Pick<SearchFilterAreaProps<T>, "timeFilters"> {
-        return options.includes("time") && timeFilters != undefined
-            ? ({ timeFilters: timeFilters, setTimeFilters: setTimeFilters } as Pick<
+        timeFilter?: TimeBlock | null,
+    ): Pick<SearchFilterAreaProps<T>, "timeFilter"> {
+        return options.includes("time") && timeFilter != undefined
+            ? ({ timeFilter: timeFilter, setTimeFilter: setTimeFilter } as Pick<
                   SearchFilterAreaProps<T>,
-                  "timeFilters"
+                  "timeFilter"
               >)
-            : ({} as Pick<SearchFilterAreaProps<T>, "timeFilters">)
+            : ({} as Pick<SearchFilterAreaProps<T>, "timeFilter">)
     }
 
     return (
@@ -227,7 +227,7 @@ function SearchArea<const ops extends readonly SearchOptions[]>({
                         <SearchFilterArea
                             options={options}
                             onChange={onChange}
-                            {...(withTimeFilter(options, timeFilters) as any)}
+                            {...(withTimeFilter(options, timeFilter) as any)}
                             resetTrigger={resetTrigger}
                             onResetTriggerComplete={() => {
                                 setResetTrigger(false)
@@ -272,8 +272,8 @@ const SearchAreaMemo = memo(SearchArea, (prev, next) => {
         prev.options === next.options &&
         prev.onSearch === next.onSearch &&
         prev.SearchIcon === next.SearchIcon &&
-        prev.timeFilters === next.timeFilters &&
-        prev.setTimeFilters === next.setTimeFilters
+        prev.timeFilter === next.timeFilter &&
+        prev.setTimeFilter === next.setTimeFilter
     )
 }) as typeof SearchArea
 export default SearchAreaMemo

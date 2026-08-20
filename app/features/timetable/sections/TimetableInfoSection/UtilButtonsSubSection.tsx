@@ -86,6 +86,8 @@ export default function UtilButtonsSubSection({
     const setIsCustomBlockSectionOpen = useTimetableUIStore(
         (s) => s.setIsCustomBlockSectionOpen,
     )
+    const setSelectedCustomBlock = useTimetableUIStore((s) => s.setSelectedCustomBlock)
+    const setTimeFilter = useTimetableUIStore((s) => s.setTimeFilter)
 
     const { query } = useAPI("GET", "/semesters")
 
@@ -224,6 +226,8 @@ export default function UtilButtonsSubSection({
             </ExportButton>
             <ExportButton
                 onClick={() => {
+                    setSelectedCustomBlock(null)
+                    setTimeFilter(null)
                     setIsCustomBlockSectionOpen(true)
                 }}
                 disabled={currentTimetableId === null}
@@ -235,7 +239,6 @@ export default function UtilButtonsSubSection({
                             ? theme.colors.Text.disable
                             : theme.colors.Highlight.default
                     }
-                    disabled={currentTimetableId === null}
                 >
                     <AddBoxIcon />
                 </Icon>

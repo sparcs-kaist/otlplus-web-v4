@@ -1,14 +1,9 @@
-import {
-    type Dispatch,
-    type SetStateAction,
-    memo,
-    useCallback,
-    useEffect,
-    useState,
-} from "react"
+import { memo, useCallback, useEffect, useState } from "react"
 
 import styled from "@emotion/styled"
 import { Close, Delete } from "@mui/icons-material"
+import { useQueryClient } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
 
 import Button from "@/common/components/Button"
 import TextInput from "@/common/components/search/TextInput"
@@ -18,10 +13,9 @@ import Icon from "@/common/primitives/Icon"
 import { IconButton } from "@/common/primitives/IconButton"
 import TextInputArea from "@/common/primitives/TextInputArea"
 import Typography from "@/common/primitives/Typography"
-import { type CustomBlock } from "@/common/schemas/customBlock"
-import { type TimeBlock } from "@/common/schemas/timeblock"
+import type { CustomBlock } from "@/common/schemas/customBlock"
+import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
 import { useAPI } from "@/utils/api/useAPI"
-import useUserStore from "@/utils/zustand/useUserStore"
 
 const CustomBlockSectionInner = styled(FlexWrapper)`
     ::-webkit-scrollbar {
@@ -30,96 +24,113 @@ const CustomBlockSectionInner = styled(FlexWrapper)`
     }
 `
 
-interface CustomBlockSectionProps {
-    customBlocks: CustomBlock[]
-    customBlock: CustomBlock | null
-    currentTimetableId: number | null
-    currentTimetableName: string
-    timeBlocks: TimeBlock[] | null
-    setTimeBlocks: Dispatch<SetStateAction<TimeBlock[] | null>>
-    setIsCustomBlockSectionOpen?: Dispatch<SetStateAction<boolean>>
-}
+function CustomBlockSection({ customBlocks }: { customBlocks: CustomBlock[] }) {
+    const { t } = useTranslation()
+    const queryClient = useQueryClient()
 
-function CustomBlockSection({
-    customBlocks,
-    customBlock,
-    currentTimetableId,
-    currentTimetableName,
-    timeBlocks,
-    setTimeBlocks,
-    setIsCustomBlockSectionOpen,
-}: CustomBlockSectionProps) {
-    const [title, setTitle] = useState(customBlock?.name ?? "")
+    const currentTimetableId = useTimetableUIStore((s) => s.currentTimetableId)
+    const currentTimetableName = useTimetableUIStore((s) => s.currentTimetableName)
+    const customBlock = useTimetableUIStore((s) => s.selectedCustomBlock)
+    const setSelectedCustomBlock = useTimetableUIStore((s) => s.setSelectedCustomBlock)
+    const setIsCustomBlockSectionOpen = useTimetableUIStore(
+        (s) => s.setIsCustomBlockSectionOpen,
+    )
+    const timeBlock = useTimetableUIStore((s) => s.timeFilter)
+    const setTimeBlock = useTimetableUIStore((s) => s.setTimeFilter)
+
+    const [title, setTitle] = useState(customBlock?.block_name ?? "")
     const [place, setPlace] = useState(customBlock?.place ?? "")
-    const [description, setDescription] = useState("")
 
-    const { status } = useUserStore()
+    const closeEditor = useCallback(() => {
+        setIsCustomBlockSectionOpen(false)
+        setSelectedCustomBlock(null)
+        setTimeBlock(null)
+    }, [setIsCustomBlockSectionOpen, setSelectedCustomBlock, setTimeBlock])
 
-    const { requestFunction: postCustomBlock } = useAPI(
+    const refreshAndClose = useCallback(() => {
+        void queryClient.invalidateQueries({
+            queryKey: [`/timetables/${currentTimetableId}/custom-blocks`],
+        })
+        closeEditor()
+    }, [closeEditor, currentTimetableId, queryClient])
+
+    const { mutation: postMutation, requestFunction: postCustomBlock } = useAPI(
         "POST",
         `/timetables/${currentTimetableId}/custom-blocks`,
-        {
-            enabled: currentTimetableId !== null && status === "success",
-        },
+        { onSuccess: refreshAndClose },
     )
-
-    const { requestFunction: patchCustomBlock } = useAPI(
+    const { mutation: patchMutation, requestFunction: patchCustomBlock } = useAPI(
         "PATCH",
         `/timetables/${currentTimetableId}/custom-blocks/${customBlock?.id}`,
-        {
-            enabled:
-                currentTimetableId !== null &&
-                customBlock?.id !== null &&
-                status === "success",
-        },
+        { onSuccess: refreshAndClose },
+    )
+    const { mutation: deleteMutation, requestFunction: deleteCustomBlock } = useAPI(
+        "DELETE",
+        `/timetables/${currentTimetableId}/custom-blocks/${customBlock?.id}`,
+        { onSuccess: refreshAndClose },
     )
 
     useEffect(() => {
-        setTitle(customBlock?.name ?? "")
+        setTitle(customBlock?.block_name ?? "")
         setPlace(customBlock?.place ?? "")
-        setDescription("")
-    }, [customBlock])
+        if (customBlock) {
+            setTimeBlock({
+                day: customBlock.day,
+                begin: customBlock.begin,
+                end: customBlock.end,
+            })
+        }
+    }, [customBlock, setTimeBlock])
 
-    useEffect(() => {
-        console.log("timeBlocks", timeBlocks)
-    }, [timeBlocks])
-
-    const handleDelete = useCallback(() => {
-        setIsCustomBlockSectionOpen?.(false)
-    }, [setIsCustomBlockSectionOpen])
-
-    const handleClose = useCallback(() => {
-        setIsCustomBlockSectionOpen?.(false)
-    }, [setIsCustomBlockSectionOpen])
+    const validate = useCallback(() => {
+        if (!title.trim()) {
+            alert(t("timetable.customBlock.errorNameRequired"))
+            return false
+        }
+        if (!timeBlock || timeBlock.begin >= timeBlock.end) {
+            alert(t("timetable.customBlock.errorTimeInvalid"))
+            return false
+        }
+        if (
+            customBlocks.some(
+                (block) =>
+                    block.id !== customBlock?.id &&
+                    block.day === timeBlock.day &&
+                    block.begin < timeBlock.end &&
+                    timeBlock.begin < block.end,
+            )
+        ) {
+            alert(t("timetable.customBlock.overlap"))
+            return false
+        }
+        return true
+    }, [customBlock?.id, customBlocks, t, timeBlock, title])
 
     const handleSave = useCallback(() => {
-        setIsCustomBlockSectionOpen?.(false)
+        if (!timeBlock || !validate()) return
         patchCustomBlock({
-            block_name: title,
-            place: place,
+            block_name: title.trim(),
+            place: place.trim(),
+            day: timeBlock.day,
+            begin: timeBlock.begin,
+            end: timeBlock.end,
         })
-    }, [setIsCustomBlockSectionOpen])
+    }, [patchCustomBlock, place, timeBlock, title, validate])
 
     const handlePost = useCallback(() => {
-        setIsCustomBlockSectionOpen?.(false)
-        customBlocks.forEach((block) => {
-            if (
-                block.day === timeBlocks?.[0]?.day &&
-                block.begin < timeBlocks?.[0]?.end &&
-                block.end > timeBlocks?.[0]?.begin
-            ) {
-                alert("해당시간과 겹치는 커스텀 블록이 있습니다.")
-                return
-            }
-        })
+        if (!timeBlock || !validate()) return
         postCustomBlock({
-            block_name: title,
-            place: place,
-            day: timeBlocks?.[0]?.day ?? 0,
-            begin: timeBlocks?.[0]?.begin ?? 0,
-            end: timeBlocks?.[0]?.end ?? 0,
+            block_name: title.trim(),
+            place: place.trim(),
+            day: timeBlock.day,
+            begin: timeBlock.begin,
+            end: timeBlock.end,
         })
-    }, [setIsCustomBlockSectionOpen])
+    }, [place, postCustomBlock, timeBlock, title, validate])
+
+    const isPending =
+        postMutation.isPending || patchMutation.isPending || deleteMutation.isPending
+    const canSubmit = Boolean(title.trim() && timeBlock && !isPending)
 
     return (
         <CustomBlockSectionInner
@@ -138,130 +149,78 @@ function CustomBlockSection({
                         align="center"
                     >
                         <TextInput
-                            placeholder="제목 추가"
+                            placeholder={t("timetable.customBlock.name")}
                             value={title}
                             handleChange={setTitle}
                             style={{ fontSize: "20px", paddingLeft: "0px" }}
                         />
                         <FlexWrapper direction="row" gap={0}>
                             <IconButton
-                                styles={
-                                    customBlock
-                                        ? undefined
-                                        : {
-                                              color: "rgba(0, 0, 0, 0.2)",
-                                              pointerEvents: "none",
-                                          }
+                                aria-label="Delete custom block"
+                                styles={customBlock ? undefined : { display: "none" }}
+                                onClick={
+                                    customBlock && !isPending
+                                        ? () => deleteCustomBlock({})
+                                        : undefined
                                 }
-                                onClick={customBlock ? handleDelete : undefined}
                             >
-                                <Icon
-                                    disabled={!customBlock}
-                                    size={20}
-                                    onClick={customBlock ? () => {} : undefined}
-                                >
+                                <Icon size={20}>
                                     <Delete />
                                 </Icon>
                             </IconButton>
-                            <IconButton onClick={handleClose}>
-                                <Icon size={20} onClick={() => {}}>
+                            <IconButton
+                                aria-label="Close custom block editor"
+                                onClick={closeEditor}
+                            >
+                                <Icon size={20}>
                                     <Close />
                                 </Icon>
                             </IconButton>
                         </FlexWrapper>
                     </FlexWrapper>
                     <FlexWrapper direction="row" gap={10}>
-                        <FlexWrapper direction="column" padding="4px 0px" gap={0}>
-                            <Typography type="NormalBold" color="Text.light">
-                                시간표
-                            </Typography>
-                        </FlexWrapper>
-                        <FlexWrapper direction="column" padding="4px 0px" gap={0}>
-                            <Typography type="NormalMedium" color="Highlight.default">
-                                {currentTimetableName}
-                            </Typography>
-                        </FlexWrapper>
+                        <Typography type="NormalBold" color="Text.light">
+                            {t("timetable.customBlock.timetable")}
+                        </Typography>
+                        <Typography type="NormalMedium" color="Highlight.default">
+                            {currentTimetableName}
+                        </Typography>
                     </FlexWrapper>
-                    <FlexWrapper
-                        direction="row"
-                        gap={20}
-                        flex="1 1 auto"
-                        align="stretch"
-                        justify="stretch"
-                    >
-                        <FlexWrapper direction="column" padding="4px 0px" gap={0}>
-                            <Typography type="NormalBold" color="Text.light">
-                                시간
-                            </Typography>
-                        </FlexWrapper>
-                        <FlexWrapper
-                            direction="column"
-                            align="stretch"
-                            justify="stretch"
-                            flex="1 1 auto"
-                            gap={0}
-                        >
-                            <TimeFilterArea
-                                timeFilters={timeBlocks}
-                                setTimeFilters={setTimeBlocks}
-                            />
-                        </FlexWrapper>
+                    <FlexWrapper direction="row" gap={20} align="stretch">
+                        <Typography type="NormalBold" color="Text.light">
+                            {t("timetable.customBlock.time")}
+                        </Typography>
+                        <TimeFilterArea
+                            timeFilter={timeBlock}
+                            setTimeFilter={setTimeBlock}
+                        />
                     </FlexWrapper>
                     <FlexWrapper direction="row" gap={20} align="center">
-                        <FlexWrapper direction="column" padding="4px 0px" gap={0}>
-                            <Typography type="NormalBold" color="Text.light">
-                                장소
-                            </Typography>
-                        </FlexWrapper>
+                        <Typography type="NormalBold" color="Text.light">
+                            {t("timetable.customBlock.place")}
+                        </Typography>
                         <TextInputArea
-                            placeholder="장소를 입력해주세요"
+                            placeholder={t("timetable.customBlock.place")}
                             style={{ border: "1px solid #ccc", padding: "8px" }}
                             handleChange={setPlace}
                             value={place}
                         />
                     </FlexWrapper>
-                    <FlexWrapper direction="row" gap={20}>
-                        <FlexWrapper direction="column" padding="8px 0px" gap={0}>
-                            <Typography type="NormalBold" color="Text.light">
-                                설명
-                            </Typography>
-                        </FlexWrapper>
-                        <TextInputArea
-                            area={true}
-                            placeholder="설명을 입력해주세요"
-                            value={description}
-                            handleChange={setDescription}
-                        />
-                    </FlexWrapper>
                 </FlexWrapper>
-                <FlexWrapper
-                    direction="row"
-                    gap={0}
-                    align="stretch"
-                    justify="stretch"
-                    flex="1 1 auto"
+                <Button
+                    type={canSubmit ? "selected" : "disabled"}
+                    onClick={customBlock ? handleSave : handlePost}
+                    $isFlexRow={true}
                 >
-                    <Button
-                        type="selected"
-                        onClick={customBlock?.id === null ? handlePost : handleSave}
-                        $isFlexRow={true}
-                    >
-                        {customBlock ? "저장하기" : "시간표에 추가하기"}
-                    </Button>
-                </FlexWrapper>
+                    {t(
+                        customBlock
+                            ? "timetable.customBlock.save"
+                            : "timetable.customBlock.add",
+                    )}
+                </Button>
             </FlexWrapper>
         </CustomBlockSectionInner>
     )
 }
 
-const memoizedCustomBlockSection = memo(CustomBlockSection, (prevProps, nextProps) => {
-    return (
-        prevProps.customBlock === nextProps.customBlock &&
-        prevProps.currentTimetableId === nextProps.currentTimetableId &&
-        prevProps.currentTimetableName === nextProps.currentTimetableName &&
-        prevProps.timeBlocks === nextProps.timeBlocks &&
-        prevProps.setTimeBlocks === nextProps.setTimeBlocks
-    )
-})
-
-export default memoizedCustomBlockSection
+export default memo(CustomBlockSection)
