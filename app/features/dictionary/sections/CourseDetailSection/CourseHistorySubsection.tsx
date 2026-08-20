@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react"
+import React, { useEffect, useId, useRef, useState } from "react"
 
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
@@ -10,7 +10,6 @@ import type { GETCourseDetailResponse } from "@/api/courses/$courseId"
 import { semesterToString } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
-import { IconButton } from "@/common/primitives/IconButton"
 import Typography from "@/common/primitives/Typography"
 import CourseHistoryChip from "@/features/dictionary/components/CourseHistoryChip"
 import professorName from "@/utils/professorName"
@@ -50,6 +49,25 @@ const CourseHistoryBlock = styled(FlexWrapper)`
     height: 100%;
 `
 
+const HistoryToggle = styled.button`
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+
+    &:focus-visible {
+        outline: 2px solid ${({ theme }) => theme.colors.Highlight.default};
+        outline-offset: 2px;
+    }
+`
+
 const FoldButton = styled(KeyboardArrowDownIcon)<{ isfolded: string }>`
     transform: ${(props) =>
         props.isfolded === "true" ? "rotate(0deg)" : "rotate(180deg)"};
@@ -65,9 +83,9 @@ const NoHistoryText = styled(Typography)`
 `
 
 interface CourseHistorySubsectionProps {
-    courseDetail: GETCourseDetailResponse | undefined
-    selectedProfessorId: number | null
-    setSelectedProfessorId: React.Dispatch<React.SetStateAction<number | null>>
+    readonly courseDetail: GETCourseDetailResponse | undefined
+    readonly selectedProfessorId: number | null
+    readonly setSelectedProfessorId: (professorId: number | null) => void
 }
 
 const CourseHistorySubsection: React.FC<CourseHistorySubsectionProps> = ({
@@ -80,6 +98,7 @@ const CourseHistorySubsection: React.FC<CourseHistorySubsectionProps> = ({
     const isMobile = useIsDevice("mobile")
 
     const historyScroll = useRef<HTMLDivElement | null>(null)
+    const historyPanelId = useId()
 
     const [isHistoryFolded, setIsHistoryFolded] = useState<boolean>(true)
 
@@ -102,24 +121,23 @@ const CourseHistorySubsection: React.FC<CourseHistorySubsectionProps> = ({
 
     return (
         <>
-            <FlexWrapper
-                direction="row"
-                gap={0}
-                justify="space-between"
-                align="center"
-                style={{ width: "100%", cursor: "pointer" }}
+            <HistoryToggle
+                type="button"
+                aria-expanded={!isHistoryFolded}
+                aria-controls={historyPanelId}
                 onClick={() => setIsHistoryFolded((prev) => !prev)}
             >
-                <Typography type={"NormalBold"} color={"Text.default"}>
+                <Typography type="NormalBold" color="Text.default">
                     {t("dictionary.courseHistory")}
                 </Typography>
-                <IconButton onClick={() => {}}>
-                    <Icon size={20} color={theme.colors.Text.default} onClick={() => {}}>
-                        <FoldButton isfolded={isHistoryFolded.toString()} />
-                    </Icon>
-                </IconButton>
-            </FlexWrapper>
+                <Icon size={20} color={theme.colors.Text.default}>
+                    <FoldButton isfolded={isHistoryFolded.toString()} />
+                </Icon>
+            </HistoryToggle>
             <CourseHistory
+                id={historyPanelId}
+                aria-hidden={isHistoryFolded}
+                inert={isHistoryFolded}
                 ref={historyScroll}
                 initial={{ height: isHistoryFolded ? 0 : "auto" }}
                 animate={{ height: isHistoryFolded ? 0 : "auto" }}

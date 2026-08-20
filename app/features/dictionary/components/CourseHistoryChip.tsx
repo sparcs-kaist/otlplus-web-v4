@@ -6,19 +6,26 @@ type ChipProps = {
     selected?: boolean
     chipIndex?: string
     chipText?: string
-} & React.ComponentProps<"div">
+} & React.ComponentProps<"button">
 
-const ChipInner = styled.div`
+const ChipInner = styled.button`
     min-width: 150px;
     height: 28px;
     display: inline-flex;
     padding: 8px 16px;
     justify-content: flex-start;
     align-items: center;
+    border: 0;
     border-radius: 16px;
+    font: inherit;
     font-size: 14px;
     line-height: 17.5px;
     font-weight: 400;
+
+    &:focus-visible {
+        outline: 2px solid ${({ theme }) => theme.colors.Highlight.default};
+        outline-offset: 2px;
+    }
 `
 
 const ChipDefaultInner = styled(ChipInner)`
@@ -55,7 +62,7 @@ const CourseHistoryChip = ({
     selected = false,
     chipIndex = "",
     chipText = "",
-    ...divProps
+    ...buttonProps
 }: ChipProps) => {
     const ChipContent = () => (
         <ChipContentWrapper>
@@ -66,7 +73,7 @@ const CourseHistoryChip = ({
 
     const ChipChosenInner = selected ? ChipSelectedInner : ChipDefaultInner
     return (
-        <ChipChosenInner {...divProps}>
+        <ChipChosenInner type="button" aria-pressed={selected} {...buttonProps}>
             <ChipContent />
         </ChipChosenInner>
     )
