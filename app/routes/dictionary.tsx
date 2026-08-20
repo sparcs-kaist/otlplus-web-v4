@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect } from "react"
 
 import styled from "@emotion/styled"
+import { useTranslation } from "react-i18next"
 import { useSearchParams } from "react-router"
 
 import Modal from "@/common/components/Modal"
@@ -8,6 +9,12 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Widget from "@/common/primitives/Widget"
 import CourseDetailSection from "@/features/dictionary/sections/CourseDetailSection"
 import CourseListSection from "@/features/dictionary/sections/CourseListSection"
+import {
+    getDictionarySelection,
+    normalizeDictionarySearchParams,
+    setDictionaryCourse,
+    setDictionaryProfessor,
+} from "@/features/dictionary/utils/dictionarySearchParams"
 import { trackEvent } from "@/libs/mixpanel"
 import { media } from "@/styles/themes/media"
 import useIsDevice from "@/utils/useIsDevice"
@@ -56,50 +63,37 @@ const CourseDetailSectionWrapper = styled(SectionWrapper)`
 
 export default function DictionaryPage() {
     const isTablet = useIsDevice("tablet")
+    const { t } = useTranslation()
     const [searchParams, setSearchParams] = useSearchParams()
-
-    const [mobileModal, setMobileModal] = useState(false)
-
-    const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null)
+    const { courseId: selectedCourseId, professorId: selectedProfessorId } =
+        getDictionarySelection(searchParams)
 
     useEffect(() => {
         trackEvent("Page View", { page: "Dictionary" })
     }, [])
 
     useEffect(() => {
-        const courseId = searchParams.get("courseId")
-        if (courseId) {
-            const courseIdNumber = parseInt(courseId, 10)
-            if (!isNaN(courseIdNumber)) {
-                setSelectedCourseId(courseIdNumber)
-                setSearchParams((prevParams) => {
-                    prevParams.delete("courseId")
-                    return prevParams
-                })
-            } else {
-                setSelectedCourseId(null)
-            }
+        const normalized = normalizeDictionarySearchParams(searchParams)
+        if (normalized.toString() !== searchParams.toString()) {
+            setSearchParams(normalized, { replace: true })
         }
-    }, [])
+    }, [searchParams, setSearchParams])
 
-    useEffect(() => {
-        if (!isTablet) {
-            setMobileModal(false)
-        } else if (selectedCourseId !== null) {
-            setMobileModal(true)
-        }
-    }, [isTablet])
-
-    useEffect(() => {
-        if (isTablet && selectedCourseId !== null) {
-            setMobileModal(true)
-        }
-    }, [selectedCourseId])
-
+    const setSelectedCourseId = useCallback(
+        (courseId: number | null) => {
+            setSearchParams((params) => setDictionaryCourse(params, courseId))
+        },
+        [setSearchParams],
+    )
+    const setSelectedProfessorId = useCallback(
+        (professorId: number | null) => {
+            setSearchParams((params) => setDictionaryProfessor(params, professorId))
+        },
+        [setSearchParams],
+    )
     const closeMobileModal = useCallback(() => {
-        setMobileModal(false)
         setSelectedCourseId(null)
-    }, [])
+    }, [setSelectedCourseId])
 
     return (
         <DictionaryWrapper direction="row" align="stretch" justify="center" gap={12}>
@@ -120,17 +114,24 @@ export default function DictionaryPage() {
                 gap={0}
                 borderRadius={12}
             >
-                <CourseDetailSection selectedCourseId={selectedCourseId} />
+                <CourseDetailSection
+                    selectedCourseId={selectedCourseId}
+                    selectedProfessorId={selectedProfessorId}
+                    setSelectedProfessorId={setSelectedProfessorId}
+                />
             </CourseDetailSectionWrapper>
             {isTablet && (
                 <Modal
-                    isOpen={mobileModal}
+                    ariaLabel={t("header.dictionary")}
+                    isOpen={selectedCourseId !== null}
                     onClose={closeMobileModal}
                     header={false}
                     fullScreen={true}
                 >
                     <CourseDetailSection
                         selectedCourseId={selectedCourseId}
+                        selectedProfessorId={selectedProfessorId}
+                        setSelectedProfessorId={setSelectedProfessorId}
                         isMobileModal={true}
                         onMobileModalClose={closeMobileModal}
                     />
