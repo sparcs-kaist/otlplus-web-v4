@@ -6,6 +6,8 @@ import { colors } from "@/styles/themes/_base/variables/colors"
 import { darkThemeColors } from "@/styles/themes/dark/variables/colors"
 import professorName from "@/utils/professorName"
 
+import { isExpectedClipboardError } from "./clipboardErrors"
+
 interface RoundedRectangleOptions {
     ctx: CanvasRenderingContext2D
     x: number
@@ -263,17 +265,23 @@ export async function downloadTimetableImage(drawTimetableData: DrawTimetableDat
 
 export async function copyTimetableImageToClipboard(
     drawTimetableData: DrawTimetableDatas,
-) {
+): Promise<boolean> {
     const canvas = await timeTableImage(drawTimetableData)
 
     const dataUrl = canvas.toDataURL("image/png")
     const response = await fetch(dataUrl)
     const blob = await response.blob()
 
-    if (!navigator.clipboard?.write) return
+    if (!navigator.clipboard?.write) return false
 
     const item = new ClipboardItem({ "image/png": blob })
-    await navigator.clipboard.write([item])
+    try {
+        await navigator.clipboard.write([item])
+        return true
+    } catch (error) {
+        if (isExpectedClipboardError(error)) return false
+        throw error
+    }
 }
 
 interface Semester {
