@@ -1,81 +1,67 @@
-import { useCallback, useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import * as ChannelService from "@channel.io/channel-web-sdk-loader"
 
 import { clientEnv } from "@/env"
 import logger from "@/utils/logger"
+import { usePreferenceStore } from "@/utils/zustand/usePreferenceStore"
 import useUserStore from "@/utils/zustand/useUserStore"
 
+function clearChannelTalkGlobals() {
+    if (typeof window === "undefined") return
+    Reflect.deleteProperty(window, "ChannelIO")
+    Reflect.deleteProperty(window, "ChannelIOInitialized")
+}
+
 /**
- * ChannelTalkProvider
- *
- * Initializes the Channel Talk SDK and keeps user profile in sync.
- *
- * Key design decisions:
- * - SDK boot is separated from user updates to avoid shutdown/reboot cycles.
- *   The old code had `user` in the useEffect deps, causing shutdown() → loadScript()
- *   (no-op because window.ChannelIO already exists) → boot() which silently failed
- *   because the SDK was in a shutdown state.
- * - bootAttemptedRef prevents double-boot during the same mount cycle.
- * - On unmount, we call shutdown() AND clear window.ChannelIO so that
- *   loadScript() can re-initialize on remount (React 18 StrictMode).
+ * Initializes Channel Talk independently from user updates so changing users does not
+ * reboot the SDK. A generation counter prevents an old asynchronous boot callback from
+ * reactivating a disabled or remounted provider.
  */
 const ChannelTalkProvider = () => {
     const { user } = useUserStore()
+    const channelTalkEnabled = usePreferenceStore((state) => state.channelTalkEnabled)
     const pluginKey = clientEnv.VITE_CHANNELTALK_PLUGIN_KEY
-    const isBootedRef = useRef(false)
+    const bootGenerationRef = useRef(0)
+    const [isBooted, setIsBooted] = useState(false)
 
-    const bootChannelTalk = useCallback(() => {
-        if (!pluginKey) return
-
-        ChannelService.loadScript()
-
-        ChannelService.boot(
-            {
-                pluginKey,
-            },
-            (error) => {
-                if (error) {
-                    logger.warn("ChannelTalk boot failed", error)
-                } else {
-                    isBootedRef.current = true
-                }
-            },
-        )
-    }, [pluginKey])
-
-    // Load and boot the SDK once on mount
     useEffect(() => {
-        if (!pluginKey) return
+        const generation = ++bootGenerationRef.current
+        if (!pluginKey || !channelTalkEnabled) {
+            setIsBooted(false)
+            return
+        }
 
-        bootChannelTalk()
+        setIsBooted(false)
+        ChannelService.loadScript()
+        ChannelService.boot({ pluginKey }, (error) => {
+            if (bootGenerationRef.current !== generation) return
+            if (error) {
+                logger.warn("ChannelTalk boot failed", error)
+                setIsBooted(false)
+                return
+            }
+            setIsBooted(true)
+        })
 
         return () => {
-            isBootedRef.current = false
-            ChannelService.shutdown()
-
-            // Clear global state so loadScript() can re-initialize on remount.
-            // Without this, React 18 StrictMode (mount → unmount → remount) breaks:
-            // shutdown() destroys SDK internals, but loadScript() sees window.ChannelIO
-            // still exists and skips re-initialization, leaving boot() with a dead SDK.
-            if (typeof window !== "undefined") {
-                const w = window as unknown as Record<string, unknown>
-                delete w.ChannelIO
-                delete w.ChannelIOInitialized
+            if (bootGenerationRef.current === generation) {
+                bootGenerationRef.current += 1
             }
+            ChannelService.shutdown()
+            clearChannelTalkGlobals()
         }
-    }, [pluginKey, bootChannelTalk])
+    }, [channelTalkEnabled, pluginKey])
 
-    // Update user info when user changes (without rebooting the SDK)
     useEffect(() => {
-        if (!isBootedRef.current || !pluginKey || !user) return
+        if (!channelTalkEnabled || !isBooted || !pluginKey || !user) return
 
         ChannelService.updateUser({
             profile: {
                 name: user.name,
             },
         })
-    }, [user, pluginKey])
+    }, [channelTalkEnabled, isBooted, pluginKey, user])
 
     return null
 }
