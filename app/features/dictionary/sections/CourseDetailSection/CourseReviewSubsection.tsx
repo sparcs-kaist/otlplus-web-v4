@@ -1,15 +1,15 @@
-import React, { use, useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
 import { useInView } from "react-intersection-observer"
-import { de } from "zod/v4/locales"
 
 import LoadingCircle from "@/common/components/LoadingCircle"
 import ReviewBlock from "@/common/components/reviews/ReviewBlock"
 import ReviewWritingBlock, {
     type ReviewWritingBlockProps,
 } from "@/common/components/reviews/ReviewWritingBlock"
+import { ReviewModeEnum } from "@/common/enum/reviewModeEnum"
 import { getAverageScoreLabel } from "@/common/enum/scoreEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
@@ -32,6 +32,9 @@ interface CourseReviewSubsectionProps {
 }
 
 const LIMIT = 20
+const REVIEW_LANGUAGES = ["all", "english"] as const
+
+type ReviewLanguage = (typeof REVIEW_LANGUAGES)[number]
 
 const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
     selectedCourseId,
@@ -40,7 +43,7 @@ const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
 }) => {
     const { t } = useTranslation()
 
-    const [reviewLanguage, setReviewLanguage] = useState("all")
+    const [reviewLanguage, setReviewLanguage] = useState<ReviewLanguage>("all")
     const [enabled, setEnabled] = useState(false)
 
     const { query, setParams, data } = useInfiniteAPI("GET", "/reviews", {
@@ -53,7 +56,7 @@ const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
 
     useEffect(() => {
         setParams({
-            mode: "default",
+            mode: ReviewModeEnum.DEFAULT,
             courseId: selectedCourseId || undefined,
             professorId: selectedProfessorId || undefined,
         })
@@ -90,7 +93,7 @@ const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
                     {t("dictionary.reviewLanguage")}
                 </Typography>
                 <FlexWrapper direction="row" gap={6}>
-                    {["all", "english"].map((lang) => (
+                    {REVIEW_LANGUAGES.map((lang) => (
                         <CourseReviewLanguageChip
                             key={lang}
                             selected={reviewLanguage == lang}

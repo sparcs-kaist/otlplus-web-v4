@@ -6,6 +6,7 @@ import { useInView } from "react-intersection-observer"
 
 import LoadingCircle from "@/common/components/LoadingCircle"
 import ReviewBlock from "@/common/components/reviews/ReviewBlock"
+import { ReviewModeEnum } from "@/common/enum/reviewModeEnum"
 import { getAverageScoreLabel } from "@/common/enum/scoreEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
@@ -51,7 +52,7 @@ const LectureReviewSubsection: React.FC<LectureReviewSubsectionProps> = ({
         setParamsFixed(false)
         const timer = setTimeout(() => {
             setParams({
-                mode: "default",
+                mode: ReviewModeEnum.DEFAULT,
                 courseId: selectedCourseId ?? undefined,
                 professorId: selectedProfessorId ?? undefined,
             })
