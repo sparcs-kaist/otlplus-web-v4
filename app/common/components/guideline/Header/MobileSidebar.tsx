@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react"
+import React, { useCallback, useRef } from "react"
 
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
@@ -14,6 +14,8 @@ import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import useBackendStatusStore from "@/utils/zustand/useBackendStatusStore"
 import useUserStore from "@/utils/zustand/useUserStore"
+
+import useDialogFocusTrap from "./useDialogFocusTrap"
 
 const Overlay = styled.div`
     position: fixed;
@@ -52,14 +54,6 @@ const StyledLink = styled(Link)`
     }
 `
 
-const StyledHyperLink = styled.a`
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    color: ${({ theme }) => theme.colors.Highlight.default};
-`
-
 const DisabledLink = styled.span`
     text-decoration: none;
     color: ${({ theme }) => theme.colors.Text.disable};
@@ -76,10 +70,34 @@ const OfflineBanner = styled(FlexWrapper)`
     margin-top: 12px;
 `
 
+const CloseButton = styled.button`
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    align-self: flex-end;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: ${({ theme }) => theme.colors.Text.default};
+    cursor: pointer;
+
+    &:hover {
+        background-color: ${({ theme }) => theme.colors.Background.Button.default};
+    }
+
+    &:focus-visible {
+        outline: 2px solid ${({ theme }) => theme.colors.Highlight.default};
+        outline-offset: 2px;
+    }
+`
+
 interface MobileSidebarProps {
-    mobileSidebarOpen: boolean
-    setMobileSidebarOpen: (open: boolean) => void
-    sidebarHeader: React.ReactNode
+    readonly mobileSidebarOpen: boolean
+    readonly setMobileSidebarOpen: (open: boolean) => void
+    readonly sidebarHeader: React.ReactNode
 }
 
 const MobileSidebar: React.FC<MobileSidebarProps> = ({
@@ -95,25 +113,26 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
     const isOfflineMode = !isBackendReachable && status === "success"
 
     const mouseDownTargetRef = useRef<EventTarget | null>(null)
+    const closeButtonRef = useRef<HTMLButtonElement>(null)
+    const dialogRef = useRef<HTMLDivElement>(null)
+    const closeSidebar = useCallback(
+        () => setMobileSidebarOpen(false),
+        [setMobileSidebarOpen],
+    )
 
-    useEffect(() => {
-        if (mobileSidebarOpen) {
-            document.body.style.overflow = "hidden"
-        } else {
-            document.body.style.overflow = "auto"
-        }
-    }, [mobileSidebarOpen])
-
-    const handleLinkClick = () => {
-        setMobileSidebarOpen(false)
-    }
+    useDialogFocusTrap({
+        dialogRef,
+        initialFocusRef: closeButtonRef,
+        onClose: closeSidebar,
+        open: mobileSidebarOpen,
+    })
 
     const renderNavLink = (path: string, label: string) => {
         if (isOfflineMode && path !== "/" && path !== "/timetable") {
             return <DisabledLink>{label}</DisabledLink>
         }
         return (
-            <StyledLink to={path} onClick={handleLinkClick}>
+            <StyledLink to={path} onClick={closeSidebar}>
                 {label}
             </StyledLink>
         )
@@ -128,19 +147,24 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
         <AnimatePresence>
             {mobileSidebarOpen && (
                 <Overlay
-                    onMouseDown={(e) => {
-                        mouseDownTargetRef.current = e.target
+                    data-mobile-sidebar-overlay
+                    onMouseDown={(event) => {
+                        mouseDownTargetRef.current = event.target
                     }}
-                    onMouseUp={(e) => {
+                    onMouseUp={(event) => {
                         if (
-                            mouseDownTargetRef.current === e.currentTarget &&
-                            e.target === e.currentTarget
+                            mouseDownTargetRef.current === event.currentTarget &&
+                            event.target === event.currentTarget
                         ) {
-                            setMobileSidebarOpen(false)
+                            closeSidebar()
                         }
                     }}
                 >
                     <Sidebar
+                        ref={dialogRef}
+                        role="dialog"
+                        aria-modal="true"
+                        aria-label={t("header.navigationMenu")}
                         initial="hidden"
                         animate="visible"
                         exit="hidden"
@@ -156,6 +180,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
                                     t("header.writeReviews"),
                                 )}
                                 {renderNavLink("/timetable", t("header.timetable"))}
+                                {renderNavLink("/planner", t("header.planner"))}
                             </FlexWrapper>
                             {isOfflineMode && (
                                 <OfflineBanner
@@ -180,13 +205,17 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
                                 </OfflineBanner>
                             )}
                         </FlexWrapper>
-                        <Icon
-                            size={20}
-                            onClick={() => setMobileSidebarOpen(false)}
-                            color={theme.colors.Text.default}
+                        <CloseButton
+                            ref={closeButtonRef}
+                            type="button"
+                            aria-label={t("common.search.close")}
+                            title={t("common.search.close")}
+                            onClick={closeSidebar}
                         >
-                            <KeyboardArrowRightIcon />
-                        </Icon>
+                            <Icon size={20} color={theme.colors.Text.default}>
+                                <KeyboardArrowRightIcon />
+                            </Icon>
+                        </CloseButton>
                     </Sidebar>
                 </Overlay>
             )}
