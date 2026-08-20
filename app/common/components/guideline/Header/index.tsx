@@ -15,6 +15,7 @@ import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
 import { handleLogin } from "@/utils/handleLoginLogout"
 import { getLocalStorageItem } from "@/utils/localStorage"
+import { localStorageKeys } from "@/utils/storageKeys"
 import useIsDevice from "@/utils/useIsDevice"
 import useThemeStore from "@/utils/zustand/useThemeStore"
 import useUserStore from "@/utils/zustand/useUserStore"
@@ -90,7 +91,7 @@ const Header: React.FC = () => {
 
     useEffect(() => {
         if (process.env.NODE_ENV === "development") {
-            const devStudentId = getLocalStorageItem("devStudentId")
+            const devStudentId = getLocalStorageItem(localStorageKeys.devStudentId)
             if (devStudentId) {
                 axiosClient.defaults.headers.common["X-AUTH-SID"] = devStudentId
             }

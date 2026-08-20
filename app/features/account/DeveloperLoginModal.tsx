@@ -6,6 +6,7 @@ import Button from "@/common/components/Button"
 import Modal from "@/common/components/Modal"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import { setLocalStorageItem } from "@/utils/localStorage"
+import { localStorageKeys } from "@/utils/storageKeys"
 import useIsDevice from "@/utils/useIsDevice"
 
 const IdInput = styled.input`
@@ -45,7 +46,7 @@ const DeveloperLoginModal: React.FC<DeveloperLoginModalProps> = ({
             alert("학번은 숫자만 입력 가능합니다.")
             return
         }
-        setLocalStorageItem("devStudentId", idInput)
+        setLocalStorageItem(localStorageKeys.devStudentId, idInput)
         location.reload()
     }
 
