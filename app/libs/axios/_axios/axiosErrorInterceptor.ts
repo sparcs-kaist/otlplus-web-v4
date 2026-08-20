@@ -2,6 +2,7 @@ import * as Sentry from "@sentry/react"
 import { AxiosError, type AxiosResponse, HttpStatusCode } from "axios"
 
 import { handleSessionExpired } from "@/utils/handleSessionExpired"
+import { sessionStorageKeys } from "@/utils/storageKeys"
 import useBackendStatusStore from "@/utils/zustand/useBackendStatusStore"
 
 function isNetworkError(error: AxiosError): boolean {
@@ -55,21 +56,24 @@ const errorInterceptor = {
         if (isServerError(status)) {
             if (typeof window !== "undefined") {
                 const { location, sessionStorage } = window
-                const SERVER_ERROR_REDIRECT_FLAG = "serverErrorRedirected"
-
                 const onServerErrorPage = location.pathname.includes("/server-error")
                 let hasRedirected = false
 
                 try {
                     hasRedirected =
-                        sessionStorage.getItem(SERVER_ERROR_REDIRECT_FLAG) === "true"
+                        sessionStorage.getItem(
+                            sessionStorageKeys.serverErrorRedirected,
+                        ) === "true"
                 } catch {
                     // Access to sessionStorage can fail in some environments; ignore.
                 }
 
                 if (!onServerErrorPage && !hasRedirected) {
                     try {
-                        sessionStorage.setItem(SERVER_ERROR_REDIRECT_FLAG, "true")
+                        sessionStorage.setItem(
+                            sessionStorageKeys.serverErrorRedirected,
+                            "true",
+                        )
                     } catch {
                         // Ignore storage errors; redirect will still proceed.
                     }

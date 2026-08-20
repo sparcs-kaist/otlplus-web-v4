@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
+import { type LocalStorageKey, localStorageKeys } from "@/utils/storageKeys"
 import useUserStore from "@/utils/zustand/useUserStore"
 
 import { handleSessionExpired } from "./handleSessionExpired"
@@ -61,16 +62,20 @@ describe("handleSessionExpired", () => {
 
     it("clears legacy credentials during an authenticated cold start", async () => {
         useUserStore.setState({ user: null, status: "loading" })
-        mocks.getLocalStorageItem.mockImplementation((key: string) =>
-            key === "accessToken" ? "expired-token" : null,
+        mocks.getLocalStorageItem.mockImplementation((key: LocalStorageKey) =>
+            key === localStorageKeys.accessToken ? "expired-token" : null,
         )
 
         await handleSessionExpired()
 
         expect(mocks.clearQueryClient).toHaveBeenCalledOnce()
         expect(mocks.clearPersistedCache).toHaveBeenCalledOnce()
-        expect(mocks.removeLocalStorageItem).toHaveBeenCalledWith("accessToken")
-        expect(mocks.removeLocalStorageItem).toHaveBeenCalledWith("refreshToken")
+        expect(mocks.removeLocalStorageItem).toHaveBeenCalledWith(
+            localStorageKeys.accessToken,
+        )
+        expect(mocks.removeLocalStorageItem).toHaveBeenCalledWith(
+            localStorageKeys.refreshToken,
+        )
     })
 
     it("clears authenticated client state once for concurrent 401 responses", async () => {
@@ -80,8 +85,12 @@ describe("handleSessionExpired", () => {
         expect(mocks.resetUser).toHaveBeenCalledOnce()
         expect(mocks.clearQueryClient).toHaveBeenCalledOnce()
         expect(mocks.clearPersistedCache).toHaveBeenCalledOnce()
-        expect(mocks.removeLocalStorageItem).toHaveBeenCalledWith("accessToken")
-        expect(mocks.removeLocalStorageItem).toHaveBeenCalledWith("refreshToken")
+        expect(mocks.removeLocalStorageItem).toHaveBeenCalledWith(
+            localStorageKeys.accessToken,
+        )
+        expect(mocks.removeLocalStorageItem).toHaveBeenCalledWith(
+            localStorageKeys.refreshToken,
+        )
     })
 
     it("waits for the analytics identity reset before clearing session state", async () => {
@@ -110,8 +119,12 @@ describe("handleSessionExpired", () => {
         expect(useUserStore.getState().user).toBeNull()
         expect(mocks.clearQueryClient).toHaveBeenCalledOnce()
         expect(mocks.clearPersistedCache).toHaveBeenCalledOnce()
-        expect(mocks.removeLocalStorageItem).toHaveBeenCalledWith("accessToken")
-        expect(mocks.removeLocalStorageItem).toHaveBeenCalledWith("refreshToken")
+        expect(mocks.removeLocalStorageItem).toHaveBeenCalledWith(
+            localStorageKeys.accessToken,
+        )
+        expect(mocks.removeLocalStorageItem).toHaveBeenCalledWith(
+            localStorageKeys.refreshToken,
+        )
     })
 
     it("clears a newly authenticated session after a previous expiration", async () => {
