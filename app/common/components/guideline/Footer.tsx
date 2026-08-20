@@ -4,11 +4,13 @@ import { useTranslation } from "react-i18next"
 import { Link } from "react-router"
 
 import Line from "@/common/components/Line"
-import { OSEnum } from "@/common/enum/osEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import { media } from "@/styles/themes/media"
 import { getPlatform } from "@/utils/getPlatform"
+import { usePreferenceStore } from "@/utils/zustand/usePreferenceStore"
+
+import { getServiceDownloadLink } from "./footerServiceLinks"
 
 const FooterWrapper = styled(FlexWrapper)`
     width: 100%;
@@ -56,38 +58,8 @@ const FooterSection = styled(FlexWrapper)`
 
 function Footer() {
     const { t } = useTranslation()
+    const channelTalkEnabled = usePreferenceStore((state) => state.channelTalkEnabled)
     const os = getPlatform()
-
-    function serviceLink(service: string) {
-        const taxiIOSLink = "https://apps.apple.com/kr/app/taxi-for-kaist/id6447231158"
-        const taxiAndroidLink =
-            "https://play.google.com/store/apps/details?id=org.sparcs.taxi_app"
-        const otlIOSLink = "https://apps.apple.com/kr/app/otl/id1579878255"
-        const otlAndroidLink =
-            "https://play.google.com/store/apps/details?id=org.sparcs.otlplus"
-        const araIOSLink = "https://apps.apple.com/kr/app/ara-for-kaist/id6457209147"
-        const araAndroidLink =
-            "https://play.google.com/store/apps/details?id=org.sparcs.newara"
-        const buddyIOSLink = "https://apps.apple.com/kr/app/buddy-for-kaist/id6749929416"
-        const buddyAndroidLink =
-            "https://play.google.com/store/apps/details?id=org.sparcs.soap&hl=ko"
-        switch (service) {
-            case "taxi":
-                if (os === OSEnum.IOS || os === OSEnum.MAC) return taxiIOSLink
-                else return taxiAndroidLink
-            case "otl":
-                if (os === OSEnum.IOS || os === OSEnum.MAC) return otlIOSLink
-                else return otlAndroidLink
-            case "ara":
-                if (os === OSEnum.IOS || os === OSEnum.MAC) return araIOSLink
-                else return araAndroidLink
-            case "buddy":
-                if (os === OSEnum.IOS || os === OSEnum.MAC) return buddyIOSLink
-                else return buddyAndroidLink
-            default:
-                return ""
-        }
-    }
 
     return (
         <FooterWrapper direction="column" justify="center" align="stretch" gap={0}>
@@ -187,22 +159,34 @@ function Footer() {
                                 Apps
                             </Typography>
                             <FlexWrapper direction="column" gap={20}>
-                                <StyledLink href={serviceLink("buddy")} target="_blank">
+                                <StyledLink
+                                    href={getServiceDownloadLink("buddy", os)}
+                                    target="_blank"
+                                >
                                     <Typography type="Big" color="Text.dark">
                                         Buddy app
                                     </Typography>
                                 </StyledLink>
-                                <StyledLink href={serviceLink("otl")} target="_blank">
+                                <StyledLink
+                                    href={getServiceDownloadLink("otl", os)}
+                                    target="_blank"
+                                >
                                     <Typography type="Big" color="Text.dark">
                                         OTL app
                                     </Typography>
                                 </StyledLink>
-                                <StyledLink href={serviceLink("taxi")} target="_blank">
+                                <StyledLink
+                                    href={getServiceDownloadLink("taxi", os)}
+                                    target="_blank"
+                                >
                                     <Typography type="Big" color="Text.dark">
                                         Taxi
                                     </Typography>
                                 </StyledLink>
-                                <StyledLink href={serviceLink("ara")} target="_blank">
+                                <StyledLink
+                                    href={getServiceDownloadLink("ara", os)}
+                                    target="_blank"
+                                >
                                     <Typography type="Big" color="Text.dark">
                                         Ara
                                     </Typography>
@@ -244,17 +228,19 @@ function Footer() {
                                         </Typography>
                                     </StyledLink>
                                 </MobileOnlyWrapper>
-                                <StyledTypographyLink>
-                                    <Typography
-                                        type="Big"
-                                        color="Text.dark"
-                                        onClick={() => {
-                                            ChannelService.showMessenger()
-                                        }}
-                                    >
-                                        {t("credits.contact")}
-                                    </Typography>
-                                </StyledTypographyLink>
+                                {channelTalkEnabled && (
+                                    <StyledTypographyLink>
+                                        <Typography
+                                            type="Big"
+                                            color="Text.dark"
+                                            onClick={() => {
+                                                ChannelService.showMessenger()
+                                            }}
+                                        >
+                                            {t("credits.contact")}
+                                        </Typography>
+                                    </StyledTypographyLink>
+                                )}
                             </FlexWrapper>
                         </FooterSection>
                     </FlexWrapper>
