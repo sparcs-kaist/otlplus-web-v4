@@ -82,7 +82,7 @@ const MultipleSelectLectureBlock = styled(FlexWrapper)`
     padding: 12px 16px;
     background-color: ${({ theme }) => theme.colors.Background.Block.default};
     border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: ${({ theme }) => theme.elevation.low};
 `
 
 interface LectureDetailSectionProps {

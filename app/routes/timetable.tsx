@@ -45,9 +45,7 @@ const SearchAreaWrapper = styled(FlexWrapper)`
     padding: 16px;
     border-radius: 12px;
     align-self: stretch; /* 부모 Flex의 align-items: stretch에 맞춰 세로 길이 맞춤 */
-    box-shadow:
-        0px 1px 3px rgba(0, 0, 0, 0.1),
-        0px 1px 2px rgba(0, 0, 0, 0.06);
+    box-shadow: ${({ theme }) => theme.elevation.surface};
 
     ${media.desktop} {
         background-color: transparent;
@@ -88,9 +86,7 @@ const Block = styled(FlexWrapper)`
     padding: 16px;
     flex: 1;
     min-height: 0;
-    box-shadow:
-        0px 1px 3px rgba(0, 0, 0, 0.1),
-        0px 1px 2px rgba(0, 0, 0, 0.06);
+    box-shadow: ${({ theme }) => theme.elevation.surface};
 
     ${media.laptop} {
         background-color: transparent;
@@ -110,9 +106,7 @@ const LectureInfoArea = styled.div`
         background-color: ${({ theme }) => theme.colors.Background.Section.default};
         padding: 16px;
         border-radius: 12px;
-        box-shadow:
-            0px 1px 3px rgba(0, 0, 0, 0.1),
-            0px 1px 2px rgba(0, 0, 0, 0.06);
+        box-shadow: ${({ theme }) => theme.elevation.surface};
     }
 
     ${media.laptop} {
@@ -135,9 +129,7 @@ const LectureListArea = styled.div`
         background-color: ${({ theme }) => theme.colors.Background.Section.default};
         padding: 16px;
         border-radius: 12px;
-        box-shadow:
-            0px 1px 3px rgba(0, 0, 0, 0.1),
-            0px 1px 2px rgba(0, 0, 0, 0.06);
+        box-shadow: ${({ theme }) => theme.elevation.surface};
     }
 
     ${media.laptop} {
@@ -156,9 +148,7 @@ const UtilButtonsArea = styled.div`
         padding: 22px;
         border-radius: 12px;
         width: 100%;
-        box-shadow:
-            0px 1px 3px rgba(0, 0, 0, 0.1),
-            0px 1px 2px rgba(0, 0, 0, 0.06);
+        box-shadow: ${({ theme }) => theme.elevation.surface};
     }
 `
 
@@ -171,9 +161,7 @@ const TimetableArea = styled(FlexWrapper)`
         background-color: ${({ theme }) => theme.colors.Background.Section.default};
         padding: 16px;
         border-radius: 0 12px 12px 12px;
-        box-shadow:
-            0px 1px 3px rgba(0, 0, 0, 0.1),
-            0px 1px 2px rgba(0, 0, 0, 0.06);
+        box-shadow: ${({ theme }) => theme.elevation.surface};
     }
 `
 
@@ -183,9 +171,7 @@ const TimetableInfoArea = styled.div`
         background-color: ${({ theme }) => theme.colors.Background.Section.default};
         padding: 16px;
         border-radius: 12px;
-        box-shadow:
-            0px 1px 3px rgba(0, 0, 0, 0.1),
-            0px 1px 2px rgba(0, 0, 0, 0.06);
+        box-shadow: ${({ theme }) => theme.elevation.surface};
     }
 
     ${media.tablet} {
@@ -199,9 +185,7 @@ const MobileControlBar = styled(FlexWrapper)`
     padding: 8px;
     border-radius: 12px;
     white-space: nowrap;
-    box-shadow:
-        0px 1px 3px rgba(0, 0, 0, 0.1),
-        0px 1px 2px rgba(0, 0, 0, 0.06);
+    box-shadow: ${({ theme }) => theme.elevation.surface};
 `
 
 export default function Timetable() {

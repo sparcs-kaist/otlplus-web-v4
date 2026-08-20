@@ -21,7 +21,7 @@ const Overlay = styled.div`
     left: 0;
     width: 100vw;
     height: 100vh;
-    background-color: rgba(51, 51, 51, 0.5);
+    background-color: ${({ theme }) => theme.colors.Background.Overlay.default};
     display: flex;
     justify-content: flex-end;
     z-index: 1000;

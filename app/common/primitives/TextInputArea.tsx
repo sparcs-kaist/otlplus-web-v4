@@ -26,8 +26,8 @@ const errorBorderStyle = css`
     border-color: red;
 `
 
-const disabledStyle = css`
-    background-color: rgba(245, 245, 245, 1);
+const disabledStyle = (theme: ThemeType) => css`
+    background-color: ${theme.colors.Background.Input.disabled};
 `
 
 const areaInputStyle = (theme: ThemeType) => css`
@@ -58,7 +58,7 @@ const Input = styled.input<TextInputProps & { hasError: boolean }>`
     color: ${({ theme }) => theme.colors.Text.default};
     background-color: ${({ theme }) => theme.colors.Background.Section.default};
     flex: 1;
-    ${({ disabled }) => disabled && disabledStyle}
+    ${({ disabled, theme }) => disabled && disabledStyle(theme)}
     ${({ hasError }) => hasError && errorBorderStyle}
     ${({ theme, area }) => area && areaInputStyle(theme)}
 `
