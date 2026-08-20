@@ -6,6 +6,7 @@ import FavoriteBorderOutlinedIcon from "@mui/icons-material/FavoriteBorderOutlin
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router"
 
+import { ReviewLikeActionEnum } from "@/common/enum/reviewLikeActionEnum"
 import { ScoreEnum } from "@/common/enum/scoreEnum"
 import { semesterToString } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
@@ -110,7 +111,10 @@ function ReviewBlock({
         if (status !== "success") return
         requestFunction({
             reviewId: review.id,
-            action: (likeOverride ?? review.likedByUser) ? "unlike" : "like",
+            action:
+                (likeOverride ?? review.likedByUser)
+                    ? ReviewLikeActionEnum.UNLIKE
+                    : ReviewLikeActionEnum.LIKE,
         })
     }
 
