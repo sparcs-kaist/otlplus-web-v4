@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next"
 import { Link } from "react-router"
 
 import Line from "@/common/components/Line"
+import { OSEnum } from "@/common/enum/osEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import { media } from "@/styles/themes/media"
@@ -72,16 +73,16 @@ function Footer() {
             "https://play.google.com/store/apps/details?id=org.sparcs.soap&hl=ko"
         switch (service) {
             case "taxi":
-                if (os === "ios" || os === "mac") return taxiIOSLink
+                if (os === OSEnum.IOS || os === OSEnum.MAC) return taxiIOSLink
                 else return taxiAndroidLink
             case "otl":
-                if (os === "ios" || os === "mac") return otlIOSLink
+                if (os === OSEnum.IOS || os === OSEnum.MAC) return otlIOSLink
                 else return otlAndroidLink
             case "ara":
-                if (os === "ios" || os === "mac") return araIOSLink
+                if (os === OSEnum.IOS || os === OSEnum.MAC) return araIOSLink
                 else return araAndroidLink
             case "buddy":
-                if (os === "ios" || os === "mac") return buddyIOSLink
+                if (os === OSEnum.IOS || os === OSEnum.MAC) return buddyIOSLink
                 else return buddyAndroidLink
             default:
                 return ""
