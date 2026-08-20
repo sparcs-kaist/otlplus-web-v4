@@ -8,6 +8,7 @@ import Line from "@/common/components/Line"
 import LoadingCircle from "@/common/components/LoadingCircle"
 import ReviewBlock from "@/common/components/reviews/ReviewBlock"
 import ReviewWritingBlock from "@/common/components/reviews/ReviewWritingBlock"
+import { ReviewModeEnum } from "@/common/enum/reviewModeEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import type { WriteReviewsSelectedLectureType } from "@/routes/write-reviews"
@@ -37,7 +38,7 @@ function WriteReviewsSubSection({ selectedLecture }: WriteReviewsSubSectionType)
     useEffect(() => {
         if (selectedLecture === null) return
         setParams({
-            mode: "default",
+            mode: ReviewModeEnum.DEFAULT,
             courseId: selectedLecture.courseId,
             professorId: selectedLecture.professors[0]?.id,
             year: selectedLecture.year,
