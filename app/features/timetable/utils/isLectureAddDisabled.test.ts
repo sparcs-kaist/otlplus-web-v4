@@ -1,45 +1,45 @@
 import { describe, expect, it } from "vitest"
 
-import isLectureAddDisabled from "./isLectureAddDisabled"
+import { getLectureAddBlockReason } from "./isLectureAddDisabled"
 
-describe("isLectureAddDisabled", () => {
-    it("disables add in the read-only My Timetable view", () => {
+describe("getLectureAddBlockReason", () => {
+    it("explains the read-only My Timetable restriction", () => {
         expect(
-            isLectureAddDisabled({
+            getLectureAddBlockReason({
                 status: "success",
                 currentTimetableId: null,
                 hasOverlap: false,
             }),
-        ).toBe(true)
+        ).toBe("myTimetable")
     })
 
-    it("disables overlapping lectures", () => {
+    it("explains overlapping lectures", () => {
         expect(
-            isLectureAddDisabled({
+            getLectureAddBlockReason({
                 status: "success",
                 currentTimetableId: 1,
                 hasOverlap: true,
             }),
-        ).toBe(true)
+        ).toBe("overlap")
     })
 
-    it("disables add while authentication is unresolved", () => {
+    it("blocks add while authentication is unresolved", () => {
         expect(
-            isLectureAddDisabled({
+            getLectureAddBlockReason({
                 status: "loading",
                 currentTimetableId: null,
                 hasOverlap: false,
             }),
-        ).toBe(true)
+        ).toBe("loading")
     })
 
     it("allows anonymous local timetable edits", () => {
         expect(
-            isLectureAddDisabled({
+            getLectureAddBlockReason({
                 status: "idle",
                 currentTimetableId: null,
                 hasOverlap: false,
             }),
-        ).toBe(false)
+        ).toBeNull()
     })
 })
