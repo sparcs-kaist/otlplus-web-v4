@@ -10,13 +10,14 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
-import isLectureAddDisabled from "@/features/timetable/utils/isLectureAddDisabled"
+import { getLectureAddBlockReason } from "@/features/timetable/utils/isLectureAddDisabled"
 import { media } from "@/styles/themes/media"
 import checkOverlap from "@/utils/timetable/checkOverlap"
 import useIsDevice from "@/utils/useIsDevice"
 import useUserStore from "@/utils/zustand/useUserStore"
 
 import LectureAddButton from "./LectureAddButton"
+import LectureCourseHeader from "./LectureCourseHeader"
 import LectureLabel from "./LectureLabel"
 import formatProfessorName from "./formatProfessorName"
 
@@ -42,12 +43,6 @@ const CourseItemWrapper = styled.div`
         transform: translateY(-2px);
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
     }
-`
-
-const CourseTitleWrapper = styled(FlexWrapper)`
-    width: 100%;
-    padding: 8px 12px;
-    word-break: keep-all;
 `
 
 const LectureItemWrapper = styled.div<{ lectureId: number }>`
@@ -132,39 +127,10 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
 
     return (
         <CourseItemWrapper ref={wrapperRef} data-is-selected="">
-            <CourseTitleWrapper
-                direction="row"
-                gap={6}
-                align="center"
-                justify="space-between"
-            >
-                <FlexWrapper
-                    direction="row"
-                    gap={6}
-                    align="center"
-                    style={{ opacity: course.completed ? 0.3 : 1 }}
-                >
-                    <Typography type={"NormalBold"} color={"Text.default"}>
-                        {course.name}
-                    </Typography>
-                    <Typography type={"Normal"} color={"Text.default"}>
-                        {course.code}
-                    </Typography>
-                </FlexWrapper>
-                {course.completed ? (
-                    <Typography type={"Normal"} color={"Text.default"}>
-                        {t("common.completedCourse")}
-                    </Typography>
-                ) : (
-                    <Typography
-                        type={"Normal"}
-                        color={"Highlight.default"}
-                        style={{ textAlign: "end" }}
-                    >
-                        {course.type}
-                    </Typography>
-                )}
-            </CourseTitleWrapper>
+            <LectureCourseHeader
+                course={course}
+                completedLabel={t("common.completedCourse")}
+            />
             <Divider />
             {course.lectures.map((lecture, idx) => {
                 const wish = wishlist.includes(lecture.id)
@@ -173,7 +139,7 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
                 const hasOverlap = timetableLectures.some((timetableLecture) =>
                     checkOverlap(timetableLecture.classes, lecture.classes),
                 )
-                const addDisabled = isLectureAddDisabled({
+                const addBlockReason = getLectureAddBlockReason({
                     status,
                     currentTimetableId,
                     hasOverlap,
@@ -257,18 +223,20 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
                                     ))}
                                 {(!isTablet || isHovered) && (
                                     <LectureAddButton
+                                        ariaDisabled={addBlockReason !== null}
                                         ariaLabel={t("timetable.addToTimetable")}
                                         color={theme.colors.Text.default}
-                                        disabled={addDisabled}
+                                        disabled={addBlockReason === "loading"}
                                         onClick={() => handleAddToTimetable(lecture)}
                                         size={isTablet ? 30 : 15}
                                         title={
-                                            currentTimetableId == null &&
-                                            status === "success"
+                                            addBlockReason === "myTimetable"
                                                 ? t(
                                                       "timetable.myTimeTableLectureAddWarning",
                                                   )
-                                                : undefined
+                                                : addBlockReason === "overlap"
+                                                  ? t("timetable.addLectureConflict")
+                                                  : undefined
                                         }
                                     />
                                 )}
