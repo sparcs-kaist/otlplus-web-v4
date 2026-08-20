@@ -1,6 +1,8 @@
 import { useEffect } from "react"
 
 import styled from "@emotion/styled"
+import ChatBubbleIcon from "@mui/icons-material/ChatBubble"
+import ChatBubbleOutlineIcon from "@mui/icons-material/ChatBubbleOutlined"
 import DarkModeIcon from "@mui/icons-material/DarkMode"
 import LanguageIcon from "@mui/icons-material/Language"
 import LightModeIcon from "@mui/icons-material/LightMode"
@@ -12,6 +14,7 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import { axiosClient } from "@/libs/axios"
+import { usePreferenceStore } from "@/utils/zustand/usePreferenceStore"
 import useThemeStore from "@/utils/zustand/useThemeStore"
 
 const SettingWrapper = styled(FlexWrapper)<{ mobileSidebar: boolean }>`
@@ -19,19 +22,24 @@ const SettingWrapper = styled(FlexWrapper)<{ mobileSidebar: boolean }>`
     width: ${({ mobileSidebar }) => (mobileSidebar ? "100%" : "auto")};
 `
 
-const LanguageButtonWrapper = styled(FlexWrapper)`
+const SettingButton = styled.button<{ mobileSidebar: boolean }>`
+    display: flex;
+    flex-direction: ${({ mobileSidebar }) => (mobileSidebar ? "row" : "column")};
+    align-items: center;
+    gap: 4px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
     cursor: pointer;
-`
-
-const AccountButtonWrapper = styled(FlexWrapper)`
-    cursor: pointer;
+    font: inherit;
 `
 
 interface SettingProps {
-    handleAccountButtonClick: () => void
-    userName: string
-    mobileSidebar: boolean
-    isLoading: boolean
+    readonly handleAccountButtonClick: () => void
+    readonly userName: string
+    readonly mobileSidebar: boolean
+    readonly isLoading: boolean
 }
 
 const Setting: React.FC<SettingProps> = ({
@@ -42,6 +50,10 @@ const Setting: React.FC<SettingProps> = ({
 }) => {
     const { t, i18n } = useTranslation()
     const { themeSetting, setTheme } = useThemeStore()
+    const channelTalkEnabled = usePreferenceStore((state) => state.channelTalkEnabled)
+    const setChannelTalkEnabled = usePreferenceStore(
+        (state) => state.setChannelTalkEnabled,
+    )
 
     const changeThemeMode = () => {
         switch (themeSetting) {
@@ -92,28 +104,62 @@ const Setting: React.FC<SettingProps> = ({
             mobileSidebar={mobileSidebar}
         >
             {!mobileSidebar && (
-                <Icon size={16} onClick={changeThemeMode}>
-                    <ThemeIcon />
-                </Icon>
+                <SettingButton
+                    type="button"
+                    aria-label={t("header.changeTheme")}
+                    mobileSidebar={false}
+                    onClick={changeThemeMode}
+                    title={t("header.changeTheme")}
+                >
+                    <Icon size={16}>
+                        <ThemeIcon />
+                    </Icon>
+                </SettingButton>
             )}
-            <LanguageButtonWrapper
-                direction={mobileSidebar ? "row" : "column"}
-                gap={4}
-                align="center"
+            <SettingButton
+                type="button"
+                aria-label={t("common.language")}
+                mobileSidebar={mobileSidebar}
                 onClick={changeLanguage}
+                title={t("common.language")}
             >
                 <Icon size={16}>
                     <LanguageIcon />
                 </Icon>
                 {mobileSidebar && t("common.language")}
-            </LanguageButtonWrapper>
+            </SettingButton>
+            <SettingButton
+                type="button"
+                aria-label={t(
+                    channelTalkEnabled
+                        ? "header.hideChannelTalk"
+                        : "header.showChannelTalk",
+                )}
+                mobileSidebar={mobileSidebar}
+                onClick={() => setChannelTalkEnabled(!channelTalkEnabled)}
+                title={t(
+                    channelTalkEnabled
+                        ? "header.hideChannelTalk"
+                        : "header.showChannelTalk",
+                )}
+            >
+                <Icon size={16}>
+                    {channelTalkEnabled ? <ChatBubbleIcon /> : <ChatBubbleOutlineIcon />}
+                </Icon>
+                {mobileSidebar &&
+                    t(
+                        channelTalkEnabled
+                            ? "header.hideChannelTalk"
+                            : "header.showChannelTalk",
+                    )}
+            </SettingButton>
             {isLoading ? (
                 "Loading..."
             ) : (
-                <AccountButtonWrapper
-                    direction="row"
-                    gap={4}
-                    align="center"
+                <SettingButton
+                    type="button"
+                    aria-label={userName}
+                    mobileSidebar={true}
                     onClick={handleAccountButtonClick}
                 >
                     <Icon size={16}>
@@ -125,7 +171,7 @@ const Setting: React.FC<SettingProps> = ({
                     >
                         {userName}
                     </Typography>
-                </AccountButtonWrapper>
+                </SettingButton>
             )}
         </SettingWrapper>
     )
