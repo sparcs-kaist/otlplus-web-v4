@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
@@ -317,6 +317,10 @@ export default function Timetable() {
         () => (canDeleteLecture ? (id: number) => removeLectures([id]) : undefined),
         [canDeleteLecture, removeLectures],
     )
+    const closeMobileLectureModal = useCallback(() => {
+        setHoveredLectures([])
+        setSelectedLectures([])
+    }, [setHoveredLectures, setSelectedLectures])
 
     // 과목을 선택할때는 반드시 onLectureSelect를 실행해줘야 다중선택이 작동함
     const { onLectureSelect } = useTimetableKeyboard({
@@ -444,18 +448,16 @@ export default function Timetable() {
                     {/* 모달 */}
                     {selectedLectures.length > 0 && (
                         <Modal
+                            ariaLabel={selectedLectures.map((lecture) => lecture.name).join(", ")}
                             isOpen={selectedLectures.length > 0}
-                            onClose={() => {}}
+                            onClose={closeMobileLectureModal}
                             fullScreen={true}
                             header={false}
                         >
                             <LectureDetailSection
                                 addLectures={addLectures}
                                 removeLectures={handleDeleteLecture}
-                                onMobileModalClose={() => {
-                                    setHoveredLectures([])
-                                    setSelectedLectures([])
-                                }}
+                                onMobileModalClose={closeMobileLectureModal}
                                 currentTimetableId={currentTimetableId}
                                 timetableLectures={currentTimetableLectures}
                             />
