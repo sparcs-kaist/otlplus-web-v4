@@ -81,7 +81,7 @@ export default function LoginSuccessPage() {
                         if (latestSemester) {
                             await qc.prefetchQuery({
                                 queryKey: [
-                                    `${queryKeys.timetables}/my-timetable`,
+                                    queryKeys.myTimetable,
                                     {
                                         year: latestSemester.year,
                                         semester: latestSemester.semester,
