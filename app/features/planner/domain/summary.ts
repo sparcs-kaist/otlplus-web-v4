@@ -15,7 +15,7 @@ type MutableProgress = { taken: number; planned: number; required: number }
 
 export type MajorSummary = {
     readonly key: string
-    readonly type: "PRIMARY" | "DOUBLE" | "MINOR" | "INTERDISCIPLINARY"
+    readonly type: "PRIMARY" | "ADVANCED" | "DOUBLE" | "MINOR" | "INTERDISCIPLINARY"
     readonly department: PlannerDepartment | null
     readonly required: Progress
     readonly elective: Progress
@@ -26,8 +26,7 @@ export type PlannerSummary = {
     readonly basicRequired: Progress
     readonly basicElective: Progress
     readonly thesisStudy: Progress
-    readonly individualStudy: Progress
-    readonly generalRequired: Progress
+    readonly generalRequired: { readonly credit: Progress; readonly au: Progress }
     readonly humanities: Progress
     readonly other: Progress
     readonly majors: readonly MajorSummary[]
@@ -76,7 +75,7 @@ function buildMajors(planner: PlannerDetail): MutableMajorSummary[] {
     const advanced = planner.additional_tracks.find((track) => track.type === "ADVANCED")
     const primary: MutableMajorSummary = {
         key: `PRIMARY:${planner.major_track.department.code}`,
-        type: "PRIMARY",
+        type: advanced === undefined ? "PRIMARY" : "ADVANCED",
         department: planner.major_track.department,
         required: progress(
             planner.major_track.major_required + (advanced?.major_required ?? 0),
@@ -135,11 +134,10 @@ export function calculatePlannerSummary(planner: PlannerDetail): PlannerSummary 
             ? planner.general_track.thesis_study_doublemajor
             : planner.general_track.thesis_study,
     )
-    const individualStudy = progress()
-    const generalRequired = progress(
-        planner.general_track.general_required_credit +
-            planner.general_track.general_required_au,
-    )
+    const generalRequired = {
+        credit: progress(planner.general_track.general_required_credit),
+        au: progress(planner.general_track.general_required_au),
+    }
     const humanities = progress(
         hasDoubleMajor
             ? planner.general_track.humanities_doublemajor
@@ -158,33 +156,32 @@ export function calculatePlannerSummary(planner: PlannerDetail): PlannerSummary 
         const source: Source = item.item_type === "TAKEN" ? "taken" : "planned"
         const credit = itemCredit(item)
         const au = itemAu(item)
-        const combined = credit + au
         add(total.credit, source, credit)
         add(total.au, source, au)
 
         const type = itemType(item)
-        if (type === "Basic Required") add(basicRequired, source, combined)
-        else if (type === "Basic Elective") add(basicElective, source, combined)
-        else if (type === "Thesis Study(Undergraduate)")
-            add(thesisStudy, source, combined)
-        else if (type === "Individual Study") add(individualStudy, source, combined)
-        else if (type === "General Required" || type === "Mandatory General Courses")
-            add(generalRequired, source, combined)
-        else if (type.startsWith("Humanities & Social Elective"))
-            add(humanities, source, combined)
+        if (type === "Basic Required") add(basicRequired, source, credit)
+        else if (type === "Basic Elective") add(basicElective, source, credit)
+        else if (type === "Thesis Study(Undergraduate)") add(thesisStudy, source, credit)
+        else if (type === "Individual Study") add(other, source, credit)
+        else if (type === "General Required" || type === "Mandatory General Courses") {
+            add(generalRequired.credit, source, credit)
+            add(generalRequired.au, source, au)
+        } else if (type.startsWith("Humanities & Social Elective"))
+            add(humanities, source, credit)
         else if (
             type === "Major Required" ||
             type === "Major Elective" ||
             type === "Elective(Graduate)"
         ) {
             const departmentCode = itemDepartmentCode(item)
-            const major =
-                majors.find((entry) => entry.department?.code === departmentCode) ??
-                majors.find((entry) => entry.type === "INTERDISCIPLINARY")
-            if (major === undefined) add(other, source, combined)
-            else if (type === "Major Required") add(major.required, source, combined)
-            else add(major.elective, source, combined)
-        } else add(other, source, combined)
+            const major = majors.find(
+                (entry) => entry.department?.code === departmentCode,
+            )
+            if (major === undefined) add(other, source, credit)
+            else if (type === "Major Required") add(major.required, source, credit)
+            else add(major.elective, source, credit)
+        } else add(other, source, credit)
     }
 
     majors.forEach(transferExcess)
@@ -193,7 +190,6 @@ export function calculatePlannerSummary(planner: PlannerDetail): PlannerSummary 
         basicRequired,
         basicElective,
         thesisStudy,
-        individualStudy,
         generalRequired,
         humanities,
         other,
