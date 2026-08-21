@@ -49,6 +49,7 @@ export const planner = {
         },
     },
     trackTypes: {
+        PRIMARY: "Primary Major",
         DOUBLE: "Double Major",
         MINOR: "Minor",
         ADVANCED: "Advanced Major",
@@ -56,16 +57,21 @@ export const planner = {
     },
     summary: {
         title: "Requirement Summary",
+        disclaimer:
+            "This summary is a credit and AU planning aid. It does not evaluate GPA, language proficiency, non-credit completion, department-specific required courses, substitutions, overlap recognition, or approval conditions. Always confirm the applicable KAIST Bulletin and department rules.",
         breakdown: "Taken {{taken}} · Planned {{planned}}",
-        interdisciplinary: "Interdisciplinary Major",
+        units: {
+            credit: "credits",
+            au: "AU",
+        },
         categories: {
             totalCredit: "Total Credits",
             totalAu: "Total AU",
             basicRequired: "Basic Required",
             basicElective: "Basic Elective",
             thesisStudy: "Thesis Study",
-            individualStudy: "Individual Study",
-            generalRequired: "General Required",
+            generalRequiredCredit: "General Required Credits",
+            generalRequiredAu: "General Required AU",
             humanities: "Humanities",
             majorRequired: "Major Required",
             majorElective: "Major Elective",

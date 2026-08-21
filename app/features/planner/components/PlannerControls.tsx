@@ -63,7 +63,9 @@ export const StatusNotice = styled.div`
     background: ${({ theme }) => theme.colors.Background.Button.highlight};
     font-size: ${({ theme }) => theme.fonts.Normal.fontSize}px;
     font-weight: ${({ theme }) => theme.fonts.NormalBold.fontWeight};
+    overflow-wrap: anywhere;
     text-align: center;
+    word-break: keep-all;
 `
 
 export const Field = styled.input`

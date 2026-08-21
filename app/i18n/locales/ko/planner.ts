@@ -46,6 +46,7 @@ export const planner = {
         },
     },
     trackTypes: {
+        PRIMARY: "주전공",
         DOUBLE: "복수전공",
         MINOR: "부전공",
         ADVANCED: "심화전공",
@@ -53,16 +54,21 @@ export const planner = {
     },
     summary: {
         title: "졸업 요건 요약",
+        disclaimer:
+            "이 요약은 학점·AU 계획을 위한 참고 정보입니다. GPA, 어학, 비학점 이수, 학과별 지정과목·대체과목·중복인정·승인 조건은 판정하지 않으므로 학사요람과 소속 학과 기준을 반드시 확인하세요.",
         breakdown: "이수 {{taken}} · 계획 {{planned}}",
-        interdisciplinary: "자유융합전공",
+        units: {
+            credit: "학점",
+            au: "AU",
+        },
         categories: {
             totalCredit: "총 학점",
             totalAu: "총 AU",
             basicRequired: "기초필수",
             basicElective: "기초선택",
             thesisStudy: "졸업연구",
-            individualStudy: "개별연구",
-            generalRequired: "교양필수",
+            generalRequiredCredit: "교양필수 학점",
+            generalRequiredAu: "교양필수 AU",
             humanities: "인문사회선택",
             majorRequired: "전공필수",
             majorElective: "전공선택",

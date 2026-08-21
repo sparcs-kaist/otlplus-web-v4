@@ -1,9 +1,11 @@
+import type { ReactNode } from "react"
+
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
 
 import type { PlannerDetail } from "@/common/schemas/planner"
 
-import { SectionTitle } from "../components/PlannerControls"
+import { SectionTitle, StatusNotice } from "../components/PlannerControls"
 import { type Progress, calculatePlannerSummary } from "../domain/summary"
 
 const SummaryGrid = styled.div`
@@ -27,6 +29,10 @@ const Label = styled.span`
     font-size: ${({ theme }) => theme.fonts.Small.fontSize}px;
 `
 
+const LabelSegment = styled.span`
+    white-space: nowrap;
+`
+
 const Value = styled.strong`
     color: ${({ theme }) => theme.colors.Text.default};
     font-size: ${({ theme }) => theme.fonts.Big.fontSize}px;
@@ -34,6 +40,7 @@ const Value = styled.strong`
 
 const ProgressTrack = styled.div`
     height: 5px;
+    margin-top: auto;
     overflow: hidden;
     border-radius: 999px;
     background: ${({ theme }) => theme.colors.Line.default};
@@ -45,15 +52,23 @@ const ProgressFill = styled.div<{ $ratio: number }>`
     background: ${({ theme }) => theme.colors.Highlight.default};
 `
 
-function ProgressCard({ label, progress }: { label: string; progress: Progress }) {
+function ProgressCard({
+    label,
+    progress,
+    unit,
+}: {
+    label: ReactNode
+    progress: Progress
+    unit: string
+}) {
     const { t } = useTranslation()
     const completed = progress.taken + progress.planned
-    const ratio = progress.required === 0 ? 1 : completed / progress.required
+    const ratio = progress.required === 0 ? 0 : completed / progress.required
     return (
         <SummaryCard>
             <Label>{label}</Label>
             <Value>
-                {completed} / {progress.required}
+                {completed} / {progress.required} {unit}
             </Value>
             <Label>
                 {t("planner.summary.breakdown", {
@@ -71,16 +86,18 @@ function ProgressCard({ label, progress }: { label: string; progress: Progress }
 export function PlannerSummary({ planner }: { readonly planner: PlannerDetail }) {
     const { t, i18n } = useTranslation()
     const summary = calculatePlannerSummary(planner)
+    const creditUnit = t("planner.summary.units.credit")
+    const auUnit = t("planner.summary.units.au")
     const entries = [
-        ["totalCredit", summary.total.credit],
-        ["totalAu", summary.total.au],
-        ["basicRequired", summary.basicRequired],
-        ["basicElective", summary.basicElective],
-        ["thesisStudy", summary.thesisStudy],
-        ["individualStudy", summary.individualStudy],
-        ["generalRequired", summary.generalRequired],
-        ["humanities", summary.humanities],
-        ["other", summary.other],
+        ["totalCredit", summary.total.credit, creditUnit],
+        ["totalAu", summary.total.au, auUnit],
+        ["basicRequired", summary.basicRequired, creditUnit],
+        ["basicElective", summary.basicElective, creditUnit],
+        ["thesisStudy", summary.thesisStudy, creditUnit],
+        ["generalRequiredCredit", summary.generalRequired.credit, creditUnit],
+        ["generalRequiredAu", summary.generalRequired.au, auUnit],
+        ["humanities", summary.humanities, creditUnit],
+        ["other", summary.other, creditUnit],
     ] as const
 
     return (
@@ -88,12 +105,14 @@ export function PlannerSummary({ planner }: { readonly planner: PlannerDetail })
             <SectionTitle id="planner-summary-title">
                 {t("planner.summary.title")}
             </SectionTitle>
+            <StatusNotice role="note">{t("planner.summary.disclaimer")}</StatusNotice>
             <SummaryGrid>
-                {entries.map(([key, progress]) => (
+                {entries.map(([key, progress, unit]) => (
                     <ProgressCard
                         key={key}
                         label={t(`planner.summary.categories.${key}`)}
                         progress={progress}
+                        unit={unit}
                     />
                 ))}
                 {summary.majors.flatMap((major) => {
@@ -101,17 +120,33 @@ export function PlannerSummary({ planner }: { readonly planner: PlannerDetail })
                         ? i18n.resolvedLanguage === "en"
                             ? major.department.name_en
                             : major.department.name
-                        : t("planner.summary.interdisciplinary")
+                        : null
+                    const trackType = t(`planner.trackTypes.${major.type}`)
+                    const label = (category: string) => (
+                        <>
+                            {department !== null && (
+                                <>
+                                    <LabelSegment>{department}</LabelSegment>
+                                    {" · "}
+                                </>
+                            )}
+                            <LabelSegment>{trackType}</LabelSegment>
+                            {" · "}
+                            <LabelSegment>{category}</LabelSegment>
+                        </>
+                    )
                     return [
                         <ProgressCard
                             key={`${major.key}:required`}
-                            label={`${department} · ${t("planner.summary.categories.majorRequired")}`}
+                            label={label(t("planner.summary.categories.majorRequired"))}
                             progress={major.required}
+                            unit={creditUnit}
                         />,
                         <ProgressCard
                             key={`${major.key}:elective`}
-                            label={`${department} · ${t("planner.summary.categories.majorElective")}`}
+                            label={label(t("planner.summary.categories.majorElective"))}
                             progress={major.elective}
+                            unit={creditUnit}
                         />,
                     ]
                 })}
