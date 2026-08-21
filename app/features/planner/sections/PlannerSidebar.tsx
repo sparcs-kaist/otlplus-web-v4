@@ -15,8 +15,12 @@ import { media } from "@/styles/themes/media"
 import { ActionButton, SectionTitle } from "../components/PlannerControls"
 
 const Sidebar = styled.aside`
+    position: sticky;
+    top: 0;
     display: flex;
+    align-self: start;
     width: 240px;
+    max-height: calc(100dvh - 80px);
     min-height: 0;
     flex-direction: column;
     gap: 12px;
@@ -26,7 +30,10 @@ const Sidebar = styled.aside`
     box-shadow: ${({ theme }) => theme.elevation.surface};
 
     ${media.tablet} {
+        position: static;
         width: 100%;
+        max-height: none;
+        align-self: stretch;
         flex: 0 0 auto;
         padding: 12px;
     }
