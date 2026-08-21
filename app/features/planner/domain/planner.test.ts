@@ -129,7 +129,9 @@ describe("PlannerDetailSchema", () => {
         const takenItem = planner.taken_items[0]
         const futureItem = planner.future_items[0]
         if (takenItem === undefined || futureItem === undefined) {
-            throw new RangeError("planner response fixture must contain taken and future items")
+            throw new RangeError(
+                "planner response fixture must contain taken and future items",
+            )
         }
         const detailedCourse = {
             ...course,
