@@ -1,26 +1,30 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
-import {
-    type PlannerDetail,
-    PlannerListSchema,
-    TracksResponseSchema,
-} from "@/common/schemas/planner"
+import { type PlannerDetail, TracksResponseSchema } from "@/common/schemas/planner"
 import { PlannerListResponseSchema } from "@/common/schemas/plannerResponse"
 import { useAPI } from "@/utils/api/useAPI"
 import useUserStore from "@/utils/zustand/useUserStore"
 
 import { createLocalIdAllocator } from "../domain/local"
+import {
+    PLANNER_STORAGE_KEY,
+    getPlannerStorage,
+    readPlannerStorage,
+    writePlannerStorage,
+} from "../domain/persistence"
 import { usePlannerItems } from "./usePlannerItems"
 import { usePlannerManagement } from "./usePlannerManagement"
 
-export const PLANNER_STORAGE_KEY = "otlplus.planner.local"
+export { PLANNER_STORAGE_KEY } from "../domain/persistence"
 
 export function usePlannerController() {
     const { status, user } = useUserStore()
     const isAuthenticated = status === "success" && user !== null
     const userId = user?.id ?? 0
     const [localPlanners, setLocalPlanners] = useState<PlannerDetail[]>([])
-    const [isHydrated, setIsHydrated] = useState(false)
+    const [persistenceStatus, setPersistenceStatus] = useState<
+        "hydrating" | "available" | "unavailable"
+    >("hydrating")
     const [selectedPlannerId, setSelectedPlannerId] = useState<number | null>(null)
     const localIdAllocatorRef = useRef(createLocalIdAllocator())
 
@@ -35,30 +39,31 @@ export function usePlannerController() {
     }).query
 
     useEffect(() => {
-        const stored = window.localStorage.getItem(PLANNER_STORAGE_KEY)
-        if (stored !== null) {
-            try {
-                const parsed = PlannerListSchema.safeParse(JSON.parse(stored))
-                if (parsed.success) {
-                    setLocalPlanners(parsed.data)
-                    localIdAllocatorRef.current.reserve(parsed.data)
-                } else {
-                    window.localStorage.removeItem(PLANNER_STORAGE_KEY)
-                }
-            } catch (error) {
-                if (!(error instanceof SyntaxError)) throw error
-                window.localStorage.removeItem(PLANNER_STORAGE_KEY)
-            }
+        const storage = getPlannerStorage(window)
+        if (storage === null) {
+            setPersistenceStatus("unavailable")
+            return
         }
-        setIsHydrated(true)
+        const result = readPlannerStorage(storage, PLANNER_STORAGE_KEY)
+        if (result.status !== "loaded") {
+            setPersistenceStatus("unavailable")
+            return
+        }
+        setLocalPlanners(result.planners)
+        localIdAllocatorRef.current.reserve(result.planners)
+        setPersistenceStatus("available")
     }, [])
 
     useEffect(() => {
-        if (!isHydrated) return
-        const parsed = PlannerListSchema.safeParse(localPlanners)
-        if (!parsed.success) return
-        window.localStorage.setItem(PLANNER_STORAGE_KEY, JSON.stringify(parsed.data))
-    }, [isHydrated, localPlanners])
+        if (persistenceStatus !== "available") return
+        const storage = getPlannerStorage(window)
+        if (
+            storage === null ||
+            !writePlannerStorage(storage, PLANNER_STORAGE_KEY, localPlanners)
+        ) {
+            setPersistenceStatus("unavailable")
+        }
+    }, [localPlanners, persistenceStatus])
 
     const planners = useMemo(
         () =>
@@ -105,7 +110,10 @@ export function usePlannerController() {
         selectedPlannerId,
         setSelectedPlannerId,
         tracks: tracksQuery.data,
-        isLoading: tracksQuery.isLoading || (isAuthenticated && plannersQuery.isLoading),
+        isLoading:
+            tracksQuery.isLoading ||
+            persistenceStatus === "hydrating" ||
+            (isAuthenticated && plannersQuery.isLoading),
         isBusy: management.isBusy || items.isBusy,
         error:
             tracksQuery.error ?? plannersQuery.error ?? management.error ?? items.error,
