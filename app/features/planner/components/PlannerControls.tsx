@@ -1,5 +1,7 @@
 import styled from "@emotion/styled"
 
+import { media } from "@/styles/themes/media"
+
 export const ActionButton = styled.button<{ $primary?: boolean; $danger?: boolean }>`
     appearance: none;
     border: 1px solid
@@ -45,6 +47,11 @@ export const ActionButton = styled.button<{ $primary?: boolean; $danger?: boolea
     &:disabled {
         cursor: not-allowed;
         opacity: 0.45;
+    }
+
+    ${media.mobile} {
+        min-width: 44px;
+        min-height: 44px;
     }
 `
 
