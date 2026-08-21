@@ -6,6 +6,7 @@ import {
     type PlannerItem,
     type PlannerSemester,
 } from "@/common/schemas/planner"
+import { media } from "@/styles/themes/media"
 
 import { SectionTitle } from "../components/PlannerControls"
 import PlannerItemCard from "../components/PlannerItemCard"
@@ -32,6 +33,14 @@ const SemesterColumns = styled.div`
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(210px, 100%), 1fr));
     gap: 8px;
+
+    ${media.tablet} {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    ${media.mobile} {
+        grid-template-columns: minmax(0, 1fr);
+    }
 `
 
 const SemesterColumn = styled.div`
