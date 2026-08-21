@@ -1,7 +1,30 @@
 import type { PersistedClient, Persister } from "@tanstack/react-query-persist-client"
 import { del, get, set } from "idb-keyval"
 
+import logger from "@/utils/logger"
+
 const IDB_KEY = "otlplus-query-cache"
+
+type PersistenceOperation = "persist" | "restore" | "remove"
+
+let hasWarnedPersistenceFailure = false
+
+function warnPersistenceFailure(operation: PersistenceOperation, error: unknown) {
+    if (hasWarnedPersistenceFailure) return
+    hasWarnedPersistenceFailure = true
+    logger.warn("Query cache persistence unavailable", {
+        operation,
+        errorName: error instanceof Error ? error.name : typeof error,
+    })
+}
+
+async function removePersistedClient(): Promise<void> {
+    try {
+        await del(IDB_KEY)
+    } catch (error) {
+        warnPersistenceFailure("remove", error)
+    }
+}
 
 function serialize(client: PersistedClient): string {
     return JSON.stringify(client)
@@ -14,22 +37,31 @@ function deserialize(cachedString: string): PersistedClient {
 export function createIDBPersister(): Persister {
     return {
         persistClient: async (client: PersistedClient) => {
-            const serialized = serialize(client)
-            await set(IDB_KEY, serialized)
+            const serializedClient = serialize(client)
+            try {
+                await set(IDB_KEY, serializedClient)
+            } catch (error) {
+                warnPersistenceFailure("persist", error)
+            }
         },
         restoreClient: async () => {
-            const cached = await get<string>(IDB_KEY)
+            let cached: string | undefined
+            try {
+                cached = await get<string>(IDB_KEY)
+            } catch (error) {
+                warnPersistenceFailure("restore", error)
+                return undefined
+            }
+
             if (!cached) return undefined
             try {
                 return deserialize(cached)
             } catch {
-                await del(IDB_KEY)
+                await removePersistedClient()
                 return undefined
             }
         },
-        removeClient: async () => {
-            await del(IDB_KEY)
-        },
+        removeClient: removePersistedClient,
     }
 }
 

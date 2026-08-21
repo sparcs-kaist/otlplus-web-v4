@@ -16,7 +16,7 @@ describe("shouldPersistQuery", () => {
         expect(shouldPersistQuery(getQuery(client, [queryKeys.semesters])!)).toBe(true)
     })
 
-    it.each([queryKeys.userInfo, queryKeys.timetables, `${queryKeys.timetables}/123`])(
+    it.each([queryKeys.userInfo, queryKeys.timetables, queryKeys.timetableDetail(123)])(
         "does not persist authenticated query %s",
         (key) => {
             const client = new QueryClient()

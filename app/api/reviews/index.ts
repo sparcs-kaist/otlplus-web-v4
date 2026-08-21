@@ -1,5 +1,6 @@
 import { z } from "zod"
 
+import { ReviewModeEnum } from "@/common/enum/reviewModeEnum"
 import { ScoreEnum } from "@/common/enum/scoreEnum"
 import { SemesterEnum } from "@/common/enum/semesterEnum"
 import { ReviewSchema } from "@/common/schemas/review"
@@ -8,7 +9,7 @@ import { ReviewSchema } from "@/common/schemas/review"
 export const GETRequest = z.object({
     courseId: z.number().int().optional(),
     professorId: z.number().int().optional(),
-    mode: z.enum(["default", "recent", "hall-of-fame", "review-feed", "popular-feed"]),
+    mode: z.enum(ReviewModeEnum),
     year: z.number().int().optional(),
     semester: z.enum(SemesterEnum).optional(),
     offset: z.number().int(),

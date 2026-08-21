@@ -13,6 +13,7 @@ import { Link } from "react-router"
 import Button from "@/common/components/Button"
 import Credits from "@/common/components/Credits"
 import { flattenTimeTableColors } from "@/common/components/timetable/Tile"
+import { LectureActionEnum } from "@/common/enum/lectureActionEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
@@ -20,6 +21,7 @@ import type { Lecture } from "@/common/schemas/lecture"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
 import isLectureAddDisabled from "@/features/timetable/utils/isLectureAddDisabled"
 import { trackEvent } from "@/libs/mixpanel"
+import { queryKeys } from "@/libs/query/queryKeys"
 import { useAPI } from "@/utils/api/useAPI"
 import checkOverlap from "@/utils/timetable/checkOverlap"
 import useIsDevice from "@/utils/useIsDevice"
@@ -80,7 +82,7 @@ const MultipleSelectLectureBlock = styled(FlexWrapper)`
     padding: 12px 16px;
     background-color: ${({ theme }) => theme.colors.Background.Block.default};
     border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    box-shadow: ${({ theme }) => theme.elevation.low};
 `
 
 interface LectureDetailSectionProps {
@@ -145,8 +147,9 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
         `/users/${user?.id}/wishlist`,
         {
             onSuccess: () => {
+                if (!user) return
                 queryClient.invalidateQueries({
-                    queryKey: [`/users/${user?.id}/wishlist`],
+                    queryKey: [queryKeys.userWishlist(user.id)],
                 })
             },
         },
@@ -193,7 +196,7 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
     const handleLikeClick = (wish: boolean, lectureId: number) => {
         if (status === "idle") return
 
-        const action = wish ? "delete" : "add"
+        const action = wish ? LectureActionEnum.DELETE : LectureActionEnum.ADD
         trackEvent("Update Wishlist", {
             action,
             lectureId,

@@ -7,6 +7,7 @@ import { useInView } from "react-intersection-observer"
 import LoadingCircle from "@/common/components/LoadingCircle"
 import ScrollableDropdown from "@/common/components/ScrollableDropdown"
 import ReviewBlock from "@/common/components/reviews/ReviewBlock"
+import { ReviewModeEnum } from "@/common/enum/reviewModeEnum"
 import { SemesterEnum, semesterToString } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
@@ -48,19 +49,19 @@ function HallOfFameFeedSubSection() {
 
     useEffect(() => {
         setParams({
-            mode: "hall-of-fame",
+            mode: ReviewModeEnum.HALL_OF_FAME,
         })
     }, [])
 
     useEffect(() => {
         if (selectedOption === 0) {
             setParams({
-                mode: "hall-of-fame",
+                mode: ReviewModeEnum.HALL_OF_FAME,
             })
             return
         }
         setParams({
-            mode: "hall-of-fame",
+            mode: ReviewModeEnum.HALL_OF_FAME,
             year: serverSemesters.data?.semesters[selectedOption - 1]?.year ?? 2025,
             semester:
                 serverSemesters.data?.semesters[selectedOption - 1]?.semester ??

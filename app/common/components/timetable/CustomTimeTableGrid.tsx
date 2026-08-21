@@ -106,7 +106,7 @@ const BackgroundGridBlock = styled(FlexWrapper)`
 
         @media (hover: hover) {
             :hover div {
-                background: rgba(229, 76, 101, 0.2);
+                background: ${({ theme }) => theme.colors.Highlight.subtle};
             }
         }
     }

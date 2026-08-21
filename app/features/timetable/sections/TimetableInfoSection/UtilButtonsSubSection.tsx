@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
@@ -6,6 +6,7 @@ import { Check } from "@mui/icons-material"
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth"
 import ContentCopyIcon from "@mui/icons-material/ContentCopy"
 import ImageIcon from "@mui/icons-material/Image"
+import * as Sentry from "@sentry/react"
 import { useTranslation } from "react-i18next"
 
 import { SemesterEnum, semesterToString } from "@/common/enum/semesterEnum"
@@ -19,6 +20,7 @@ import {
 } from "@/features/timetable/sections/TimetableInfoSection/util/shareFunctions"
 import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
+import logger from "@/utils/logger"
 import useIsDevice from "@/utils/useIsDevice"
 import useThemeStore from "@/utils/zustand/useThemeStore"
 
@@ -50,9 +52,17 @@ const ExportButton = styled.button`
     color: ${({ theme }) => theme.colors.Highlight.default};
     font-size: 13px;
 
-    &:hover {
+    &:hover:not(:disabled) {
         text-decoration: underline;
     }
+
+    &:disabled {
+        cursor: default;
+    }
+`
+
+const ExportIcon = styled(Icon)`
+    cursor: inherit;
 `
 
 export default function UtilButtonsSubSection({
@@ -74,8 +84,13 @@ export default function UtilButtonsSubSection({
     const { query } = useAPI("GET", "/semesters")
 
     const [process, setProcess] = useState<
-        "idle" | "successCopyImage" | "successDownloadImage" | "successDownloadCalendar"
+        | "idle"
+        | "processing"
+        | "successCopyImage"
+        | "successDownloadImage"
+        | "successDownloadCalendar"
     >("idle")
+    const exportInFlightRef = useRef(false)
 
     const currentSemester = useMemo(() => {
         if (!query) return null
@@ -100,75 +115,105 @@ export default function UtilButtonsSubSection({
         }
     }, [process])
 
+    const imageData = {
+        timetableName,
+        lectures: timetableLectures,
+        timetableType,
+        semesterName: year + " " + semesterToString(semester),
+        semesterFontSize: 30,
+        tileFontSize: 18,
+        displayMode: displayedTheme,
+        language: i18n.resolvedLanguage == "ko" ? "ko" : "en",
+    } as const
+
+    const beginExport = () => {
+        if (exportInFlightRef.current || process !== "idle") return false
+        exportInFlightRef.current = true
+        setProcess("processing")
+        return true
+    }
+
+    const finishExport = (
+        result:
+            | "idle"
+            | "successCopyImage"
+            | "successDownloadImage"
+            | "successDownloadCalendar",
+    ) => {
+        exportInFlightRef.current = false
+        setProcess(result)
+    }
+
+    const reportExportError = (action: string, error: unknown) => {
+        logger.error(`Timetable ${action} failed`, error)
+        Sentry.captureException(error, {
+            tags: { type: "timetable_export", action },
+        })
+        finishExport("idle")
+    }
+
+    const handleCopyImage = async () => {
+        if (!beginExport()) return
+        try {
+            const copied = await copyTimetableImageToClipboard(imageData)
+            finishExport(copied ? "successCopyImage" : "idle")
+        } catch (error) {
+            reportExportError("image_copy", error)
+        }
+    }
+
+    const handleDownloadImage = async () => {
+        if (!beginExport()) return
+        try {
+            await downloadTimetableImage(imageData)
+            finishExport("successDownloadImage")
+        } catch (error) {
+            reportExportError("image_download", error)
+        }
+    }
+
+    const handleDownloadCalendar = () => {
+        if (!currentSemester || !beginExport()) return
+        try {
+            downloadTimetableCalendar({
+                name: timetableName,
+                lectures: timetableLectures,
+                semesterObject: {
+                    beginning: new Date(currentSemester.beginning),
+                    end: new Date(currentSemester.end),
+                },
+            })
+            finishExport("successDownloadCalendar")
+        } catch (error) {
+            reportExportError("calendar_download", error)
+        }
+    }
+
     return (
         <UtilButtonsWrapper direction={isTablet ? "row" : "column"} gap={8}>
-            <ExportButton
-                onClick={() => {
-                    if (process === "idle") {
-                        copyTimetableImageToClipboard({
-                            timetableName: timetableName,
-                            lectures: timetableLectures,
-                            timetableType: timetableType,
-                            semesterName: year + " " + semesterToString(semester),
-                            semesterFontSize: 30,
-                            tileFontSize: 18,
-                            displayMode: displayedTheme,
-                            language: i18n.resolvedLanguage == "ko" ? "ko" : "en",
-                        })
-                        setProcess("successCopyImage")
-                    }
-                }}
-            >
-                <Icon size={16} color={theme.colors.Highlight.default} onClick={() => {}}>
+            <ExportButton onClick={handleCopyImage} disabled={process !== "idle"}>
+                <ExportIcon size={16} color={theme.colors.Highlight.default}>
                     {process == "successCopyImage" ? <Check /> : <ContentCopyIcon />}
-                </Icon>
+                </ExportIcon>
                 {!isTablet && <span>{t("timetable.copyImage")}</span>}
             </ExportButton>
-            <ExportButton
-                onClick={() => {
-                    if (process === "idle") {
-                        downloadTimetableImage({
-                            timetableName: timetableName,
-                            lectures: timetableLectures,
-                            timetableType: timetableType,
-                            semesterName: year + " " + semesterToString(semester),
-                            semesterFontSize: 30,
-                            tileFontSize: 18,
-                            displayMode: displayedTheme,
-                            language: i18n.resolvedLanguage == "ko" ? "ko" : "en",
-                        })
-                        setProcess("successDownloadImage")
-                    }
-                }}
-            >
-                <Icon size={16} color={theme.colors.Highlight.default} onClick={() => {}}>
+            <ExportButton onClick={handleDownloadImage} disabled={process !== "idle"}>
+                <ExportIcon size={16} color={theme.colors.Highlight.default}>
                     {process == "successDownloadImage" ? <Check /> : <ImageIcon />}
-                </Icon>
+                </ExportIcon>
                 {!isTablet && <span>{t("timetable.exportImage")}</span>}
             </ExportButton>
             <ExportButton
-                onClick={() => {
-                    if (process === "idle") {
-                        if (!currentSemester) return
-                        downloadTimetableCalendar({
-                            name: timetableName,
-                            lectures: timetableLectures,
-                            semesterObject: {
-                                beginning: new Date(currentSemester.beginning),
-                                end: new Date(currentSemester.end),
-                            },
-                        })
-                        setProcess("successDownloadCalendar")
-                    }
-                }}
+                onClick={handleDownloadCalendar}
+                disabled={process !== "idle" || !currentSemester}
             >
-                <Icon size={16} color={theme.colors.Highlight.default}>
+                <ExportIcon size={16} color={theme.colors.Highlight.default}>
                     {process == "successDownloadCalendar" ? (
                         <Check />
                     ) : (
                         <CalendarMonthIcon />
                     )}
-                </Icon>
+                </ExportIcon>
                 {!isTablet && <span>{t("timetable.exportICal")}</span>}
             </ExportButton>
         </UtilButtonsWrapper>

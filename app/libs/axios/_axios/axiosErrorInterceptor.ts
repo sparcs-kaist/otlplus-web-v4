@@ -1,8 +1,12 @@
 import * as Sentry from "@sentry/react"
 import { AxiosError, type AxiosResponse, HttpStatusCode } from "axios"
 
+import { sanitizeSentryUrl } from "@/libs/sentry/sentryEventFilter"
 import { handleSessionExpired } from "@/utils/handleSessionExpired"
+import { sessionStorageKeys } from "@/utils/storageKeys"
 import useBackendStatusStore from "@/utils/zustand/useBackendStatusStore"
+
+import { shouldCaptureApiError } from "./apiErrorReporting"
 
 function isNetworkError(error: AxiosError): boolean {
     return (
@@ -13,14 +17,6 @@ function isNetworkError(error: AxiosError): boolean {
     )
 }
 
-function isServerError(status: number | undefined): boolean {
-    return status !== undefined && status >= 500 && status < 600
-}
-
-function isAuthError(status: number | undefined): boolean {
-    return status === HttpStatusCode.Unauthorized || status === HttpStatusCode.Forbidden
-}
-
 const errorInterceptor = {
     onFulfilled(values: AxiosResponse) {
         useBackendStatusStore.getState().setBackendReachable(true)
@@ -29,10 +25,9 @@ const errorInterceptor = {
     async onRejected(error: AxiosError) {
         const status = error.response?.status
 
-        // Don't report 401/403 to Sentry — these are expected auth errors
-        if (Sentry.getClient() && !isAuthError(status)) {
+        if (Sentry.getClient() && shouldCaptureApiError(status)) {
             const originalUrl = error.config?.url
-            const safeUrlPath = originalUrl ? originalUrl.split("?")[0] : undefined
+            const safeUrlPath = originalUrl ? sanitizeSentryUrl(originalUrl) : undefined
             const safeError = new Error(error.message || "Axios request failed")
 
             const tags: Record<string, string> = { type: "api_error" }
@@ -52,24 +47,27 @@ const errorInterceptor = {
             useBackendStatusStore.getState().setBackendReachable(true)
         }
 
-        if (isServerError(status)) {
+        if (shouldCaptureApiError(status)) {
             if (typeof window !== "undefined") {
                 const { location, sessionStorage } = window
-                const SERVER_ERROR_REDIRECT_FLAG = "serverErrorRedirected"
-
                 const onServerErrorPage = location.pathname.includes("/server-error")
                 let hasRedirected = false
 
                 try {
                     hasRedirected =
-                        sessionStorage.getItem(SERVER_ERROR_REDIRECT_FLAG) === "true"
+                        sessionStorage.getItem(
+                            sessionStorageKeys.serverErrorRedirected,
+                        ) === "true"
                 } catch {
                     // Access to sessionStorage can fail in some environments; ignore.
                 }
 
                 if (!onServerErrorPage && !hasRedirected) {
                     try {
-                        sessionStorage.setItem(SERVER_ERROR_REDIRECT_FLAG, "true")
+                        sessionStorage.setItem(
+                            sessionStorageKeys.serverErrorRedirected,
+                            "true",
+                        )
                     } catch {
                         // Ignore storage errors; redirect will still proceed.
                     }

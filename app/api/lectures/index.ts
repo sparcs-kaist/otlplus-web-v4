@@ -1,5 +1,6 @@
 import { z } from "zod"
 
+import { LectureOrderEnum } from "@/common/enum/orderEnum"
 import { SemesterEnum } from "@/common/enum/semesterEnum"
 import { WeekdayEnum } from "@/common/enum/weekdayEnum"
 import { LectureSchema } from "@/common/schemas/lecture"
@@ -15,7 +16,7 @@ export const GETRequest = z.object({
     day: z.enum(WeekdayEnum).optional(),
     begin: z.number().int().optional(),
     end: z.number().int().optional(),
-    order: z.enum(["code", "popular", "studentCount"]),
+    order: z.enum(LectureOrderEnum),
     offset: z.number().int(),
     limit: z.number().int(),
 })

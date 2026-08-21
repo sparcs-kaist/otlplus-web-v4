@@ -1,31 +1,15 @@
 import React, { useEffect, useState } from "react"
 
-import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
 import { useInView } from "react-intersection-observer"
 
 import LoadingCircle from "@/common/components/LoadingCircle"
+import StyledDivider from "@/common/components/StyledDivider"
 import ReviewBlock from "@/common/components/reviews/ReviewBlock"
-import { getAverageScoreLabel } from "@/common/enum/scoreEnum"
+import ReviewScoreSummary from "@/common/components/reviews/ReviewScoreSummary"
+import { ReviewModeEnum } from "@/common/enum/reviewModeEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
-import Typography from "@/common/primitives/Typography"
 import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
-
-const NumberWrapper = styled(FlexWrapper)`
-    width: 100%;
-    max-width: 300px;
-    padding: 10px;
-`
-
-const NumberContent = styled(FlexWrapper)`
-    flex: 1 0 0;
-`
-
-const Divider = styled.div`
-    width: 100%;
-    min-height: 1px;
-    background-color: ${({ theme }) => theme.colors.Line.divider};
-`
 
 interface LectureReviewSubsectionProps {
     selectedCourseId: number | null
@@ -51,7 +35,7 @@ const LectureReviewSubsection: React.FC<LectureReviewSubsectionProps> = ({
         setParamsFixed(false)
         const timer = setTimeout(() => {
             setParams({
-                mode: "default",
+                mode: ReviewModeEnum.DEFAULT,
                 courseId: selectedCourseId ?? undefined,
                 professorId: selectedProfessorId ?? undefined,
             })
@@ -80,49 +64,20 @@ const LectureReviewSubsection: React.FC<LectureReviewSubsectionProps> = ({
                 align="center"
                 style={{ width: "100%" }}
             >
-                <NumberWrapper
-                    direction="row"
-                    gap={0}
-                    justify={"space-between"}
-                    align={"center"}
-                >
-                    {[
-                        [
-                            getAverageScoreLabel(
-                                data?.averageGrade,
-                                data?.reviews.length,
-                            ),
-                            t("common.grade"),
-                        ],
-                        [
-                            getAverageScoreLabel(data?.averageLoad, data?.reviews.length),
-                            t("common.load"),
-                        ],
-                        [
-                            getAverageScoreLabel(
-                                data?.averageSpeech,
-                                data?.reviews.length,
-                            ),
-                            t("common.speech"),
-                        ],
-                    ].map(([value, label], index) => (
-                        <NumberContent
-                            key={index}
-                            direction="column"
-                            gap={0}
-                            align={"center"}
-                        >
-                            <Typography type={"Bigger"} color={"Text.default"}>
-                                {value}
-                            </Typography>
-                            <Typography type={"Smaller"} color={"Text.default"}>
-                                {label}
-                            </Typography>
-                        </NumberContent>
-                    ))}
-                </NumberWrapper>
+                <ReviewScoreSummary
+                    averageGrade={data?.averageGrade}
+                    averageLoad={data?.averageLoad}
+                    averageSpeech={data?.averageSpeech}
+                    reviewCount={data?.reviews.length}
+                    labels={{
+                        grade: t("common.grade"),
+                        load: t("common.load"),
+                        speech: t("common.speech"),
+                    }}
+                    fluid
+                />
             </FlexWrapper>
-            <Divider />
+            <StyledDivider />
 
             {data?.reviews.map((review) => (
                 <ReviewBlock review={review} key={review.id} linkToDictionary={true} />

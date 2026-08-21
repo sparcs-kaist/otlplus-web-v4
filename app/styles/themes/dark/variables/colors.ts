@@ -42,10 +42,19 @@ export const darkThemeColors: ThemeType["colors"] = {
         Tile: {
             highlight: "#E54C65",
         },
+        Overlay: {
+            default: "rgba(51, 51, 51, 0.5)",
+            text: "#FFFFFF",
+        },
+        Input: {
+            disabled: "#333333",
+        },
     },
     Highlight: {
         default: "#E54C65",
         dark: "#461720",
+        subtle: "rgba(229, 76, 101, 0.2)",
+        medium: "rgba(229, 76, 101, 0.4)",
     },
     Line: {
         default: "#2f2f2f",
@@ -62,6 +71,10 @@ export const darkThemeColors: ThemeType["colors"] = {
         light: "#838383",
         default: "#bdbdbd",
         dark: "#ffffff",
+        onHighlight: {
+            default: "#FFFFFF",
+            muted: "rgba(255, 255, 255, 0.5)",
+        },
     },
     TimeTable: {
         title: "#000000",

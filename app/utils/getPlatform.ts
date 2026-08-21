@@ -1,15 +1,15 @@
-export type OS = "ios" | "android" | "mac" | "PC"
+import { OSEnum } from "@/common/enum/osEnum"
 
-export const getPlatform = (): OS => {
-    if (typeof window === "undefined") return "PC"
+export const getPlatform = (): OSEnum => {
+    if (typeof window === "undefined") return OSEnum.PC
 
     const userAgent = window.navigator.userAgent.toLowerCase()
 
     if (!(navigator.maxTouchPoints && navigator.maxTouchPoints > 2)) {
-        if (/mac/.test(userAgent)) return "mac"
-        return "PC"
+        if (/mac/.test(userAgent)) return OSEnum.MAC
+        return OSEnum.PC
     }
 
-    if (/android/.test(userAgent) || /linux/.test(userAgent)) return "android"
-    return "ios"
+    if (/android/.test(userAgent) || /linux/.test(userAgent)) return OSEnum.ANDROID
+    return OSEnum.IOS
 }

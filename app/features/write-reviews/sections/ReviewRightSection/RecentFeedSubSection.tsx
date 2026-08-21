@@ -5,6 +5,7 @@ import { useInView } from "react-intersection-observer"
 
 import LoadingCircle from "@/common/components/LoadingCircle"
 import ReviewBlock from "@/common/components/reviews/ReviewBlock"
+import { ReviewModeEnum } from "@/common/enum/reviewModeEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import { useAPI } from "@/utils/api/useAPI"
@@ -29,7 +30,7 @@ function RecentFeedSubSection() {
 
     useEffect(() => {
         setParams({
-            mode: "recent",
+            mode: ReviewModeEnum.RECENT,
         })
     }, [])
 
