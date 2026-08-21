@@ -23,6 +23,12 @@ const taken = {
     lecture: csLecture,
 }
 
+function firstItem<T>(items: readonly T[]): T {
+    const item = items[0]
+    if (item === undefined) throw new Error("Expected a planner item")
+    return item
+}
+
 describe("planner duplicate policy", () => {
     it("blocks an active future duplicate but allows an excluded one", () => {
         expect(
@@ -56,10 +62,22 @@ describe("planner duplicate policy", () => {
         ).toBe("none")
     })
 
+    it("does not mark repeatable courses as duplicate warnings", () => {
+        const special = { ...csCourse, title_en: "Special Topics in AI" }
+        const planner = createPlanner({
+            taken_items: [{ ...taken, course: special }],
+            future_items: [{ ...future, course: special }],
+        })
+        expect(isActiveDuplicateItem(planner, firstItem(planner.taken_items))).toBe(false)
+        expect(isActiveDuplicateItem(planner, firstItem(planner.future_items))).toBe(
+            false,
+        )
+    })
+
     it("marks active taken/future duplicates in the grid", () => {
         const planner = createPlanner({ taken_items: [taken], future_items: [future] })
-        expect(isActiveDuplicateItem(planner, planner.taken_items[0]!)).toBe(true)
-        expect(isActiveDuplicateItem(planner, planner.future_items[0]!)).toBe(true)
+        expect(isActiveDuplicateItem(planner, firstItem(planner.taken_items))).toBe(true)
+        expect(isActiveDuplicateItem(planner, firstItem(planner.future_items))).toBe(true)
         expect(
             isActiveDuplicateItem(
                 createPlanner({

@@ -32,9 +32,9 @@ export function getCourseDuplicateDecision(
     return "none"
 }
 
-function itemCourseId(item: PlannerItem): number | null {
+function itemCourse(item: PlannerItem): PlannerCourse | null {
     if (item.item_type === "TAKEN" || item.item_type === "FUTURE") {
-        return item.course.id
+        return item.course
     }
     return null
 }
@@ -43,10 +43,10 @@ export function isActiveDuplicateItem(
     planner: PlannerDetail,
     item: PlannerItem,
 ): boolean {
-    const courseId = itemCourseId(item)
-    if (courseId === null || item.is_excluded) return false
+    const course = itemCourse(item)
+    if (course === null || item.is_excluded || isRepeatableCourse(course)) return false
     const matching = [...planner.taken_items, ...planner.future_items].filter(
-        (candidate) => !candidate.is_excluded && itemCourseId(candidate) === courseId,
+        (candidate) => !candidate.is_excluded && itemCourse(candidate)?.id === course.id,
     )
     return matching.length > 1
 }
