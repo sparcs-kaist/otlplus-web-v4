@@ -12,22 +12,29 @@ import Typography from "@/common/primitives/Typography"
 import { trackEvent } from "@/libs/mixpanel"
 
 interface CourseBlockProps {
-    course: GETCoursesResponse["courses"][number]
-    isSelected: boolean
-    selectCourseId: React.Dispatch<React.SetStateAction<number | null>>
+    readonly course: GETCoursesResponse["courses"][number]
+    readonly isSelected: boolean
+    readonly selectCourseId: (courseId: number | null) => void
 }
 
-const CourseBlockInner = styled.div<{ selected: boolean }>`
+const CourseBlockInner = styled.button<{ selected: boolean }>`
     width: 100%;
     border-radius: 7px;
     padding: 8px 10px;
     border: 1px ${({ theme }) => theme.colors.Background.Block.dark} solid;
+    color: inherit;
+    font: inherit;
+    text-align: left;
     cursor: pointer;
     &:hover {
         background-color: ${({ theme, selected }) =>
             selected
                 ? theme.colors.Background.Block.darker
                 : theme.colors.Background.Block.dark};
+    }
+    &:focus-visible {
+        outline: 2px solid ${({ theme }) => theme.colors.Highlight.default};
+        outline-offset: 2px;
     }
     background-color: ${({ selected, theme }) =>
         selected
@@ -69,7 +76,12 @@ const CourseBlock: React.FC<CourseBlockProps> = ({
     }, [isSelected, course.id, selectCourseId])
 
     return (
-        <CourseBlockInner onClick={handleClick} selected={isSelected}>
+        <CourseBlockInner
+            type="button"
+            aria-pressed={isSelected}
+            onClick={handleClick}
+            selected={isSelected}
+        >
             <FlexWrapper direction="row" gap={0} justify="space-between" align="center">
                 <FlexWrapper direction="row" gap={6} align={"center"}>
                     <Icon

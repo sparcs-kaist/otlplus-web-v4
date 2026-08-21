@@ -3,6 +3,7 @@ export const localStorageKeys = {
     devStudentId: "devStudentId",
     accessToken: "accessToken",
     refreshToken: "refreshToken",
+    channelTalkEnabled: "channelTalkEnabled",
 } as const
 
 export type LocalStorageKey = (typeof localStorageKeys)[keyof typeof localStorageKeys]

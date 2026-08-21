@@ -4,9 +4,8 @@ import { useNavigate } from "react-router"
 
 import SearchArea, { type SearchParamsType } from "@/common/components/search/SearchArea"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
+import { createDictionarySearchParams } from "@/features/dictionary/utils/dictionarySearchParams"
 import checkEmpty from "@/utils/search/checkEmpty"
-
-import createDictionarySearchParams from "./createDictionarySearchParams"
 
 const SearchSectionInner = styled(FlexWrapper)`
     flex: 0 1 auto;

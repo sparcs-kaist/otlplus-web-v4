@@ -2,15 +2,10 @@ import React, { useEffect, useRef, useState } from "react"
 
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
-import AddIcon from "@mui/icons-material/Add"
 import CircleIcon from "@mui/icons-material/Circle"
-import CloseIcon from "@mui/icons-material/Close"
-import FavoriteIcon from "@mui/icons-material/Favorite"
 import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
-import { Link } from "react-router"
 
-import Button from "@/common/components/Button"
 import Credits from "@/common/components/Credits"
 import { flattenTimeTableColors } from "@/common/components/timetable/Tile"
 import { LectureActionEnum } from "@/common/enum/lectureActionEnum"
@@ -19,14 +14,14 @@ import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
-import isLectureAddDisabled from "@/features/timetable/utils/isLectureAddDisabled"
 import { trackEvent } from "@/libs/mixpanel"
 import { queryKeys } from "@/libs/query/queryKeys"
 import { useAPI } from "@/utils/api/useAPI"
-import checkOverlap from "@/utils/timetable/checkOverlap"
 import useIsDevice from "@/utils/useIsDevice"
 import useUserStore from "@/utils/zustand/useUserStore"
 
+import LectureDetailActions from "./LectureDetailActions"
+import LectureDetailHeader from "./LectureDetailHeader"
 import LectureInfoSubsection from "./LectureInfoSubsection"
 import LectureReviewSubsection from "./LectureReviewSubsection"
 
@@ -44,34 +39,6 @@ const LectureDetailSectionInner = styled(FlexWrapper)`
 
 const LectureDetailWrapper = styled(FlexWrapper)`
     width: 100%;
-`
-
-const LectureTitle = styled(FlexWrapper)`
-    width: 100%;
-    position: sticky;
-    top: 0;
-    background-color: ${({ theme }) => theme.colors.Background.Section.default};
-    z-index: 10;
-    padding-bottom: 10px;
-    text-align: center;
-`
-
-const LectureActionsWrapper = styled(FlexWrapper)`
-    position: sticky;
-    bottom: 0;
-    width: 100%;
-    padding: 12px 0;
-    background-color: ${({ theme }) => theme.colors.Background.Section.default};
-    margin-top: auto;
-    z-index: 20;
-`
-
-const StyledLink = styled(Link)`
-    text-decoration: none;
-`
-
-const StyledAnchor = styled.a`
-    text-decoration: none;
 `
 
 const MultipleSelectWrapper = styled(FlexWrapper)`
@@ -157,42 +124,6 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
 
     const reviewSectionRef = useRef<HTMLDivElement>(null)
 
-    const getSyllabusUrl = (lecture: Lecture) => {
-        const payload = {
-            syy: String(year),
-            smtDivCd: String(semester),
-            subjtCd: lecture.code,
-            syllabusOpenYn: "0",
-        }
-        const encodedLecture = btoa(JSON.stringify(payload))
-        return `https://erp.kaist.ac.kr/com/lgin/SsoCtr/initExtPageWork.do?link=estblSubjt&params=${encodedLecture}`
-    }
-
-    const handleAddToTimetable = (lecture: Lecture) => {
-        if (!timetableLectures) return
-        const hasOverlap = timetableLectures.some((lec) =>
-            checkOverlap(lec.classes, lecture.classes),
-        )
-        if (
-            isLectureAddDisabled({
-                status,
-                currentTimetableId: currentTimetableId ?? null,
-                hasOverlap,
-            })
-        ) {
-            if (hasOverlap) alert(t("timetable.addLectureConflict"))
-            return
-        }
-        addLectures([lecture])
-        trackEvent("Add Lecture to Timetable", {
-            lectureId: lecture.id,
-            lectureCode: lecture.code,
-            courseName: lecture.name,
-            timetableId: currentTimetableId,
-            source: "LectureDetail",
-        })
-    }
-
     const handleLikeClick = (wish: boolean, lectureId: number) => {
         if (status === "idle") return
 
@@ -261,71 +192,12 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                 </MultipleSelectWrapper>
             ) : selectedLecture ? (
                 <>
-                    <LectureTitle
-                        direction="column"
-                        gap={2}
-                        align={"center"}
-                        justify={"center"}
-                    >
-                        <FlexWrapper
-                            direction="row"
-                            align="center"
-                            gap={8}
-                            justify={isTablet ? "space-between" : "center"}
-                            style={{ width: "100%" }}
-                        >
-                            {isTablet && <div style={{ width: 20 }}></div>}
-                            <Typography type={"Bigger"} color={"Text.default"}>
-                                {selectedLecture.name + selectedLecture.subtitle}
-                            </Typography>
-                            {isTablet && (
-                                <Icon
-                                    size={20}
-                                    onClick={onMobileModalClose}
-                                    color={theme.colors.Text.default}
-                                >
-                                    <CloseIcon />
-                                </Icon>
-                            )}
-                        </FlexWrapper>
-                        <Typography type={"Big"} color={"Text.default"}>
-                            {selectedLecture.code +
-                                " " +
-                                (selectedLecture.classNo !== ""
-                                    ? `(${selectedLecture.classNo})`
-                                    : "")}
-                        </Typography>
-                    </LectureTitle>
-                    <FlexWrapper
-                        direction="row"
-                        gap={8}
-                        justify="flex-end"
-                        style={{ width: "100%" }}
-                    >
-                        <StyledLink
-                            to={`/dictionary?courseId=${selectedLecture.courseId}`}
-                        >
-                            <Typography
-                                type={"Normal"}
-                                color={"Highlight.default"}
-                                style={{ cursor: "pointer" }}
-                            >
-                                {t("header.dictionary")}
-                            </Typography>
-                        </StyledLink>
-                        <StyledAnchor
-                            href={getSyllabusUrl(selectedLecture)}
-                            target="_blank"
-                        >
-                            <Typography
-                                type={"Normal"}
-                                color={"Highlight.default"}
-                                style={{ cursor: "pointer" }}
-                            >
-                                {t("header.syllabus")}
-                            </Typography>
-                        </StyledAnchor>
-                    </FlexWrapper>
+                    <LectureDetailHeader
+                        lecture={selectedLecture}
+                        onMobileModalClose={onMobileModalClose}
+                        semester={semester}
+                        year={year}
+                    />
                     <LectureDetailWrapper direction="column" gap={10} align="center">
                         <LectureInfoSubsection selectedLecture={selectedLecture} />
                     </LectureDetailWrapper>
@@ -340,69 +212,17 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                         />
                     </LectureDetailWrapper>
                     {isTablet && (
-                        <LectureActionsWrapper
-                            direction="row"
-                            gap={12}
-                            justify="flex-end"
-                        >
-                            {status === "success" && (
-                                <Button
-                                    onClick={() => {
-                                        handleLikeClick(
-                                            wishListIds.includes(selectedLecture.id),
-                                            selectedLecture.id,
-                                        )
-                                        if (onMobileModalClose) onMobileModalClose()
-                                    }}
-                                >
-                                    <Icon size={15}>
-                                        <FavoriteIcon />
-                                    </Icon>
-                                    <Typography type="NormalBold">
-                                        {wishListIds.includes(selectedLecture.id)
-                                            ? t("timetable.removeFromWishlist")
-                                            : t("timetable.addToWishlist")}
-                                    </Typography>
-                                </Button>
-                            )}
-
-                            {(currentTimetableId != null || status === "idle") &&
-                                (!timetableLectures?.some(
-                                    (lec) => lec.id === selectedLecture.id,
-                                ) ? (
-                                    <Button
-                                        type="selected"
-                                        onClick={() => {
-                                            handleAddToTimetable(selectedLecture)
-                                            if (onMobileModalClose) onMobileModalClose()
-                                        }}
-                                    >
-                                        <Icon size={15}>
-                                            <AddIcon />
-                                        </Icon>
-                                        <Typography type="NormalBold">
-                                            {t("timetable.addToTimetable")}
-                                        </Typography>
-                                    </Button>
-                                ) : (
-                                    <Button
-                                        type="selected"
-                                        onClick={() => {
-                                            if (removeLectures) {
-                                                removeLectures(selectedLecture.id)
-                                            }
-                                            if (onMobileModalClose) onMobileModalClose()
-                                        }}
-                                    >
-                                        <Icon size={15}>
-                                            <CloseIcon />
-                                        </Icon>
-                                        <Typography type="NormalBold">
-                                            {t("timetable.removeFromTimetable")}
-                                        </Typography>
-                                    </Button>
-                                ))}
-                        </LectureActionsWrapper>
+                        <LectureDetailActions
+                            currentTimetableId={currentTimetableId}
+                            lecture={selectedLecture}
+                            onAdd={(lecture) => addLectures([lecture])}
+                            onClose={onMobileModalClose}
+                            onRemove={removeLectures}
+                            onToggleWishlist={handleLikeClick}
+                            status={status}
+                            timetableLectures={timetableLectures}
+                            wishListIds={wishListIds}
+                        />
                     )}
                 </>
             ) : (

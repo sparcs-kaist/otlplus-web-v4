@@ -15,6 +15,10 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import CourseBlock from "@/features/dictionary/components/CourseBlock"
+import {
+    createDictionarySearchParams,
+    getDictionarySearch,
+} from "@/features/dictionary/utils/dictionarySearchParams"
 import { trackEvent } from "@/libs/mixpanel"
 import type { getAPIResponseType } from "@/utils/api/getAPIType"
 import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
@@ -70,8 +74,8 @@ const CourseBlockWrapper = styled(FlexWrapper)`
 `
 
 interface CourseListSectionProps {
-    selectedCourseId: number | null
-    setSelectedCourseId: React.Dispatch<React.SetStateAction<number | null>>
+    readonly selectedCourseId: number | null
+    readonly setSelectedCourseId: (courseId: number | null) => void
 }
 
 const LIMIT = 20
@@ -84,7 +88,9 @@ function CourseListSection({
     const theme = useTheme()
     const isMobile = useIsDevice("mobile")
     const scrollRef = useRef<HTMLDivElement>(null)
-    const [searchParams] = useSearchParams()
+    const [searchParams, setSearchParams] = useSearchParams()
+    const urlSearchParams = getDictionarySearch(searchParams)
+    const urlSearchKey = createDictionarySearchParams(urlSearchParams).toString()
 
     const [sortOption, setSortOption] = useState<number>(0)
 
@@ -114,21 +120,19 @@ function CourseListSection({
     }, [inView])
 
     useEffect(() => {
-        const term = searchParams.get("term")
-            ? parseInt(searchParams.get("term") as string)
-            : undefined
-        const param: SearchParamsType = {
-            keyword: searchParams.get("keyword") || "",
-            type: searchParams.getAll("type"),
-            department: searchParams.getAll("department").map((dept) => parseInt(dept)),
-            level: searchParams.getAll("level").map((lvl) => parseInt(lvl)),
+        if (checkEmpty(urlSearchParams)) {
+            setEnabled(false)
+            setSearchResult({ courses: [], totalCount: 0 })
+            return
         }
-        if (term !== undefined) {
-            param.term = term
-        }
-        if (checkEmpty(param)) return
-        handleSearch(param)
-    }, [])
+
+        setParams({
+            ...urlSearchParams,
+            order: LECTURE_ORDERS[sortOption] ?? LectureOrderEnum.CODE,
+        })
+        setEnabled(true)
+        scrollRef.current?.scrollTo(0, 0)
+    }, [urlSearchKey])
 
     useEffect(() => {
         if (data === undefined) return
@@ -156,15 +160,7 @@ function CourseListSection({
             alert(t("common.search.empty"))
             return
         }
-        const fullParam = {
-            ...param,
-            order: LECTURE_ORDERS[sortOption] ?? LectureOrderEnum.CODE,
-            offset: 0,
-            limit: LIMIT,
-        }
-        setParams(fullParam)
-        setEnabled(true)
-        scrollRef.current?.scrollTo(0, 0)
+        setSearchParams(createDictionarySearchParams(param))
         trackEvent("Search Courses", {
             keyword: param.keyword ?? "",
             department: param.department ?? "",

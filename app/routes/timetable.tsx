@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import SearchIcon from "@mui/icons-material/Search"
+import { useTranslation } from "react-i18next"
 
 import Modal from "@/common/components/Modal"
 import StyledDivider from "@/common/components/StyledDivider"
@@ -188,7 +189,27 @@ const MobileControlBar = styled(FlexWrapper)`
     box-shadow: ${({ theme }) => theme.elevation.surface};
 `
 
+const MobileSearchButton = styled.button`
+    height: 100%;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: ${({ theme }) => theme.colors.Highlight.default};
+    font: inherit;
+    cursor: pointer;
+
+    &:focus-visible {
+        outline: 2px solid ${({ theme }) => theme.colors.Highlight.default};
+        outline-offset: 2px;
+    }
+`
+
 export default function Timetable() {
+    const { t } = useTranslation()
     const { status } = useUserStore()
     const theme = useTheme()
 
@@ -317,6 +338,10 @@ export default function Timetable() {
         () => (canDeleteLecture ? (id: number) => removeLectures([id]) : undefined),
         [canDeleteLecture, removeLectures],
     )
+    const closeMobileLectureModal = useCallback(() => {
+        setHoveredLectures([])
+        setSelectedLectures([])
+    }, [setHoveredLectures, setSelectedLectures])
 
     // 과목을 선택할때는 반드시 onLectureSelect를 실행해줘야 다중선택이 작동함
     const { onLectureSelect } = useTimetableKeyboard({
@@ -405,27 +430,27 @@ export default function Timetable() {
                             year={year}
                             semester={semesterEnum}
                         />
-                        <FlexWrapper
-                            direction="row"
-                            gap={4}
-                            align="center"
-                            style={{ height: "100%" }}
-                            onClick={() => {
-                                setMobileSearchOpen(!mobileSearchOpen)
-                            }}
+                        <MobileSearchButton
+                            type="button"
+                            aria-expanded={mobileSearchOpen}
+                            aria-controls="mobile-lecture-search"
+                            onClick={() => setMobileSearchOpen(!mobileSearchOpen)}
                         >
                             <Icon size={16} color={theme.colors.Highlight.default}>
                                 <SearchIcon />
                             </Icon>
                             <Typography type="Normal" color="Highlight.default">
-                                {mobileSearchOpen ? "검색 닫기" : "과목 검색하기"}
+                                {mobileSearchOpen
+                                    ? t("timetable.closeLectureSearch")
+                                    : t("timetable.openLectureSearch")}
                             </Typography>
-                        </FlexWrapper>
+                        </MobileSearchButton>
                     </MobileControlBar>
 
                     {/* 하단: LectureListArea (검색 열렸을 때만) */}
                     {mobileSearchOpen && (
                         <SearchAreaWrapper
+                            id="mobile-lecture-search"
                             direction="row"
                             align="flex-start"
                             gap={12}
@@ -444,18 +469,16 @@ export default function Timetable() {
                     {/* 모달 */}
                     {selectedLectures.length > 0 && (
                         <Modal
+                            ariaLabel={selectedLectures.map((lecture) => lecture.name).join(", ")}
                             isOpen={selectedLectures.length > 0}
-                            onClose={() => {}}
+                            onClose={closeMobileLectureModal}
                             fullScreen={true}
                             header={false}
                         >
                             <LectureDetailSection
                                 addLectures={addLectures}
                                 removeLectures={handleDeleteLecture}
-                                onMobileModalClose={() => {
-                                    setHoveredLectures([])
-                                    setSelectedLectures([])
-                                }}
+                                onMobileModalClose={closeMobileLectureModal}
                                 currentTimetableId={currentTimetableId}
                                 timetableLectures={currentTimetableLectures}
                             />

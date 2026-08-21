@@ -22,6 +22,26 @@ describe("LectureAddButton", () => {
         expect(onClick).not.toHaveBeenCalled()
     })
 
+    it("fires while aria-disabled so the caller can explain the restriction", () => {
+        const onClick = vi.fn()
+        render(
+            <LectureAddButton
+                ariaDisabled
+                ariaLabel="Add to timetable"
+                color="#000"
+                disabled={false}
+                onClick={onClick}
+                size={15}
+            />,
+        )
+
+        const button = screen.getByRole("button", { name: "Add to timetable" })
+        expect(button).toHaveAttribute("aria-disabled", "true")
+        fireEvent.click(button)
+
+        expect(onClick).toHaveBeenCalledOnce()
+    })
+
     it("fires when enabled", () => {
         const onClick = vi.fn()
         render(

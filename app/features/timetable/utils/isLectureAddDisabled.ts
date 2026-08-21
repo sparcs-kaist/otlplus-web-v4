@@ -1,15 +1,26 @@
 import type { UserStatus } from "@/utils/zustand/useUserStore"
 
 interface LectureAddAvailability {
-    status: UserStatus
-    currentTimetableId: number | null
-    hasOverlap: boolean
+    readonly status: UserStatus
+    readonly currentTimetableId: number | null
+    readonly hasOverlap: boolean
 }
 
-export default function isLectureAddDisabled({
+export type LectureAddBlockReason = "loading" | "myTimetable" | "overlap"
+
+export function getLectureAddBlockReason({
     status,
     currentTimetableId,
     hasOverlap,
-}: LectureAddAvailability): boolean {
-    return (status !== "idle" && currentTimetableId === null) || hasOverlap
+}: LectureAddAvailability): LectureAddBlockReason | null {
+    if (status === "loading") return "loading"
+    if (status === "success" && currentTimetableId === null) return "myTimetable"
+    if (hasOverlap) return "overlap"
+    return null
+}
+
+export default function isLectureAddDisabled(
+    availability: LectureAddAvailability,
+): boolean {
+    return getLectureAddBlockReason(availability) !== null
 }

@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 
 import styled from "@emotion/styled"
 import MenuIcon from "@mui/icons-material/Menu"
+import { useTranslation } from "react-i18next"
 
 import { type GETUserInfoResponse } from "@/api/users/info"
 import Icon from "@/common/primitives/Icon"
@@ -50,17 +51,36 @@ const HeaderInner = styled.header`
     gap: 16px;
 `
 
-const MobileSidebarButtonWrapper = styled.div`
+const MobileSidebarButtonWrapper = styled.button`
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
     color: ${({ theme }) => theme.colors.Text.default};
+    cursor: pointer;
     display: none;
 
+    &:hover {
+        background-color: ${({ theme }) => theme.colors.Background.Button.default};
+    }
+
+    &:focus-visible {
+        outline: 2px solid ${({ theme }) => theme.colors.Highlight.default};
+        outline-offset: 2px;
+    }
+
     ${media.mobile} {
-        display: block;
+        display: flex;
     }
 `
 
 const Header: React.FC = () => {
     const isMobile = useIsDevice("mobile")
+    const { t } = useTranslation()
 
     const { displayedTheme } = useThemeStore()
     const { status: userStatus, setUser, clearUser } = useUserStore()
@@ -87,6 +107,11 @@ const Header: React.FC = () => {
         } else {
             setAccountPageOpen(true)
         }
+    }
+
+    const handleMobileAccountButtonClick = () => {
+        setMobileSidebarOpen(false)
+        handleAccountButtonClick()
     }
 
     useEffect(() => {
@@ -166,7 +191,12 @@ const Header: React.FC = () => {
                     mobileSidebar={false}
                     isLoading={query.isLoading}
                 />
-                <MobileSidebarButtonWrapper onClick={() => setMobileSidebarOpen(true)}>
+                <MobileSidebarButtonWrapper
+                    type="button"
+                    aria-label={t("header.openMenu")}
+                    title={t("header.openMenu")}
+                    onClick={() => setMobileSidebarOpen(true)}
+                >
                     <Icon size={18}>
                         <MenuIcon />
                     </Icon>
@@ -177,7 +207,7 @@ const Header: React.FC = () => {
                 mobileSidebarOpen={mobileSidebarOpen}
                 sidebarHeader={
                     <Setting
-                        handleAccountButtonClick={handleAccountButtonClick}
+                        handleAccountButtonClick={handleMobileAccountButtonClick}
                         userName={authenticatedUserInfo?.name ?? "Sign in"}
                         mobileSidebar={true}
                         isLoading={query.isLoading}
