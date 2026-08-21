@@ -448,7 +448,9 @@ export default function Timetable() {
                     {/* 모달 */}
                     {selectedLectures.length > 0 && (
                         <Modal
-                            ariaLabel={selectedLectures.map((lecture) => lecture.name).join(", ")}
+                            ariaLabel={selectedLectures
+                                .map((lecture) => lecture.name)
+                                .join(", ")}
                             isOpen={selectedLectures.length > 0}
                             onClose={closeMobileLectureModal}
                             fullScreen={true}

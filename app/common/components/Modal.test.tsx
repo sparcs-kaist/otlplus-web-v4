@@ -93,7 +93,9 @@ describe("Modal", () => {
             "true",
         )
         await waitFor(() =>
-            expect(screen.getByRole("button", { name: "common.search.close" })).toHaveFocus(),
+            expect(
+                screen.getByRole("button", { name: "common.search.close" }),
+            ).toHaveFocus(),
         )
     })
 
@@ -103,14 +105,18 @@ describe("Modal", () => {
         openOuter.focus()
         fireEvent.click(openOuter)
         await waitFor(() =>
-            expect(screen.getByRole("dialog", { name: "Outer dialog" })).toBeInTheDocument(),
+            expect(
+                screen.getByRole("dialog", { name: "Outer dialog" }),
+            ).toBeInTheDocument(),
         )
 
         const openInner = screen.getByRole("button", { name: "Open inner" })
         openInner.focus()
         fireEvent.click(openInner)
         await waitFor(() =>
-            expect(screen.getByRole("dialog", { name: "Inner dialog" })).toBeInTheDocument(),
+            expect(
+                screen.getByRole("dialog", { name: "Inner dialog" }),
+            ).toBeInTheDocument(),
         )
 
         fireEvent.keyDown(document, { key: "Escape" })
