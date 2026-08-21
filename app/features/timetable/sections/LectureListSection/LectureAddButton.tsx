@@ -23,6 +23,10 @@ const Button = styled.button<{ iconSize: number }>`
     }
 `
 
+const TooltipTarget = styled.span`
+    display: inline-flex;
+`
+
 interface LectureAddButtonProps {
     ariaLabel: string
     color: string
@@ -41,17 +45,18 @@ export default function LectureAddButton({
     title,
 }: LectureAddButtonProps) {
     return (
-        <Button
-            type="button"
-            aria-label={ariaLabel}
-            disabled={disabled}
-            iconSize={size}
-            onClick={onClick}
-            title={title}
-        >
-            <Icon size={size} color={color}>
-                <AddIcon />
-            </Icon>
-        </Button>
+        <TooltipTarget title={title}>
+            <Button
+                type="button"
+                aria-label={ariaLabel}
+                disabled={disabled}
+                iconSize={size}
+                onClick={onClick}
+            >
+                <Icon size={size} color={color}>
+                    <AddIcon />
+                </Icon>
+            </Button>
+        </TooltipTarget>
     )
 }
