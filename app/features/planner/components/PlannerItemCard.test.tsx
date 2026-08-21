@@ -38,9 +38,7 @@ describe("PlannerItemCard", () => {
         )
 
         expect(
-            screen.getByText(
-                "ARBITRARY · 0planner.items.credits · 2 planner.items.au",
-            ),
+            screen.getByText("ARBITRARY · 0planner.items.credits · 2 planner.items.au"),
         ).toBeInTheDocument()
     })
 })
