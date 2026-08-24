@@ -39,6 +39,7 @@ const Value = styled.strong`
 `
 
 const ProgressTrack = styled.div`
+    display: flex;
     height: 5px;
     margin-top: auto;
     overflow: hidden;
@@ -46,24 +47,47 @@ const ProgressTrack = styled.div`
     background: ${({ theme }) => theme.colors.Line.default};
 `
 
-const ProgressFill = styled.div<{ $ratio: number }>`
+const TakenFill = styled.div<{ $ratio: number }>`
     width: ${({ $ratio }) => `${Math.min(100, Math.max(0, $ratio * 100))}%`};
     height: 100%;
     background: ${({ theme }) => theme.colors.Highlight.default};
 `
 
+const PlannedFill = styled.div<{ $ratio: number }>`
+    width: ${({ $ratio }) => `${Math.min(100, Math.max(0, $ratio * 100))}%`};
+    height: 100%;
+    background-color: ${({ theme }) => theme.colors.Highlight.subtle};
+    background-image: repeating-linear-gradient(
+        45deg,
+        ${({ theme }) => theme.colors.Highlight.default} 0 3px,
+        transparent 3px 6px
+    );
+`
+
+function progressRatios(progress: Progress): { taken: number; planned: number } {
+    if (progress.required === 0) return { taken: 0, planned: 0 }
+    const taken = Math.min(1, Math.max(0, progress.taken / progress.required))
+    const planned = Math.min(
+        Math.max(0, 1 - taken),
+        Math.max(0, progress.planned / progress.required),
+    )
+    return { taken, planned }
+}
+
 function ProgressCard({
     label,
     progress,
     unit,
+    trackId,
 }: {
     label: ReactNode
     progress: Progress
     unit: string
+    trackId: string
 }) {
     const { t } = useTranslation()
     const completed = progress.taken + progress.planned
-    const ratio = progress.required === 0 ? 0 : completed / progress.required
+    const segments = progressRatios(progress)
     return (
         <SummaryCard>
             <Label>{label}</Label>
@@ -76,8 +100,19 @@ function ProgressCard({
                     planned: progress.planned,
                 })}
             </Label>
-            <ProgressTrack aria-hidden="true">
-                <ProgressFill $ratio={ratio} />
+            <ProgressTrack aria-hidden="true" data-track={trackId}>
+                <TakenFill
+                    data-segment="taken"
+                    data-ratio={segments.taken}
+                    $ratio={segments.taken}
+                />
+                {progress.planned > 0 && (
+                    <PlannedFill
+                        data-segment="planned"
+                        data-ratio={segments.planned}
+                        $ratio={segments.planned}
+                    />
+                )}
             </ProgressTrack>
         </SummaryCard>
     )
@@ -113,6 +148,7 @@ export function PlannerSummary({ planner }: { readonly planner: PlannerDetail })
                         label={t(`planner.summary.categories.${key}`)}
                         progress={progress}
                         unit={unit}
+                        trackId={key}
                     />
                 ))}
                 {summary.majors.flatMap((major) => {
@@ -141,12 +177,14 @@ export function PlannerSummary({ planner }: { readonly planner: PlannerDetail })
                             label={label(t("planner.summary.categories.majorRequired"))}
                             progress={major.required}
                             unit={creditUnit}
+                            trackId={`${major.key}:required`}
                         />,
                         <ProgressCard
                             key={`${major.key}:elective`}
                             label={label(t("planner.summary.categories.majorElective"))}
                             progress={major.elective}
                             unit={creditUnit}
+                            trackId={`${major.key}:elective`}
                         />,
                     ]
                 })}
