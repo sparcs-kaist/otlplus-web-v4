@@ -55,10 +55,7 @@ describe("PlannerSummary progress bars", () => {
             throw new Error("Expected both bar segments")
         }
         expect(Number.parseFloat(taken.dataset.ratio ?? "NaN")).toBeCloseTo(0, 5)
-        expect(Number.parseFloat(planned.dataset.ratio ?? "NaN")).toBeCloseTo(
-            3 / 130,
-,
-        )
+        expect(Number.parseFloat(planned.dataset.ratio ?? "NaN")).toBeCloseTo(3 / 130, 5)
 
         const electiveTrack = track(container, "PRIMARY:CS:elective")
         const electivePlanned = electiveTrack.querySelector<HTMLElement>(
@@ -67,7 +64,7 @@ describe("PlannerSummary progress bars", () => {
         if (electivePlanned === null) throw new Error("Expected an elective stripe")
         expect(Number.parseFloat(electivePlanned.dataset.ratio ?? "NaN")).toBeCloseTo(
             3 / 21,
-,
+            5,
         )
     })
 })
