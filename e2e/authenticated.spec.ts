@@ -21,7 +21,7 @@ async function openAuthenticatedPage(page: Page, path: string): Promise<string> 
 test.describe("Authenticated user flows", () => {
     test("opens account details after SSO login", async ({ page }) => {
         const userName = await openAuthenticatedPage(page, "/")
-        await page.getByText(userName, { exact: true }).click()
+        await page.getByRole("banner").getByText(userName, { exact: true }).click()
 
         await expect(page.getByText(/^(내 정보|My Account)$/)).toBeVisible()
         await expect(page.getByText(/^(이름|Name)$/)).toBeVisible()
