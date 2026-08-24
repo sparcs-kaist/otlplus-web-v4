@@ -32,8 +32,7 @@ export const publicEnvSchema = z.object({
     VITE_SENTRY_DSN: z.string().optional(),
     VITE_MIXPANEL_TOKEN: z.string().optional(),
     VITE_MIXPANEL_RECORD_SESSIONS_PERCENT: z.preprocess(
-        (value) =>
-            value === undefined || value === "" ? 100 : Number(value),
+        (value) => (value === undefined || value === "" ? 100 : Number(value)),
         z.number().int().min(0).max(100),
     ),
 })
