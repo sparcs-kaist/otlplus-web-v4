@@ -58,7 +58,7 @@ export const planner = {
     summary: {
         title: "Requirement Summary",
         disclaimer:
-            "This summary is a credit and AU planning aid. It does not evaluate GPA, language proficiency, non-credit completion, department-specific required courses, substitutions, overlap recognition, or approval conditions. Always confirm against the applicable KAIST Bulletin and your department's graduation regulations.",
+            "This summary is a credit and AU planning aid. It does not evaluate GPA, language proficiency, non-credit completion, department-specific required courses, substitutions, overlap recognition, or approval conditions. Always confirm against the applicable KAIST Bulletin and your department's graduation\u00A0regulations.",
         breakdown: "Taken {{taken}} · Planned {{planned}}",
         units: {
             credit: "credits",
