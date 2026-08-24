@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
@@ -106,6 +106,11 @@ type Props = {
     readonly planner: PlannerDetail
     readonly departments: readonly PlannerDepartment[]
     readonly busy: boolean
+    readonly year: number
+    readonly semester: PlannerSemester
+    readonly onYearChange: (year: number) => void
+    readonly onSemesterChange: (semester: PlannerSemester) => void
+    readonly keywordInputRef?: React.Ref<HTMLInputElement>
     readonly onAddFuture: AddFutureItem
     readonly onAddArbitrary: (input: ArbitraryItemInput) => Promise<void>
 }
@@ -114,6 +119,11 @@ export function CourseSearchPanel({
     planner,
     departments,
     busy,
+    year,
+    semester,
+    onYearChange,
+    onSemesterChange,
+    keywordInputRef,
     onAddFuture,
     onAddArbitrary,
 }: Props) {
@@ -121,18 +131,12 @@ export function CourseSearchPanel({
     const [keyword, setKeyword] = useState("")
     const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null)
     const [searchEnabled, setSearchEnabled] = useState(false)
-    const [year, setYear] = useState(planner.start_year)
-    const [semester, setSemester] = useState<PlannerSemester>(1)
     const courses = useAPI("GET", "/planner-courses", {
         enabled: searchEnabled,
         apiPrefix: "/api",
         apiPath: "/courses",
         select: (data) => PlannerCoursesResponseSchema.parse(data),
     })
-
-    useEffect(() => {
-        setYear(planner.start_year)
-    }, [planner])
 
     const plannerCourse =
         courses.query.data?.find((course) => course.id === selectedCourseId) ?? null
@@ -160,6 +164,7 @@ export function CourseSearchPanel({
             <SearchRow onSubmit={search}>
                 <Field
                     aria-label={t("planner.search.keyword")}
+                    ref={keywordInputRef}
                     value={keyword}
                     onChange={(event) => setKeyword(event.target.value)}
                     placeholder={t("planner.search.placeholder")}
@@ -187,7 +192,7 @@ export function CourseSearchPanel({
                     {t("planner.grid.targetYear")}
                     <Select
                         value={year}
-                        onChange={(event) => setYear(Number(event.target.value))}
+                        onChange={(event) => onYearChange(Number(event.target.value))}
                     >
                         {Array.from(
                             { length: planner.end_year - planner.start_year + 1 },
@@ -204,7 +209,7 @@ export function CourseSearchPanel({
                     <Select
                         value={semester}
                         onChange={(event) =>
-                            setSemester(
+                            onSemesterChange(
                                 PlannerSemesterSchema.parse(Number(event.target.value)),
                             )
                         }

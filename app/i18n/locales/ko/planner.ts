@@ -79,6 +79,7 @@ export const planner = {
         title: "학기별 이수 계획",
         year: "{{year}}년",
         empty: "추가된 과목이 없습니다.",
+        addHere: "{{year}} {{semester}}에 추가",
         targetYear: "추가할 연도",
         targetSemester: "추가할 학기",
     },

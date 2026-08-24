@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next"
 import LoadingCircle from "@/common/components/LoadingCircle"
 import Typography from "@/common/primitives/Typography"
 import Widget from "@/common/primitives/Widget"
+import type { PlannerSemester } from "@/common/schemas/planner"
 import { ActionButton } from "@/features/planner/components/PlannerControls"
 import { usePlannerController } from "@/features/planner/hooks/usePlannerController"
 import { CourseSearchPanel } from "@/features/planner/sections/CourseSearchPanel"
@@ -77,9 +78,35 @@ export default function GraduationPlannerPage() {
     const { t } = useTranslation()
     const controller = usePlannerController()
 
+    const selectedId = controller.selectedPlanner?.id ?? null
+    const plannersRef = useRef(controller.planners)
+    plannersRef.current = controller.planners
+    const searchInputRef = useRef<HTMLInputElement>(null)
+    const [targetSlot, setTargetSlot] = useState<{
+        year: number
+        semester: PlannerSemester
+    }>({ year: new Date().getFullYear(), semester: 1 })
+
     useEffect(() => {
         trackEvent("Page View", { page: "Planner" })
     }, [])
+
+    useEffect(() => {
+        if (selectedId === null) return
+        const selected = plannersRef.current.find((planner) => planner.id === selectedId)
+        if (selected !== undefined) {
+            setTargetSlot({ year: selected.start_year, semester: 1 })
+        }
+    }, [selectedId])
+
+    const handleRequestAdd = (year: number, semester: PlannerSemester): void => {
+        setTargetSlot({ year, semester })
+        requestAnimationFrame(() => {
+            const input = searchInputRef.current
+            input?.scrollIntoView({ behavior: "smooth", block: "center" })
+            input?.focus({ preventScroll: true })
+        })
+    }
 
     const departments = useMemo(() => {
         const candidates = [
@@ -154,6 +181,7 @@ export default function GraduationPlannerPage() {
                                 busy={controller.isBusy}
                                 onUpdate={controller.updateItem}
                                 onRemove={controller.removeItem}
+                                onRequestAdd={handleRequestAdd}
                             />
                         </Panel>
                         <Panel direction="column" gap={12}>
@@ -161,6 +189,15 @@ export default function GraduationPlannerPage() {
                                 planner={controller.selectedPlanner}
                                 departments={departments}
                                 busy={controller.isBusy}
+                                year={targetSlot.year}
+                                semester={targetSlot.semester}
+                                onYearChange={(year) =>
+                                    setTargetSlot((slot) => ({ ...slot, year }))
+                                }
+                                onSemesterChange={(semester) =>
+                                    setTargetSlot((slot) => ({ ...slot, semester }))
+                                }
+                                keywordInputRef={searchInputRef}
                                 onAddFuture={controller.addFuture}
                                 onAddArbitrary={controller.addArbitrary}
                             />

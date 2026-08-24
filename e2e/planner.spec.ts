@@ -19,7 +19,7 @@ const futureItem = {
 
 const planners = [
     createPlanner({ future_items: [futureItem] }),
-    createPlanner({ id: -3, arrange_order: 1 }),
+    createPlanner({ id: -3, arrange_order: 1, start_year: 2024, end_year: 2027 }),
 ]
 const plannerBaseUrl = process.env.PLANNER_TEST_BASE_URL ?? "http://localhost:5173"
 const plannerUrl = new URL("/planner", plannerBaseUrl).toString()
@@ -302,5 +302,48 @@ test.describe("control affordances", () => {
         )
 
         expect(before).not.toBe(after)
+    })
+})
+
+test.describe("quick-add chip", () => {
+    test("chip-presets-slot-and-focuses-search", async ({ page }) => {
+        await preparePlannerPage(page)
+
+        await page.getByRole("button", { name: "Add to 2023 Summer" }).click()
+
+        await expect(page.getByRole("combobox", { name: "Target year" })).toHaveValue(
+            "2023",
+        )
+        await expect(page.getByRole("combobox", { name: "Target semester" })).toHaveValue(
+            "2",
+        )
+        await expect(page.getByRole("textbox", { name: "Course keyword" })).toBeFocused()
+    })
+
+    test("slot-resets-on-planner-switch", async ({ page }) => {
+        await preparePlannerPage(page)
+
+        const planner1Tab = page.getByRole("button", { name: "Planner 1" })
+        const planner2Tab = page.getByRole("button", { name: "Planner 2" })
+
+        await page.getByRole("button", { name: "Add to 2023 Winter" }).click()
+        await expect(planner2Tab).toHaveAttribute("aria-pressed", "false")
+        await planner2Tab.click()
+        await expect(planner2Tab).toHaveAttribute("aria-pressed", "true")
+        await expect(page.getByRole("combobox", { name: "Target year" })).toHaveValue(
+            "2024",
+        )
+        await expect(page.getByRole("combobox", { name: "Target semester" })).toHaveValue(
+            "1",
+        )
+
+        await planner1Tab.click()
+        await expect(planner1Tab).toHaveAttribute("aria-pressed", "true")
+        await expect(page.getByRole("combobox", { name: "Target year" })).toHaveValue(
+            "2023",
+        )
+        await expect(page.getByRole("combobox", { name: "Target semester" })).toHaveValue(
+            "1",
+        )
     })
 })

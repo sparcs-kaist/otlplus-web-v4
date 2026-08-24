@@ -61,9 +61,38 @@ const SemesterTitle = styled.h4`
     font-size: ${({ theme }) => theme.fonts.SmallBold.fontSize}px;
 `
 
-const Empty = styled.span`
-    color: ${({ theme }) => theme.colors.Text.disable};
+const AddHereChip = styled.button`
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 28px;
+    padding: 3px 10px;
+    border: 1px dashed ${({ theme }) => theme.colors.Notice.border};
+    border-radius: 999px;
+    color: ${({ theme }) => theme.colors.Notice.text};
+    background: ${({ theme }) => theme.colors.Notice.background};
     font-size: ${({ theme }) => theme.fonts.Small.fontSize}px;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 120ms ease;
+
+    &:hover:not(:disabled) {
+        filter: brightness(0.97);
+    }
+
+    &:focus-visible {
+        outline: 2px solid ${({ theme }) => theme.colors.Highlight.default};
+        outline-offset: 2px;
+    }
+
+    &:disabled {
+        cursor: not-allowed;
+        opacity: 0.6;
+    }
+
+    ${media.mobile} {
+        min-height: 36px;
+    }
 `
 
 const SEMESTERS = [1, 2, 3, 4] as const satisfies readonly PlannerSemester[]
@@ -84,9 +113,10 @@ type Props = {
         patch: { readonly semester?: PlannerSemester; readonly isExcluded?: boolean },
     ) => Promise<void>
     readonly onRemove: (item: PlannerItem) => Promise<void>
+    readonly onRequestAdd: (year: number, semester: PlannerSemester) => void
 }
 
-export function SemesterGrid({ planner, busy, onUpdate, onRemove }: Props) {
+export function SemesterGrid({ planner, busy, onUpdate, onRemove, onRequestAdd }: Props) {
     const { t, i18n } = useTranslation()
     const items = [
         ...planner.taken_items,
@@ -142,7 +172,22 @@ export function SemesterGrid({ planner, busy, onUpdate, onRemove }: Props) {
                                             />
                                         ))}
                                         {semesterItems.length === 0 && (
-                                            <Empty>{t("planner.grid.empty")}</Empty>
+                                            <AddHereChip
+                                                type="button"
+                                                data-slot-chip="true"
+                                                disabled={busy}
+                                                onClick={() =>
+                                                    onRequestAdd(year, semester)
+                                                }
+                                            >
+                                                +{" "}
+                                                {t("planner.grid.addHere", {
+                                                    year,
+                                                    semester: t(
+                                                        `planner.semesters.${semester}`,
+                                                    ),
+                                                })}
+                                            </AddHereChip>
                                         )}
                                     </SemesterColumn>
                                 )

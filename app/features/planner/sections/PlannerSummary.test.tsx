@@ -44,8 +44,25 @@ describe("PlannerSummary progress bars", () => {
     })
 
     it("widths-proportional: sizes segments from taken and planned credits", () => {
+        const electiveCourse = {
+            ...csCourse,
+            id: -5,
+            type: "전공선택",
+            type_en: "Major Elective",
+        }
         const { container } = render(
-            <PlannerSummary planner={createPlanner({ future_items: [futureItem] })} />,
+            <PlannerSummary
+                planner={createPlanner({
+                    future_items: [
+                        futureItem,
+                        {
+                            ...futureItem,
+                            id: -6,
+                            course: electiveCourse,
+                        },
+                    ],
+                })}
+            />,
         )
 
         const totalTrack = track(container, "totalCredit")
@@ -55,7 +72,7 @@ describe("PlannerSummary progress bars", () => {
             throw new Error("Expected both bar segments")
         }
         expect(Number.parseFloat(taken.dataset.ratio ?? "NaN")).toBeCloseTo(0, 5)
-        expect(Number.parseFloat(planned.dataset.ratio ?? "NaN")).toBeCloseTo(3 / 130, 5)
+        expect(Number.parseFloat(planned.dataset.ratio ?? "NaN")).toBeCloseTo(6 / 130, 5)
 
         const electiveTrack = track(container, "PRIMARY:CS:elective")
         const electivePlanned = electiveTrack.querySelector<HTMLElement>(

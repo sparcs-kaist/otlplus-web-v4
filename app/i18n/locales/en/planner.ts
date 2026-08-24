@@ -82,6 +82,7 @@ export const planner = {
         title: "Semester Plan",
         year: "{{year}}",
         empty: "No courses added.",
+        addHere: "Add to {{year}} {{semester}}",
         targetYear: "Target year",
         targetSemester: "Target semester",
     },
