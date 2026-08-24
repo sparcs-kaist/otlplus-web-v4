@@ -14,6 +14,7 @@ import { PlannerSidebar } from "@/features/planner/sections/PlannerSidebar"
 import { PlannerSummary } from "@/features/planner/sections/PlannerSummary"
 import { SemesterGrid } from "@/features/planner/sections/SemesterGrid"
 import { TrackSettings } from "@/features/planner/sections/TrackSettings"
+import { RequireFeatureFlag } from "@/libs/featureFlags"
 import { trackEvent } from "@/libs/mixpanel"
 import { media } from "@/styles/themes/media"
 
@@ -74,7 +75,15 @@ const StatusPanel = styled(Widget)`
     padding: 24px;
 `
 
-export default function GraduationPlannerPage() {
+export default function PlannerRoute() {
+    return (
+        <RequireFeatureFlag flag="planner-enabled">
+            <GraduationPlannerPage />
+        </RequireFeatureFlag>
+    )
+}
+
+export function GraduationPlannerPage() {
     const { t } = useTranslation()
     const controller = usePlannerController()
 

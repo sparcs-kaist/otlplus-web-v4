@@ -12,6 +12,7 @@ import { Link } from "react-router-dom"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
+import { useFeatureFlag } from "@/libs/featureFlags"
 import useBackendStatusStore from "@/utils/zustand/useBackendStatusStore"
 import useUserStore from "@/utils/zustand/useUserStore"
 
@@ -107,6 +108,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
 }) => {
     const theme = useTheme()
     const { t } = useTranslation()
+    const { enabled: plannerEnabled } = useFeatureFlag("planner-enabled")
     const isBackendReachable = useBackendStatusStore((state) => state.isBackendReachable)
     const { status } = useUserStore()
 
@@ -180,7 +182,8 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
                                     t("header.writeReviews"),
                                 )}
                                 {renderNavLink("/timetable", t("header.timetable"))}
-                                {renderNavLink("/planner", t("header.planner"))}
+                                {plannerEnabled &&
+                                    renderNavLink("/planner", t("header.planner"))}
                             </FlexWrapper>
                             {isOfflineMode && (
                                 <OfflineBanner
