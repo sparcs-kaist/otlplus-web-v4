@@ -1,9 +1,17 @@
 import { type Page, expect, test } from "@playwright/test"
 import { z } from "zod"
 
-const UserInfoSchema = z.object({ name: z.string() })
+const UserInfoSchema = z.object({ id: z.number().int(), name: z.string() })
+const UserLecturesResponseSchema = z.object({
+    totalLecturesCount: z.number().int(),
+    reviewedLecturesCount: z.number().int(),
+    totalLikesCount: z.number().int(),
+    lecturesWrap: z.array(z.unknown()),
+})
 
-async function openAuthenticatedPage(page: Page, path: string): Promise<string> {
+type UserInfo = z.infer<typeof UserInfoSchema>
+
+async function openAuthenticatedPage(page: Page, path: string): Promise<UserInfo> {
     const userInfoResponse = page.waitForResponse(
         (response) =>
             response.url().includes("/api/v2/users/info") && response.status() === 200,
@@ -12,16 +20,19 @@ async function openAuthenticatedPage(page: Page, path: string): Promise<string> 
     await page.goto(path)
 
     const response = await userInfoResponse
-    const { name } = UserInfoSchema.parse(await response.json())
+    const userInfo = UserInfoSchema.parse(await response.json())
+    await expect(
+        page.getByRole("banner").getByText(userInfo.name, { exact: true }),
+    ).toBeVisible({ timeout: 15000 })
     await expect(page.getByText("Sign in", { exact: true })).toHaveCount(0)
 
-    return name
+    return userInfo
 }
 
 test.describe("Authenticated user flows", () => {
     test("opens account details after SSO login", async ({ page }) => {
-        const userName = await openAuthenticatedPage(page, "/")
-        await page.getByRole("banner").getByText(userName, { exact: true }).click()
+        const userInfo = await openAuthenticatedPage(page, "/")
+        await page.getByRole("banner").getByText(userInfo.name, { exact: true }).click()
 
         await expect(page.getByText(/^(내 정보|My Account)$/)).toBeVisible()
         await expect(page.getByText(/^(이름|Name)$/)).toBeVisible()
@@ -31,7 +42,14 @@ test.describe("Authenticated user flows", () => {
     })
 
     test("opens write reviews without the login gate", async ({ page }) => {
+        const userLecturesResponse = page.waitForResponse(
+            (response) =>
+                /\/api\/v2\/users\/\d+\/lectures(?:\?|$)/.test(response.url()) &&
+                response.status() === 200,
+        )
+
         await openAuthenticatedPage(page, "/write-reviews")
+        UserLecturesResponseSchema.parse(await (await userLecturesResponse).json())
 
         await expect(page.getByText("로그인하러가기", { exact: true })).toHaveCount(0)
         await expect(page.getByText(/^(내가 들은 과목|Taken Lectures)$/)).toBeVisible({

@@ -17,6 +17,7 @@ setup("authenticates through SPARCS SSO", async ({ page, baseURL }) => {
     await page.goto("/")
     await page.getByText("Sign in", { exact: true }).click()
     await expect(page).toHaveTitle(/SPARCS SSO/)
+    await expect(page).toHaveURL(/^https:\/\/sparcssso\.kaist\.ac\.kr\/account\/login\//)
 
     await page.locator('input[name="email"]').fill(email)
     await page.locator('input[name="password"]').fill(password)
