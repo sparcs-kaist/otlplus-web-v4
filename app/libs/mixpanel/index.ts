@@ -26,7 +26,9 @@ export const initMixpanel = async () => {
         track_pageview: true,
         persistence: "localStorage",
         autocapture: true,
-        record_sessions_percent: 100,
+        record_sessions_percent:
+            clientEnv.VITE_MIXPANEL_RECORD_SESSIONS_PERCENT,
+        flags: true,
     })
     isInitialized = true
 }
