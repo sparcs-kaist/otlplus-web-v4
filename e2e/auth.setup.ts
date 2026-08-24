@@ -18,8 +18,8 @@ setup("authenticates through SPARCS SSO", async ({ page, baseURL }) => {
     await page.getByText("Sign in", { exact: true }).click()
     await expect(page).toHaveTitle(/SPARCS SSO/)
 
-    await page.getByRole("textbox", { name: "이메일" }).fill(email)
-    await page.getByRole("textbox", { name: "비밀번호" }).fill(password)
+    await page.locator('input[name="email"]').fill(email)
+    await page.locator('input[name="password"]').fill(password)
 
     const baseOrigin = new URL(baseURL).origin
     const userInfoResponse = page.waitForResponse(
@@ -28,7 +28,7 @@ setup("authenticates through SPARCS SSO", async ({ page, baseURL }) => {
         { timeout: 120000 },
     )
 
-    await page.getByRole("button", { name: "이메일로 로그인" }).click()
+    await page.locator('button[type="submit"]').first().click()
     await page.waitForURL((url) => url.origin === baseOrigin && url.pathname === "/", {
         timeout: 120000,
     })
