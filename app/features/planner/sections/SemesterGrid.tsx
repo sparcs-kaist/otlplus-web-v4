@@ -87,7 +87,9 @@ const AddHereChip = styled.button`
 
     &:disabled {
         cursor: not-allowed;
-        opacity: 0.6;
+        color: ${({ theme }) => theme.colors.Text.disable};
+        background: ${({ theme }) => theme.colors.Background.Input.disabled};
+        border-color: ${({ theme }) => theme.colors.Line.block};
     }
 
     ${media.mobile} {

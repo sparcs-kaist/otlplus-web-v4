@@ -51,10 +51,28 @@ describe("SemesterGrid quick-add chip", () => {
     it("busy-disables-chips: prevents slot requests while busy", () => {
         setup(true)
 
-        for (const chip of screen
+        const chips = screen
             .getAllByRole("button")
-            .filter((element) => element.getAttribute("data-slot-chip") === "true")) {
+            .filter((element) => element.getAttribute("data-slot-chip") === "true")
+        expect(chips.length).toBeGreaterThan(0)
+        for (const chip of chips) {
             expect(chip).toBeDisabled()
         }
+    })
+
+    it("chips-disable-explicitly: uses token colors instead of opacity", () => {
+        setup(true)
+
+        const chip = screen
+            .getAllByRole("button")
+            .filter((element) => element.getAttribute("data-slot-chip") === "true")[0]
+        if (!(chip instanceof HTMLElement)) {
+            throw new Error("Expected a slot chip")
+        }
+        expect(chip).not.toHaveStyle({ opacity: "0.6" })
+        expect(chip).toHaveStyle({
+            color: "#AAAAAA",
+            backgroundColor: "#F5F5F5",
+        })
     })
 })
