@@ -21,7 +21,10 @@ export const GA_TRACKING_ID = clientEnv.VITE_GA_MEASUREMENT_ID
 const safeGtag: typeof window.gtag = (...args) => {
     try {
         window.gtag(...args)
-    } catch {}
+        return
+    } catch {
+        return
+    }
 }
 
 export const pageview = (url: string) => {
