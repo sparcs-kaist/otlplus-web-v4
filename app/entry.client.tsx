@@ -13,8 +13,34 @@ import {
     sanitizeSentrySpan,
     sanitizeSentryTransaction,
 } from "@/libs/sentry/sentryEventFilter"
+import { handleChunkLoadError, isChunkLoadErrorMessage } from "@/utils/chunkReload"
 
 const isSensitiveLoginCallback = isSensitiveSentryPath(window.location.pathname)
+
+window.addEventListener("error", (event) => {
+    if (!isChunkLoadErrorMessage(event.message)) return
+    handleChunkLoadError(window.location.pathname, {
+        now: () => Date.now(),
+        storage: window.sessionStorage,
+        reload: () => window.location.reload(),
+        capture: (message, extra) => {
+            if (Sentry.getClient()) Sentry.captureMessage(message, extra)
+        },
+    })
+})
+window.addEventListener("unhandledrejection", (event) => {
+    const reason = event.reason
+    const message = reason instanceof Error ? reason.message : String(reason ?? "")
+    if (!isChunkLoadErrorMessage(message)) return
+    handleChunkLoadError(window.location.pathname, {
+        now: () => Date.now(),
+        storage: window.sessionStorage,
+        reload: () => window.location.reload(),
+        capture: (message, extra) => {
+            if (Sentry.getClient()) Sentry.captureMessage(message, extra)
+        },
+    })
+})
 
 // Check if Sentry DSN is properly configured (not empty string)
 if (clientEnv.VITE_SENTRY_DSN && clientEnv.VITE_SENTRY_DSN.trim() !== "") {
