@@ -4,7 +4,6 @@ import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
 
 import LoadingCircle from "@/common/components/LoadingCircle"
-import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import Widget from "@/common/primitives/Widget"
 import { ActionButton } from "@/features/planner/components/PlannerControls"
@@ -18,24 +17,17 @@ import { trackEvent } from "@/libs/mixpanel"
 import { media } from "@/styles/themes/media"
 
 const PlannerPage = styled.main`
-    display: grid;
+    display: flex;
+    min-width: 0;
     min-height: 0;
     flex: 1 0 auto;
-    grid-template-columns: 240px minmax(0, 1fr);
+    flex-direction: column;
     gap: 12px;
     padding: 0 20px 20px;
 
     ${media.tablet} {
-        grid-template-columns: minmax(0, 1fr);
         padding: 0 8px 12px;
     }
-`
-
-const Content = styled.div`
-    display: flex;
-    min-width: 0;
-    flex-direction: column;
-    gap: 12px;
 `
 
 const Panel = styled(Widget)`
@@ -50,14 +42,30 @@ const Panel = styled(Widget)`
     }
 `
 
-const OverviewGrid = styled.div`
+const Workspace = styled.div`
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 340px);
+    align-items: start;
     gap: 12px;
 
-    ${media.laptop} {
+    ${media.tablet} {
         grid-template-columns: minmax(0, 1fr);
     }
+`
+
+const PrimaryFlow = styled.div`
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 12px;
+`
+
+const SupportRail = styled.aside`
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 12px;
 `
 
 const StatusPanel = styled(Widget)`
@@ -111,56 +119,43 @@ export default function GraduationPlannerPage() {
                 onDelete={controller.deletePlanner}
                 onReorder={controller.reorderPlanner}
             />
-            <Content>
-                {controller.error !== null && controller.error !== undefined && (
-                    <Panel direction="column" gap={6}>
-                        <Typography type="NormalBold" color="Highlight.dark">
-                            {t("planner.status.error")}
-                        </Typography>
-                        <Typography type="Small" color="Text.light">
-                            {controller.error.message}
-                        </Typography>
-                    </Panel>
-                )}
-                {controller.selectedPlanner === null ||
-                controller.tracks === undefined ? (
-                    <StatusPanel
-                        direction="column"
-                        align="center"
-                        justify="center"
-                        gap={12}
+            {controller.error !== null && controller.error !== undefined && (
+                <Panel direction="column" gap={6}>
+                    <Typography type="NormalBold" color="Highlight.dark">
+                        {t("planner.status.error")}
+                    </Typography>
+                    <Typography type="Small" color="Text.light">
+                        {controller.error.message}
+                    </Typography>
+                </Panel>
+            )}
+            {controller.selectedPlanner === null || controller.tracks === undefined ? (
+                <StatusPanel direction="column" align="center" justify="center" gap={12}>
+                    <Typography type="BiggerBold" color="Text.default">
+                        {t("planner.empty.title")}
+                    </Typography>
+                    <Typography type="Normal" color="Text.placeholder">
+                        {t("planner.empty.description")}
+                    </Typography>
+                    <ActionButton
+                        $primary
+                        disabled={controller.isBusy || controller.tracks === undefined}
+                        onClick={() => void controller.createPlanner(false)}
                     >
-                        <Typography type="BiggerBold" color="Text.default">
-                            {t("planner.empty.title")}
-                        </Typography>
-                        <Typography type="Normal" color="Text.placeholder">
-                            {t("planner.empty.description")}
-                        </Typography>
-                        <ActionButton
-                            $primary
-                            disabled={
-                                controller.isBusy || controller.tracks === undefined
-                            }
-                            onClick={() => void controller.createPlanner(false)}
-                        >
-                            {t("planner.actions.create")}
-                        </ActionButton>
-                    </StatusPanel>
-                ) : (
-                    <>
-                        <OverviewGrid>
-                            <Panel direction="column" gap={12}>
-                                <TrackSettings
-                                    planner={controller.selectedPlanner}
-                                    tracks={controller.tracks}
-                                    busy={controller.isBusy}
-                                    onSave={controller.updateTracks}
-                                />
-                            </Panel>
-                            <Panel direction="column" gap={12}>
-                                <PlannerSummary planner={controller.selectedPlanner} />
-                            </Panel>
-                        </OverviewGrid>
+                        {t("planner.actions.create")}
+                    </ActionButton>
+                </StatusPanel>
+            ) : (
+                <Workspace>
+                    <PrimaryFlow>
+                        <Panel direction="column" gap={12}>
+                            <SemesterGrid
+                                planner={controller.selectedPlanner}
+                                busy={controller.isBusy}
+                                onUpdate={controller.updateItem}
+                                onRemove={controller.removeItem}
+                            />
+                        </Panel>
                         <Panel direction="column" gap={12}>
                             <CourseSearchPanel
                                 planner={controller.selectedPlanner}
@@ -170,17 +165,22 @@ export default function GraduationPlannerPage() {
                                 onAddArbitrary={controller.addArbitrary}
                             />
                         </Panel>
+                    </PrimaryFlow>
+                    <SupportRail aria-label={t("planner.settings.title")}>
                         <Panel direction="column" gap={12}>
-                            <SemesterGrid
+                            <TrackSettings
                                 planner={controller.selectedPlanner}
+                                tracks={controller.tracks}
                                 busy={controller.isBusy}
-                                onUpdate={controller.updateItem}
-                                onRemove={controller.removeItem}
+                                onSave={controller.updateTracks}
                             />
                         </Panel>
-                    </>
-                )}
-            </Content>
+                        <Panel direction="column" gap={12}>
+                            <PlannerSummary planner={controller.selectedPlanner} />
+                        </Panel>
+                    </SupportRail>
+                </Workspace>
+            )}
         </PlannerPage>
     )
 }

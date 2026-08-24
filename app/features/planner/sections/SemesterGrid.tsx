@@ -46,6 +46,7 @@ const SemesterColumns = styled.div`
 const SemesterColumn = styled.div`
     display: flex;
     min-width: 0;
+    align-self: start;
     flex-direction: column;
     gap: 8px;
     padding: 10px;
