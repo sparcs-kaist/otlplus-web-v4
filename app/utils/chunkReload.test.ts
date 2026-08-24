@@ -26,9 +26,7 @@ describe("isChunkLoadErrorMessage", () => {
                 "Failed to fetch dynamically imported module: https://otl.kaist.ac.kr/assets/TimeTableSection-D0o1l5VZ.js",
             ),
         ).toBe(true)
-        expect(isChunkLoadErrorMessage("Importing a module script failed.")).toBe(
-            true,
-        )
+        expect(isChunkLoadErrorMessage("Importing a module script failed.")).toBe(true)
     })
 
     it("rejects unrelated failures", () => {

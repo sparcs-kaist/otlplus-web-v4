@@ -44,9 +44,7 @@ describe("googleAnalytics guards", () => {
         }) as unknown as typeof window.gtag
 
         expect(() => pageview("/x")).not.toThrow()
-        expect(() =>
-            event({ action: "a", category: "c", label: "l" }),
-        ).not.toThrow()
+        expect(() => event({ action: "a", category: "c", label: "l" })).not.toThrow()
         window.gtag = originalGtag
     })
 })
