@@ -24,7 +24,9 @@ export const ActionButton = styled.button<{ $primary?: boolean; $danger?: boolea
               ? theme.colors.Highlight.default
               : theme.colors.Background.Button.default};
     flex-shrink: 0;
-    font: inherit;
+    font-size: ${({ theme }) => theme.fonts.Normal.fontSize}px;
+    font-weight: ${({ theme }) => theme.fonts.Normal.fontWeight};
+    line-height: ${({ theme }) => theme.fonts.Normal.lineHeight}px;
     white-space: nowrap;
     cursor: pointer;
     transition:
@@ -84,6 +86,13 @@ export const Field = styled.input`
         outline: 2px solid ${({ theme }) => theme.colors.Highlight.default};
         outline-offset: 1px;
     }
+
+    &:disabled {
+        cursor: not-allowed;
+        color: ${({ theme }) => theme.colors.Text.disable};
+        background: ${({ theme }) => theme.colors.Background.Input.disabled};
+        border-color: ${({ theme }) => theme.colors.Line.block};
+    }
 `
 
 export const Select = styled.select`
@@ -99,6 +108,13 @@ export const Select = styled.select`
     &:focus-visible {
         outline: 2px solid ${({ theme }) => theme.colors.Highlight.default};
         outline-offset: 1px;
+    }
+
+    &:disabled {
+        cursor: not-allowed;
+        color: ${({ theme }) => theme.colors.Text.disable};
+        background: ${({ theme }) => theme.colors.Background.Input.disabled};
+        border-color: ${({ theme }) => theme.colors.Line.block};
     }
 `
 

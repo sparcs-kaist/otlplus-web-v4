@@ -65,6 +65,19 @@ const CourseButton = styled.button<{ $selected: boolean }>`
     font: inherit;
     text-align: start;
     cursor: pointer;
+    transition: background-color 120ms ease;
+
+    &:hover:not(:disabled) {
+        background-color: ${({ $selected, theme }) =>
+            $selected
+                ? theme.colors.Background.Button.highlightDark
+                : theme.colors.Background.Button.dark};
+    }
+
+    &:focus-visible {
+        outline: 2px solid ${({ theme }) => theme.colors.Highlight.default};
+        outline-offset: 2px;
+    }
 `
 
 const CourseCode = styled.span`

@@ -80,9 +80,17 @@ const PlannerButton = styled.button<{ $selected: boolean }>`
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    transition: background-color 120ms ease;
 
     flex: 0 0 min(180px, 42vw);
     scroll-snap-align: start;
+
+    &:hover:not(:disabled) {
+        background-color: ${({ $selected, theme }) =>
+            $selected
+                ? theme.colors.Background.Button.highlightDark
+                : theme.colors.Background.Block.darker};
+    }
 
     &:focus-visible {
         outline: 2px solid ${({ theme }) => theme.colors.Highlight.default};

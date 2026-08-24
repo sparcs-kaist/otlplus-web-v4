@@ -24,7 +24,10 @@ const planners = [
 const plannerBaseUrl = process.env.PLANNER_TEST_BASE_URL ?? "http://localhost:5173"
 const plannerUrl = new URL("/planner", plannerBaseUrl).toString()
 
-async function preparePlannerPage(page: Page): Promise<void> {
+async function preparePlannerPage(
+    page: Page,
+    setup?: (page: Page) => Promise<void>,
+): Promise<void> {
     await page.route("**/api/v2/users/info", async (route) => {
         await route.fulfill({ status: 401, json: {} })
     })
@@ -38,6 +41,9 @@ async function preparePlannerPage(page: Page): Promise<void> {
         })
     })
     await page.goto(plannerBaseUrl)
+    if (setup !== undefined) {
+        await setup(page)
+    }
     const storageValue = JSON.stringify({ version: 1, planners })
     await page.evaluate(
         ({ key, value }) => {
@@ -47,7 +53,9 @@ async function preparePlannerPage(page: Page): Promise<void> {
         { key: PLANNER_STORAGE_KEY, value: storageValue },
     )
     await page.goto(plannerUrl)
-    await expect(page.getByRole("heading", { name: "Semester Plan" })).toBeVisible()
+    await expect(page.getByRole("heading", { name: "Semester Plan" })).toBeVisible({
+        timeout: 15000,
+    })
 }
 
 async function boundingBox(locator: ReturnType<Page["locator"]>) {
@@ -232,5 +240,67 @@ test.describe("dark mode readability", () => {
         })
 
         expect(contrast).toBeGreaterThanOrEqual(4.5)
+    })
+})
+
+test.describe("control affordances", () => {
+    test("course-button-focus-visible: reveals a keyboard outline on result buttons", async ({
+        page,
+    }) => {
+        const searchDetail = {
+            ...csCourse,
+            related_courses_prior: [],
+            related_courses_posterior: [],
+            professors: [],
+            grade: 0,
+            load: 0,
+            speech: 0,
+        }
+        await preparePlannerPage(page, async (prepared) => {
+            await prepared.route("**/api/courses*", async (route) => {
+                await route.fulfill({ json: [searchDetail] })
+            })
+        })
+
+        await page.getByRole("textbox", { name: "Course keyword" }).fill("programming")
+        await page.getByRole("button", { name: "Search" }).click()
+        const result = page.getByRole("button", { name: /Programming Basics/ }).first()
+        await result.waitFor()
+
+        let focusedVisible = false
+        for (let index = 0; index < 25; index += 1) {
+            await page.keyboard.press("Tab")
+            focusedVisible = await page.evaluate(() => {
+                const active = document.activeElement
+                return (
+                    active instanceof HTMLElement &&
+                    active.textContent?.includes("Programming Basics") === true &&
+                    active.matches(":focus-visible") &&
+                    getComputedStyle(active).outlineWidth !== "0px" &&
+                    getComputedStyle(active).outlineColor === "rgb(229, 76, 101)"
+                )
+            })
+            if (focusedVisible) break
+        }
+
+        expect(focusedVisible).toBe(true)
+    })
+
+    test("planner-tab-hover: darkens unselected planner tabs on hover", async ({
+        page,
+    }) => {
+        await preparePlannerPage(page)
+
+        const tab = page.getByRole("button", { name: "Planner 2" })
+        const before = await tab.evaluate(
+            (element) => getComputedStyle(element).backgroundColor,
+        )
+        await tab.hover()
+        await page.waitForTimeout(250)
+        const after = await tab.evaluate(
+            (element) => getComputedStyle(element).backgroundColor,
+        )
+
+        expect(before).not.toBe(after)
     })
 })

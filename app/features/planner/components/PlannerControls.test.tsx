@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest"
 import darkTheme from "@/styles/themes/dark"
 import { render, screen } from "@/test/test-utils"
 
-import { ActionButton, StatusNotice } from "./PlannerControls"
+import { ActionButton, Field, Select, StatusNotice } from "./PlannerControls"
 
 const SurfaceProbe = styled.div`
     color: ${({ theme }) => theme.colors.Text.disable};
@@ -55,6 +55,42 @@ describe("PlannerControls under the dark theme", () => {
         expect(screen.getByTestId("probe")).toHaveStyle({
             color: "#8a8a8a",
             backgroundColor: "#282828",
+        })
+    })
+})
+
+describe("PlannerControls light-theme parity", () => {
+    it("actionbutton-shared-typography: uses the shared 14px normal scale", () => {
+        render(<ActionButton type="button">search</ActionButton>)
+
+        expect(screen.getByRole("button", { name: "search" })).toHaveStyle({
+            fontSize: "14px",
+            fontWeight: "400",
+            lineHeight: "17.5px",
+        })
+    })
+
+    it("field-disabled-treatment: disables fields with explicit tokens", () => {
+        render(<Field data-testid="field" disabled placeholder="keyword" />)
+
+        const field = screen.getByTestId("field")
+        expect(field).toHaveStyle({
+            backgroundColor: "#F5F5F5",
+            color: "#AAAAAA",
+        })
+    })
+
+    it("select-disabled-treatment: disables selects with explicit tokens", () => {
+        render(
+            <Select data-testid="select" disabled aria-label="semester">
+                <option value="1">1</option>
+            </Select>,
+        )
+
+        const select = screen.getByTestId("select")
+        expect(select).toHaveStyle({
+            backgroundColor: "#F5F5F5",
+            color: "#AAAAAA",
         })
     })
 })
