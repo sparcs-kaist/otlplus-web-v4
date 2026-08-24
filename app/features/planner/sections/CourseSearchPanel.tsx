@@ -11,6 +11,7 @@ import {
     type PlannerSemester,
     PlannerSemesterSchema,
 } from "@/common/schemas/planner"
+import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
 
 import {
@@ -35,6 +36,10 @@ const SearchRow = styled.form`
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 8px;
+
+    ${media.mobile} {
+        grid-template-columns: minmax(0, 1fr);
+    }
 `
 
 const Results = styled.div`

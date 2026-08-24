@@ -52,8 +52,16 @@ const DuplicateBadge = styled.span`
 
 const ItemActions = styled.div`
     display: flex;
+    min-width: 0;
+    flex-wrap: wrap;
     align-items: center;
     gap: 6px;
+`
+
+const SemesterSelect = styled(Select)`
+    width: auto;
+    min-width: 96px;
+    flex: 1 1 96px;
 `
 
 const SEMESTERS = [1, 2, 3, 4] as const satisfies readonly PlannerSemester[]
@@ -133,7 +141,7 @@ export default function PlannerItemCard({
                     )}
                 </ActionButton>
                 {item.item_type !== "TAKEN" && (
-                    <Select
+                    <SemesterSelect
                         aria-label={t("planner.actions.changeSemester")}
                         value={item.semester}
                         disabled={busy}
@@ -150,7 +158,7 @@ export default function PlannerItemCard({
                                 {t(`planner.semesters.${value}`)}
                             </option>
                         ))}
-                    </Select>
+                    </SemesterSelect>
                 )}
                 {item.item_type !== "TAKEN" && (
                     <ActionButton
