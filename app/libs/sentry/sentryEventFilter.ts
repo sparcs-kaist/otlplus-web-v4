@@ -10,6 +10,14 @@ export const IGNORED_SENTRY_ERROR_PATTERNS = [
     /^Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node\.$/,
     /^Failed to execute 'insertBefore' on 'Node': The node before which the new node is to be inserted is not a child of this node\.$/,
     /^Non-Error promise rejection captured with value: null$/,
+    // Client connectivity noise; backend uptime alerting owns real outages.
+    /^Network Error$/,
+    // Stale-deploy chunk failures self-heal via utils/chunkReload (loop-guarded).
+    /Failed to fetch dynamically imported module/,
+    /^Importing a module script failed\.$/,
+    // Browser-internal IndexedDB failures outside application control.
+    /^NotReadableError: The I\/O read operation failed\.$/,
+    /^InvalidStateError: Failed to execute 'transaction' on 'IDBDatabase': The database connection is closing\.$/,
 ] as const
 
 const BREADCRUMB_URL_KEYS = ["url", "from", "to"] as const
