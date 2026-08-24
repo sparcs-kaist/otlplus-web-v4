@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import { FLAGS, resolveFlag, type FlagKey } from "./core"
+import { FLAGS, type FlagKey, resolveFlag } from "./core"
 
 const key: FlagKey = "planner-enabled"
 

@@ -4,15 +4,15 @@ import { parseFlagEnvDefaults } from "./envDefaults"
 
 describe("parseFlagEnvDefaults", () => {
     it("maps generic VITE_APP_FLAG_* vars to normalized flag keys", () => {
-        expect(
-            parseFlagEnvDefaults({ VITE_APP_FLAG_PLANNER_ENABLED: "true" }),
-        ).toEqual({ "planner-enabled": true })
+        expect(parseFlagEnvDefaults({ VITE_APP_FLAG_PLANNER_ENABLED: "true" })).toEqual({
+            "planner-enabled": true,
+        })
     })
 
     it("normalizes underscores in suffixes and boolean-ish values", () => {
-        expect(
-            parseFlagEnvDefaults({ VITE_APP_FLAG_NEW_COOL_THING: "1" }),
-        ).toEqual({ "new-cool-thing": true })
+        expect(parseFlagEnvDefaults({ VITE_APP_FLAG_NEW_COOL_THING: "1" })).toEqual({
+            "new-cool-thing": true,
+        })
         expect(parseFlagEnvDefaults({ VITE_APP_FLAG_NEW_COOL_THING: "off" })).toEqual({
             "new-cool-thing": false,
         })

@@ -33,6 +33,8 @@ export function parseFlagEnvDefaults(
     return { ...aliases, ...generics }
 }
 
-export const flagEnvDefaults: Record<string, boolean> = parseFlagEnvDefaults(
-    import.meta.env as unknown as Record<string, unknown>,
-)
+export function getFlagEnvDefault(key: string): boolean | undefined {
+    return parseFlagEnvDefaults(import.meta.env as unknown as Record<string, unknown>)[
+        key
+    ]
+}
