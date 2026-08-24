@@ -1,10 +1,8 @@
 import z from "zod"
 
-const possibleTrueValues = ["true", "1", "yes", "y", "on", "enable", "enabled"]
+import { stringToBoolean } from "./utils/booleanEnv"
 
-const stringToBoolean = (value: string) => {
-    return possibleTrueValues.includes(value)
-}
+export { stringToBoolean }
 
 /**
  * In production, the API is served from the same origin (like legacy OTL v3).
@@ -17,7 +15,7 @@ const getDefaultApiUrl = (): string => {
     return "http://localhost:8080"
 }
 
-const publicEnvSchema = z.object({
+export const publicEnvSchema = z.object({
     VITE_APP_LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]),
     VITE_APP_API_URL: z.preprocess(
         (value) => (value && String(value).trim() !== "" ? value : getDefaultApiUrl()),
@@ -33,6 +31,11 @@ const publicEnvSchema = z.object({
     VITE_GA_MEASUREMENT_ID: z.string().optional(),
     VITE_SENTRY_DSN: z.string().optional(),
     VITE_MIXPANEL_TOKEN: z.string().optional(),
+    VITE_MIXPANEL_RECORD_SESSIONS_PERCENT: z.preprocess(
+        (value) =>
+            value === undefined || value === "" ? 100 : Number(value),
+        z.number().int().min(0).max(100),
+    ),
 })
 
 export const clientEnv = publicEnvSchema.parse(import.meta.env)
