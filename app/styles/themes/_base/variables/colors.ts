@@ -47,6 +47,11 @@ export const colors = {
         subtle: "rgba(229, 76, 101, 0.2)",
         medium: "rgba(229, 76, 101, 0.4)",
     },
+    Notice: {
+        background: "#F9F0F0",
+        text: "#963246",
+        border: "rgba(229, 76, 101, 0.2)",
+    },
     Line: {
         default: "#E8E8E8",
         divider: "#EDD1DC",

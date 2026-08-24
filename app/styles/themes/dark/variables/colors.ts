@@ -56,6 +56,11 @@ export const darkThemeColors: ThemeType["colors"] = {
         subtle: "rgba(229, 76, 101, 0.2)",
         medium: "rgba(229, 76, 101, 0.4)",
     },
+    Notice: {
+        background: "#332126",
+        text: "#F2A0AE",
+        border: "rgba(229, 76, 101, 0.35)",
+    },
     Line: {
         default: "#2f2f2f",
         divider: "#2f2f2f",
@@ -65,7 +70,7 @@ export const darkThemeColors: ThemeType["colors"] = {
     },
     Text: {
         bright: "#000000",
-        disable: "#606060",
+        disable: "#8a8a8a",
         placeholder: "#949494",
         lighter: "#9f9f9f",
         light: "#838383",

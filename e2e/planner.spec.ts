@@ -188,3 +188,49 @@ test.describe("Graduation planner responsive layout", () => {
         ).toBe(true)
     })
 })
+
+test.describe("dark mode readability", () => {
+    test.use({ colorScheme: "dark" })
+
+    test("dark-status-notice-contrast: keeps the summary notice readable", async ({
+        page,
+    }) => {
+        await preparePlannerPage(page)
+
+        const contrast = await page.evaluate(() => {
+            const notice = document.querySelector<HTMLElement>(
+                'section[aria-labelledby="planner-summary-title"] [role="note"]',
+            )
+            if (notice === null) throw new Error("Expected the summary notice to render")
+            const parse = (value: string): [number, number, number] => {
+                const match = value.match(/\d+/g)
+                if (match === null || match.length < 3) {
+                    throw new Error(`Unexpected color: ${value}`)
+                }
+                return [Number(match[0]), Number(match[1]), Number(match[2])] as [
+                    number,
+                    number,
+                    number,
+                ]
+            }
+            const luminance = ([red, green, blue]: [number, number, number]) => {
+                const scale = (raw: number) => {
+                    const normalized = raw / 255
+                    return normalized <= 0.03928
+                        ? normalized / 12.92
+                        : ((normalized + 0.055) / 1.055) ** 2.4
+                }
+                return 0.2126 * scale(red) + 0.7152 * scale(green) + 0.0722 * scale(blue)
+            }
+            const style = getComputedStyle(notice)
+            if (style.backgroundColor.includes("rgba")) {
+                throw new Error("Expected an opaque notice background")
+            }
+            const first = luminance(parse(style.color))
+            const second = luminance(parse(style.backgroundColor))
+            return (Math.max(first, second) + 0.05) / (Math.min(first, second) + 0.05)
+        })
+
+        expect(contrast).toBeGreaterThanOrEqual(4.5)
+    })
+})

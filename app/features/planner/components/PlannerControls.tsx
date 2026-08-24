@@ -46,7 +46,9 @@ export const ActionButton = styled.button<{ $primary?: boolean; $danger?: boolea
 
     &:disabled {
         cursor: not-allowed;
-        opacity: 0.45;
+        color: ${({ theme }) => theme.colors.Text.disable};
+        background: ${({ theme }) => theme.colors.Background.Input.disabled};
+        border-color: ${({ theme }) => theme.colors.Line.block};
     }
 
     ${media.mobile} {
@@ -57,10 +59,10 @@ export const ActionButton = styled.button<{ $primary?: boolean; $danger?: boolea
 
 export const StatusNotice = styled.div`
     padding: 10px 12px;
-    border: 1px solid ${({ theme }) => theme.colors.Highlight.subtle};
+    border: 1px solid ${({ theme }) => theme.colors.Notice.border};
     border-radius: 6px;
-    color: ${({ theme }) => theme.colors.Highlight.dark};
-    background: ${({ theme }) => theme.colors.Background.Button.highlight};
+    color: ${({ theme }) => theme.colors.Notice.text};
+    background: ${({ theme }) => theme.colors.Notice.background};
     font-size: ${({ theme }) => theme.fonts.Normal.fontSize}px;
     font-weight: ${({ theme }) => theme.fonts.NormalBold.fontWeight};
     overflow-wrap: anywhere;
