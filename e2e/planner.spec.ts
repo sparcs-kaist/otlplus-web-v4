@@ -21,7 +21,7 @@ const planners = [
     createPlanner({ future_items: [futureItem] }),
     createPlanner({ id: -3, arrange_order: 1, start_year: 2024, end_year: 2027 }),
 ]
-const plannerBaseUrl = process.env.PLANNER_TEST_BASE_URL ?? "http://localhost:5173"
+const plannerBaseUrl = process.env.PLANNER_TEST_BASE_URL ?? "http://localhost:5218"
 const plannerUrl = new URL("/planner", plannerBaseUrl).toString()
 
 async function preparePlannerPage(
