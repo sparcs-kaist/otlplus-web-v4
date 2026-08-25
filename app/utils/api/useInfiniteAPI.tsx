@@ -20,6 +20,28 @@ import {
     getZodSchemaRequest,
 } from "./getAPIType"
 
+/**
+ * Resolves the next page offset from the tracked array keys of a paginated
+ * response. A missing, non-array, or short page stops pagination instead of
+ * crashing on `.length` (Sentry OTL-FRONT-V4-PROD-6X).
+ */
+export function nextPageFromKeys(
+    lastPage: unknown,
+    keys: ReadonlyArray<PropertyKey>,
+    limit: number,
+    allPagesLength: number,
+): number | undefined {
+    if (keys.length === 0) return undefined
+    const record = lastPage as Record<PropertyKey, unknown> | null | undefined
+    if (record === null || typeof record !== "object") return undefined
+    for (const key of keys) {
+        const page = record[key]
+        if (!Array.isArray(page)) return undefined
+        if (page.length < limit) return undefined
+    }
+    return allPagesLength
+}
+
 type ArrayKeys<T> = {
     [K in keyof T]-?: T[K] extends any[] ? K : never
 }[keyof T]
@@ -111,14 +133,12 @@ export function useInfiniteAPI<
                 return iteratedCount > 0 ? allPages.length : undefined
             }
 
-            for (const key of infinitesRef.current) {
-                const lastPageLength = (lastPage[key] as any[]).length
-                if (lastPageLength < limit) {
-                    return undefined
-                }
-            }
-
-            return infinitesRef.current.length > 0 ? allPages.length : undefined
+            return nextPageFromKeys(
+                lastPage,
+                infinitesRef.current,
+                limit,
+                allPages.length,
+            )
         },
         retry: 1,
         staleTime,
