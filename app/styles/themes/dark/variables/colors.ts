@@ -67,6 +67,7 @@ export const darkThemeColors: ThemeType["colors"] = {
         block: "#343434",
         dark: "#000000",
         darker: "#000000",
+        subtle: "rgba(255, 255, 255, 0.12)",
     },
     Text: {
         bright: "#000000",

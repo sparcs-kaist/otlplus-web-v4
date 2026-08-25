@@ -58,6 +58,7 @@ export const colors = {
         block: "#D6D6D6",
         dark: "#D6D6D6",
         darker: "#bebebeff",
+        subtle: "rgba(194, 194, 194, 0.2)",
     },
     Text: {
         bright: "#FFFFFF",

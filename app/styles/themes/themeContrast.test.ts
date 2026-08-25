@@ -72,4 +72,12 @@ describe("theme elevation", () => {
         expect(darkTheme.elevation.dropdown).toContain("rgba(255, 255, 255")
         expect(darkTheme.elevation.raised).toContain("rgba(0, 0, 0, 0.5)")
     })
+
+    it("preserves the exact legacy faint-border color as Line.subtle in light", () => {
+        expect(colors.Line.subtle).toBe("rgba(194, 194, 194, 0.2)")
+    })
+
+    it("gives Line.subtle a deliberate white-based value in dark", () => {
+        expect(darkTheme.colors.Line.subtle).toContain("rgba(255, 255, 255")
+    })
 })
