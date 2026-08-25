@@ -61,4 +61,15 @@ describe("theme elevation", () => {
         expect(darkTheme.elevation.surface).toContain("rgba(255, 255, 255")
         expect(darkTheme.elevation.low).toContain("rgba(255, 255, 255")
     })
+
+    it("exposes dropdown and raised elevations in both themes", () => {
+        for (const theme of [baseTheme, darkTheme]) {
+            expect(typeof theme.elevation.dropdown).toBe("string")
+            expect(theme.elevation.dropdown.length).toBeGreaterThan(0)
+            expect(typeof theme.elevation.raised).toBe("string")
+            expect(theme.elevation.raised.length).toBeGreaterThan(0)
+        }
+        expect(darkTheme.elevation.dropdown).toContain("rgba(255, 255, 255")
+        expect(darkTheme.elevation.raised).toContain("rgba(0, 0, 0, 0.5)")
+    })
 })
