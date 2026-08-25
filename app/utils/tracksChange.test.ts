@@ -68,8 +68,6 @@ describe("storeTracksVersion", () => {
 
         storeTracksVersion(signature, storage, "otlplus.tracks.signature")
 
-        expect(
-            storage.getItem("otlplus.tracks.signature"),
-        ).toBe(signature)
+        expect(storage.getItem("otlplus.tracks.signature")).toBe(signature)
     })
 })

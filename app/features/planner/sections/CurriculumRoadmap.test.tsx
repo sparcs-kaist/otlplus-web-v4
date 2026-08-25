@@ -24,9 +24,7 @@ const futureItem = {
 describe("CurriculumRoadmap", () => {
     it("roadmap-renders-year-rows: one row per planner year", () => {
         render(
-            <CurriculumRoadmap
-                planner={createPlanner({ future_items: [futureItem] })}
-            />,
+            <CurriculumRoadmap planner={createPlanner({ future_items: [futureItem] })} />,
         )
 
         expect(screen.getAllByTestId("roadmap-year-row")).toHaveLength(4)
@@ -34,14 +32,10 @@ describe("CurriculumRoadmap", () => {
 
     it("roadmap-groups-by-slot: chips land in their year/semester cell", () => {
         render(
-            <CurriculumRoadmap
-                planner={createPlanner({ future_items: [futureItem] })}
-            />,
+            <CurriculumRoadmap planner={createPlanner({ future_items: [futureItem] })} />,
         )
 
-        const cell = document.querySelector(
-            '[data-roadmap-cell="2023-1"]',
-        )
+        const cell = document.querySelector('[data-roadmap-cell="2023-1"]')
         if (cell === null) throw new Error("Expected the 2023-1 roadmap cell")
         expect(cell.textContent).toContain("Programming Basics")
     })
