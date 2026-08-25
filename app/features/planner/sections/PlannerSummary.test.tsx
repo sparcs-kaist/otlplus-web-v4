@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, it, vi } from "vitest"
 
 import { render } from "@/test/test-utils"
 
@@ -83,5 +83,39 @@ describe("PlannerSummary progress bars", () => {
             3 / 21,
             5,
         )
+    })
+})
+
+describe("PlannerSummary category drill-down", () => {
+    it("clicking a mapped card emits its Korean course type", () => {
+        const onSelectCategory = vi.fn()
+        const { container } = render(
+            <PlannerSummary
+                planner={createPlanner({ future_items: [futureItem] })}
+                onSelectCategory={onSelectCategory}
+            />,
+        )
+
+        const card = container.querySelector('[data-track="basicRequired"]')
+        if (!(card instanceof HTMLElement)) throw new Error("Expected the card")
+        card.click()
+
+        expect(onSelectCategory).toHaveBeenCalledWith("기초필수")
+    })
+
+    it("non-mapped cards stay inert", () => {
+        const onSelectCategory = vi.fn()
+        const { container } = render(
+            <PlannerSummary
+                planner={createPlanner({ future_items: [futureItem] })}
+                onSelectCategory={onSelectCategory}
+            />,
+        )
+
+        const card = container.querySelector('[data-track="totalCredit"]')
+        if (!(card instanceof HTMLElement)) throw new Error("Expected the card")
+        card.click()
+
+        expect(onSelectCategory).not.toHaveBeenCalled()
     })
 })

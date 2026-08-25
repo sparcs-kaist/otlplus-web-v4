@@ -98,6 +98,7 @@ export const planner = {
     search: {
         title: "과목 검색 및 추가",
         keyword: "과목 검색어",
+        drillChip: "{{type}}만 보기",
         placeholder: "과목명 또는 과목 코드를 입력하세요",
         duplicate: "이미 계획에 포함된 과목입니다",
         takenDuplicateConfirm:

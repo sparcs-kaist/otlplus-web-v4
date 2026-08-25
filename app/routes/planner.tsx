@@ -101,6 +101,7 @@ export function GraduationPlannerPage() {
     plannersRef.current = controller.planners
     const searchInputRef = useRef<HTMLInputElement>(null)
     const [tracksNoticeShown, setTracksNoticeShown] = useState(false)
+    const [drillTypeKo, setDrillTypeKo] = useState<string | null>(null)
 
     useEffect(() => {
         const tracks = controller.tracks
@@ -156,6 +157,15 @@ export function GraduationPlannerPage() {
             })
             await controller.removeItem(item)
         }
+    }
+
+    const handleSelectCategory = (typeKo: string): void => {
+        setDrillTypeKo(typeKo)
+        requestAnimationFrame(() => {
+            const input = searchInputRef.current
+            input?.scrollIntoView({ behavior: "smooth", block: "center" })
+            input?.focus({ preventScroll: true })
+        })
     }
 
     const handleRequestAdd = (year: number, semester: PlannerSemester): void => {
@@ -270,6 +280,8 @@ export function GraduationPlannerPage() {
                                 planner={controller.selectedPlanner}
                                 departments={departments}
                                 busy={controller.isBusy}
+                                drillTypeKo={drillTypeKo}
+                                onDrillTypeClear={() => setDrillTypeKo(null)}
                                 year={targetSlot.year}
                                 semester={targetSlot.semester}
                                 onYearChange={(year) =>
@@ -294,7 +306,10 @@ export function GraduationPlannerPage() {
                             />
                         </Panel>
                         <Panel direction="column" gap={12}>
-                            <PlannerSummary planner={controller.selectedPlanner} />
+                            <PlannerSummary
+                                planner={controller.selectedPlanner}
+                                onSelectCategory={handleSelectCategory}
+                            />
                         </Panel>
                     </SupportRail>
                 </Workspace>

@@ -22,6 +22,7 @@ import {
     Select,
     StatusNotice,
 } from "../components/PlannerControls"
+import { filterCoursesByType } from "../domain/drillDown"
 import { getCourseDuplicateDecision } from "../domain/duplicates"
 import type { AddFutureItem, ArbitraryItemInput } from "../hooks/types"
 import { ArbitraryCourseForm } from "./ArbitraryCourseForm"
@@ -87,6 +88,24 @@ const CourseCode = styled.span`
     font-size: ${({ theme }) => theme.fonts.Small.fontSize}px;
 `
 
+const DrillChip = styled.button`
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border: 1px solid ${({ theme }) => theme.colors.Highlight.default};
+    border-radius: 999px;
+    color: ${({ theme }) => theme.colors.Highlight.default};
+    background: ${({ theme }) => theme.colors.Background.Button.highlight};
+    font-size: ${({ theme }) => theme.fonts.Small.fontSize}px;
+    cursor: pointer;
+
+    &:focus-visible {
+        outline: 2px solid ${({ theme }) => theme.colors.Highlight.default};
+        outline-offset: 2px;
+    }
+`
+
 const TargetGrid = styled.div`
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr));
@@ -111,6 +130,8 @@ type Props = {
     readonly onYearChange: (year: number) => void
     readonly onSemesterChange: (semester: PlannerSemester) => void
     readonly keywordInputRef?: React.Ref<HTMLInputElement>
+    readonly drillTypeKo?: string | null
+    readonly onDrillTypeClear?: () => void
     readonly onAddFuture: AddFutureItem
     readonly onAddArbitrary: (input: ArbitraryItemInput) => Promise<void>
 }
@@ -124,6 +145,8 @@ export function CourseSearchPanel({
     onYearChange,
     onSemesterChange,
     keywordInputRef,
+    drillTypeKo = null,
+    onDrillTypeClear,
     onAddFuture,
     onAddArbitrary,
 }: Props) {
@@ -173,19 +196,29 @@ export function CourseSearchPanel({
                     {t("planner.actions.search")}
                 </ActionButton>
             </SearchRow>
+            {drillTypeKo !== null && (
+                <DrillChip type="button" onClick={() => onDrillTypeClear?.()}>
+                    {t("planner.search.drillChip", { type: drillTypeKo })}
+                    {" ✕"}
+                </DrillChip>
+            )}
             <Results>
-                {courses.query.data?.map((course) => (
-                    <CourseButton
-                        key={course.id}
-                        type="button"
-                        $selected={course.id === selectedCourseId}
-                        aria-pressed={course.id === selectedCourseId}
-                        onClick={() => setSelectedCourseId(course.id)}
-                    >
-                        <CourseCode>{course.old_code}</CourseCode>
-                        {i18n.resolvedLanguage === "en" ? course.title_en : course.title}
-                    </CourseButton>
-                ))}
+                {filterCoursesByType(courses.query.data ?? [], drillTypeKo).map(
+                    (course) => (
+                        <CourseButton
+                            key={course.id}
+                            type="button"
+                            $selected={course.id === selectedCourseId}
+                            aria-pressed={course.id === selectedCourseId}
+                            onClick={() => setSelectedCourseId(course.id)}
+                        >
+                            <CourseCode>{course.old_code}</CourseCode>
+                            {i18n.resolvedLanguage === "en"
+                                ? course.title_en
+                                : course.title}
+                        </CourseButton>
+                    ),
+                )}
             </Results>
             <TargetGrid>
                 <FieldLabel>

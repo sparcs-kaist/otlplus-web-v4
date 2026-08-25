@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next"
 import type { PlannerDetail } from "@/common/schemas/planner"
 
 import { SectionTitle, StatusNotice } from "../components/PlannerControls"
+import { CATEGORY_COURSE_TYPES } from "../domain/drillDown"
 import { type Progress, calculatePlannerSummary } from "../domain/summary"
 
 const SummaryGrid = styled.div`
@@ -14,7 +15,7 @@ const SummaryGrid = styled.div`
     gap: 8px;
 `
 
-const SummaryCard = styled.div`
+const SummaryCard = styled.div<{ $selectable?: boolean }>`
     display: flex;
     flex-direction: column;
     gap: 6px;
@@ -22,6 +23,12 @@ const SummaryCard = styled.div`
     border: 1px solid ${({ theme }) => theme.colors.Line.default};
     border-radius: 8px;
     background: ${({ theme }) => theme.colors.Background.Block.default};
+    cursor: ${({ $selectable }) => ($selectable ? "pointer" : "default")};
+
+    &:focus-visible {
+        outline: 2px solid ${({ theme }) => theme.colors.Highlight.default};
+        outline-offset: 2px;
+    }
 `
 
 const Label = styled.span`
@@ -79,17 +86,25 @@ function ProgressCard({
     progress,
     unit,
     trackId,
+    onSelect,
 }: {
     label: ReactNode
     progress: Progress
     unit: string
     trackId: string
+    onSelect?: (() => void) | undefined
 }) {
     const { t } = useTranslation()
     const completed = progress.taken + progress.planned
     const segments = progressRatios(progress)
-    return (
-        <SummaryCard>
+    const card = (
+        <SummaryCard
+            as={onSelect !== undefined ? "button" : "div"}
+            {...(onSelect !== undefined
+                ? { type: "button" as const, onClick: onSelect }
+                : {})}
+            $selectable={onSelect !== undefined}
+        >
             <Label>{label}</Label>
             <Value>
                 {completed} / {progress.required} {unit}
@@ -116,9 +131,16 @@ function ProgressCard({
             </ProgressTrack>
         </SummaryCard>
     )
+    return card
 }
 
-export function PlannerSummary({ planner }: { readonly planner: PlannerDetail }) {
+export function PlannerSummary({
+    planner,
+    onSelectCategory,
+}: {
+    readonly planner: PlannerDetail
+    readonly onSelectCategory?: (typeKo: string) => void
+}) {
     const { t, i18n } = useTranslation()
     const summary = calculatePlannerSummary(planner)
     const creditUnit = t("planner.summary.units.credit")
@@ -135,6 +157,15 @@ export function PlannerSummary({ planner }: { readonly planner: PlannerDetail })
         ["other", summary.other, creditUnit],
     ] as const
 
+    const drillKoByEntry: Partial<Record<(typeof entries)[number][0], string>> = {
+        basicRequired: CATEGORY_COURSE_TYPES.basicRequired,
+        basicElective: CATEGORY_COURSE_TYPES.basicElective,
+        thesisStudy: CATEGORY_COURSE_TYPES.thesisStudy,
+        generalRequiredCredit: CATEGORY_COURSE_TYPES.generalRequired,
+        generalRequiredAu: CATEGORY_COURSE_TYPES.generalRequired,
+        humanities: CATEGORY_COURSE_TYPES.humanities,
+    }
+
     return (
         <section aria-labelledby="planner-summary-title">
             <SectionTitle id="planner-summary-title">
@@ -142,15 +173,23 @@ export function PlannerSummary({ planner }: { readonly planner: PlannerDetail })
             </SectionTitle>
             <StatusNotice role="note">{t("planner.summary.disclaimer")}</StatusNotice>
             <SummaryGrid>
-                {entries.map(([key, progress, unit]) => (
-                    <ProgressCard
-                        key={key}
-                        label={t(`planner.summary.categories.${key}`)}
-                        progress={progress}
-                        unit={unit}
-                        trackId={key}
-                    />
-                ))}
+                {entries.map(([key, progress, unit]) => {
+                    const typeKo = drillKoByEntry[key]
+                    return (
+                        <ProgressCard
+                            key={key}
+                            label={t(`planner.summary.categories.${key}`)}
+                            progress={progress}
+                            unit={unit}
+                            trackId={key}
+                            onSelect={
+                                onSelectCategory !== undefined && typeKo !== undefined
+                                    ? () => onSelectCategory(typeKo)
+                                    : undefined
+                            }
+                        />
+                    )
+                })}
                 {summary.majors.flatMap((major) => {
                     const department = major.department
                         ? i18n.resolvedLanguage === "en"
@@ -178,6 +217,14 @@ export function PlannerSummary({ planner }: { readonly planner: PlannerDetail })
                             progress={major.required}
                             unit={creditUnit}
                             trackId={`${major.key}:required`}
+                            onSelect={
+                                onSelectCategory !== undefined
+                                    ? () =>
+                                          onSelectCategory(
+                                              CATEGORY_COURSE_TYPES.majorRequired,
+                                          )
+                                    : undefined
+                            }
                         />,
                         <ProgressCard
                             key={`${major.key}:elective`}
@@ -185,6 +232,14 @@ export function PlannerSummary({ planner }: { readonly planner: PlannerDetail })
                             progress={major.elective}
                             unit={creditUnit}
                             trackId={`${major.key}:elective`}
+                            onSelect={
+                                onSelectCategory !== undefined
+                                    ? () =>
+                                          onSelectCategory(
+                                              CATEGORY_COURSE_TYPES.majorElective,
+                                          )
+                                    : undefined
+                            }
                         />,
                     ]
                 })}

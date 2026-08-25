@@ -101,6 +101,7 @@ export const planner = {
     search: {
         title: "Search and Add Courses",
         keyword: "Course keyword",
+        drillChip: "Filter: {{type}} only",
         placeholder: "Enter a course name or code",
         duplicate: "This course is already planned",
         takenDuplicateConfirm:
