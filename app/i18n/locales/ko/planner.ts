@@ -124,6 +124,10 @@ export const planner = {
         loading: "플래너를 불러오는 중입니다.",
         error: "플래너 요청을 처리하지 못했습니다.",
     },
+    roadmap: {
+        title: "커리큘럼 로드맵",
+        empty: "계획 과목을 추가하면 로드맵에 표시됩니다.",
+    },
     notice: {
         tracksUpdated:
             "졸업요건 정보가 갱신되었습니다. 플래너 요약을 다시 확인해 주세요.",

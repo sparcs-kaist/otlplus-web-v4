@@ -11,6 +11,7 @@ import type { PlannerSemester } from "@/common/schemas/planner"
 import { ActionButton, StatusNotice } from "@/features/planner/components/PlannerControls"
 import { usePlannerController } from "@/features/planner/hooks/usePlannerController"
 import { CourseSearchPanel } from "@/features/planner/sections/CourseSearchPanel"
+import { CurriculumRoadmap } from "@/features/planner/sections/CurriculumRoadmap"
 import { PlannerSidebar } from "@/features/planner/sections/PlannerSidebar"
 import { PlannerSummary } from "@/features/planner/sections/PlannerSummary"
 import { SemesterGrid } from "@/features/planner/sections/SemesterGrid"
@@ -224,6 +225,9 @@ export function GraduationPlannerPage() {
                                 onRemove={controller.removeItem}
                                 onRequestAdd={handleRequestAdd}
                             />
+                        </Panel>
+                        <Panel direction="column" gap={12}>
+                            <CurriculumRoadmap planner={controller.selectedPlanner} />
                         </Panel>
                         <Panel direction="column" gap={12}>
                             <CourseSearchPanel

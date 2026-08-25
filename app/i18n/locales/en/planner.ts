@@ -127,6 +127,10 @@ export const planner = {
         loading: "Loading your planner.",
         error: "The planner request could not be completed.",
     },
+    roadmap: {
+        title: "Curriculum roadmap",
+        empty: "Add planned courses to see them on the roadmap.",
+    },
     notice: {
         tracksUpdated:
             "Graduation requirement data has been updated. Please review your planner summary.",
