@@ -62,5 +62,10 @@ Bulletin 원문(bulletin.kaist.ac.kr)은 SSO 게이트. 2026 신입생 안내책
   P1-7 curriculum roadmap view, P2-8 scenario comparison, P2-9 bulletin-change banner.
 - P1-4: picker already exists in TrackSettings (compat rules + issue validation);
   remaining enhancement is grouped browsing over the 101-row catalog.
-- P0 items remain backend-scoped (separate repo): SS/FX track seeds, bulletin pipeline,
-  general-track audit.
+- P0 status:
+    - P0-3 general-track audit: DONE — 2023+ general track already live (id=1: 138 credits,
+      AU 4, humanities 21); no frontend gap.
+    - P0-1 SS track: backend PR sparcs-kaist/otlplus#998 opened (sourced from sse.kaist.ac.kr);
+      FX (AI미래학과) data not publicly found — pending.
+    - P0-2 bulletin pipeline: backend already has `apps/graduation/data/*.csv` +
+      `update_tracks` command — pipeline exists; automation is an ops concern.
