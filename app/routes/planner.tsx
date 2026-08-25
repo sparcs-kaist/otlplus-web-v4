@@ -15,6 +15,7 @@ import { CourseSearchPanel } from "@/features/planner/sections/CourseSearchPanel
 import { CurriculumRoadmap } from "@/features/planner/sections/CurriculumRoadmap"
 import { PlannerSidebar } from "@/features/planner/sections/PlannerSidebar"
 import { PlannerSummary } from "@/features/planner/sections/PlannerSummary"
+import { ScenarioComparison } from "@/features/planner/sections/ScenarioComparison"
 import { SemesterGrid } from "@/features/planner/sections/SemesterGrid"
 import { TermConfirmWizard } from "@/features/planner/sections/TermConfirmWizard"
 import { TrackSettings } from "@/features/planner/sections/TrackSettings"
@@ -311,6 +312,14 @@ export function GraduationPlannerPage() {
                                 onSelectCategory={handleSelectCategory}
                             />
                         </Panel>
+                        {controller.planners.length >= 2 && (
+                            <Panel direction="column" gap={12}>
+                                <ScenarioComparison
+                                    planners={controller.planners}
+                                    selectedId={controller.selectedPlanner.id}
+                                />
+                            </Panel>
+                        )}
                     </SupportRail>
                 </Workspace>
             )}

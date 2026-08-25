@@ -128,6 +128,10 @@ export const planner = {
         loading: "Loading your planner.",
         error: "The planner request could not be completed.",
     },
+    comparison: {
+        title: "Scenario comparison",
+        category: "Category",
+    },
     wizard: {
         title: "Confirm completed terms",
         description:

@@ -125,6 +125,10 @@ export const planner = {
         loading: "플래너를 불러오는 중입니다.",
         error: "플래너 요청을 처리하지 못했습니다.",
     },
+    comparison: {
+        title: "시나리오 비교",
+        category: "요건",
+    },
     wizard: {
         title: "지난 학기 계획 확정",
         description:
