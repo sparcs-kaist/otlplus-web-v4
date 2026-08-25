@@ -127,6 +127,11 @@ export const planner = {
         loading: "Loading your planner.",
         error: "The planner request could not be completed.",
     },
+    notice: {
+        tracksUpdated:
+            "Graduation requirement data has been updated. Please review your planner summary.",
+        dismiss: "Dismiss",
+    },
     empty: {
         title: "Start your graduation plan",
         description:

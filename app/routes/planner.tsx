@@ -4,10 +4,11 @@ import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
 
 import LoadingCircle from "@/common/components/LoadingCircle"
+import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import Widget from "@/common/primitives/Widget"
 import type { PlannerSemester } from "@/common/schemas/planner"
-import { ActionButton } from "@/features/planner/components/PlannerControls"
+import { ActionButton, StatusNotice } from "@/features/planner/components/PlannerControls"
 import { usePlannerController } from "@/features/planner/hooks/usePlannerController"
 import { CourseSearchPanel } from "@/features/planner/sections/CourseSearchPanel"
 import { PlannerSidebar } from "@/features/planner/sections/PlannerSidebar"
@@ -17,6 +18,11 @@ import { TrackSettings } from "@/features/planner/sections/TrackSettings"
 import { RequireFeatureFlag } from "@/libs/featureFlags"
 import { trackEvent } from "@/libs/mixpanel"
 import { media } from "@/styles/themes/media"
+import {
+    computeTracksSignature,
+    resolveTracksNotice,
+    storeTracksVersion,
+} from "@/utils/tracksChange"
 
 const PlannerPage = styled.main`
     display: flex;
@@ -91,6 +97,22 @@ export function GraduationPlannerPage() {
     const plannersRef = useRef(controller.planners)
     plannersRef.current = controller.planners
     const searchInputRef = useRef<HTMLInputElement>(null)
+    const [tracksNoticeShown, setTracksNoticeShown] = useState(false)
+
+    useEffect(() => {
+        const tracks = controller.tracks
+        if (tracks === undefined) return
+        const outcome = resolveTracksNotice(tracks, window.localStorage)
+        setTracksNoticeShown(outcome.show)
+    }, [controller.tracks])
+
+    const dismissTracksNotice = () => {
+        const tracks = controller.tracks
+        if (tracks !== undefined) {
+            storeTracksVersion(computeTracksSignature(tracks), window.localStorage)
+        }
+        setTracksNoticeShown(false)
+    }
     const [targetSlot, setTargetSlot] = useState<{
         year: number
         semester: PlannerSemester
@@ -155,6 +177,16 @@ export function GraduationPlannerPage() {
                 onDelete={controller.deletePlanner}
                 onReorder={controller.reorderPlanner}
             />
+            {tracksNoticeShown && (
+                <StatusNotice role="status">
+                    {t("planner.notice.tracksUpdated")}
+                    <FlexWrapper direction="row" justify="flex-end" gap={6}>
+                        <ActionButton type="button" onClick={dismissTracksNotice}>
+                            {t("planner.notice.dismiss")}
+                        </ActionButton>
+                    </FlexWrapper>
+                </StatusNotice>
+            )}
             {controller.error !== null && controller.error !== undefined && (
                 <Panel direction="column" gap={6}>
                     <Typography type="NormalBold" color="Highlight.dark">

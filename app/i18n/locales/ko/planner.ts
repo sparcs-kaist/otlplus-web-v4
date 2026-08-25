@@ -124,6 +124,11 @@ export const planner = {
         loading: "플래너를 불러오는 중입니다.",
         error: "플래너 요청을 처리하지 못했습니다.",
     },
+    notice: {
+        tracksUpdated:
+            "졸업요건 정보가 갱신되었습니다. 플래너 요약을 다시 확인해 주세요.",
+        dismiss: "닫기",
+    },
     empty: {
         title: "졸업 계획을 시작해 보세요",
         description:
