@@ -55,3 +55,12 @@ Bulletin 원문(bulletin.kaist.ac.kr)은 SSO 게이트. 2026 신입생 안내책
   (`dev:flags-on`, seeded `localStorage` fixture, mocked `/api/tracks` + `/api/courses`).
 - Backend seeds (P0-1/P0-2) ship as PRs to `sparcs-kaist/otlplus`; frontend needs no flag gate.
 - Keep the planner behind `planner-enabled` until P0 lands in production.
+
+## Implementation status (2026-08-25)
+
+- Done (this branch): P1-5 term confirm wizard, P1-6 drill-down (client-side type filter),
+  P1-7 curriculum roadmap view, P2-8 scenario comparison, P2-9 bulletin-change banner.
+- P1-4: picker already exists in TrackSettings (compat rules + issue validation);
+  remaining enhancement is grouped browsing over the 101-row catalog.
+- P0 items remain backend-scoped (separate repo): SS/FX track seeds, bulletin pipeline,
+  general-track audit.
