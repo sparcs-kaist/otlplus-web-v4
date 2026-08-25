@@ -7,6 +7,7 @@ import type { PlannerDetail, TracksResponse } from "@/common/schemas/planner"
 
 import {
     ActionButton,
+    Field,
     FieldLabel,
     PlannerFieldGrid,
     PlannerForm,
@@ -46,6 +47,7 @@ export function TrackSettings({ planner, tracks, busy, onSave }: Props) {
     const [additionalIds, setAdditionalIds] = useState<readonly number[]>(
         planner.additional_tracks.map((track) => track.id),
     )
+    const [additionalQuery, setAdditionalQuery] = useState("")
 
     useEffect(() => {
         const nextDuration = planner.end_year - planner.start_year + 1
@@ -72,9 +74,23 @@ export function TrackSettings({ planner, tracks, busy, onSave }: Props) {
     const majorOptions = tracks.major.filter(
         (track) => track.end_year >= 2020 || track.id === majorId,
     )
-    const additionalOptions = tracks.additional.filter(
-        (track) => track.end_year >= 2020 || additionalIds.includes(track.id),
-    )
+    const additionalOptions = useMemo(() => {
+        const base = tracks.additional.filter(
+            (track) => track.end_year >= 2020 || additionalIds.includes(track.id),
+        )
+        const query = additionalQuery.trim().toLowerCase()
+        if (query === "") return base
+        return base.filter((track) => {
+            const haystack = [
+                track.department?.name ?? "",
+                track.department?.name_en ?? "",
+                track.type,
+            ]
+                .join(" ")
+                .toLowerCase()
+            return haystack.includes(query)
+        })
+    }, [tracks.additional, additionalIds, additionalQuery])
     const localizedDepartment = (department: {
         readonly name: string
         readonly name_en: string
@@ -202,6 +218,13 @@ export function TrackSettings({ planner, tracks, busy, onSave }: Props) {
             </PlannerFieldGrid>
             <FieldLabel>
                 {t("planner.settings.additionalTracks")}
+                <Field
+                    type="text"
+                    value={additionalQuery}
+                    onChange={(event) => setAdditionalQuery(event.target.value)}
+                    aria-label={t("planner.settings.additionalFilter")}
+                    placeholder={t("planner.settings.additionalFilterPlaceholder")}
+                />
                 <Select
                     multiple
                     size={6}

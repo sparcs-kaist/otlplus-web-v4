@@ -29,6 +29,8 @@ export const planner = {
         durationYears: "{{count}} years",
         generalTrack: "General requirements",
         majorTrack: "Primary major",
+        additionalFilter: "Filter additional tracks",
+        additionalFilterPlaceholder: "Search by department or type…",
         additionalTracks: "Additional tracks",
         domestic: "Domestic student",
         foreign: "International student",

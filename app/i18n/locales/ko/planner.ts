@@ -29,6 +29,8 @@ export const planner = {
         durationYears: "{{count}}년",
         generalTrack: "공통 졸업 요건",
         majorTrack: "주전공",
+        additionalFilter: "추가 트랙 필터",
+        additionalFilterPlaceholder: "학과·유형으로 검색…",
         additionalTracks: "추가 이수 유형",
         domestic: "일반 학생",
         foreign: "외국인 학생",
