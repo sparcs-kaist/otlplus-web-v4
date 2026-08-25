@@ -127,6 +127,13 @@ export const planner = {
         loading: "Loading your planner.",
         error: "The planner request could not be completed.",
     },
+    wizard: {
+        title: "Confirm completed terms",
+        description:
+            "{{count}} planned courses are from finished semesters. Mark them as completed to move them into your record.",
+        item: "{{year}} {{semester}} — {{course}}",
+        confirm: "Confirm as completed",
+    },
     roadmap: {
         title: "Curriculum roadmap",
         empty: "Add planned courses to see them on the roadmap.",

@@ -124,6 +124,13 @@ export const planner = {
         loading: "플래너를 불러오는 중입니다.",
         error: "플래너 요청을 처리하지 못했습니다.",
     },
+    wizard: {
+        title: "지난 학기 계획 확정",
+        description:
+            "종료된 학기의 계획 과목 {{count}}개가 있습니다. 이수 확정으로 처리하면 이수 기록으로 옮길 수 있어요.",
+        item: "{{year}} {{semester}} — {{course}}",
+        confirm: "이수 확정",
+    },
     roadmap: {
         title: "커리큘럼 로드맵",
         empty: "계획 과목을 추가하면 로드맵에 표시됩니다.",

@@ -7,14 +7,16 @@ import LoadingCircle from "@/common/components/LoadingCircle"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import Widget from "@/common/primitives/Widget"
-import type { PlannerSemester } from "@/common/schemas/planner"
+import type { PlannerDetail, PlannerSemester } from "@/common/schemas/planner"
 import { ActionButton, StatusNotice } from "@/features/planner/components/PlannerControls"
+import { isPastSlot } from "@/features/planner/domain/timeUtils"
 import { usePlannerController } from "@/features/planner/hooks/usePlannerController"
 import { CourseSearchPanel } from "@/features/planner/sections/CourseSearchPanel"
 import { CurriculumRoadmap } from "@/features/planner/sections/CurriculumRoadmap"
 import { PlannerSidebar } from "@/features/planner/sections/PlannerSidebar"
 import { PlannerSummary } from "@/features/planner/sections/PlannerSummary"
 import { SemesterGrid } from "@/features/planner/sections/SemesterGrid"
+import { TermConfirmWizard } from "@/features/planner/sections/TermConfirmWizard"
 import { TrackSettings } from "@/features/planner/sections/TrackSettings"
 import { RequireFeatureFlag } from "@/libs/featureFlags"
 import { trackEvent } from "@/libs/mixpanel"
@@ -131,6 +133,31 @@ export function GraduationPlannerPage() {
         }
     }, [selectedId])
 
+    const hasPastItems = useMemo(() => {
+        const planner = controller.selectedPlanner
+        if (planner === null) return false
+        return planner.future_items.some((item) =>
+            isPastSlot({ year: item.year, semester: item.semester }, new Date()),
+        )
+    }, [controller.selectedPlanner])
+
+    const handleConfirmPastItems = async (
+        items: readonly PlannerDetail["future_items"][number][],
+    ): Promise<void> => {
+        for (const item of items) {
+            await controller.addArbitrary({
+                year: item.year,
+                semester: item.semester,
+                department: item.course.department,
+                type: item.course.type,
+                typeEn: item.course.type_en,
+                credit: item.course.credit,
+                creditAU: item.course.credit_au,
+            })
+            await controller.removeItem(item)
+        }
+    }
+
     const handleRequestAdd = (year: number, semester: PlannerSemester): void => {
         setTargetSlot({ year, semester })
         requestAnimationFrame(() => {
@@ -217,6 +244,15 @@ export function GraduationPlannerPage() {
             ) : (
                 <Workspace>
                     <PrimaryFlow>
+                        {hasPastItems && (
+                            <Panel direction="column" gap={12}>
+                                <TermConfirmWizard
+                                    planner={controller.selectedPlanner}
+                                    busy={controller.isBusy}
+                                    onConfirm={handleConfirmPastItems}
+                                />
+                            </Panel>
+                        )}
                         <Panel direction="column" gap={12}>
                             <SemesterGrid
                                 planner={controller.selectedPlanner}
