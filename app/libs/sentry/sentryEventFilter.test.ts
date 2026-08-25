@@ -221,3 +221,18 @@ describe("IGNORED_SENTRY_ERROR_PATTERNS: connectivity and asset noise", () => {
         ).toBe(false)
     })
 })
+
+describe("IGNORED_SENTRY_ERROR_PATTERNS: browser storage exhaustion", () => {
+    it("matches the UnknownError IDB no-space family", () => {
+        const message =
+            "UnknownError: Connection is closing because of: IO error: /home/chronos/u-f2a04.../https_otl.kaist.ac.kr_0.indexeddb.leveldb/000006.log: FILE_ERROR_NO_SPACE (ChromeMethodBFE: 3::WritableFileAppend::8)"
+        expect(
+            IGNORED_SENTRY_ERROR_PATTERNS.some((pattern) => pattern.test(message)),
+        ).toBe(true)
+        expect(
+            IGNORED_SENTRY_ERROR_PATTERNS.some((pattern) =>
+                pattern.test("UnknownError: Connection is open"),
+            ),
+        ).toBe(false)
+    })
+})

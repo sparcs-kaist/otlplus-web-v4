@@ -18,6 +18,7 @@ export const IGNORED_SENTRY_ERROR_PATTERNS = [
     // Browser-internal IndexedDB failures outside application control.
     /^NotReadableError: The I\/O read operation failed\.$/,
     /^InvalidStateError: Failed to execute 'transaction' on 'IDBDatabase': The database connection is closing\.$/,
+    /^UnknownError: Connection is closing because of: IO error: .*FILE_ERROR_NO_SPACE/,
 ] as const
 
 const BREADCRUMB_URL_KEYS = ["url", "from", "to"] as const
