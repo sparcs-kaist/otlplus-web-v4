@@ -19,6 +19,14 @@ test.describe("Navigation", () => {
         await expect(page).toHaveURL(/timetable/)
     })
 
+    test("should redirect /planner home while the feature flag is off", async ({
+        page,
+    }) => {
+        await page.goto("/planner")
+        await page.waitForLoadState("domcontentloaded")
+        await expect(page).not.toHaveURL(/planner/)
+    })
+
     test("should navigate to write-reviews page", async ({ page }) => {
         await page.goto("/write-reviews")
         await page.waitForLoadState("domcontentloaded")

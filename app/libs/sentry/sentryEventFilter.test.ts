@@ -188,3 +188,51 @@ describe("IGNORED_SENTRY_ERROR_PATTERNS", () => {
         ).toBe(false)
     })
 })
+
+describe("IGNORED_SENTRY_ERROR_PATTERNS: connectivity and asset noise", () => {
+    const productionMessages = [
+        "Network Error",
+        "Failed to fetch dynamically imported module: https://otl.kaist.ac.kr/assets/TimeTableSection-D0o1l5VZ.js",
+        "Importing a module script failed.",
+        "NotReadableError: The I/O read operation failed.",
+        "InvalidStateError: Failed to execute 'transaction' on 'IDBDatabase': The database connection is closing.",
+    ]
+
+    it("matches the recurring production noise messages", () => {
+        expect(
+            productionMessages.every((message) =>
+                IGNORED_SENTRY_ERROR_PATTERNS.some((pattern) => pattern.test(message)),
+            ),
+        ).toBe(true)
+    })
+
+    it("does not swallow near-miss application errors", () => {
+        const nearMisses = [
+            "Network Error: retry succeeded after backoff",
+            "A network error occurred while saving",
+            "TypeError: Failed to fetch",
+            "Failed to execute 'transaction' on 'IDBDatabase': The database connection is open.",
+        ]
+
+        expect(
+            nearMisses.some((message) =>
+                IGNORED_SENTRY_ERROR_PATTERNS.some((pattern) => pattern.test(message)),
+            ),
+        ).toBe(false)
+    })
+})
+
+describe("IGNORED_SENTRY_ERROR_PATTERNS: browser storage exhaustion", () => {
+    it("matches the UnknownError IDB no-space family", () => {
+        const message =
+            "UnknownError: Connection is closing because of: IO error: /home/chronos/u-f2a04.../https_otl.kaist.ac.kr_0.indexeddb.leveldb/000006.log: FILE_ERROR_NO_SPACE (ChromeMethodBFE: 3::WritableFileAppend::8)"
+        expect(
+            IGNORED_SENTRY_ERROR_PATTERNS.some((pattern) => pattern.test(message)),
+        ).toBe(true)
+        expect(
+            IGNORED_SENTRY_ERROR_PATTERNS.some((pattern) =>
+                pattern.test("UnknownError: Connection is open"),
+            ),
+        ).toBe(false)
+    })
+})

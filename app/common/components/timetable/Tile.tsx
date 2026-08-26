@@ -117,7 +117,7 @@ const LectureTileWrapper = styled(FlexWrapper)<{
 
     [data-selected-lectures~="${({ lectureId }) => lectureId}"] & {
         transform: translateY(-2px);
-        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        box-shadow: ${({ theme }) => theme.elevation.raised};
     }
 
     [data-flash-lectures~="${({ lectureId }) => lectureId}"] & {
@@ -414,7 +414,7 @@ const OverflowTileInner = styled(FlexWrapper)<{ courseId: number; lectureId: num
 
     [data-selected-lectures~="${({ lectureId }) => lectureId}"] & {
         transform: translateY(-2px);
-        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        box-shadow: ${({ theme }) => theme.elevation.raised};
         opacity: 1;
     }
 

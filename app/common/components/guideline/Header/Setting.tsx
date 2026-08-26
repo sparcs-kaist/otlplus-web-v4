@@ -19,19 +19,24 @@ const SettingWrapper = styled(FlexWrapper)<{ mobileSidebar: boolean }>`
     width: ${({ mobileSidebar }) => (mobileSidebar ? "100%" : "auto")};
 `
 
-const LanguageButtonWrapper = styled(FlexWrapper)`
+const SettingButton = styled.button<{ mobileSidebar: boolean }>`
+    display: flex;
+    flex-direction: ${({ mobileSidebar }) => (mobileSidebar ? "row" : "column")};
+    align-items: center;
+    gap: 4px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
     cursor: pointer;
-`
-
-const AccountButtonWrapper = styled(FlexWrapper)`
-    cursor: pointer;
+    font: inherit;
 `
 
 interface SettingProps {
-    handleAccountButtonClick: () => void
-    userName: string
-    mobileSidebar: boolean
-    isLoading: boolean
+    readonly handleAccountButtonClick: () => void
+    readonly userName: string
+    readonly mobileSidebar: boolean
+    readonly isLoading: boolean
 }
 
 const Setting: React.FC<SettingProps> = ({
@@ -92,28 +97,37 @@ const Setting: React.FC<SettingProps> = ({
             mobileSidebar={mobileSidebar}
         >
             {!mobileSidebar && (
-                <Icon size={16} onClick={changeThemeMode}>
-                    <ThemeIcon />
-                </Icon>
+                <SettingButton
+                    type="button"
+                    aria-label={t("header.changeTheme")}
+                    mobileSidebar={false}
+                    onClick={changeThemeMode}
+                    title={t("header.changeTheme")}
+                >
+                    <Icon size={16}>
+                        <ThemeIcon />
+                    </Icon>
+                </SettingButton>
             )}
-            <LanguageButtonWrapper
-                direction={mobileSidebar ? "row" : "column"}
-                gap={4}
-                align="center"
+            <SettingButton
+                type="button"
+                aria-label={t("common.language")}
+                mobileSidebar={mobileSidebar}
                 onClick={changeLanguage}
+                title={t("common.language")}
             >
                 <Icon size={16}>
                     <LanguageIcon />
                 </Icon>
                 {mobileSidebar && t("common.language")}
-            </LanguageButtonWrapper>
+            </SettingButton>
             {isLoading ? (
                 "Loading..."
             ) : (
-                <AccountButtonWrapper
-                    direction="row"
-                    gap={4}
-                    align="center"
+                <SettingButton
+                    type="button"
+                    aria-label={userName}
+                    mobileSidebar={true}
                     onClick={handleAccountButtonClick}
                 >
                     <Icon size={16}>
@@ -125,7 +139,7 @@ const Setting: React.FC<SettingProps> = ({
                     >
                         {userName}
                     </Typography>
-                </AccountButtonWrapper>
+                </SettingButton>
             )}
         </SettingWrapper>
     )
