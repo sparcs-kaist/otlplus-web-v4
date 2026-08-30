@@ -1,6 +1,7 @@
 import styled from "@emotion/styled"
 
 import StyledDivider from "@/common/components/StyledDivider"
+import type { CustomBlock } from "@/common/schemas/customBlock"
 import type { Lecture } from "@/common/schemas/lecture"
 import CreditGridSubSection from "@/features/timetable/sections/TimetableInfoSection/CreditGridSubSection"
 import CreditScoreSubSection from "@/features/timetable/sections/TimetableInfoSection/CreditScoreSubSection"
@@ -34,12 +35,18 @@ const InfoArea = styled.div`
 
 interface TimetableInfoSectionProps {
     timetableLectures: Lecture[]
+    customBlocks: CustomBlock[]
 }
 
 export default function TimetableInfoSection({
     timetableLectures,
+    customBlocks,
 }: TimetableInfoSectionProps) {
     const isLaptop = useIsDevice("laptop")
+
+    const timetableName = useTimetableUIStore((s) => s.currentTimetableName)
+    const year = useTimetableUIStore((s) => s.year)
+    const semester = useTimetableUIStore((s) => s.semesterEnum)
 
     const selectedLectures = useTimetableUIStore((s) => s.selectedLectures)
     const hoveredLectures = useTimetableUIStore((s) => s.hoveredLectures)
@@ -87,7 +94,15 @@ export default function TimetableInfoSection({
             {!isLaptop && <StyledDivider direction="row" />}
 
             {/* 내보내기 버튼들 */}
-            {!isLaptop && <UtilButtonsSubSection timetableLectures={timetableLectures} />}
+            {!isLaptop && (
+                <UtilButtonsSubSection
+                    timetableName={timetableName}
+                    timetableLectures={timetableLectures}
+                    customBlocks={customBlocks}
+                    year={year}
+                    semester={semester}
+                />
+            )}
         </InfoArea>
     )
 }

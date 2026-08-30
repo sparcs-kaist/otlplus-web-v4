@@ -62,7 +62,7 @@ const HoverTileWrapper = styled(FlexWrapper)`
 `
 
 const HoverTileInner = styled(FlexWrapper)`
-    background: rgba(229, 76, 101, 0.4);
+    background: ${({ theme }) => theme.colors.Highlight.medium};
     border-radius: 4px;
 `
 

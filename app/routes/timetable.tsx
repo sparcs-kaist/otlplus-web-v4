@@ -216,6 +216,7 @@ export default function Timetable() {
 
     const currentTimetableId = useTimetableUIStore((s) => s.currentTimetableId)
     const setCurrentTimetableId = useTimetableUIStore((s) => s.setCurrentTimetableId)
+    const currentTimetableName = useTimetableUIStore((s) => s.currentTimetableName)
     const year = useTimetableUIStore((s) => s.year)
     const semesterEnum = useTimetableUIStore((s) => s.semesterEnum)
 
@@ -449,12 +450,17 @@ export default function Timetable() {
                         ) : (
                             <TimetableInfoSection
                                 timetableLectures={currentTimetableLectures}
+                                customBlocks={currentCustomBlocks}
                             />
                         )}
                     </TimetableInfoArea>
                     <MobileControlBar direction="row" gap={0}>
                         <UtilButtonsSubSection
+                            timetableName={currentTimetableName}
                             timetableLectures={currentTimetableLectures}
+                            customBlocks={currentCustomBlocks}
+                            year={year}
+                            semester={semesterEnum}
                         />
                         <FlexWrapper
                             direction="row"
@@ -526,7 +532,11 @@ export default function Timetable() {
                         {isLaptop && (
                             <UtilButtonsArea>
                                 <UtilButtonsSubSection
+                                    timetableName={currentTimetableName}
                                     timetableLectures={currentTimetableLectures}
+                                    customBlocks={currentCustomBlocks}
+                                    year={year}
+                                    semester={semesterEnum}
                                 />
                             </UtilButtonsArea>
                         )}
@@ -598,6 +608,7 @@ export default function Timetable() {
                                 <TimetableInfoArea>
                                     <TimetableInfoSection
                                         timetableLectures={currentTimetableLectures}
+                                        customBlocks={currentCustomBlocks}
                                     />
                                 </TimetableInfoArea>
                             </Block>

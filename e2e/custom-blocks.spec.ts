@@ -1,4 +1,5 @@
 import { type Page, expect, test } from "@playwright/test"
+import { readFile } from "node:fs/promises"
 
 type CustomBlock = {
     id: number
@@ -132,6 +133,19 @@ test("creates, edits, and deletes a custom block", async ({ page }) => {
         await route.fulfill({ json: {} })
     })
 
+    await page.addInitScript(() => {
+        localStorage.setItem("theme", "dark")
+        const exportedTexts: string[] = []
+        const originalFillText = CanvasRenderingContext2D.prototype.fillText
+        Object.assign(window, { __timetableExportTexts: exportedTexts })
+        CanvasRenderingContext2D.prototype.fillText = function (text, x, y, maxWidth) {
+            exportedTexts.push(String(text))
+            return maxWidth === undefined
+                ? originalFillText.call(this, text, x, y)
+                : originalFillText.call(this, text, x, y, maxWidth)
+        }
+    })
+
     await page.goto("/timetable")
 
     const addButton = page.getByRole("button", {
@@ -148,7 +162,48 @@ test("creates, edits, and deletes a custom block", async ({ page }) => {
     await expect(page.locator(".block-title", { hasText: "Focus time" })).toBeVisible()
     expect(blocks[0]).toMatchObject({ day: 0, begin: 600, end: 690 })
 
+    await page.getByRole("button", { name: /Copy as Image|이미지로 복사하기/ }).click()
+    await expect
+        .poll(() =>
+            page.evaluate(
+                () =>
+                    (
+                        window as unknown as Window & {
+                            __timetableExportTexts: string[]
+                        }
+                    ).__timetableExportTexts,
+            ),
+        )
+        .toContain("Focus time")
+
+    await page.waitForTimeout(600)
+    const imageDownloadPromise = page.waitForEvent("download")
+    await page.getByRole("button", { name: /Export as Image|이미지로 내보내기/ }).click()
+    const imageDownload = await imageDownloadPromise
+    expect(imageDownload.suggestedFilename()).toBe("Test timetable.png")
+
+    await page.waitForTimeout(600)
+    const calendarDownloadPromise = page.waitForEvent("download")
+    await page
+        .getByRole("button", { name: /Export as Calendar|캘린더로 내보내기/ })
+        .click()
+    const calendarDownload = await calendarDownloadPromise
+    const calendarPath = await calendarDownload.path()
+    if (!calendarPath) throw new Error("Calendar download is unavailable")
+    const calendarContents = await readFile(calendarPath, "utf8")
+    expect(calendarContents).toContain("SUMMARY:Focus time")
+    expect(calendarContents).toContain("LOCATION:Library")
+
     await page.locator(".block-title", { hasText: "Focus time" }).click()
+    await expect(
+        page.getByRole("button", { name: "Delete custom block" }).locator("div").first(),
+    ).toHaveCSS("color", "rgb(189, 189, 189)")
+    await expect(
+        page
+            .getByRole("button", { name: "Close custom block editor" })
+            .locator("div")
+            .first(),
+    ).toHaveCSS("color", "rgb(189, 189, 189)")
     await page.getByPlaceholder(/Name|일정 이름/).fill("Focus time updated")
     await dragTime(page, 1, 8, 10)
     await page.getByText(/Save|저장하기/, { exact: true }).click()

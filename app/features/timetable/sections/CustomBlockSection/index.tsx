@@ -1,5 +1,6 @@
 import { memo, useCallback, useEffect, useState } from "react"
 
+import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import { Close, Delete } from "@mui/icons-material"
 import { useQueryClient } from "@tanstack/react-query"
@@ -26,6 +27,7 @@ const CustomBlockSectionInner = styled(FlexWrapper)`
 
 function CustomBlockSection({ customBlocks }: { customBlocks: CustomBlock[] }) {
     const { t } = useTranslation()
+    const theme = useTheme()
     const queryClient = useQueryClient()
 
     const currentTimetableId = useTimetableUIStore((s) => s.currentTimetableId)
@@ -49,7 +51,7 @@ function CustomBlockSection({ customBlocks }: { customBlocks: CustomBlock[] }) {
 
     const refreshAndClose = useCallback(() => {
         void queryClient.invalidateQueries({
-            queryKey: [`/timetables/${currentTimetableId}/custom-blocks`],
+            queryKey: ["/api/v2", `/timetables/${currentTimetableId}/custom-blocks`],
         })
         closeEditor()
     }, [closeEditor, currentTimetableId, queryClient])
@@ -164,7 +166,7 @@ function CustomBlockSection({ customBlocks }: { customBlocks: CustomBlock[] }) {
                                         : undefined
                                 }
                             >
-                                <Icon size={20}>
+                                <Icon size={20} color={theme.colors.Text.default}>
                                     <Delete />
                                 </Icon>
                             </IconButton>
@@ -172,7 +174,7 @@ function CustomBlockSection({ customBlocks }: { customBlocks: CustomBlock[] }) {
                                 aria-label="Close custom block editor"
                                 onClick={closeEditor}
                             >
-                                <Icon size={20}>
+                                <Icon size={20} color={theme.colors.Text.default}>
                                     <Close />
                                 </Icon>
                             </IconButton>

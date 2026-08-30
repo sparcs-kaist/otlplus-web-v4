@@ -13,6 +13,7 @@ import { useTranslation } from "react-i18next"
 import { SemesterEnum, semesterToString } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
+import type { CustomBlock } from "@/common/schemas/customBlock"
 import type { Lecture } from "@/common/schemas/lecture"
 import {
     copyTimetableImageToClipboard,
@@ -70,9 +71,17 @@ const ExportIcon = styled(Icon)`
 `
 
 export default function UtilButtonsSubSection({
+    timetableName,
     timetableLectures,
+    customBlocks = [],
+    year,
+    semester,
 }: {
+    timetableName: string
     timetableLectures: Lecture[]
+    customBlocks?: CustomBlock[]
+    year: number
+    semester: SemesterEnum
 }) {
     const { t, i18n } = useTranslation()
     const theme = useTheme()
@@ -80,9 +89,6 @@ export default function UtilButtonsSubSection({
     const { displayedTheme } = useThemeStore()
 
     const currentTimetableId = useTimetableUIStore((s) => s.currentTimetableId)
-    const timetableName = useTimetableUIStore((s) => s.currentTimetableName)
-    const year = useTimetableUIStore((s) => s.year)
-    const semester = useTimetableUIStore((s) => s.semesterEnum)
     const setIsCustomBlockSectionOpen = useTimetableUIStore(
         (s) => s.setIsCustomBlockSectionOpen,
     )
@@ -108,11 +114,14 @@ export default function UtilButtonsSubSection({
         )
     }, [query.data, year, semester])
     const timetableType = useMemo(() => {
-        if (timetableLectures.some((lec) => lec.classes.some((cls) => cls.day >= 5))) {
+        if (
+            timetableLectures.some((lec) => lec.classes.some((cls) => cls.day >= 5)) ||
+            customBlocks.some((block) => block.day >= 5)
+        ) {
             return "7days"
         }
         return "5days"
-    }, [timetableLectures])
+    }, [customBlocks, timetableLectures])
 
     useEffect(() => {
         if (process.startsWith("success")) {
@@ -126,6 +135,7 @@ export default function UtilButtonsSubSection({
     const imageData = {
         timetableName,
         lectures: timetableLectures,
+        customBlocks,
         timetableType,
         semesterName: year + " " + semesterToString(semester),
         semesterFontSize: 30,
@@ -186,6 +196,7 @@ export default function UtilButtonsSubSection({
             downloadTimetableCalendar({
                 name: timetableName,
                 lectures: timetableLectures,
+                customBlocks,
                 semesterObject: {
                     beginning: new Date(currentSemester.beginning),
                     end: new Date(currentSemester.end),
