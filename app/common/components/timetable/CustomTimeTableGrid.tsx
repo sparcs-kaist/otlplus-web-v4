@@ -7,9 +7,11 @@ import { WeekdayEnum } from "@/common/enum/weekdayEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import GridWrapper from "@/common/primitives/GridWrapper"
 import Typography from "@/common/primitives/Typography"
+import { type CustomBlock } from "@/common/schemas/customBlock"
 import { type Lecture } from "@/common/schemas/lecture"
 import { type TimeBlock } from "@/common/schemas/timeblock"
 
+import CustomBlockTile from "./CustomBlockTile"
 import {
     HoverTile,
     LECTURE_TILE_CLASSNAME,
@@ -406,6 +408,7 @@ const CurrentTimeBar = styled.div<{ ratio: number; dayIndex: number }>`
 
 interface CustomTimeTableGridProps {
     lectures: Lecture[]
+    customBlocks?: CustomBlock[]
     cellWidth?: string
     needTimeFilter?: boolean
     timeFilter?: TimeBlock | null
@@ -417,12 +420,16 @@ interface CustomTimeTableGridProps {
     setHoveredLectures?: React.Dispatch<React.SetStateAction<Lecture[]>>
     selectedLectures?: Lecture[]
     onLectureSelect?: (lecture: Lecture, e?: React.PointerEvent) => void
+    selectedCustomBlock?: CustomBlock | null
+    onCustomBlockSelect?: (block: CustomBlock) => void
+    isCustomBlockSectionOpen?: boolean
     needCurrentTimeBar?: boolean
     flashLectureIds?: number[]
 }
 
 function CustomTimeTableGrid({
     lectures,
+    customBlocks = [],
     cellWidth,
     needTimeFilter = true,
     timeFilter,
@@ -434,6 +441,9 @@ function CustomTimeTableGrid({
     setHoveredLectures,
     selectedLectures = [],
     onLectureSelect,
+    selectedCustomBlock = null,
+    onCustomBlockSelect,
+    isCustomBlockSectionOpen = false,
     needCurrentTimeBar = false,
     flashLectureIds = [],
 }: CustomTimeTableGridProps) {
@@ -604,7 +614,10 @@ function CustomTimeTableGrid({
                 end: (TIME_BEGIN + timeRef.current[1] * 0.5) * 60,
             })
 
-        if (timeRef.current && timeRef.current[1] - timeRef.current[0] > 1) {
+        if (
+            timeRef.current &&
+            (timeRef.current[1] - timeRef.current[0] > 1 || isCustomBlockSectionOpen)
+        ) {
             overlayRef.current?.setAttribute("data-is-dragging", "wait")
             backgroundRef.current?.setAttribute("data-is-dragging", "wait")
         } else if (
@@ -620,7 +633,7 @@ function CustomTimeTableGrid({
         timeRef.current = null
         dayRef.current = null
         anchorRef.current = null
-    }, [timeFilter, setTimeFilter])
+    }, [isCustomBlockSectionOpen, timeFilter, setTimeFilter])
 
     useEffect(() => {
         if (!timeFilter) {
@@ -688,6 +701,13 @@ function CustomTimeTableGrid({
         [needLectureDeletable, deleteLecture, clearHoveredLecturesCallback],
     )
 
+    const handleCustomBlockSelect = useCallback(
+        (block: CustomBlock) => {
+            if (needLectureInteraction) onCustomBlockSelect?.(block)
+        },
+        [needLectureInteraction, onCustomBlockSelect],
+    )
+
     return (
         <FlexWrapper
             direction="column"
@@ -708,6 +728,7 @@ function CustomTimeTableGrid({
                     ? selectedLectures.map((lec) => lec.id).join(" ")
                     : ""
             }
+            data-selected-custom-block={selectedCustomBlock?.id ?? ""}
             data-flash-lectures={flashLectureIds.join(" ")}
             data-interaction={needLectureInteraction}
             data-lecture-deletable={needLectureDeletable}
@@ -847,6 +868,15 @@ function CustomTimeTableGrid({
                                     }
                                 />
                             ))}
+                            {customBlocks
+                                .filter((block) => validTime(block))
+                                .map((block) => (
+                                    <CustomBlockTile
+                                        key={`custom-block-${block.id}`}
+                                        block={block}
+                                        onSelect={handleCustomBlockSelect}
+                                    />
+                                ))}
                             {ghostLectures.map((ghostLecture) => (
                                 <MemoizedLectureTiles
                                     key={`ghost-${ghostLecture.id}`}
@@ -907,6 +937,7 @@ function CustomTimeTableGrid({
 export default memo(CustomTimeTableGrid, (prevProps, nextProps) => {
     return (
         prevProps.lectures === nextProps.lectures &&
+        prevProps.customBlocks === nextProps.customBlocks &&
         prevProps.hoveredLectures === nextProps.hoveredLectures &&
         prevProps.selectedLectures === nextProps.selectedLectures &&
         prevProps.timeFilter === nextProps.timeFilter &&
@@ -916,6 +947,9 @@ export default memo(CustomTimeTableGrid, (prevProps, nextProps) => {
         prevProps.needLectureDeletable === nextProps.needLectureDeletable &&
         prevProps.deleteLecture === nextProps.deleteLecture &&
         prevProps.onLectureSelect === nextProps.onLectureSelect &&
+        prevProps.selectedCustomBlock === nextProps.selectedCustomBlock &&
+        prevProps.onCustomBlockSelect === nextProps.onCustomBlockSelect &&
+        prevProps.isCustomBlockSectionOpen === nextProps.isCustomBlockSectionOpen &&
         prevProps.needCurrentTimeBar === nextProps.needCurrentTimeBar &&
         (prevProps.flashLectureIds ?? []).length ===
             (nextProps.flashLectureIds ?? []).length &&

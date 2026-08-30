@@ -1,6 +1,7 @@
 import styled from "@emotion/styled"
 
 import StyledDivider from "@/common/components/StyledDivider"
+import type { CustomBlock } from "@/common/schemas/customBlock"
 import type { Lecture } from "@/common/schemas/lecture"
 import CreditGridSubSection from "@/features/timetable/sections/TimetableInfoSection/CreditGridSubSection"
 import CreditScoreSubSection from "@/features/timetable/sections/TimetableInfoSection/CreditScoreSubSection"
@@ -34,10 +35,12 @@ const InfoArea = styled.div`
 
 interface TimetableInfoSectionProps {
     timetableLectures: Lecture[]
+    customBlocks: CustomBlock[]
 }
 
 export default function TimetableInfoSection({
     timetableLectures,
+    customBlocks,
 }: TimetableInfoSectionProps) {
     const isLaptop = useIsDevice("laptop")
 
@@ -95,6 +98,7 @@ export default function TimetableInfoSection({
                 <UtilButtonsSubSection
                     timetableName={timetableName}
                     timetableLectures={timetableLectures}
+                    customBlocks={customBlocks}
                     year={year}
                     semester={semester}
                 />

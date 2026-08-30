@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import { Check } from "@mui/icons-material"
+import AddBoxIcon from "@mui/icons-material/AddBox"
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth"
 import ContentCopyIcon from "@mui/icons-material/ContentCopy"
 import ImageIcon from "@mui/icons-material/Image"
@@ -12,6 +13,7 @@ import { useTranslation } from "react-i18next"
 import { SemesterEnum, semesterToString } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
+import type { CustomBlock } from "@/common/schemas/customBlock"
 import type { Lecture } from "@/common/schemas/lecture"
 import {
     copyTimetableImageToClipboard,
@@ -23,6 +25,8 @@ import { useAPI } from "@/utils/api/useAPI"
 import logger from "@/utils/logger"
 import useIsDevice from "@/utils/useIsDevice"
 import useThemeStore from "@/utils/zustand/useThemeStore"
+
+import { useTimetableUIStore } from "../../store/useTimetableUIStore"
 
 const UtilButtonsWrapper = styled(FlexWrapper)`
     width: 100%;
@@ -40,7 +44,7 @@ const UtilButtonsWrapper = styled(FlexWrapper)`
     }
 `
 
-const ExportButton = styled.button`
+const ExportButton = styled.button<{ disabled?: boolean }>`
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -49,7 +53,8 @@ const ExportButton = styled.button`
     border: none;
     cursor: pointer;
     padding: 4px 0;
-    color: ${({ theme }) => theme.colors.Highlight.default};
+    color: ${({ theme, disabled }) =>
+        disabled ? theme.colors.Text.disable : theme.colors.Highlight.default};
     font-size: 13px;
 
     &:hover:not(:disabled) {
@@ -68,11 +73,13 @@ const ExportIcon = styled(Icon)`
 export default function UtilButtonsSubSection({
     timetableName,
     timetableLectures,
+    customBlocks = [],
     year,
     semester,
 }: {
     timetableName: string
     timetableLectures: Lecture[]
+    customBlocks?: CustomBlock[]
     year: number
     semester: SemesterEnum
 }) {
@@ -80,6 +87,13 @@ export default function UtilButtonsSubSection({
     const theme = useTheme()
     const isTablet = useIsDevice("tablet")
     const { displayedTheme } = useThemeStore()
+
+    const currentTimetableId = useTimetableUIStore((s) => s.currentTimetableId)
+    const setIsCustomBlockSectionOpen = useTimetableUIStore(
+        (s) => s.setIsCustomBlockSectionOpen,
+    )
+    const setSelectedCustomBlock = useTimetableUIStore((s) => s.setSelectedCustomBlock)
+    const setTimeFilter = useTimetableUIStore((s) => s.setTimeFilter)
 
     const { query } = useAPI("GET", "/semesters")
 
@@ -100,11 +114,14 @@ export default function UtilButtonsSubSection({
         )
     }, [query.data, year, semester])
     const timetableType = useMemo(() => {
-        if (timetableLectures.some((lec) => lec.classes.some((cls) => cls.day >= 5))) {
+        if (
+            timetableLectures.some((lec) => lec.classes.some((cls) => cls.day >= 5)) ||
+            customBlocks.some((block) => block.day >= 5)
+        ) {
             return "7days"
         }
         return "5days"
-    }, [timetableLectures])
+    }, [customBlocks, timetableLectures])
 
     useEffect(() => {
         if (process.startsWith("success")) {
@@ -118,6 +135,7 @@ export default function UtilButtonsSubSection({
     const imageData = {
         timetableName,
         lectures: timetableLectures,
+        customBlocks,
         timetableType,
         semesterName: year + " " + semesterToString(semester),
         semesterFontSize: 30,
@@ -178,6 +196,7 @@ export default function UtilButtonsSubSection({
             downloadTimetableCalendar({
                 name: timetableName,
                 lectures: timetableLectures,
+                customBlocks,
                 semesterObject: {
                     beginning: new Date(currentSemester.beginning),
                     end: new Date(currentSemester.end),
@@ -215,6 +234,26 @@ export default function UtilButtonsSubSection({
                     )}
                 </ExportIcon>
                 {!isTablet && <span>{t("timetable.exportICal")}</span>}
+            </ExportButton>
+            <ExportButton
+                onClick={() => {
+                    setSelectedCustomBlock(null)
+                    setTimeFilter(null)
+                    setIsCustomBlockSectionOpen(true)
+                }}
+                disabled={currentTimetableId === null}
+            >
+                <Icon
+                    size={16}
+                    color={
+                        currentTimetableId === null
+                            ? theme.colors.Text.disable
+                            : theme.colors.Highlight.default
+                    }
+                >
+                    <AddBoxIcon />
+                </Icon>
+                {!isTablet && <span>{t("timetable.addCustomBlock")}</span>}
             </ExportButton>
         </UtilButtonsWrapper>
     )

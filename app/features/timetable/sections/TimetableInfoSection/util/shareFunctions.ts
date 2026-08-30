@@ -1,6 +1,7 @@
 import { CanvasRenderingContext2D, createCanvas, loadImage } from "canvas"
 import ical, { ICalAlarmType, ICalEventRepeatingFreq } from "ical-generator"
 
+import type { CustomBlock } from "@/common/schemas/customBlock"
 import type { Lecture } from "@/common/schemas/lecture"
 import { colors } from "@/styles/themes/_base/variables/colors"
 import { darkThemeColors } from "@/styles/themes/dark/variables/colors"
@@ -46,12 +47,36 @@ interface DrawTileOptions {
 interface DrawTimetableDatas {
     timetableName: string
     lectures: Lecture[]
+    customBlocks: CustomBlock[]
     timetableType: string
     semesterName: string
     semesterFontSize: number
     tileFontSize: number
     displayMode: "dark" | "light"
     language: "ko" | "en"
+}
+
+function getTimetableExportEntries(lectures: Lecture[], customBlocks: CustomBlock[]) {
+    return [
+        ...lectures.flatMap((lecture) =>
+            lecture.classes.map((classtime) => ({
+                ...classtime,
+                title: lecture.name,
+                professor: professorName(lecture.professors),
+                location: `${classtime.buildingCode} ${classtime.roomName}`.trim(),
+                colorIndex: lecture.courseId,
+            })),
+        ),
+        ...customBlocks.map((block) => ({
+            day: block.day,
+            begin: block.begin,
+            end: block.end,
+            title: block.block_name,
+            professor: "",
+            location: block.place,
+            colorIndex: block.id * 3 + 7,
+        })),
+    ]
 }
 
 function drawRoundedRectangle(options: RoundedRectangleOptions) {
@@ -171,6 +196,7 @@ async function timeTableImage(drawTimetableData: DrawTimetableDatas) {
     const {
         timetableName,
         lectures,
+        customBlocks,
         timetableType,
         semesterName,
         semesterFontSize,
@@ -210,45 +236,31 @@ async function timeTableImage(drawTimetableData: DrawTimetableDatas) {
         align: "right",
     })
 
-    for (const lecture of lectures) {
+    for (const entry of getTimetableExportEntries(lectures, customBlocks)) {
         const color =
-            TIMETABLE_CELL_COLORS[lecture.courseId % TIMETABLE_CELL_COLORS.length] ||
+            TIMETABLE_CELL_COLORS[entry.colorIndex % TIMETABLE_CELL_COLORS.length] ||
             "#F2CECE"
+        const [x, y, width, height] = [
+            178 * entry.day + 76,
+            (entry.begin * 4) / 3 - 486,
+            178 - 7,
+            ((entry.end - entry.begin) * 4) / 3 - 7,
+        ]
 
-        for (const classtime of lecture.classes) {
-            const { day, begin, end } = classtime
-
-            const [x, y, width, height] = [
-                178 * day + 76,
-                (begin * 4) / 3 - 486,
-                178 - 7,
-                ((end - begin) * 4) / 3 - 7,
-            ]
-
-            drawRoundedRectangle({
-                ctx,
-                x,
-                y,
-                width,
-                height,
-                radius: 4,
-                color,
-            })
-
-            drawTile({
-                ctx,
-                x: x + 12,
-                y: y + 8,
-                width: width - 24,
-                height: height - 16,
-                title: lecture.name,
-                professor: professorName(lecture.professors) || "",
-                location: classtime.buildingCode + " " + classtime.roomName || "",
-                font: "'Noto Sans KR', Pretendard, sans-serif",
-                fontSize: tileFontSize,
-                displayMode,
-            })
-        }
+        drawRoundedRectangle({ ctx, x, y, width, height, radius: 4, color })
+        drawTile({
+            ctx,
+            x: x + 12,
+            y: y + 8,
+            width: width - 24,
+            height: height - 16,
+            title: entry.title,
+            professor: entry.professor,
+            location: entry.location,
+            font: "'Noto Sans KR', Pretendard, sans-serif",
+            fontSize: tileFontSize,
+            displayMode,
+        })
     }
     return canvas
 }
@@ -292,9 +304,10 @@ interface Semester {
 export function downloadTimetableCalendar(timetableIcalData: {
     name: string
     lectures: Lecture[]
+    customBlocks: CustomBlock[]
     semesterObject: Semester
 }) {
-    const { name, lectures, semesterObject } = timetableIcalData
+    const { name, lectures, customBlocks, semesterObject } = timetableIcalData
 
     const calendar = ical({
         name,
@@ -302,48 +315,34 @@ export function downloadTimetableCalendar(timetableIcalData: {
         timezone: "Asia/Seoul",
     })
 
-    for (const lecture of lectures) {
-        for (const classtime of lecture.classes) {
-            const classroomShortStr = classtime.buildingCode + " " + classtime.roomName
+    for (const entry of getTimetableExportEntries(lectures, customBlocks)) {
+        const semesterBeginning = new Date(semesterObject.beginning)
+        const dayOfWeek = (entry.day + 1) % 7
 
-            const semesterBeginning = new Date(semesterObject.beginning)
-            const dayOfWeek = (classtime.day + 1) % 7
+        const firstClassDate = new Date(semesterBeginning)
+        const currentDay = firstClassDate.getDay()
+        const distance = (dayOfWeek + 7 - currentDay) % 7
+        firstClassDate.setDate(firstClassDate.getDate() + distance)
 
-            const firstClassDate = new Date(semesterBeginning)
-            const currentDay = firstClassDate.getDay()
-            const distance = (dayOfWeek + 7 - currentDay) % 7
-            firstClassDate.setDate(firstClassDate.getDate() + distance)
+        const eventStart = new Date(firstClassDate)
+        eventStart.setHours(Math.floor(entry.begin / 60), entry.begin % 60, 0, 0)
 
-            const startHour = Math.floor(classtime.begin / 60)
-            const startMinute = classtime.begin % 60
-            const endHour = Math.floor(classtime.end / 60)
-            const endMinute = classtime.end % 60
+        const eventEnd = new Date(firstClassDate)
+        eventEnd.setHours(Math.floor(entry.end / 60), entry.end % 60, 0, 0)
 
-            const eventStart = new Date(firstClassDate)
-            eventStart.setHours(startHour, startMinute, 0, 0)
+        const event = calendar.createEvent({
+            start: eventStart,
+            end: eventEnd,
+            summary: entry.title,
+            location: entry.location,
+            repeating: {
+                freq: ICalEventRepeatingFreq.WEEKLY,
+                until: new Date(semesterObject.end),
+            },
+            timezone: "Asia/Seoul",
+        })
 
-            const eventEnd = new Date(firstClassDate)
-            eventEnd.setHours(endHour, endMinute, 0, 0)
-
-            const event = calendar.createEvent({
-                start: eventStart,
-                end: eventEnd,
-                summary: lecture.name,
-                location: classroomShortStr,
-                repeating: {
-                    freq: ICalEventRepeatingFreq.WEEKLY,
-                    until: new Date(semesterObject.end),
-                },
-                timezone: "Asia/Seoul",
-            })
-
-            event.alarms([
-                {
-                    type: ICalAlarmType.display,
-                    trigger: 900,
-                },
-            ])
-        }
+        event.alarms([{ type: ICalAlarmType.display, trigger: 900 }])
     }
 
     const blob = new Blob([calendar.toString()], { type: "text/calendar;charset=utf-8" })
