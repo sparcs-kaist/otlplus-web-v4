@@ -6,6 +6,23 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 
 import Widget from "../../../../common/primitives/Widget"
+import { schedules } from "./schedules.generated"
+
+const MAX_VISIBLE_SCHEDULES = 5
+
+const ScheduleName = styled(Typography)`
+    flex: 1 1 0;
+    contain: inline-size;
+    overflow: hidden;
+    text-align: right;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+
+    &:hover {
+        overflow: visible;
+        white-space: normal;
+    }
+`
 
 const NoSchedulesPlaceholder = styled(Typography)`
     min-height: 100px;
@@ -19,40 +36,12 @@ const NoSchedulesPlaceholder = styled(Typography)`
 function ScheduleFeedSection() {
     const { t } = useTranslation()
 
-    const thisYear = new Date().getFullYear()
-    // const { query } = useAPI("GET", "/schedules")
-    const temporarySchedules = [
-        {
-            year: 2026,
-            from: new Date(2026, 1, 23),
-            to: new Date(2026, 2, 9),
-            name: "봄학기 수강신청 변경",
-        },
-        {
-            year: 2026,
-            from: new Date(2026, 1, 25),
-            to: new Date(2026, 1, 25),
-            name: "2026년 학사과정 입학식",
-        },
-        {
-            year: 2026,
-            from: new Date(2026, 2, 2),
-            to: new Date(2026, 2, 2),
-            name: "삼일절 (대체 공휴일)",
-        },
-        {
-            year: 2026,
-            from: new Date(2026, 2, 4),
-            to: new Date(2026, 2, 5),
-            name: "학사과정 봄학기 학점인정시험",
-        },
-        {
-            year: 2026,
-            from: new Date(2026, 2, 10),
-            to: new Date(2026, 3, 17),
-            name: "봄학기 수강신청 취소",
-        },
-    ]
+    // 오늘 자정 기준으로 비교해, 오늘 끝나는 일정까지는 노출한다
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    const visibleSchedules = schedules
+        .filter((schedule) => schedule.to.getTime() >= today.getTime())
+        .slice(0, MAX_VISIBLE_SCHEDULES)
 
     const isSameDay = (d1: Date, d2: Date) => {
         return (
@@ -73,38 +62,30 @@ function ScheduleFeedSection() {
                 </Typography>
             </FlexWrapper>
             <FlexWrapper direction="column" align="stretch" gap={15} flex="1 1 0">
-                {!temporarySchedules || temporarySchedules.length === 0 ? (
+                {visibleSchedules.length === 0 ? (
                     <NoSchedulesPlaceholder type="BiggerBold" color="Text.default">
                         {t("main.scheduleFeed.noSchedules")}
                     </NoSchedulesPlaceholder>
                 ) : null}
-                {temporarySchedules.map((schedule, idx) => {
-                    if (schedule.year !== thisYear) return null
-                    return (
-                        <FlexWrapper
-                            key={idx}
-                            direction="column"
-                            align="stretch"
-                            gap={15}
-                        >
-                            <FlexWrapper direction="row" justify="space-between" gap={0}>
-                                <Typography type="BigBold" color="Highlight.default">
-                                    {isSameDay(schedule.from, schedule.to)
-                                        ? formatDate(schedule.from)
-                                        : formatDate(schedule.from) +
-                                          " - " +
-                                          formatDate(schedule.to)}
-                                </Typography>
-                                <Typography type="BigBold" color="Text.default">
-                                    {schedule.name}
-                                </Typography>
-                            </FlexWrapper>
-                            {idx < temporarySchedules.length - 1 ? (
-                                <Line height={1} color="Line.default" />
-                            ) : null}
+                {visibleSchedules.map((schedule, idx) => (
+                    <FlexWrapper key={idx} direction="column" align="stretch" gap={15}>
+                        <FlexWrapper direction="row" justify="space-between" gap={12}>
+                            <Typography type="BigBold" color="Highlight.default">
+                                {isSameDay(schedule.from, schedule.to)
+                                    ? formatDate(schedule.from)
+                                    : formatDate(schedule.from) +
+                                      " - " +
+                                      formatDate(schedule.to)}
+                            </Typography>
+                            <ScheduleName type="BigBold" color="Text.default">
+                                {schedule.name}
+                            </ScheduleName>
                         </FlexWrapper>
-                    )
-                })}
+                        {idx < visibleSchedules.length - 1 ? (
+                            <Line height={1} color="Line.default" />
+                        ) : null}
+                    </FlexWrapper>
+                ))}
             </FlexWrapper>
         </Widget>
     )
