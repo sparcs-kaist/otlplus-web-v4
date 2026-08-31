@@ -3,7 +3,9 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "react-router build",
+        "crawl:schedules": "node scripts/crawl-schedules.mjs --out",
+        "build": "node scripts/crawl-schedules.mjs --out && react-router build",
+        "postinstall": "node scripts/crawl-schedules.mjs --ensure",
         "dev": "react-router dev --host",
         "start:client": "vite preview --outDir ./build/client",
         "start:server": "react-router-serve ./build/server/index.js",

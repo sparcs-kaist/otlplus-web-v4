@@ -12,3 +12,6 @@
 # Playwright
 /playwright-report/
 /test-results/
+
+# 크롤러가 생성 (scripts/crawl-schedules.mjs)
+app/features/main/sections/ScheduleFeedSection/schedules.generated.ts
