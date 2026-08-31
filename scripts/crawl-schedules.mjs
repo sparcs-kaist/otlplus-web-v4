@@ -302,6 +302,19 @@ export function toTypeScript(schedules) {
     return HEADER + "[\n" + entries.join("\n") + "\n]\n"
 }
 
+/** `--out` / `--ensure` 뒤의 경로를 읽는다. 플래그만 주고 경로를 빠뜨리면 조용히 넘어가지 않는다. */
+function readPathArg(args, flag) {
+    const index = args.indexOf(flag)
+    if (index === -1) return null
+
+    const path = args[index + 1]
+    if (!path || path.startsWith("-")) {
+        console.error(`${flag} 뒤에는 파일 경로가 필요합니다.`)
+        process.exit(2)
+    }
+    return path
+}
+
 if (process.argv[1]?.endsWith("crawl-schedules.mjs")) {
     const args = process.argv.slice(2)
 
@@ -311,9 +324,9 @@ if (process.argv[1]?.endsWith("crawl-schedules.mjs")) {
 
     // --ensure: 네트워크 없이 "파일이 존재함"만 보장한다. 생성 파일을 git에 두지 않으므로,
     // 새로 클론했거나 CI가 build 없이 typecheck만 돌 때 import가 깨지는 걸 막는다.
-    const ensureIndex = args.indexOf("--ensure")
-    if (ensureIndex !== -1) {
-        const path = args[ensureIndex + 1]
+    const ensurePath = readPathArg(args, "--ensure")
+    if (ensurePath) {
+        const path = ensurePath
         if (!existsSync(path)) {
             mkdirSync(dirname(path), { recursive: true })
             writeFileSync(path, toTypeScript([]))
@@ -324,8 +337,7 @@ if (process.argv[1]?.endsWith("crawl-schedules.mjs")) {
         process.exit(0)
     }
 
-    const outIndex = args.indexOf("--out")
-    const outPath = outIndex === -1 ? null : args[outIndex + 1]
+    const outPath = readPathArg(args, "--out")
     const thisYear = new Date().getFullYear()
     const years = [thisYear, thisYear + 1]
 

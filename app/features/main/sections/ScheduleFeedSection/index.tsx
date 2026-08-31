@@ -24,6 +24,26 @@ const ScheduleName = styled(Typography)`
     }
 `
 
+const isSameDay = (a: Date, b: Date) =>
+    a.getFullYear() === b.getFullYear() &&
+    a.getMonth() === b.getMonth() &&
+    a.getDate() === b.getDate()
+
+/**
+ * 올해 일정은 MM/DD로 짧게 보여준다.
+ * 연말에는 내년 일정이 목록에 섞이므로, 그때는 어느 해인지 알 수 있게 연도까지 붙인다.
+ */
+function formatSchedulePeriod(from: Date, to: Date, currentYear: number) {
+    const withYear =
+        from.getFullYear() !== currentYear || to.getFullYear() !== currentYear
+    const format = (date: Date) => {
+        const month = String(date.getMonth() + 1).padStart(2, "0")
+        const date_ = String(date.getDate()).padStart(2, "0")
+        return withYear ? `${date.getFullYear()}.${month}.${date_}` : `${month}/${date_}`
+    }
+    return isSameDay(from, to) ? format(from) : `${format(from)} - ${format(to)}`
+}
+
 const NoSchedulesPlaceholder = styled(Typography)`
     min-height: 100px;
     flex-grow: 1;
@@ -43,17 +63,6 @@ function ScheduleFeedSection() {
         .filter((schedule) => schedule.to.getTime() >= today.getTime())
         .slice(0, MAX_VISIBLE_SCHEDULES)
 
-    const isSameDay = (d1: Date, d2: Date) => {
-        return (
-            d1.getFullYear() === d2.getFullYear() &&
-            d1.getMonth() === d2.getMonth() &&
-            d1.getDate() === d2.getDate()
-        )
-    }
-    function formatDate(date: Date) {
-        return `${(date.getMonth() + 1).toString().padStart(2, "0")}/${date.getDate().toString().padStart(2, "0")}`
-    }
-
     return (
         <Widget direction="column" gap={20} align="stretch" padding="30px" flex="1 1 0">
             <FlexWrapper direction="row" gap={0}>
@@ -68,14 +77,20 @@ function ScheduleFeedSection() {
                     </NoSchedulesPlaceholder>
                 ) : null}
                 {visibleSchedules.map((schedule, idx) => (
-                    <FlexWrapper key={idx} direction="column" align="stretch" gap={15}>
+                    // 크롤러가 from/to/name 조합으로 중복을 제거하므로 이 키는 유일하다.
+                    <FlexWrapper
+                        key={`${schedule.from.getTime()}-${schedule.to.getTime()}-${schedule.name}`}
+                        direction="column"
+                        align="stretch"
+                        gap={15}
+                    >
                         <FlexWrapper direction="row" justify="space-between" gap={12}>
                             <Typography type="BigBold" color="Highlight.default">
-                                {isSameDay(schedule.from, schedule.to)
-                                    ? formatDate(schedule.from)
-                                    : formatDate(schedule.from) +
-                                      " - " +
-                                      formatDate(schedule.to)}
+                                {formatSchedulePeriod(
+                                    schedule.from,
+                                    schedule.to,
+                                    today.getFullYear(),
+                                )}
                             </Typography>
                             <ScheduleName type="BigBold" color="Text.default">
                                 {schedule.name}
