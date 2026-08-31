@@ -10,7 +10,8 @@
  * month를 비우면 "전체"가 아니라 현재 월로 폴백하므로 01~12를 각각 요청한다.
  *
  * 사용법:
- *   node scripts/crawl-schedules.mjs --out <path.ts>   # 크롤링 후 TS 모듈 생성
+ *   node scripts/crawl-schedules.mjs --out [path.ts]   # 크롤링 후 TS 모듈 생성
+ *   node scripts/crawl-schedules.mjs --ensure          # 파일 없으면 빈 모듈만 생성
  *   node scripts/crawl-schedules.mjs                   # stdout으로 출력
  *   node scripts/crawl-schedules.mjs --test   # 네트워크 없이 파서 검증
  */
@@ -19,6 +20,10 @@ import { dirname } from "node:path"
 
 const BASE_URL = "https://www.kaist.ac.kr/kr/html/edu/03110101.html"
 const GROUPS = "university"
+
+// 출력 경로의 단일 소스. package.json의 여러 스크립트가 각자 적어두면 어긋난다.
+const DEFAULT_OUT_PATH =
+    "app/features/main/sections/ScheduleFeedSection/schedules.generated.ts"
 
 const ENTITIES = {
     "&amp;": "&",
@@ -113,10 +118,11 @@ async function fetchMonth(year, month, fetchImpl, retries = 3) {
             return await response.text()
         } catch (error) {
             if (attempt >= retries) {
-                throw new Error(
-                    `${year}-${String(month).padStart(2, "0")}: ${error.message}`,
-                    { cause: error },
-                )
+                // fetch가 Error가 아닌 값을 던져도 원인을 잃지 않도록 문자열화한다.
+                const reason = error instanceof Error ? error.message : String(error)
+                throw new Error(`${year}-${String(month).padStart(2, "0")}: ${reason}`, {
+                    cause: error,
+                })
             }
             await sleep(attempt * 500)
         }
@@ -302,17 +308,13 @@ export function toTypeScript(schedules) {
     return HEADER + "[\n" + entries.join("\n") + "\n]\n"
 }
 
-/** `--out` / `--ensure` 뒤의 경로를 읽는다. 플래그만 주고 경로를 빠뜨리면 조용히 넘어가지 않는다. */
+/** `--out` / `--ensure` 뒤의 경로를 읽는다. 생략하면 DEFAULT_OUT_PATH를 쓴다. */
 function readPathArg(args, flag) {
     const index = args.indexOf(flag)
     if (index === -1) return null
 
     const path = args[index + 1]
-    if (!path || path.startsWith("-")) {
-        console.error(`${flag} 뒤에는 파일 경로가 필요합니다.`)
-        process.exit(2)
-    }
-    return path
+    return !path || path.startsWith("-") ? DEFAULT_OUT_PATH : path
 }
 
 if (process.argv[1]?.endsWith("crawl-schedules.mjs")) {
