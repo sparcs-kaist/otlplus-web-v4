@@ -5,24 +5,67 @@ import { hydrateRoot } from "react-dom/client"
 import { HydratedRouter } from "react-router/dom"
 
 import { clientEnv } from "@/env"
+import {
+    IGNORED_SENTRY_ERROR_PATTERNS,
+    isSensitiveSentryPath,
+    sanitizeSentryBreadcrumb,
+    sanitizeSentryEvent,
+    sanitizeSentrySpan,
+    sanitizeSentryTransaction,
+} from "@/libs/sentry/sentryEventFilter"
+import { handleChunkLoadError, isChunkLoadErrorMessage } from "@/utils/chunkReload"
+
+const isSensitiveLoginCallback = isSensitiveSentryPath(window.location.pathname)
+
+window.addEventListener("error", (event) => {
+    if (!isChunkLoadErrorMessage(event.message)) return
+    handleChunkLoadError(window.location.pathname, {
+        now: () => Date.now(),
+        storage: window.sessionStorage,
+        reload: () => window.location.reload(),
+        capture: (message, extra) => {
+            if (Sentry.getClient()) Sentry.captureMessage(message, extra)
+        },
+    })
+})
+window.addEventListener("unhandledrejection", (event) => {
+    const reason = event.reason
+    const message = reason instanceof Error ? reason.message : String(reason ?? "")
+    if (!isChunkLoadErrorMessage(message)) return
+    handleChunkLoadError(window.location.pathname, {
+        now: () => Date.now(),
+        storage: window.sessionStorage,
+        reload: () => window.location.reload(),
+        capture: (message, extra) => {
+            if (Sentry.getClient()) Sentry.captureMessage(message, extra)
+        },
+    })
+})
 
 // Check if Sentry DSN is properly configured (not empty string)
 if (clientEnv.VITE_SENTRY_DSN && clientEnv.VITE_SENTRY_DSN.trim() !== "") {
     Sentry.init({
         dsn: clientEnv.VITE_SENTRY_DSN,
         environment: clientEnv.VITE_DEV_MODE ? "development" : "production",
-        sendDefaultPii: true,
-        integrations: [
-            Sentry.browserTracingIntegration(),
-            Sentry.browserProfilingIntegration(),
-            Sentry.replayIntegration({
-                maskAllText: false,
-                blockAllMedia: false,
-            }),
-        ],
-        tracesSampleRate: clientEnv.VITE_DEV_MODE ? 1.0 : 0.1,
-        // Profile every session (decision made once on SDK init)
-        profileSessionSampleRate: 1.0,
+        sendDefaultPii: false,
+        ignoreErrors: [...IGNORED_SENTRY_ERROR_PATTERNS],
+        beforeBreadcrumb: sanitizeSentryBreadcrumb,
+        beforeSend: sanitizeSentryEvent,
+        beforeSendTransaction: sanitizeSentryTransaction,
+        beforeSendSpan: sanitizeSentrySpan,
+        integrations: isSensitiveLoginCallback
+            ? []
+            : [Sentry.browserTracingIntegration(), Sentry.browserProfilingIntegration()],
+        tracesSampleRate: isSensitiveLoginCallback
+            ? 0
+            : clientEnv.VITE_DEV_MODE
+              ? 1.0
+              : 0.1,
+        profileSessionSampleRate: isSensitiveLoginCallback
+            ? 0
+            : clientEnv.VITE_DEV_MODE
+              ? 1.0
+              : 0.1,
         // "trace" mode: profiler runs automatically with active spans
         // (default "manual" mode requires explicit start/stop calls)
         profileLifecycle: "trace",
@@ -33,8 +76,10 @@ if (clientEnv.VITE_SENTRY_DSN && clientEnv.VITE_SENTRY_DSN.trim() !== "") {
             /^https:\/\/api\.otl\.sparcs\.org/,
             /^https:\/\/api\.otl\.dev\.sparcs\.org/,
         ],
-        replaysSessionSampleRate: 0.1,
-        replaysOnErrorSampleRate: 1.0,
+        // Replay records the full page URL before custom event sanitizers run.
+        // Keep it disabled while auth credentials and search terms can appear in URLs.
+        replaysSessionSampleRate: 0,
+        replaysOnErrorSampleRate: 0,
     })
 }
 

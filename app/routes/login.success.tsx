@@ -10,6 +10,7 @@ import { DEFAULT_DOCUMENT_LANGUAGE } from "@/libs/i18n/resolveDocumentLanguage"
 import { identifyUser, trackEvent } from "@/libs/mixpanel"
 import { clearQueryCache } from "@/libs/offline"
 import { queryKeys } from "@/libs/query/queryKeys"
+import logger from "@/utils/logger"
 
 export default function LoginSuccessPage() {
     const navigate = useNavigate()
@@ -81,7 +82,7 @@ export default function LoginSuccessPage() {
                         if (latestSemester) {
                             await qc.prefetchQuery({
                                 queryKey: [
-                                    `${queryKeys.timetables}/my-timetable`,
+                                    queryKeys.myTimetable,
                                     {
                                         year: latestSemester.year,
                                         semester: latestSemester.semester,
@@ -105,7 +106,7 @@ export default function LoginSuccessPage() {
                         }
                     }
                 } catch (error) {
-                    console.error("Failed to prefetch timetable:", error)
+                    logger.warn("Timetable prefetch failed", error)
                 }
 
                 if (isMounted.current) {

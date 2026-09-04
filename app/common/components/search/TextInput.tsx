@@ -19,10 +19,6 @@ const errorBorderStyle = css`
     border-color: red;
 `
 
-const disabledStyle = css`
-    background-color: rgba(245, 245, 245, 1);
-`
-
 const Input = styled.input<{
     $hasError: boolean
     $placeholderColor?: string
@@ -36,14 +32,16 @@ const Input = styled.input<{
     color: ${({ theme }) => theme.colors.Text.default};
     border: 0;
     padding: 8px;
-    background-color: ${({ theme }) => theme.colors.Background.Section.default};
 
     &::placeholder {
         color: ${({ $placeholderColor, theme }) =>
             $placeholderColor || theme.colors.Text.placeholder};
     }
 
-    ${({ disabled }) => disabled && disabledStyle};
+    background-color: ${({ disabled, theme }) =>
+        disabled
+            ? theme.colors.Background.Input.disabled
+            : theme.colors.Background.Section.default};
     ${({ $hasError }) => $hasError && errorBorderStyle};
 `
 

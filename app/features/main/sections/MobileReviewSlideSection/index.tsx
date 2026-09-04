@@ -5,12 +5,11 @@ import styled from "@emotion/styled"
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft"
 import ChevronRightIcon from "@mui/icons-material/ChevronRight"
 
+import { ReviewModeEnum } from "@/common/enum/reviewModeEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import { IconButton } from "@/common/primitives/IconButton"
-import HallOfFameFeedSection from "@/features/main/sections/HallOfFameFeedSection"
-import LikedMajorFeedSection from "@/features/main/sections/LikedMajorFeedSection"
-import RecentFeedSection from "@/features/main/sections/RecentFeedSection"
+import ReviewFeedSection from "@/features/main/sections/ReviewFeedSection"
 import useIsDevice from "@/utils/useIsDevice"
 
 const MobileReviewSlideSectionWrapper = styled(FlexWrapper)`
@@ -170,11 +169,14 @@ export default function MobileReviewSlideSection() {
                 offset={dragOffset}
             >
                 {[
-                    <HallOfFameFeedSection key="clone-last" />,
-                    <RecentFeedSection key="recent" />,
-                    <LikedMajorFeedSection key="liked" />,
-                    <HallOfFameFeedSection key="hall" />,
-                    <RecentFeedSection key="clone-first" />,
+                    <ReviewFeedSection
+                        key="clone-last"
+                        mode={ReviewModeEnum.HALL_OF_FAME}
+                    />,
+                    <ReviewFeedSection key="recent" mode={ReviewModeEnum.RECENT} />,
+                    <ReviewFeedSection key="liked" mode={ReviewModeEnum.POPULAR_FEED} />,
+                    <ReviewFeedSection key="hall" mode={ReviewModeEnum.HALL_OF_FAME} />,
+                    <ReviewFeedSection key="clone-first" mode={ReviewModeEnum.RECENT} />,
                 ].map((component, idx) => (
                     <SlideItem direction="row" align="stretch" gap={0} key={idx}>
                         {component}

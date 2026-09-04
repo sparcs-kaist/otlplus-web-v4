@@ -4,6 +4,7 @@ import { credits } from "./credits"
 import { dictionary } from "./dictionary"
 import { header } from "./header"
 import { main } from "./main"
+import { planner } from "./planner"
 import { timetable } from "./timetable"
 import { writeReviews } from "./writeReviews"
 
@@ -14,6 +15,7 @@ export const i18nKo = {
     dictionary,
     header,
     main,
+    planner,
     writeReviews,
     timetable,
 }

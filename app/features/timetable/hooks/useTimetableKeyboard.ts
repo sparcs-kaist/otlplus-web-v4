@@ -3,8 +3,15 @@ import { useCallback, useEffect, useRef } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 
+import { LectureActionEnum } from "@/common/enum/lectureActionEnum"
+import { OSEnum } from "@/common/enum/osEnum"
 import type { Lecture } from "@/common/schemas/lecture"
+import type {
+    TimetableAction,
+    TimetableTransaction,
+} from "@/features/timetable/hooks/useTimetableEditor"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
+import { queryKeys } from "@/libs/query/queryKeys"
 import { useAPI } from "@/utils/api/useAPI"
 import { getPlatform } from "@/utils/getPlatform"
 import checkOverlap from "@/utils/timetable/checkOverlap"
@@ -35,7 +42,7 @@ interface UseTimetableKeyboardOptions {
     isLoggedIn: boolean
 
     changeSemester: (direction: "prev" | "next") => void
-    recordAction: (action: any) => void
+    recordAction: (action: TimetableAction | TimetableTransaction) => void
 }
 
 export function useTimetableKeyboard({
@@ -85,7 +92,9 @@ export function useTimetableKeyboard({
 
             setSelectedLectures((prev) => {
                 const isMod =
-                    platform === "ios" || platform === "mac" ? e?.metaKey : e?.ctrlKey
+                    platform === OSEnum.IOS || platform === OSEnum.MAC
+                        ? e?.metaKey
+                        : e?.ctrlKey
                 const isShift = e?.shiftKey
 
                 if (isMod) {
@@ -156,7 +165,7 @@ export function useTimetableKeyboard({
 
     const { requestFunction: addTimetableFunction } = useAPI("POST", "/timetables", {
         onSuccess: (data) => {
-            queryClient.invalidateQueries({ queryKey: ["/timetables"] })
+            queryClient.invalidateQueries({ queryKey: [queryKeys.timetables] })
             setCurrentTimetableId(data.id)
         },
     })
@@ -176,7 +185,7 @@ export function useTimetableKeyboard({
             }
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["/timetables"] })
+            queryClient.invalidateQueries({ queryKey: [queryKeys.timetables] })
         },
     })
     const deleteTimetable = useCallback(
@@ -205,7 +214,8 @@ export function useTimetableKeyboard({
             return
         }
 
-        const isMod = platform === "ios" || platform === "mac" ? e.metaKey : e.ctrlKey
+        const isMod =
+            platform === OSEnum.IOS || platform === OSEnum.MAC ? e.metaKey : e.ctrlKey
 
         // 1. Shortcut Help Modal: Ctrl + /
         if (isMod && e.key === "/") {
@@ -312,14 +322,14 @@ export function useTimetableKeyboard({
 
                         recordAction([
                             {
-                                type: "delete",
+                                type: LectureActionEnum.DELETE,
                                 lectures: overlappingLectures.map((l) => ({
                                     lecture: l,
                                     lectureId: l.id,
                                 })),
                             },
                             {
-                                type: "add",
+                                type: LectureActionEnum.ADD,
                                 lectures: lecturesToAdd.map((l) => ({
                                     lecture: l,
                                     lectureId: l.id,

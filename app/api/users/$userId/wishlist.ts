@@ -1,5 +1,6 @@
 import { z } from "zod"
 
+import { LectureActionEnum } from "@/common/enum/lectureActionEnum"
 import { SemesterEnum } from "@/common/enum/semesterEnum"
 import { LectureSchema } from "@/common/schemas/lecture"
 
@@ -27,7 +28,7 @@ export type GETWishlistResponse = z.infer<typeof GETResponse>
 // PATCH /api/users/:userId/wishlist
 export const PATCHRequest = z.object({
     lectureId: z.number().int(),
-    mode: z.enum(["add", "delete"]),
+    mode: z.enum(LectureActionEnum),
 })
 
 export const PATCHResponse = z.object({})

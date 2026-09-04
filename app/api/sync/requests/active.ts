@@ -1,6 +1,7 @@
 import { z } from "zod"
 
 import { SemesterEnum } from "@/common/enum/semesterEnum"
+import { SyncStatusEnum } from "@/common/enum/syncStatusEnum"
 
 // GET /api/sync/requests/active
 export const GETRequest = z.object({
@@ -11,7 +12,7 @@ export const GETResponse = z.object({
     requestId: z.string(),
     year: z.number().int(),
     semester: z.enum(SemesterEnum),
-    status: z.enum(["wait", "inProgress", "complete", "error"]),
+    status: z.enum(SyncStatusEnum),
     startedAt: z.date(),
 })
 

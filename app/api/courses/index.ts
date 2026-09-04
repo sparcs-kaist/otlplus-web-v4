@@ -1,5 +1,6 @@
 import { z } from "zod"
 
+import { LectureOrderEnum } from "@/common/enum/orderEnum"
 import { DepartmentSchema } from "@/common/schemas/department"
 import { ProfessorSchema } from "@/common/schemas/professor"
 
@@ -9,7 +10,7 @@ export const GETRequest = z.object({
     department: z.array(z.number().int()).optional(),
     level: z.array(z.number().int()).optional(),
     term: z.number().int().optional(),
-    order: z.enum(["code", "popular", "studentCount"]),
+    order: z.enum(LectureOrderEnum),
     keyword: z.string(),
     offset: z.number().int(),
     limit: z.number().int(),

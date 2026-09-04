@@ -8,12 +8,17 @@ interface IconButtonProps {
     children?: ReactNode | null
     styles?: React.CSSProperties | null
     onClick?: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void | null
+    "aria-label"?: string
 }
 
 export const IconButton = (props: IconButtonProps) => {
     return (
         <ThemeProvider theme={theme}>
-            <MUIIconButton onClick={props.onClick} style={props.styles ?? undefined}>
+            <MUIIconButton
+                aria-label={props["aria-label"]}
+                onClick={props.onClick}
+                style={props.styles ?? undefined}
+            >
                 {props.children}
             </MUIIconButton>
         </ThemeProvider>

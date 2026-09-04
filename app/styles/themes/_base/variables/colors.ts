@@ -33,10 +33,24 @@ export const colors = {
         Tile: {
             highlight: "#E54C65",
         },
+        Overlay: {
+            default: "rgba(51, 51, 51, 0.5)",
+            text: "#FFFFFF",
+        },
+        Input: {
+            disabled: "#F5F5F5",
+        },
     },
     Highlight: {
         default: "#E54C65",
         dark: "#963246",
+        subtle: "rgba(229, 76, 101, 0.2)",
+        medium: "rgba(229, 76, 101, 0.4)",
+    },
+    Notice: {
+        background: "#F9F0F0",
+        text: "#963246",
+        border: "rgba(229, 76, 101, 0.2)",
     },
     Line: {
         default: "#E8E8E8",
@@ -44,6 +58,7 @@ export const colors = {
         block: "#D6D6D6",
         dark: "#D6D6D6",
         darker: "#bebebeff",
+        subtle: "rgba(194, 194, 194, 0.2)",
     },
     Text: {
         bright: "#FFFFFF",
@@ -53,6 +68,10 @@ export const colors = {
         light: "#555555",
         default: "#333333",
         dark: "#000000",
+        onHighlight: {
+            default: "#FFFFFF",
+            muted: "rgba(255, 255, 255, 0.5)",
+        },
     },
     TimeTable: {
         title: "#000000",

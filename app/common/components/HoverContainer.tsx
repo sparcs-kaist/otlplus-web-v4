@@ -6,8 +6,8 @@ const HoverContainer = styled.div<{ top: number; left: number; width?: number }>
     position: fixed;
     top: ${(props) => props.top + 20}px;
     left: ${(props) => props.left}px;
-    background-color: rgba(51, 51, 51, 0.5);
-    color: white;
+    background-color: ${({ theme }) => theme.colors.Background.Overlay.default};
+    color: ${({ theme }) => theme.colors.Background.Overlay.text};
     padding: 10px;
     border-radius: 2px;
     pointer-events: none;

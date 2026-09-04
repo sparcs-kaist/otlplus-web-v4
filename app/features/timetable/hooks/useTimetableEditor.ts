@@ -2,15 +2,17 @@ import { useCallback, useRef, useState } from "react"
 
 import { useQueryClient } from "@tanstack/react-query"
 
+import { LectureActionEnum } from "@/common/enum/lectureActionEnum"
 import { SemesterEnum } from "@/common/enum/semesterEnum"
 import type { Lecture } from "@/common/schemas/lecture"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
 import { trackEvent } from "@/libs/mixpanel"
+import { queryKeys } from "@/libs/query/queryKeys"
 import { useAPI } from "@/utils/api/useAPI"
 import useUserStore from "@/utils/zustand/useUserStore"
 
 export type TimetableAction = {
-    type: "add" | "delete"
+    type: LectureActionEnum
     lectures: { lecture: Lecture; lectureId: number }[]
 }
 
@@ -22,6 +24,10 @@ export type StackState = {
 }
 
 const MAX_HISTORY_SIZE = 50
+
+function assertNever(value: never): never {
+    throw new Error(`Unexpected timetable action: ${String(value)}`)
+}
 
 interface UseTimetableEditorOptions {
     currentTimetableLectures: Lecture[]
@@ -43,6 +49,10 @@ export function useTimetableEditor({
     const setYear = useTimetableUIStore((s) => s.setYear)
     const semesterEnum = useTimetableUIStore((s) => s.semesterEnum)
     const setSemesterEnum = useTimetableUIStore((s) => s.setSemesterEnum)
+    const timetablePath =
+        currentTimetableId == null
+            ? queryKeys.timetables
+            : queryKeys.timetableDetail(currentTimetableId)
 
     // History Local State
     const [historyStacks, setHistoryStacks] = useState<Record<string, StackState>>({})
@@ -133,84 +143,69 @@ export function useTimetableEditor({
         if (invalidateTimeoutRef.current) clearTimeout(invalidateTimeoutRef.current)
         invalidateTimeoutRef.current = setTimeout(() => {
             queryClient.invalidateQueries({
-                queryKey: [`/timetables/${currentTimetableId}`],
+                queryKey: [timetablePath],
             })
         }, 100)
-    }, [queryClient, currentTimetableId])
+    }, [queryClient, timetablePath])
 
-    const { requestFunction: addLectureFunction } = useAPI(
-        "PATCH",
-        `/timetables/${currentTimetableId}`,
-        {
-            onMutate: async (variables: any) => {
-                await queryClient.cancelQueries({
-                    queryKey: [`/timetables/${currentTimetableId}`],
+    const { requestFunction: addLectureFunction } = useAPI("PATCH", timetablePath, {
+        onMutate: async (variables: any) => {
+            await queryClient.cancelQueries({
+                queryKey: [timetablePath],
+            })
+            const previousTimetable = queryClient.getQueryData([timetablePath])
+
+            if (variables.lecture) {
+                queryClient.setQueriesData({ queryKey: [timetablePath] }, (old: any) => {
+                    if (!old) return old
+                    return {
+                        ...old,
+                        lectures: [...old.lectures, variables.lecture],
+                    }
                 })
-                const previousTimetable = queryClient.getQueryData([
-                    `/timetables/${currentTimetableId}`,
-                ])
+            }
 
-                if (variables.lecture) {
-                    queryClient.setQueriesData(
-                        { queryKey: [`/timetables/${currentTimetableId}`] },
-                        (old: any) => {
-                            if (!old) return old
-                            return {
-                                ...old,
-                                lectures: [...old.lectures, variables.lecture],
-                            }
-                        },
-                    )
-                }
-
-                return { previousTimetable }
-            },
-            onError: (err, variables, context: any) => {
-                queryClient.setQueriesData(
-                    { queryKey: [`/timetables/${currentTimetableId}`] },
-                    context?.previousTimetable,
-                )
-            },
-            onSettled: debounceInvalidate,
+            return { previousTimetable }
         },
-    )
-
-    const { requestFunction: removeLectureFunction } = useAPI(
-        "PATCH",
-        `/timetables/${currentTimetableId}`,
-        {
-            onMutate: async (variables: any) => {
-                await queryClient.cancelQueries({
-                    queryKey: [`/timetables/${currentTimetableId}`],
-                })
-                const previousTimetable = queryClient.getQueryData([
-                    `/timetables/${currentTimetableId}`,
-                ])
-
-                queryClient.setQueriesData(
-                    { queryKey: [`/timetables/${currentTimetableId}`] },
-                    (old: { lectures: Lecture[] } | undefined) => {
-                        if (!old) return old
-                        return {
-                            ...old,
-                            lectures: old.lectures.filter(
-                                (l) => l.id !== variables.lectureId,
-                            ),
-                        }
-                    },
-                )
-
-                return { previousTimetable }
-            },
-            onError: (err, variables, context: any) => {
-                queryClient.setQueriesData(
-                    { queryKey: [`/timetables/${currentTimetableId}`] },
-                    context?.previousTimetable,
-                )
-            },
-            onSettled: debounceInvalidate,
+        onError: (err, variables, context: any) => {
+            queryClient.setQueriesData(
+                { queryKey: [timetablePath] },
+                context?.previousTimetable,
+            )
         },
-    )
+        onSettled: debounceInvalidate,
+    })
+
+    const { requestFunction: removeLectureFunction } = useAPI("PATCH", timetablePath, {
+        onMutate: async (variables: any) => {
+            await queryClient.cancelQueries({
+                queryKey: [timetablePath],
+            })
+            const previousTimetable = queryClient.getQueryData([timetablePath])
+
+            queryClient.setQueriesData(
+                { queryKey: [timetablePath] },
+                (old: { lectures: Lecture[] } | undefined) => {
+                    if (!old) return old
+                    return {
+                        ...old,
+                        lectures: old.lectures.filter(
+                            (l) => l.id !== variables.lectureId,
+                        ),
+                    }
+                },
+            )
+
+            return { previousTimetable }
+        },
+        onError: (err, variables, context: any) => {
+            queryClient.setQueriesData(
+                { queryKey: [timetablePath] },
+                context?.previousTimetable,
+            )
+        },
+        onSettled: debounceInvalidate,
+    })
 
     const addLectures = useCallback(
         (lectures: Lecture[], options: { record?: boolean } = { record: true }) => {
@@ -226,7 +221,7 @@ export function useTimetableEditor({
                 })
                 if (options.record !== false) {
                     recordAction({
-                        type: "add",
+                        type: LectureActionEnum.ADD,
                         lectures: lectures.map((lecture) => ({
                             lecture,
                             lectureId: lecture.id,
@@ -239,14 +234,14 @@ export function useTimetableEditor({
             if (currentTimetableId) {
                 lectures.forEach((lecture) => {
                     addLectureFunction({
-                        action: "add",
+                        action: LectureActionEnum.ADD,
                         lectureId: lecture.id,
                         lecture,
                     } as any)
                 })
                 if (options.record !== false) {
                     recordAction({
-                        type: "add",
+                        type: LectureActionEnum.ADD,
                         lectures: lectures.map((lecture) => ({
                             lecture,
                             lectureId: lecture.id,
@@ -292,7 +287,7 @@ export function useTimetableEditor({
                     )
                     if (removedNonLogin.length > 0 && options.record !== false) {
                         recordAction({
-                            type: "delete",
+                            type: LectureActionEnum.DELETE,
                             lectures: removedNonLogin.map((l) => ({
                                 lecture: l,
                                 lectureId: l.id,
@@ -302,7 +297,7 @@ export function useTimetableEditor({
                 } else if (currentTimetableId) {
                     lectureIds.forEach((id) => {
                         removeLectureFunction({
-                            action: "delete",
+                            action: LectureActionEnum.DELETE,
                             lectureId: id,
                         } as any)
                         trackEvent("Remove Lecture from Timetable", {
@@ -312,7 +307,7 @@ export function useTimetableEditor({
                     })
                     if (removedLogin.length > 0 && options.record !== false) {
                         recordAction({
-                            type: "delete",
+                            type: LectureActionEnum.DELETE,
                             lectures: removedLogin.map((l) => ({
                                 lecture: l,
                                 lectureId: l.id,
@@ -341,25 +336,36 @@ export function useTimetableEditor({
 
     const executeAction = useCallback(
         (action: TimetableAction) => {
-            if (action.type === "add") {
-                addLectures(
-                    action.lectures.map((l) => l.lecture),
-                    { record: false },
-                )
-            } else {
-                removeLectures(
-                    action.lectures.map((l) => l.lectureId),
-                    { record: false, delay: true },
-                )
+            switch (action.type) {
+                case LectureActionEnum.ADD:
+                    addLectures(
+                        action.lectures.map((lecture) => lecture.lecture),
+                        { record: false },
+                    )
+                    return
+                case LectureActionEnum.DELETE:
+                    removeLectures(
+                        action.lectures.map((lecture) => lecture.lectureId),
+                        { record: false, delay: true },
+                    )
+                    return
+                default:
+                    return assertNever(action.type)
             }
         },
         [addLectures, removeLectures],
     )
 
-    const reverseAction = (action: TimetableAction): TimetableAction => ({
-        ...action,
-        type: action.type === "add" ? "delete" : "add",
-    })
+    const reverseAction = (action: TimetableAction): TimetableAction => {
+        switch (action.type) {
+            case LectureActionEnum.ADD:
+                return { ...action, type: LectureActionEnum.DELETE }
+            case LectureActionEnum.DELETE:
+                return { ...action, type: LectureActionEnum.ADD }
+            default:
+                return assertNever(action.type)
+        }
+    }
 
     const reverseTransaction = (transaction: TimetableAction[]): TimetableAction[] => {
         return [...transaction].reverse().map(reverseAction)

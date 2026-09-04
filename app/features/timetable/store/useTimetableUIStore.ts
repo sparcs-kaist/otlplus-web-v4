@@ -1,6 +1,7 @@
 import { create } from "zustand"
 
 import { SemesterEnum } from "@/common/enum/semesterEnum"
+import type { CustomBlock } from "@/common/schemas/customBlock"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimeBlock } from "@/common/schemas/timeblock"
 
@@ -28,6 +29,8 @@ interface TimetableUIState {
 
     // 5. Flash State (잘라내기, undo 등 효과)
     flashLectureIds: number[] | null
+    selectedCustomBlock: CustomBlock | null
+    isCustomBlockSectionOpen: boolean
 
     // Actions
     setHoveredLectures: (
@@ -61,6 +64,13 @@ interface TimetableUIState {
     markSemesterAutoSelected: (key: string) => void
     resetAutoSelectedSemesters: () => void
     setPendingMyTimetableSelection: (pending: boolean) => void
+    setSelectedCustomBlock: (
+        blockOrUpdater:
+            | CustomBlock
+            | null
+            | ((prev: CustomBlock | null) => CustomBlock | null),
+    ) => void
+    setIsCustomBlockSectionOpen: (open: boolean) => void
 
     // Flash Action
     triggerFlash: (ids: number[]) => void
@@ -84,6 +94,8 @@ export const useTimetableUIStore = create<TimetableUIState>((set) => ({
     pendingMyTimetableSelection: false,
 
     flashLectureIds: null,
+    selectedCustomBlock: null,
+    isCustomBlockSectionOpen: false,
 
     // Actions
     setHoveredLectures: (val) =>
@@ -167,6 +179,13 @@ export const useTimetableUIStore = create<TimetableUIState>((set) => ({
                 ? state
                 : { pendingMyTimetableSelection: pending },
         ),
+    setSelectedCustomBlock: (val) =>
+        set((state) => ({
+            selectedCustomBlock:
+                typeof val === "function" ? val(state.selectedCustomBlock) : val,
+        })),
+    setIsCustomBlockSectionOpen: (isCustomBlockSectionOpen) =>
+        set({ isCustomBlockSectionOpen }),
 
     triggerFlash: (ids) => {
         set({ flashLectureIds: ids })

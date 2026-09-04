@@ -1,0 +1,155 @@
+export const planner = {
+    list: {
+        title: "졸업 플래너",
+        item: "플래너 {{index}}",
+        empty: "아직 만든 플래너가 없습니다.",
+    },
+    actions: {
+        create: "새 플래너 만들기",
+        copy: "현재 플래너 복사",
+        delete: "현재 플래너 삭제",
+        deleteConfirm: "현재 플래너를 삭제할까요? 이 작업은 되돌릴 수 없습니다.",
+        moveUp: "앞으로 이동",
+        moveDown: "뒤로 이동",
+        save: "설정 저장",
+        search: "검색",
+        addCourse: "선택 과목 추가",
+        addArbitrary: "임의 과목 추가",
+        include: "포함",
+        exclude: "제외",
+        changeSemester: "학기 변경",
+        removeItem: "과목 삭제",
+        removeItemConfirm: "이 과목을 계획에서 삭제할까요?",
+    },
+    settings: {
+        title: "플래너 설정",
+        startYear: "입학 연도",
+        endYear: "졸업 예정 연도",
+        duration: "계획 기간",
+        durationYears: "{{count}}년",
+        generalTrack: "공통 졸업 요건",
+        majorTrack: "주전공",
+        additionalFilter: "추가 트랙 필터",
+        additionalFilterPlaceholder: "학과·유형으로 검색…",
+        additionalTracks: "추가 이수 유형",
+        domestic: "일반 학생",
+        foreign: "외국인 학생",
+        confirmRange:
+            "플래너 기간을 {{startYear}}~{{endYear}}년으로 변경하면 {{count}}개의 과목이 삭제됩니다. 계속할까요?",
+        confirmIncompatible:
+            "선택한 졸업요건 중 {{count}}개는 {{startYear}}년 입학자에게 적용되지 않을 수 있습니다. 계속할까요?",
+        errors: {
+            sameAsPrimary: "주전공과 같은 학과의 부전공·복수전공은 선택할 수 없습니다.",
+            duplicateDepartment:
+                "같은 학과의 부전공과 복수전공을 동시에 선택할 수 없습니다.",
+            advancedDepartment: "심화전공은 주전공과 같은 학과만 선택할 수 있습니다.",
+            multipleAdvanced: "심화전공은 하나만 선택할 수 있습니다.",
+            multipleInterdisciplinary: "자유융합전공은 하나만 선택할 수 있습니다.",
+        },
+    },
+    trackTypes: {
+        PRIMARY: "주전공",
+        DOUBLE: "복수전공",
+        MINOR: "부전공",
+        ADVANCED: "심화전공",
+        INTERDISCIPLINARY: "자유융합전공",
+    },
+    summary: {
+        title: "졸업 요건 요약",
+        disclaimer:
+            "이 요약은 학점·AU 계획을 위한 참고 정보입니다. GPA, 어학, 비학점 이수, 학과별 지정과목, 대체과목, 중복인정, 승인 조건은 판정하지 않으므로 학사요람과 소속 학과 기준을 반드시 확인하세요.",
+        breakdown: "이수 {{taken}} · 계획 {{planned}}",
+        units: {
+            credit: "학점",
+            au: "AU",
+        },
+        categories: {
+            totalCredit: "총 학점",
+            totalAu: "총 AU",
+            basicRequired: "기초필수",
+            basicElective: "기초선택",
+            thesisStudy: "졸업연구",
+            generalRequiredCredit: "교양필수 학점",
+            generalRequiredAu: "교양필수 AU",
+            humanities: "인문사회선택",
+            majorRequired: "전공필수",
+            majorElective: "전공선택",
+            other: "기타",
+        },
+    },
+    grid: {
+        title: "학기별 이수 계획",
+        year: "{{year}}년",
+        empty: "추가된 과목이 없습니다.",
+        addHere: "{{year}} {{semester}}에 추가",
+        targetYear: "추가할 연도",
+        targetSemester: "추가할 학기",
+    },
+    semesters: {
+        1: "봄학기",
+        2: "여름 계절학기",
+        3: "가을학기",
+        4: "겨울 계절학기",
+    },
+    items: {
+        arbitrary: "임의 과목",
+        credits: "학점",
+        au: "AU",
+        duplicate: "중복 과목",
+    },
+    search: {
+        title: "과목 검색 및 추가",
+        keyword: "과목 검색어",
+        drillChip: "{{type}}만 보기",
+        placeholder: "과목명 또는 과목 코드를 입력하세요",
+        duplicate: "이미 계획에 포함된 과목입니다",
+        takenDuplicateConfirm:
+            "동일한 과목의 수강 기록이 있습니다. 새 계획을 추가하고 기존 수강 과목을 제외할까요?",
+    },
+    arbitrary: {
+        title: "임의 과목 추가",
+        department: "학과",
+        type: "이수 구분",
+        credit: "학점",
+        creditAU: "AU",
+    },
+    categories: {
+        "Basic Required": "기초필수",
+        "Basic Elective": "기초선택",
+        "Major Required": "전공필수",
+        "Major Elective": "전공선택",
+        "Thesis Study(Undergraduate)": "졸업연구",
+        "General Required": "교양필수",
+        "Humanities & Social Elective": "인문사회선택",
+        "Other Elective": "자유선택",
+    },
+    status: {
+        loading: "플래너를 불러오는 중입니다.",
+        error: "플래너 요청을 처리하지 못했습니다.",
+    },
+    comparison: {
+        title: "시나리오 비교",
+        category: "요건",
+    },
+    wizard: {
+        title: "지난 학기 계획 확정",
+        description:
+            "종료된 학기의 계획 과목 {{count}}개가 있습니다. 이수 확정으로 처리하면 이수 기록으로 옮길 수 있어요.",
+        item: "{{year}} {{semester}} — {{course}}",
+        confirm: "이수 확정",
+    },
+    roadmap: {
+        title: "커리큘럼 로드맵",
+        empty: "계획 과목을 추가하면 로드맵에 표시됩니다.",
+    },
+    notice: {
+        tracksUpdated:
+            "졸업요건 정보가 갱신되었습니다. 플래너 요약을 다시 확인해 주세요.",
+        dismiss: "닫기",
+    },
+    empty: {
+        title: "졸업 계획을 시작해 보세요",
+        description:
+            "트랙을 선택하고 학기별 과목과 졸업 요건을 한곳에서 관리할 수 있습니다.",
+    },
+}

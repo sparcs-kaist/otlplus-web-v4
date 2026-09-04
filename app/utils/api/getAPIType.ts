@@ -1,3 +1,5 @@
+import type { z } from "zod"
+
 import { APIEndPoints } from ".api/types/endpoint"
 import { type RequestMap, requestMap } from ".api/types/request"
 import { type ResponseMap, responseMap } from ".api/types/response"
@@ -124,13 +126,13 @@ export function getOriginalPathValue<P extends DynamicPath>(path: P): GetOrigina
 export function getZodSchemaRequest<M extends Method<P>, P extends Path>(
     method: M,
     path: P,
-): (typeof requestMap)[P][Extract<M, keyof (typeof requestMap)[P]>] {
+): z.ZodType {
     return (requestMap as any)[path][method]
 }
 
 export function getZodSchemaResponse<M extends Method<P>, P extends Path>(
     method: M,
     path: P,
-): (typeof responseMap)[P][any] {
+): z.ZodType {
     return (responseMap as any)[path][method]
 }

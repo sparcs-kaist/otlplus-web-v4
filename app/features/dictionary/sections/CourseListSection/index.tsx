@@ -10,6 +10,7 @@ import { useSearchParams } from "react-router"
 import LoadingCircle from "@/common/components/LoadingCircle"
 import ScrollableDropdown from "@/common/components/ScrollableDropdown"
 import SearchArea, { type SearchParamsType } from "@/common/components/search/SearchArea"
+import { LECTURE_ORDERS, LectureOrderEnum } from "@/common/enum/orderEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
@@ -142,8 +143,7 @@ function CourseListSection({
         setParams((prevState) => {
             return {
                 ...prevState,
-                order:
-                    (["code", "popular", "studentCount"] as const)[sortOption] ?? "code",
+                order: LECTURE_ORDERS[sortOption] ?? LectureOrderEnum.CODE,
                 offset: 0,
             }
         })
@@ -158,7 +158,7 @@ function CourseListSection({
         }
         const fullParam = {
             ...param,
-            order: (["code", "popular", "studentCount"] as const)[sortOption] ?? "code",
+            order: LECTURE_ORDERS[sortOption] ?? LectureOrderEnum.CODE,
             offset: 0,
             limit: LIMIT,
         }

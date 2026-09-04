@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef } from "react"
 import * as ChannelService from "@channel.io/channel-web-sdk-loader"
 
 import { clientEnv } from "@/env"
+import logger from "@/utils/logger"
 import useUserStore from "@/utils/zustand/useUserStore"
 
 /**
@@ -37,7 +38,7 @@ const ChannelTalkProvider = () => {
             },
             (error) => {
                 if (error) {
-                    console.error("[ChannelTalk] Boot failed:", error)
+                    logger.warn("ChannelTalk boot failed", error)
                 } else {
                     isBootedRef.current = true
                 }

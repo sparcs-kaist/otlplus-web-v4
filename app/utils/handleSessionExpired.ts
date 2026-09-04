@@ -4,10 +4,14 @@ import { clearQueryCache } from "@/libs/offline"
 import { queryClient } from "@/libs/query/queryClient"
 import { getLocalStorageItem, removeLocalStorageItem } from "@/utils/localStorage"
 import logger from "@/utils/logger"
+import { localStorageKeys } from "@/utils/storageKeys"
 import useUserStore from "@/utils/zustand/useUserStore"
 
 let sessionExpirationPromise: Promise<void> | null = null
-const AUTH_STORAGE_KEYS = ["accessToken", "refreshToken"] as const
+const AUTH_STORAGE_KEYS = [
+    localStorageKeys.accessToken,
+    localStorageKeys.refreshToken,
+] as const
 
 function hasStoredAuthCredentials(): boolean {
     try {
@@ -33,7 +37,7 @@ export async function clearClientSession(): Promise<void> {
         try {
             removeLocalStorageItem(key)
         } catch (error) {
-            logger.warn(`Failed to clear ${key}`, error)
+            logger.warn("Local storage cleanup failed", { key }, error)
         }
     }
 

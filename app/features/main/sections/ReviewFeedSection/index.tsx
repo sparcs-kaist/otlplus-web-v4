@@ -1,18 +1,30 @@
-import { useEffect } from "react"
-import React from "react"
+import React, { useEffect } from "react"
 
 import { useTheme } from "@emotion/react"
+import type { ParseKeys } from "i18next"
 import { Trans, useTranslation } from "react-i18next"
 
 import StyledDivider from "@/common/components/StyledDivider"
 import ReviewBlock from "@/common/components/reviews/ReviewBlock"
+import { type MainReviewFeedMode, ReviewModeEnum } from "@/common/enum/reviewModeEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import Widget from "@/common/primitives/Widget"
+import type { I18nBase } from "@/i18n"
 import { useAPI } from "@/utils/api/useAPI"
 import useIsDevice from "@/utils/useIsDevice"
 
-function HallOfFameFeedSection() {
+const REVIEW_FEED_TITLE_KEYS = {
+    [ReviewModeEnum.RECENT]: "main.recentFeed.title",
+    [ReviewModeEnum.POPULAR_FEED]: "main.likedMajorFeed.title",
+    [ReviewModeEnum.HALL_OF_FAME]: "main.hallOfFameFeed.title",
+} as const satisfies Record<MainReviewFeedMode, ParseKeys<keyof I18nBase>>
+
+interface ReviewFeedSectionProps {
+    mode: MainReviewFeedMode
+}
+
+function ReviewFeedSection({ mode }: ReviewFeedSectionProps) {
     const {} = useTranslation() // 없으면 새로고침 안했을때 언어가 안바껴!
     const theme = useTheme()
     const isLaptop = useIsDevice("laptop")
@@ -21,11 +33,11 @@ function HallOfFameFeedSection() {
 
     useEffect(() => {
         setParams({
-            mode: "hall-of-fame",
+            mode,
             offset: 0,
             limit: 3,
         })
-    }, [])
+    }, [mode])
 
     return (
         <Widget
@@ -37,7 +49,7 @@ function HallOfFameFeedSection() {
         >
             <FlexWrapper direction="row" gap={0}>
                 <Trans
-                    i18nKey="main.hallOfFameFeed.title"
+                    i18nKey={REVIEW_FEED_TITLE_KEYS[mode]}
                     components={{
                         bold: (
                             <Typography
@@ -71,4 +83,4 @@ function HallOfFameFeedSection() {
     )
 }
 
-export default HallOfFameFeedSection
+export default ReviewFeedSection

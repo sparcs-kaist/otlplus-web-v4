@@ -1,29 +1,19 @@
-import React, { use, useEffect, useState } from "react"
+import React, { useEffect, useState } from "react"
 
-import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
 import { useInView } from "react-intersection-observer"
-import { de } from "zod/v4/locales"
 
 import LoadingCircle from "@/common/components/LoadingCircle"
 import ReviewBlock from "@/common/components/reviews/ReviewBlock"
+import ReviewScoreSummary from "@/common/components/reviews/ReviewScoreSummary"
 import ReviewWritingBlock, {
     type ReviewWritingBlockProps,
 } from "@/common/components/reviews/ReviewWritingBlock"
-import { getAverageScoreLabel } from "@/common/enum/scoreEnum"
+import { ReviewModeEnum } from "@/common/enum/reviewModeEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import CourseReviewLanguageChip from "@/features/dictionary/components/CourseReviewLanguageChip"
 import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
-
-const NumberWrapper = styled(FlexWrapper)`
-    width: 300px;
-    padding: 10px;
-`
-
-const NumberContent = styled(FlexWrapper)`
-    flex: 1 0 0;
-`
 
 interface CourseReviewSubsectionProps {
     selectedCourseId: number | null
@@ -32,6 +22,9 @@ interface CourseReviewSubsectionProps {
 }
 
 const LIMIT = 20
+const REVIEW_LANGUAGES = ["all", "english"] as const
+
+type ReviewLanguage = (typeof REVIEW_LANGUAGES)[number]
 
 const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
     selectedCourseId,
@@ -40,7 +33,7 @@ const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
 }) => {
     const { t } = useTranslation()
 
-    const [reviewLanguage, setReviewLanguage] = useState("all")
+    const [reviewLanguage, setReviewLanguage] = useState<ReviewLanguage>("all")
     const [enabled, setEnabled] = useState(false)
 
     const { query, setParams, data } = useInfiniteAPI("GET", "/reviews", {
@@ -53,7 +46,7 @@ const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
 
     useEffect(() => {
         setParams({
-            mode: "default",
+            mode: ReviewModeEnum.DEFAULT,
             courseId: selectedCourseId || undefined,
             professorId: selectedProfessorId || undefined,
         })
@@ -90,7 +83,7 @@ const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
                     {t("dictionary.reviewLanguage")}
                 </Typography>
                 <FlexWrapper direction="row" gap={6}>
-                    {["all", "english"].map((lang) => (
+                    {REVIEW_LANGUAGES.map((lang) => (
                         <CourseReviewLanguageChip
                             key={lang}
                             selected={reviewLanguage == lang}
@@ -111,50 +104,17 @@ const CourseReviewSubsection: React.FC<CourseReviewSubsectionProps> = ({
                         align="center"
                         style={{ width: "100%" }}
                     >
-                        <NumberWrapper
-                            direction="row"
-                            gap={0}
-                            justify={"space-between"}
-                            align={"center"}
-                        >
-                            {[
-                                [
-                                    getAverageScoreLabel(
-                                        data?.averageGrade,
-                                        data?.reviews.length,
-                                    ),
-                                    t("common.grade"),
-                                ],
-                                [
-                                    getAverageScoreLabel(
-                                        data?.averageLoad,
-                                        data?.reviews.length,
-                                    ),
-                                    t("common.load"),
-                                ],
-                                [
-                                    getAverageScoreLabel(
-                                        data?.averageSpeech,
-                                        data?.reviews.length,
-                                    ),
-                                    t("common.speech"),
-                                ],
-                            ].map(([value, label], index) => (
-                                <NumberContent
-                                    key={index}
-                                    direction="column"
-                                    gap={0}
-                                    align={"center"}
-                                >
-                                    <Typography type={"Bigger"} color={"Text.default"}>
-                                        {value}
-                                    </Typography>
-                                    <Typography type={"Smaller"} color={"Text.default"}>
-                                        {label}
-                                    </Typography>
-                                </NumberContent>
-                            ))}
-                        </NumberWrapper>
+                        <ReviewScoreSummary
+                            averageGrade={data?.averageGrade}
+                            averageLoad={data?.averageLoad}
+                            averageSpeech={data?.averageSpeech}
+                            reviewCount={data?.reviews.length}
+                            labels={{
+                                grade: t("common.grade"),
+                                load: t("common.load"),
+                                speech: t("common.speech"),
+                            }}
+                        />
                     </FlexWrapper>
                     {writableReviewProps.map((props, index) => (
                         <ReviewWritingBlock {...props} key={index} />
