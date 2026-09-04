@@ -35,6 +35,12 @@ export default defineConfig([
         settings: { react: { version: "detect" } },
     },
 
+    // Node에서 직접 실행하는 스크립트는 브라우저가 아닌 Node 전역을 쓴다
+    {
+        files: ["scripts/**/*.{js,mjs,cjs}"],
+        languageOptions: { globals: { ...globals.node } },
+    },
+
     // Custom configurations for your project
     pluginReact.configs.flat["jsx-runtime"],
 ])

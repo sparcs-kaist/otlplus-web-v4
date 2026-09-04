@@ -28,6 +28,10 @@ export const publicEnvSchema = z.object({
     ),
     VITE_APP_DEV_API_AUTH_TOKEN: z.string().optional(),
     VITE_CHANNELTALK_PLUGIN_KEY: z.string().optional(),
+    VITE_CHANNELTALK_BUTTON_HIDDEN: z.preprocess(
+        (value) => stringToBoolean(String(value)),
+        z.boolean(),
+    ),
     VITE_GA_MEASUREMENT_ID: z.string().optional(),
     VITE_SENTRY_DSN: z.string().optional(),
     VITE_MIXPANEL_TOKEN: z.string().optional(),

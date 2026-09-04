@@ -3,7 +3,9 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "react-router build",
+        "crawl:schedules": "node scripts/crawl-schedules.mjs --out",
+        "build": "node scripts/crawl-schedules.mjs --out && react-router build",
+        "postinstall": "node scripts/crawl-schedules.mjs --ensure",
         "dev": "react-router dev --host",
         "dev:flags-on": "VITE_APP_FLAG_PLANNER_ENABLED=true react-router dev --host --port 5218",
         "start:client": "vite preview --outDir ./build/client",
