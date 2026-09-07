@@ -59,6 +59,8 @@ export default function FriendLectureDetail({ lecture }: { lecture: Lecture | nu
     const { t } = useTranslation()
     const { query } = useAPI("GET", `/friends/lectures/${lecture?.id ?? 0}/overlaps`, {
         enabled: lecture !== null,
+        staleTime: 0,
+        gcTime: 0,
     })
 
     if (!lecture) {
@@ -85,17 +87,26 @@ export default function FriendLectureDetail({ lecture }: { lecture: Lecture | nu
                 </StyledLink>
             </FlexWrapper>
             <LectureInfoSubsection selectedLecture={lecture} />
+            {query.isError && (
+                <Typography type="Small" color="Highlight.default" role="alert">
+                    {t("friends.loadError")}
+                </Typography>
+            )}
             <FriendGroup
                 title={t("friends.sameLecture")}
-                friends={query.data?.sameLecture ?? []}
+                friends={query.isError ? [] : (query.data?.sameLecture ?? [])}
             />
             <FriendGroup
                 title={t("friends.sameCourseDifferentSection")}
-                friends={query.data?.sameCourseDifferentSection ?? []}
+                friends={
+                    query.isError ? [] : (query.data?.sameCourseDifferentSection ?? [])
+                }
             />
             <FriendGroup
                 title={t("friends.previousSemesterSameProfessor")}
-                friends={query.data?.previousSemesterSameProfessor ?? []}
+                friends={
+                    query.isError ? [] : (query.data?.previousSemesterSameProfessor ?? [])
+                }
             />
         </Detail>
     )

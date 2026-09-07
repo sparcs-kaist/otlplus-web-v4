@@ -22,11 +22,11 @@ import type { Friend } from "@/common/schemas/friend"
 import type { Lecture } from "@/common/schemas/lecture"
 import FriendInviteModal from "@/features/friends/FriendInviteModal"
 import FriendLectureDetail from "@/features/friends/FriendLectureDetail"
+import FriendLoginButton from "@/features/friends/FriendLoginButton"
 import SemesterButton from "@/features/timetable/sections/TabsRowSubSection/SemesterButton"
 import TabButton from "@/features/timetable/sections/TabsRowSubSection/TabButton"
 import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
-import { handleLogin } from "@/utils/handleLoginLogout"
 import useIsDevice from "@/utils/useIsDevice"
 import useUserStore from "@/utils/zustand/useUserStore"
 
@@ -61,7 +61,7 @@ const Layout = styled.div`
     gap: 12px;
 
     ${media.laptop} {
-        grid-template-columns: 240px minmax(500px, 1fr) 320px;
+        grid-template-columns: minmax(180px, 220px) minmax(0, 1fr) minmax(220px, 300px);
     }
 
     ${media.tablet} {
@@ -205,6 +205,7 @@ const InviteButton = styled.button`
 const TimetableHeader = styled(FlexWrapper)`
     width: 100%;
     flex-shrink: 0;
+    flex-wrap: wrap;
 `
 
 const Tabs = styled.div`
@@ -223,6 +224,17 @@ const TimetableGrid = styled.div`
 
 const MobileOnly = styled.div`
     display: none;
+    min-width: 0;
+    max-width: 100%;
+
+    & > div {
+        max-width: 100%;
+    }
+
+    & > div > div {
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 
     ${media.tablet} {
         display: block;
@@ -247,10 +259,16 @@ interface FriendRowProps {
 }
 
 function FriendRow({ friend, selected, onSelect, onDelete }: FriendRowProps) {
+    const { t } = useTranslation()
     const queryClient = useQueryClient()
-    const { requestFunction } = useAPI("PATCH", `/friends/${friend.id}/favorite`, {
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/friends"] }),
-    })
+    const { mutation, requestFunction } = useAPI(
+        "PATCH",
+        `/friends/${friend.id}/favorite`,
+        {
+            onSuccess: () =>
+                queryClient.invalidateQueries({ queryKey: ["/api/v2", "/friends"] }),
+        },
+    )
 
     return (
         <FriendRowButton
@@ -260,7 +278,10 @@ function FriendRow({ friend, selected, onSelect, onDelete }: FriendRowProps) {
             onClick={onSelect}
             onKeyDown={(event) => {
                 if (event.currentTarget !== event.target) return
-                if (event.key === "Enter" || event.key === " ") onSelect()
+                if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault()
+                    onSelect()
+                }
             }}
         >
             <Icon size={18}>
@@ -269,7 +290,7 @@ function FriendRow({ friend, selected, onSelect, onDelete }: FriendRowProps) {
             <FriendName>{friend.name}</FriendName>
             {selected && (
                 <RowIconButton
-                    aria-label="delete friend"
+                    aria-label={t("friends.delete")}
                     onClick={(event) => {
                         event.stopPropagation()
                         onDelete()
@@ -281,7 +302,9 @@ function FriendRow({ friend, selected, onSelect, onDelete }: FriendRowProps) {
                 </RowIconButton>
             )}
             <RowIconButton
-                aria-label="favorite friend"
+                aria-label={t("friends.favorite")}
+                aria-pressed={friend.isFavorite}
+                disabled={mutation.isPending}
                 onClick={(event) => {
                     event.stopPropagation()
                     requestFunction({ isFavorite: !friend.isFavorite })
@@ -344,7 +367,10 @@ function FriendListContent({
                     tabIndex={0}
                     onClick={() => onSelect(null)}
                     onKeyDown={(event) => {
-                        if (event.key === "Enter" || event.key === " ") onSelect(null)
+                        if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault()
+                            onSelect(null)
+                        }
                     }}
                 >
                     <Icon size={18}>
@@ -400,6 +426,7 @@ export default function FriendsPage() {
 
     const { query: friendsQuery } = useAPI("GET", "/friends", {
         enabled: status === "success",
+        staleTime: 0,
     })
     const selectedFriend = friendsQuery.data?.friends.find(
         ({ id }) => id === selectedFriendId,
@@ -425,12 +452,20 @@ export default function FriendsPage() {
     const { query: friendTimetables, setParams: setFriendTimetableParams } = useAPI(
         "GET",
         `/friends/${selectedFriendId ?? 0}/timetables`,
-        { enabled: status === "success" && selectedFriendId !== null },
+        {
+            enabled: status === "success" && selectedFriendId !== null,
+            staleTime: 0,
+            gcTime: 0,
+        },
     )
     const { query: friendActual, setParams: setFriendActualParams } = useAPI(
         "GET",
         `/friends/${selectedFriendId ?? 0}/timetables/my-timetable`,
-        { enabled: status === "success" && selectedFriendId !== null },
+        {
+            enabled: status === "success" && selectedFriendId !== null,
+            staleTime: 0,
+            gcTime: 0,
+        },
     )
     const { query: friendSaved } = useAPI(
         "GET",
@@ -440,17 +475,31 @@ export default function FriendsPage() {
                 status === "success" &&
                 selectedFriendId !== null &&
                 currentTimetableId !== null,
+            staleTime: 0,
+            gcTime: 0,
         },
     )
 
-    const { requestFunction: deleteFriend } = useAPI(
+    const { mutation: deleteMutation, requestFunction: deleteFriend } = useAPI(
         "DELETE",
         `/friends/${deletingFriend?.id ?? 0}`,
         {
             onSuccess: () => {
                 if (deletingFriend?.id === selectedFriendId) setSearchParams({})
+                queryClient.removeQueries({
+                    predicate: ({ queryKey }) =>
+                        queryKey[0] === "/api/v2" &&
+                        typeof queryKey[1] === "string" &&
+                        queryKey[1].startsWith(`/friends/${deletingFriend?.id}/`),
+                })
                 setDeletingFriend(null)
-                queryClient.invalidateQueries({ queryKey: ["/friends"] })
+                queryClient.invalidateQueries({
+                    predicate: ({ queryKey }) =>
+                        queryKey[0] === "/api/v2" &&
+                        typeof queryKey[1] === "string" &&
+                        (queryKey[1] === "/friends" ||
+                            queryKey[1].startsWith("/friends/lectures/")),
+                })
             },
         },
     )
@@ -479,27 +528,39 @@ export default function FriendsPage() {
     useEffect(() => {
         if (
             selectedFriendId !== null &&
+            !friendsQuery.isFetching &&
+            friendsQuery.isSuccess &&
             friendsQuery.data &&
             !friendsQuery.data.friends.some(({ id }) => id === selectedFriendId)
         ) {
             setSearchParams({})
         }
-    }, [friendsQuery.data, selectedFriendId, setSearchParams])
+    }, [
+        friendsQuery.data,
+        friendsQuery.isFetching,
+        friendsQuery.isSuccess,
+        selectedFriendId,
+        setSearchParams,
+    ])
 
     const timetables =
         selectedFriendId === null
             ? (ownTimetables.data?.timetables ?? [])
-            : (friendTimetables.data?.timetables ?? [])
-    const lectures =
+            : friendTimetables.isError
+              ? []
+              : (friendTimetables.data?.timetables ?? [])
+    const lectureQuery =
         currentTimetableId === null
             ? selectedFriendId === null
-                ? (ownActual.data?.lectures ?? [])
-                : (friendActual.data?.lectures ?? [])
+                ? ownActual
+                : friendActual
             : selectedFriendId === null
-              ? (ownSaved.data?.lectures ?? [])
-              : (friendSaved.data?.lectures ?? [])
+              ? ownSaved
+              : friendSaved
+    const lectures = lectureQuery.isError ? [] : (lectureQuery.data?.lectures ?? [])
 
     const handleSelectFriend = (friendId: number | null) => {
+        setFriendListOpen(false)
         setSearchParams(friendId === null ? {} : { friendId: String(friendId) })
     }
 
@@ -516,9 +577,7 @@ export default function FriendsPage() {
                         <Typography type="Big" color="Text.placeholder">
                             {t("friends.loginRequired")}
                         </Typography>
-                        <Button type="highlighted" onClick={handleLogin}>
-                            {t("friends.login")}
-                        </Button>
+                        <FriendLoginButton />
                     </>
                 )}
             </LoginPage>
@@ -590,6 +649,11 @@ export default function FriendsPage() {
                             </TabButton>
                         ))}
                     </Tabs>
+                    {lectureQuery.isError && (
+                        <Typography type="Small" color="Highlight.default" role="alert">
+                            {t("friends.loadError")}
+                        </Typography>
+                    )}
                     <TimetableGrid>
                         <CustomTimeTableGrid
                             lectures={lectures}
@@ -618,8 +682,14 @@ export default function FriendsPage() {
                     friends={friendsQuery.data?.friends ?? []}
                     selectedFriendId={selectedFriendId}
                     onSelect={handleSelectFriend}
-                    onDelete={setDeletingFriend}
-                    onInvite={() => setInviteOpen(true)}
+                    onDelete={(friend) => {
+                        setFriendListOpen(false)
+                        setDeletingFriend(friend)
+                    }}
+                    onInvite={() => {
+                        setFriendListOpen(false)
+                        setInviteOpen(true)
+                    }}
                 />
             </Modal>
             <Modal
@@ -644,11 +714,19 @@ export default function FriendsPage() {
                 <Typography type="Normal" color="Text.default">
                     {t("friends.deleteConfirm", { name: deletingFriend?.name })}
                 </Typography>
+                {deleteMutation.isError && (
+                    <Typography type="Small" color="Highlight.default" role="alert">
+                        {t("friends.updateError")}
+                    </Typography>
+                )}
                 <FlexWrapper direction="row" gap={8} justify="flex-end">
                     <Button onClick={() => setDeletingFriend(null)}>
                         {t("friends.cancel")}
                     </Button>
-                    <Button type="highlighted" onClick={() => deleteFriend({})}>
+                    <Button
+                        type={deleteMutation.isPending ? "disabled" : "highlighted"}
+                        onClick={() => deleteFriend({})}
+                    >
                         {t("friends.delete")}
                     </Button>
                 </FlexWrapper>

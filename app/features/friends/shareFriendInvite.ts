@@ -17,8 +17,11 @@ export async function copyFriendInvite(name: string, url: string) {
     textarea.style.opacity = "0"
     document.body.appendChild(textarea)
     textarea.select()
-    document.execCommand("copy")
-    textarea.remove()
+    try {
+        if (!document.execCommand("copy")) throw new Error("Clipboard unavailable")
+    } finally {
+        textarea.remove()
+    }
 }
 
 export async function shareFriendInvite(name: string, url: string) {

@@ -5,11 +5,10 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { useLocation, useNavigate } from "react-router-dom"
 
-import Button from "@/common/components/Button"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
+import FriendLoginButton from "@/features/friends/FriendLoginButton"
 import { useAPI } from "@/utils/api/useAPI"
-import { handleLogin } from "@/utils/handleLoginLogout"
 import useUserStore from "@/utils/zustand/useUserStore"
 
 export const meta = () => [
@@ -48,14 +47,22 @@ const Card = styled(FlexWrapper)`
 export default function FriendInvitePage() {
     const { t } = useTranslation()
     const location = useLocation()
-    const token = decodeURIComponent(location.hash.slice(1))
+    let token = ""
+    try {
+        token = decodeURIComponent(location.hash.slice(1))
+    } catch {
+        // Malformed links should show the invalid-invite message, not crash the page.
+    }
     const navigate = useNavigate()
     const queryClient = useQueryClient()
     const { status } = useUserStore()
     const acceptingToken = useRef<string | null>(null)
     const { mutation, requestFunction } = useAPI("POST", "/friends/invites/accept", {
-        onSuccess: ({ friend }) => {
-            queryClient.invalidateQueries({ queryKey: ["/friends"] })
+        onSuccess: async ({ friend }) => {
+            await queryClient.invalidateQueries({
+                queryKey: ["/api/v2", "/friends"],
+                refetchType: "all",
+            })
             navigate(`/friends?friendId=${friend.id}`, {
                 replace: true,
                 state: { friendAddedName: friend.name },
@@ -75,19 +82,17 @@ export default function FriendInvitePage() {
                 <Typography type="BigBold" color="Text.default">
                     {t("friends.inviteTitle")}
                 </Typography>
-                {status === "idle" ? (
+                {!token || mutation.isError ? (
+                    <Typography type="Normal" color="Highlight.default">
+                        {t("friends.inviteInvalid")}
+                    </Typography>
+                ) : status === "idle" ? (
                     <>
                         <Typography type="Normal" color="Text.placeholder">
                             {t("friends.inviteLogin")}
                         </Typography>
-                        <Button type="highlighted" onClick={handleLogin}>
-                            {t("friends.login")}
-                        </Button>
+                        <FriendLoginButton />
                     </>
-                ) : mutation.isError ? (
-                    <Typography type="Normal" color="Highlight.default">
-                        {t("friends.inviteInvalid")}
-                    </Typography>
                 ) : (
                     <Typography type="Normal" color="Text.placeholder">
                         {t("friends.inviteAccepting")}
