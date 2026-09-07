@@ -108,7 +108,11 @@ export default function FriendInviteModal({
                         {t("friends.inviteError")}
                     </Typography>
                 )}
-                {invite && <Preview>{friendInviteMessage(userName, inviteUrl)}</Preview>}
+                {invite && (
+                    <Preview className="mp-block mp-sensitive">
+                        {friendInviteMessage(userName, inviteUrl)}
+                    </Preview>
+                )}
                 {copied && (
                     <Typography type="Small" color="Highlight.default">
                         {t("friends.copied")}
