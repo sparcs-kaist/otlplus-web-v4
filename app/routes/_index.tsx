@@ -4,22 +4,17 @@ import styled from "@emotion/styled"
 
 import LoadingCircle from "@/common/components/LoadingCircle"
 import Footer from "@/common/components/guideline/Footer"
+import { ReviewModeEnum } from "@/common/enum/reviewModeEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import SearchSection from "@/features/main/sections/SearchSection"
 import { trackEvent } from "@/libs/mixpanel"
 import { media } from "@/styles/themes/media"
 import useIsDevice from "@/utils/useIsDevice"
 
-const HallOfFameFeedSection = lazy(
-    () => import("@/features/main/sections/HallOfFameFeedSection"),
-)
-const LikedMajorFeedSection = lazy(
-    () => import("@/features/main/sections/LikedMajorFeedSection"),
-)
 const MobileReviewSlideSection = lazy(
     () => import("@/features/main/sections/MobileReviewSlideSection"),
 )
-const RecentFeedSection = lazy(() => import("@/features/main/sections/RecentFeedSection"))
+const ReviewFeedSection = lazy(() => import("@/features/main/sections/ReviewFeedSection"))
 const ReviewSection = lazy(() => import("@/features/main/sections/ReviewSection"))
 const ScheduleFeedSection = lazy(
     () => import("@/features/main/sections/ScheduleFeedSection"),
@@ -160,13 +155,17 @@ export default function Home() {
                         {!isLaptop && (
                             <FlexWrapper direction="row" align="stretch" gap={24}>
                                 <Suspense fallback={<SectionLoader />}>
-                                    <RecentFeedSection />
+                                    <ReviewFeedSection mode={ReviewModeEnum.RECENT} />
                                 </Suspense>
                                 <Suspense fallback={<SectionLoader />}>
-                                    <LikedMajorFeedSection />
+                                    <ReviewFeedSection
+                                        mode={ReviewModeEnum.POPULAR_FEED}
+                                    />
                                 </Suspense>
                                 <Suspense fallback={<SectionLoader />}>
-                                    <HallOfFameFeedSection />
+                                    <ReviewFeedSection
+                                        mode={ReviewModeEnum.HALL_OF_FAME}
+                                    />
                                 </Suspense>
                             </FlexWrapper>
                         )}

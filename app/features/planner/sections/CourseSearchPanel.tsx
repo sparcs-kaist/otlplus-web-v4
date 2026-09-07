@@ -1,0 +1,294 @@
+import { useState } from "react"
+
+import styled from "@emotion/styled"
+import { useTranslation } from "react-i18next"
+
+import { GETResponse as PlannerCoursesResponseSchema } from "@/api/planner-courses"
+import {
+    type PlannerCourse,
+    type PlannerDepartment,
+    type PlannerDetail,
+    type PlannerSemester,
+    PlannerSemesterSchema,
+} from "@/common/schemas/planner"
+import { media } from "@/styles/themes/media"
+import { useAPI } from "@/utils/api/useAPI"
+
+import {
+    ActionButton,
+    Field,
+    FieldLabel,
+    SectionTitle,
+    Select,
+    StatusNotice,
+} from "../components/PlannerControls"
+import { filterCoursesByType } from "../domain/drillDown"
+import { getCourseDuplicateDecision } from "../domain/duplicates"
+import type { AddFutureItem, ArbitraryItemInput } from "../hooks/types"
+import { ArbitraryCourseForm } from "./ArbitraryCourseForm"
+
+const Panel = styled.section`
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+`
+
+const SearchRow = styled.form`
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px;
+
+    ${media.mobile} {
+        grid-template-columns: minmax(0, 1fr);
+    }
+`
+
+const Results = styled.div`
+    display: grid;
+    max-height: 220px;
+    grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr));
+    gap: 6px;
+    overflow-y: auto;
+`
+
+const CourseButton = styled.button<{ $selected: boolean }>`
+    min-width: 0;
+    border: 1px solid
+        ${({ $selected, theme }) =>
+            $selected ? theme.colors.Highlight.default : theme.colors.Line.default};
+    border-radius: 6px;
+    padding: 10px;
+    color: ${({ theme }) => theme.colors.Text.default};
+    background: ${({ $selected, theme }) =>
+        $selected
+            ? theme.colors.Background.Button.highlight
+            : theme.colors.Background.Block.default};
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+    transition: background-color 120ms ease;
+
+    &:hover:not(:disabled) {
+        background-color: ${({ $selected, theme }) =>
+            $selected
+                ? theme.colors.Background.Button.highlightDark
+                : theme.colors.Background.Button.dark};
+    }
+
+    &:focus-visible {
+        outline: 2px solid ${({ theme }) => theme.colors.Highlight.default};
+        outline-offset: 2px;
+    }
+`
+
+const CourseCode = styled.span`
+    display: block;
+    margin-bottom: 3px;
+    color: ${({ theme }) => theme.colors.Text.placeholder};
+    font-size: ${({ theme }) => theme.fonts.Small.fontSize}px;
+`
+
+const DrillChip = styled.button`
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border: 1px solid ${({ theme }) => theme.colors.Highlight.default};
+    border-radius: 999px;
+    color: ${({ theme }) => theme.colors.Highlight.default};
+    background: ${({ theme }) => theme.colors.Background.Button.highlight};
+    font-size: ${({ theme }) => theme.fonts.Small.fontSize}px;
+    cursor: pointer;
+
+    &:focus-visible {
+        outline: 2px solid ${({ theme }) => theme.colors.Highlight.default};
+        outline-offset: 2px;
+    }
+`
+
+const TargetGrid = styled.div`
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(140px, 100%), 1fr));
+    gap: 8px;
+`
+
+const Divider = styled.hr`
+    width: 100%;
+    margin: 4px 0;
+    border: 0;
+    border-top: 1px solid ${({ theme }) => theme.colors.Line.default};
+`
+
+const SEMESTERS = [1, 2, 3, 4] as const satisfies readonly PlannerSemester[]
+
+type Props = {
+    readonly planner: PlannerDetail
+    readonly departments: readonly PlannerDepartment[]
+    readonly busy: boolean
+    readonly year: number
+    readonly semester: PlannerSemester
+    readonly onYearChange: (year: number) => void
+    readonly onSemesterChange: (semester: PlannerSemester) => void
+    readonly keywordInputRef?: React.Ref<HTMLInputElement>
+    readonly drillTypeKo?: string | null
+    readonly onDrillTypeClear?: () => void
+    readonly onAddFuture: AddFutureItem
+    readonly onAddArbitrary: (input: ArbitraryItemInput) => Promise<void>
+}
+
+export function CourseSearchPanel({
+    planner,
+    departments,
+    busy,
+    year,
+    semester,
+    onYearChange,
+    onSemesterChange,
+    keywordInputRef,
+    drillTypeKo = null,
+    onDrillTypeClear,
+    onAddFuture,
+    onAddArbitrary,
+}: Props) {
+    const { t, i18n } = useTranslation()
+    const [keyword, setKeyword] = useState("")
+    const [selectedCourseId, setSelectedCourseId] = useState<number | null>(null)
+    const [searchEnabled, setSearchEnabled] = useState(false)
+    const courses = useAPI("GET", "/planner-courses", {
+        enabled: searchEnabled,
+        apiPrefix: "/api",
+        apiPath: "/courses",
+        select: (data) => PlannerCoursesResponseSchema.parse(data),
+    })
+
+    const plannerCourse =
+        courses.query.data?.find((course) => course.id === selectedCourseId) ?? null
+    const duplicateDecision =
+        plannerCourse === null
+            ? "none"
+            : getCourseDuplicateDecision(planner, plannerCourse)
+
+    const search = (event: React.FormEvent) => {
+        event.preventDefault()
+        if (keyword.trim() === "") return
+        courses.setParams({
+            keyword: keyword.trim(),
+            offset: 0,
+            limit: 20,
+        })
+        setSearchEnabled(true)
+    }
+
+    return (
+        <Panel aria-labelledby="planner-course-search-title">
+            <SectionTitle id="planner-course-search-title">
+                {t("planner.search.title")}
+            </SectionTitle>
+            <SearchRow onSubmit={search}>
+                <Field
+                    aria-label={t("planner.search.keyword")}
+                    ref={keywordInputRef}
+                    value={keyword}
+                    onChange={(event) => setKeyword(event.target.value)}
+                    placeholder={t("planner.search.placeholder")}
+                />
+                <ActionButton $primary type="submit" disabled={busy}>
+                    {t("planner.actions.search")}
+                </ActionButton>
+            </SearchRow>
+            {drillTypeKo !== null && (
+                <DrillChip type="button" onClick={() => onDrillTypeClear?.()}>
+                    {t("planner.search.drillChip", { type: drillTypeKo })}
+                    {" ✕"}
+                </DrillChip>
+            )}
+            <Results>
+                {filterCoursesByType(courses.query.data ?? [], drillTypeKo).map(
+                    (course) => (
+                        <CourseButton
+                            key={course.id}
+                            type="button"
+                            $selected={course.id === selectedCourseId}
+                            aria-pressed={course.id === selectedCourseId}
+                            onClick={() => setSelectedCourseId(course.id)}
+                        >
+                            <CourseCode>{course.old_code}</CourseCode>
+                            {i18n.resolvedLanguage === "en"
+                                ? course.title_en
+                                : course.title}
+                        </CourseButton>
+                    ),
+                )}
+            </Results>
+            <TargetGrid>
+                <FieldLabel>
+                    {t("planner.grid.targetYear")}
+                    <Select
+                        value={year}
+                        onChange={(event) => onYearChange(Number(event.target.value))}
+                    >
+                        {Array.from(
+                            { length: planner.end_year - planner.start_year + 1 },
+                            (_, index) => planner.start_year + index,
+                        ).map((value) => (
+                            <option key={value} value={value}>
+                                {value}
+                            </option>
+                        ))}
+                    </Select>
+                </FieldLabel>
+                <FieldLabel>
+                    {t("planner.grid.targetSemester")}
+                    <Select
+                        value={semester}
+                        onChange={(event) =>
+                            onSemesterChange(
+                                PlannerSemesterSchema.parse(Number(event.target.value)),
+                            )
+                        }
+                    >
+                        {SEMESTERS.map((value) => (
+                            <option key={value} value={value}>
+                                {t(`planner.semesters.${value}`)}
+                            </option>
+                        ))}
+                    </Select>
+                </FieldLabel>
+            </TargetGrid>
+            {duplicateDecision === "future" ? (
+                <StatusNotice role="status" aria-live="polite">
+                    {t("planner.search.duplicate")}
+                </StatusNotice>
+            ) : (
+                <ActionButton
+                    $primary
+                    type="button"
+                    disabled={busy || plannerCourse === null}
+                    onClick={() => {
+                        if (plannerCourse === null) return
+                        const excludeTakenDuplicates =
+                            duplicateDecision === "taken" &&
+                            window.confirm(t("planner.search.takenDuplicateConfirm"))
+                        if (duplicateDecision === "taken" && !excludeTakenDuplicates) {
+                            return
+                        }
+                        void onAddFuture(plannerCourse, year, semester, {
+                            excludeTakenDuplicates,
+                        })
+                    }}
+                >
+                    {t("planner.actions.addCourse")}
+                </ActionButton>
+            )}
+            <Divider />
+            <ArbitraryCourseForm
+                departments={departments}
+                defaultDepartmentId={planner.major_track.department.id}
+                year={year}
+                semester={semester}
+                busy={busy}
+                onAdd={onAddArbitrary}
+            />
+        </Panel>
+    )
+}

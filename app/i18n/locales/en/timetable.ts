@@ -40,4 +40,16 @@ export const timetable = {
         etcSelectCancel: "Cancel selected lectures",
         etcShortcutInfo: "Show this shortcut information",
     },
+    addCustomBlock: "Add Custom Block",
+    customBlock: {
+        name: "Name",
+        place: "Place",
+        timetable: "Timetable",
+        time: "Time",
+        add: "Add to Timetable",
+        save: "Save",
+        overlap: "This time overlaps another custom block.",
+        errorNameRequired: "Please enter a name for the block.",
+        errorTimeInvalid: "End time must be later than start time.",
+    },
 }

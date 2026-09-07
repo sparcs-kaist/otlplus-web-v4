@@ -4,6 +4,7 @@ import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
 
 import Modal from "@/common/components/Modal"
+import { OSEnum } from "@/common/enum/osEnum"
 import Typography from "@/common/primitives/Typography"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
 import { getPlatform } from "@/utils/getPlatform"
@@ -63,7 +64,7 @@ function KeyboardShortcutModal() {
     const setIsShortcutModalOpen = useTimetableUIStore((s) => s.setIsShortcutModalOpen)
 
     const platform = getPlatform()
-    const isApple = platform === "ios" || platform === "mac"
+    const isApple = platform === OSEnum.IOS || platform === OSEnum.MAC
     const mod = isApple ? "⌘ Cmd" : "Ctrl"
 
     if (!isShortcutModalOpen) return null

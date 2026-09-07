@@ -11,9 +11,7 @@ const WidgetInner = styled(FlexWrapper)<{
     width: ${(props) => (props.width ? `${props.width}px` : "auto")};
     background: ${({ theme }) => theme.colors.Background.Section.default};
     border-radius: ${(props) => props.borderRadius}px;
-    box-shadow:
-        0px 1px 3px rgba(0, 0, 0, 0.1),
-        0px 1px 2px rgba(0, 0, 0, 0.06);
+    box-shadow: ${({ theme }) => theme.elevation.surface};
 `
 
 interface WidgetProps extends FlexWrapperProps {

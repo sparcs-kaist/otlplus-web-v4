@@ -8,11 +8,14 @@ import { useInView } from "react-intersection-observer"
 import type { GETLecturesResponse } from "@/api/lectures"
 import LoadingCircle from "@/common/components/LoadingCircle"
 import { type SearchParamsType } from "@/common/components/search/SearchArea"
+import { LectureActionEnum } from "@/common/enum/lectureActionEnum"
+import { LECTURE_ORDERS, LectureOrderEnum } from "@/common/enum/orderEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
 import { trackEvent } from "@/libs/mixpanel"
+import { queryKeys } from "@/libs/query/queryKeys"
 import { media } from "@/styles/themes/media"
 import type { getAPIResponseType } from "@/utils/api/getAPIType"
 import { useAPI } from "@/utils/api/useAPI"
@@ -192,8 +195,9 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
         `/users/${user?.id}/wishlist`,
         {
             onSuccess: () => {
+                if (!user) return
                 queryClient.invalidateQueries({
-                    queryKey: [`/users/${user?.id}/wishlist`],
+                    queryKey: [queryKeys.userWishlist(user.id)],
                 })
             },
         },
@@ -236,8 +240,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                 year: year,
                 semester: semester,
                 ...param,
-                order:
-                    (["code", "popular", "studentCount"] as const)[sortOption] ?? "code",
+                order: LECTURE_ORDERS[sortOption] ?? LectureOrderEnum.CODE,
                 offset: 0,
                 limit: SEARCH_LIMIT,
                 day: param.time?.day ?? undefined,
@@ -262,7 +265,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
         setIsWishlist(false)
         setParams((prev) => ({
             ...prev,
-            order: (["code", "popular", "studentCount"] as const)[sortOption] ?? "code",
+            order: LECTURE_ORDERS[sortOption] ?? LectureOrderEnum.CODE,
             offset: 0,
         }))
     }, [sortOption])
@@ -375,7 +378,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     const handleLikeClick = (wish: boolean, lectureId: number) => {
         if (status === "idle") return
 
-        const action = wish ? "delete" : "add"
+        const action = wish ? LectureActionEnum.DELETE : LectureActionEnum.ADD
         trackEvent("Update Wishlist", {
             action,
             lectureId,

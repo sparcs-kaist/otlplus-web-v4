@@ -1,5 +1,3 @@
-import i18n from "i18next"
-
 /*
     [<API에 요청 보내는 type>, i18n string]
 */
@@ -45,6 +43,7 @@ export const getDepartmentOptions = () => {
         ["TS", "common.department.tsShort", 500],
         ["SS", "common.department.ssShort", 500],
         ["BCS", "common.department.bcsShort", 500],
+        ["AIC", "common.department.aicShort", 500],
         ["ETC", "common.department.etcShort", 900],
     ]
 
@@ -79,6 +78,7 @@ export const getDepartmentOptions = () => {
         ["TS", "common.department.tsShort"],
         ["SS", "common.department.ssShort"],
         ["BCS", "common.department.bcsShort"],
+        ["AIC", "common.department.aicShort"],
         ["ETC", "common.department.etcShort"],
     ] as const
 }

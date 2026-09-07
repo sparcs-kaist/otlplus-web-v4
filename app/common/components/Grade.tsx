@@ -14,7 +14,7 @@ interface GradeButtonProps {
 }
 
 const GradeButtonDefaultStyle = (theme: ThemeType) => css`
-    border: 1px solid rgba(194, 194, 194, 0.2);
+    border: 1px solid ${theme.colors.Line.subtle};
     background-color: ${theme.colors.Background.Tab.darker};
     color: ${theme.colors.Text.default};
     opacity: 50%;

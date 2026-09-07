@@ -1,0 +1,61 @@
+import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
+import { resetUser } from "@/libs/mixpanel"
+import { clearQueryCache } from "@/libs/offline"
+import { queryClient } from "@/libs/query/queryClient"
+import { getLocalStorageItem, removeLocalStorageItem } from "@/utils/localStorage"
+import logger from "@/utils/logger"
+import { localStorageKeys } from "@/utils/storageKeys"
+import useUserStore from "@/utils/zustand/useUserStore"
+
+let sessionExpirationPromise: Promise<void> | null = null
+const AUTH_STORAGE_KEYS = [
+    localStorageKeys.accessToken,
+    localStorageKeys.refreshToken,
+] as const
+
+function hasStoredAuthCredentials(): boolean {
+    try {
+        return AUTH_STORAGE_KEYS.some((key) => getLocalStorageItem(key) !== null)
+    } catch (error) {
+        logger.warn("Failed to inspect stored auth credentials", error)
+        return false
+    }
+}
+
+export async function clearClientSession(): Promise<void> {
+    try {
+        await resetUser()
+    } catch (error) {
+        logger.warn("Failed to reset analytics identity", error)
+    }
+
+    useUserStore.getState().clearUser()
+    useTimetableUIStore.getState().resetTimetableSelection()
+    queryClient.clear()
+
+    for (const key of AUTH_STORAGE_KEYS) {
+        try {
+            removeLocalStorageItem(key)
+        } catch (error) {
+            logger.warn("Local storage cleanup failed", { key }, error)
+        }
+    }
+
+    try {
+        await clearQueryCache()
+    } catch (error) {
+        logger.warn("Failed to clear persisted query cache", error)
+    }
+}
+
+export function handleSessionExpired(): Promise<void> {
+    if (sessionExpirationPromise) return sessionExpirationPromise
+    if (useUserStore.getState().status !== "success" && !hasStoredAuthCredentials()) {
+        return Promise.resolve()
+    }
+
+    sessionExpirationPromise = clearClientSession().finally(() => {
+        sessionExpirationPromise = null
+    })
+    return sessionExpirationPromise
+}

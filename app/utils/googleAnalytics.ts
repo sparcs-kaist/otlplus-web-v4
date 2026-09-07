@@ -17,12 +17,19 @@ declare global {
 
 export const GA_TRACKING_ID = clientEnv.VITE_GA_MEASUREMENT_ID
 
+// Third-party snippet failures must never break the app surface.
+const safeGtag: typeof window.gtag = (...args) => {
+    try {
+        window.gtag(...args)
+        return
+    } catch {
+        return
+    }
+}
+
 export const pageview = (url: string) => {
     if (!GA_TRACKING_ID || typeof window.gtag === "undefined") return
-
-    window.gtag("config", GA_TRACKING_ID, {
-        page_path: url,
-    })
+    safeGtag("config", GA_TRACKING_ID, { page_path: url })
 }
 
 export const event = ({
@@ -37,11 +44,10 @@ export const event = ({
     value?: number
 }) => {
     if (!GA_TRACKING_ID || typeof window.gtag === "undefined") return
-
-    window.gtag("event", action, {
+    safeGtag("event", action, {
         event_category: category,
         event_label: label,
-        value: value,
+        value,
     })
 }
 

@@ -23,7 +23,7 @@ jobs:
               with:
                   doppler-token: ${{ secrets.DOPPLER_SECRET_DEV }}
                   inject-env-vars: true
-    
+
             - name: Notify Slack - Deploy Started
               id: slack-start
               continue-on-error: true
@@ -164,7 +164,7 @@ jobs:
               with:
                   doppler-token: ${{ secrets.DOPPLER_SECRET_PROD }}
                   inject-env-vars: true
-        
+
             - uses: actions/checkout@v4
 
             - name: Setup pnpm

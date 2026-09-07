@@ -2,7 +2,10 @@ import { useEffect, useState } from "react"
 
 import styled from "@emotion/styled"
 
-import { type TabType } from "@/common/interface/ReviewWriteTabs"
+import {
+    ReviewWriteTab,
+    type ReviewWriteTabKey,
+} from "@/common/interface/ReviewWriteTabs"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Widget from "@/common/primitives/Widget"
 import type { WriteReviewsSelectedLectureType } from "@/routes/write-reviews"
@@ -56,25 +59,29 @@ const ReviewRightSectionInner = styled(FlexWrapper)`
     }
 `
 
+function assertNever(value: never): never {
+    throw new Error(`Unexpected review tab: ${String(value)}`)
+}
+
 function ReviewRightSection({
     selectedLecture,
     setSelectedLecture,
 }: ReviewRightSectionProps) {
     const { status } = useUserStore()
 
-    const [tab, setTab] = useState<TabType>("write")
+    const [tab, setTab] = useState<ReviewWriteTabKey>(ReviewWriteTab.WRITE)
 
     useEffect(() => {
-        if (status === "idle") setTab("recentFeed")
+        if (status === "idle") setTab(ReviewWriteTab.RECENT_FEED)
     }, [status])
     useEffect(() => {
-        if (tab !== "write") {
+        if (tab !== ReviewWriteTab.WRITE) {
             setSelectedLecture(null)
         }
     }, [tab])
     useEffect(() => {
         if (selectedLecture !== null) {
-            setTab("write")
+            setTab(ReviewWriteTab.WRITE)
         }
     }, [selectedLecture])
 
@@ -97,20 +104,20 @@ function ReviewRightSection({
                 >
                     {(() => {
                         switch (tab) {
-                            case "write":
+                            case ReviewWriteTab.WRITE:
                                 return (
                                     <WriteReviewsSubSection
                                         selectedLecture={selectedLecture}
                                     />
                                 )
-                            case "recentFeed":
+                            case ReviewWriteTab.RECENT_FEED:
                                 return <RecentFeedSubSection /> // 띠끈따끈 후기
-                            case "hallOfFameFeed":
+                            case ReviewWriteTab.HALL_OF_FAME_FEED:
                                 return <HallOfFameFeedSubSection /> // 명예의 전당
-                            case "liked":
+                            case ReviewWriteTab.LIKED:
                                 return <LikedReviewsSection />
                             default:
-                                return null
+                                return assertNever(tab)
                         }
                     })()}
                 </ReviewRightSectionInner>

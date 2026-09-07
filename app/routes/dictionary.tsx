@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react"
 
 import styled from "@emotion/styled"
+import { useTranslation } from "react-i18next"
 import { useSearchParams } from "react-router"
 
 import Modal from "@/common/components/Modal"
@@ -56,6 +57,7 @@ const CourseDetailSectionWrapper = styled(SectionWrapper)`
 
 export default function DictionaryPage() {
     const isTablet = useIsDevice("tablet")
+    const { t } = useTranslation()
     const [searchParams, setSearchParams] = useSearchParams()
 
     const [mobileModal, setMobileModal] = useState(false)
@@ -124,6 +126,7 @@ export default function DictionaryPage() {
             </CourseDetailSectionWrapper>
             {isTablet && (
                 <Modal
+                    ariaLabel={t("header.dictionary")}
                     isOpen={mobileModal}
                     onClose={closeMobileModal}
                     header={false}

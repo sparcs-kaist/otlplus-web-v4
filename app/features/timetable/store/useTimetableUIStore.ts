@@ -1,6 +1,7 @@
 import { create } from "zustand"
 
 import { SemesterEnum } from "@/common/enum/semesterEnum"
+import type { CustomBlock } from "@/common/schemas/customBlock"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimeBlock } from "@/common/schemas/timeblock"
 
@@ -24,9 +25,12 @@ interface TimetableUIState {
     year: number
     semesterEnum: SemesterEnum
     autoSelectedSemesterKeys: string[]
+    pendingMyTimetableSelection: boolean
 
     // 5. Flash State (잘라내기, undo 등 효과)
     flashLectureIds: number[] | null
+    selectedCustomBlock: CustomBlock | null
+    isCustomBlockSectionOpen: boolean
 
     // Actions
     setHoveredLectures: (
@@ -52,12 +56,21 @@ interface TimetableUIState {
         idOrUpdater: number | null | ((prev: number | null) => number | null),
     ) => void
     setCurrentTimetableName: (nameOrUpdater: string | ((prev: string) => string)) => void
+    resetTimetableSelection: () => void
     setYear: (yearOrUpdater: number | ((prev: number) => number)) => void
     setSemesterEnum: (
         semesterOrUpdater: SemesterEnum | ((prev: SemesterEnum) => SemesterEnum),
     ) => void
     markSemesterAutoSelected: (key: string) => void
     resetAutoSelectedSemesters: () => void
+    setPendingMyTimetableSelection: (pending: boolean) => void
+    setSelectedCustomBlock: (
+        blockOrUpdater:
+            | CustomBlock
+            | null
+            | ((prev: CustomBlock | null) => CustomBlock | null),
+    ) => void
+    setIsCustomBlockSectionOpen: (open: boolean) => void
 
     // Flash Action
     triggerFlash: (ids: number[]) => void
@@ -78,8 +91,11 @@ export const useTimetableUIStore = create<TimetableUIState>((set) => ({
     year: -1,
     semesterEnum: SemesterEnum.SPRING,
     autoSelectedSemesterKeys: [],
+    pendingMyTimetableSelection: false,
 
     flashLectureIds: null,
+    selectedCustomBlock: null,
+    isCustomBlockSectionOpen: false,
 
     // Actions
     setHoveredLectures: (val) =>
@@ -125,6 +141,16 @@ export const useTimetableUIStore = create<TimetableUIState>((set) => ({
             currentTimetableName:
                 typeof val === "function" ? val(state.currentTimetableName) : val,
         })),
+    resetTimetableSelection: () =>
+        set((state) =>
+            state.currentTimetableId === null &&
+            state.autoSelectedSemesterKeys.length === 0
+                ? state
+                : {
+                      currentTimetableId: null,
+                      autoSelectedSemesterKeys: [],
+                  },
+        ),
     setYear: (val) =>
         set((state) => ({
             year: typeof val === "function" ? val(state.year) : val,
@@ -136,7 +162,7 @@ export const useTimetableUIStore = create<TimetableUIState>((set) => ({
     markSemesterAutoSelected: (key) =>
         set((state) =>
             state.autoSelectedSemesterKeys.includes(key)
-                ? {}
+                ? state
                 : {
                       autoSelectedSemesterKeys: [...state.autoSelectedSemesterKeys, key],
                   },
@@ -144,9 +170,22 @@ export const useTimetableUIStore = create<TimetableUIState>((set) => ({
     resetAutoSelectedSemesters: () =>
         set((state) =>
             state.autoSelectedSemesterKeys.length === 0
-                ? {}
+                ? state
                 : { autoSelectedSemesterKeys: [] },
         ),
+    setPendingMyTimetableSelection: (pending) =>
+        set((state) =>
+            state.pendingMyTimetableSelection === pending
+                ? state
+                : { pendingMyTimetableSelection: pending },
+        ),
+    setSelectedCustomBlock: (val) =>
+        set((state) => ({
+            selectedCustomBlock:
+                typeof val === "function" ? val(state.selectedCustomBlock) : val,
+        })),
+    setIsCustomBlockSectionOpen: (isCustomBlockSectionOpen) =>
+        set({ isCustomBlockSectionOpen }),
 
     triggerFlash: (ids) => {
         set({ flashLectureIds: ids })

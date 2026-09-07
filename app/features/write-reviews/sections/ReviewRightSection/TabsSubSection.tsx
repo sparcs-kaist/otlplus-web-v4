@@ -14,7 +14,11 @@ import {
 } from "@mui/icons-material"
 import { useTranslation } from "react-i18next"
 
-import { type TabType, TabTypes } from "@/common/interface/ReviewWriteTabs"
+import {
+    REVIEW_WRITE_TABS,
+    ReviewWriteTab,
+    type ReviewWriteTabKey,
+} from "@/common/interface/ReviewWriteTabs"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
@@ -22,22 +26,22 @@ import useIsDevice from "@/utils/useIsDevice"
 import useUserStore from "@/utils/zustand/useUserStore"
 
 interface tabsSubSectionType {
-    tab: TabType
-    setTab: Dispatch<SetStateAction<TabType>>
+    tab: ReviewWriteTabKey
+    setTab: Dispatch<SetStateAction<ReviewWriteTabKey>>
 }
 
 const Icons = {
-    write: EditOutlined,
-    recentFeed: WhatshotOutlined,
-    hallOfFameFeed: EmojiEventsOutlined,
-    liked: FavoriteBorderOutlined,
+    [ReviewWriteTab.WRITE]: EditOutlined,
+    [ReviewWriteTab.RECENT_FEED]: WhatshotOutlined,
+    [ReviewWriteTab.HALL_OF_FAME_FEED]: EmojiEventsOutlined,
+    [ReviewWriteTab.LIKED]: FavoriteBorderOutlined,
 }
 
 const FilledIcons = {
-    write: Edit,
-    recentFeed: Whatshot,
-    hallOfFameFeed: EmojiEvents,
-    liked: Favorite,
+    [ReviewWriteTab.WRITE]: Edit,
+    [ReviewWriteTab.RECENT_FEED]: Whatshot,
+    [ReviewWriteTab.HALL_OF_FAME_FEED]: EmojiEvents,
+    [ReviewWriteTab.LIKED]: Favorite,
 }
 
 const TabSelectedStyle = ({ theme }: { theme: Theme }) => css`
@@ -70,11 +74,14 @@ function TabsSubSection({ tab, setTab }: tabsSubSectionType) {
 
     return (
         <FlexWrapper direction="row" gap={6}>
-            {TabTypes.map((tabType, idx) => {
+            {REVIEW_WRITE_TABS.map((tabType) => {
                 const ThisIcon = Icons[tabType]
                 const ThisIconFilled = FilledIcons[tabType]
 
-                if (status !== "success" && (tabType === "liked" || tabType === "write"))
+                if (
+                    status !== "success" &&
+                    (tabType === ReviewWriteTab.LIKED || tabType === ReviewWriteTab.WRITE)
+                )
                     return null
 
                 return (

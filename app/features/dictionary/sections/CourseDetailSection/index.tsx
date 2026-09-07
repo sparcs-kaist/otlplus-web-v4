@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react"
 
-import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import CloseIcon from "@mui/icons-material/Close"
+import { useTranslation } from "react-i18next"
 import { useSearchParams } from "react-router"
 
 import Credits from "@/common/components/Credits"
@@ -42,6 +42,34 @@ const CourseTitle = styled(FlexWrapper)`
     text-align: center;
 `
 
+const MobileTitleSpacer = styled.div`
+    width: 44px;
+    height: 44px;
+`
+
+const MobileCloseButton = styled.button`
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: ${({ theme }) => theme.colors.Text.default};
+    cursor: pointer;
+
+    &:hover {
+        background-color: ${({ theme }) => theme.colors.Background.Button.default};
+    }
+
+    &:focus-visible {
+        outline: 2px solid ${({ theme }) => theme.colors.Highlight.default};
+        outline-offset: 2px;
+    }
+`
+
 const Divider = styled.div`
     width: 100%;
     min-height: 1px;
@@ -59,7 +87,7 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
     isMobileModal = false,
     onMobileModalClose,
 }) => {
-    const theme = useTheme()
+    const { t } = useTranslation()
     const [searchParams, setSearchParams] = useSearchParams()
 
     const { query } = useAPI("GET", `/courses/${selectedCourseId}`, {
@@ -132,18 +160,21 @@ const CourseDetailSection: React.FC<CourseDetailSectionProps> = ({
                                 justify={isMobileModal ? "space-between" : "center"}
                                 style={{ width: "100%" }}
                             >
-                                {isMobileModal && <div style={{ width: 20 }}></div>}
+                                {isMobileModal && <MobileTitleSpacer />}
                                 <Typography type={"Bigger"} color={"Text.default"}>
                                     {query.data?.name}
                                 </Typography>
                                 {isMobileModal && (
-                                    <Icon
-                                        size={20}
+                                    <MobileCloseButton
+                                        type="button"
+                                        aria-label={t("common.search.close")}
+                                        title={t("common.search.close")}
                                         onClick={onMobileModalClose}
-                                        color={theme.colors.Text.default}
                                     >
-                                        <CloseIcon />
-                                    </Icon>
+                                        <Icon size={20}>
+                                            <CloseIcon />
+                                        </Icon>
+                                    </MobileCloseButton>
                                 )}
                             </FlexWrapper>
                             <Typography type={"Big"} color={"Text.default"}>

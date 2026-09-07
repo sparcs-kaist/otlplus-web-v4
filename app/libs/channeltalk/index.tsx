@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef } from "react"
 import * as ChannelService from "@channel.io/channel-web-sdk-loader"
 
 import { clientEnv } from "@/env"
+import logger from "@/utils/logger"
 import useUserStore from "@/utils/zustand/useUserStore"
 
 /**
@@ -22,6 +23,7 @@ import useUserStore from "@/utils/zustand/useUserStore"
 const ChannelTalkProvider = () => {
     const { user } = useUserStore()
     const pluginKey = clientEnv.VITE_CHANNELTALK_PLUGIN_KEY
+    const isChannelButtonHidden = clientEnv.VITE_CHANNELTALK_BUTTON_HIDDEN
     const isBootedRef = useRef(false)
 
     const bootChannelTalk = useCallback(() => {
@@ -31,17 +33,18 @@ const ChannelTalkProvider = () => {
 
         ChannelService.boot(
             {
+                hideChannelButtonOnBoot: isChannelButtonHidden,
                 pluginKey,
             },
             (error) => {
                 if (error) {
-                    console.error("[ChannelTalk] Boot failed:", error)
+                    logger.warn("ChannelTalk boot failed", error)
                 } else {
                     isBootedRef.current = true
                 }
             },
         )
-    }, [pluginKey])
+    }, [isChannelButtonHidden, pluginKey])
 
     // Load and boot the SDK once on mount
     useEffect(() => {

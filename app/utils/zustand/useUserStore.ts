@@ -1,8 +1,12 @@
 import { create } from "zustand"
 
-type User = {
+import type { Department } from "@/common/schemas/department"
+
+export type User = {
     id: number
     name: string
+    studentNumber?: number
+    majorDepartments?: readonly Department[]
 }
 
 export type UserStatus = "idle" | "loading" | "success"

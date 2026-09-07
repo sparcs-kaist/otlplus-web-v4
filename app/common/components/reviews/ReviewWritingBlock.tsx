@@ -14,6 +14,7 @@ import Typography from "@/common/primitives/Typography"
 import type { Professor } from "@/common/schemas/professor"
 import type { Review } from "@/common/schemas/review"
 import { trackEvent } from "@/libs/mixpanel"
+import { queryKeys } from "@/libs/query/queryKeys"
 import { useAPI } from "@/utils/api/useAPI"
 import professorName from "@/utils/professorName"
 import useUserStore from "@/utils/zustand/useUserStore"
@@ -73,39 +74,26 @@ function ReviewWritingBlock({
 
     const [myReview, setMyReview] = useState<Review | null>(null)
 
+    const invalidateReviewQueries = () => {
+        queryClient.invalidateQueries({ queryKey: [queryKeys.reviews] })
+        if (user) {
+            queryClient.invalidateQueries({
+                queryKey: [queryKeys.userLectures(user.id)],
+            })
+        }
+        queryClient.invalidateQueries({ queryKey: [queryKeys.writtenReviews] })
+        queryClient.invalidateQueries({ queryKey: [queryKeys.writableReview] })
+    }
+
     const { requestFunction: requestCreateFunction } = useAPI("POST", "/reviews", {
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ["/reviews"] })
-            queryClient.invalidateQueries({
-                queryKey: [`/users/${user?.id}/lectures`],
-            })
-            queryClient.invalidateQueries({
-                queryKey: ["/users/written-reviews"],
-            })
-            queryClient.invalidateQueries({
-                queryKey: ["/users/writable-review"],
-            })
-        },
+        onSuccess: invalidateReviewQueries,
     })
 
     const { requestFunction: requestEditFunction } = useAPI(
         "PUT",
         `/reviews/${myReview?.id}`,
         {
-            onSuccess: () => {
-                queryClient.invalidateQueries({
-                    queryKey: ["/reviews"],
-                })
-                queryClient.invalidateQueries({
-                    queryKey: [`/users/${user?.id}/lectures`],
-                })
-                queryClient.invalidateQueries({
-                    queryKey: ["/users/written-reviews"],
-                })
-                queryClient.invalidateQueries({
-                    queryKey: ["/users/writable-review"],
-                })
-            },
+            onSuccess: invalidateReviewQueries,
         },
     )
 

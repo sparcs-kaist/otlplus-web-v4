@@ -2,6 +2,7 @@ import { useEffect, useState } from "react"
 
 import styled from "@emotion/styled"
 import MenuIcon from "@mui/icons-material/Menu"
+import { useTranslation } from "react-i18next"
 
 import { type GETUserInfoResponse } from "@/api/users/info"
 import Icon from "@/common/primitives/Icon"
@@ -10,10 +11,12 @@ import AccountPageModal from "@/features/account/AccountPageModal"
 import DeveloperLoginModal from "@/features/account/DeveloperLoginModal"
 import { axiosClient } from "@/libs/axios"
 import { identifyUser } from "@/libs/mixpanel"
+import { queryKeys } from "@/libs/query/queryKeys"
 import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
 import { handleLogin } from "@/utils/handleLoginLogout"
 import { getLocalStorageItem } from "@/utils/localStorage"
+import { localStorageKeys } from "@/utils/storageKeys"
 import useIsDevice from "@/utils/useIsDevice"
 import useThemeStore from "@/utils/zustand/useThemeStore"
 import useUserStore from "@/utils/zustand/useUserStore"
@@ -21,6 +24,7 @@ import useUserStore from "@/utils/zustand/useUserStore"
 import Menu from "./Menu"
 import MobileSidebar from "./MobileSidebar"
 import Setting from "./Setting"
+import resolveUserInfo, { selectAuthenticatedUserInfo } from "./resolveUserInfo"
 
 const HeaderWrapper = styled.div`
     width: 100%;
@@ -47,31 +51,54 @@ const HeaderInner = styled.header`
     gap: 16px;
 `
 
-const MobileSidebarButtonWrapper = styled.div`
+const MobileSidebarButton = styled.button`
+    width: 44px;
+    height: 44px;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
     color: ${({ theme }) => theme.colors.Text.default};
+    cursor: pointer;
     display: none;
 
+    &:hover {
+        background-color: ${({ theme }) => theme.colors.Background.Button.default};
+    }
+
+    &:focus-visible {
+        outline: 2px solid ${({ theme }) => theme.colors.Highlight.default};
+        outline-offset: 2px;
+    }
+
     ${media.mobile} {
-        display: block;
+        display: flex;
     }
 `
 
 const Header: React.FC = () => {
     const isMobile = useIsDevice("mobile")
+    const { t } = useTranslation()
 
     const { displayedTheme } = useThemeStore()
-    const { setUser, clearUser } = useUserStore()
+    const { status: userStatus, setUser, clearUser } = useUserStore()
     const [enabled, setEnabled] = useState<boolean>(false)
 
     const [accountPageOpen, setAccountPageOpen] = useState<boolean>(false)
     const [developerLoginOpen, setDeveloperLoginOpen] = useState(false)
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState<boolean>(false)
     const [userInfo, setUserInfo] = useState<GETUserInfoResponse | null>(null)
+    const authenticatedUserInfo = selectAuthenticatedUserInfo(userStatus, userInfo)
 
-    const { query } = useAPI("GET", "/users/info", { enabled: enabled })
+    const { query } = useAPI("GET", queryKeys.userInfo, {
+        enabled,
+        staleTime: 0,
+    })
 
     const handleAccountButtonClick = () => {
-        if (userInfo === null) {
+        if (authenticatedUserInfo === null) {
             if (process.env.NODE_ENV === "development") {
                 setDeveloperLoginOpen(true)
             } else {
@@ -82,9 +109,14 @@ const Header: React.FC = () => {
         }
     }
 
+    const handleMobileAccountButtonClick = () => {
+        setMobileSidebarOpen(false)
+        handleAccountButtonClick()
+    }
+
     useEffect(() => {
         if (process.env.NODE_ENV === "development") {
-            const devStudentId = getLocalStorageItem("devStudentId")
+            const devStudentId = getLocalStorageItem(localStorageKeys.devStudentId)
             if (devStudentId) {
                 axiosClient.defaults.headers.common["X-AUTH-SID"] = devStudentId
             }
@@ -97,23 +129,44 @@ const Header: React.FC = () => {
     }, [])
 
     useEffect(() => {
-        if (query.isLoading || !enabled) return
-        if (query.data) {
-            setUserInfo(query.data)
-            setUser({ id: query.data.id, name: query.data.name })
+        const resolvedUserInfo = resolveUserInfo({
+            enabled,
+            isPending: query.isPending,
+            isError: query.isError,
+            error: query.error,
+            data: query.data,
+        })
+        if (resolvedUserInfo === undefined) return
+
+        if (resolvedUserInfo !== null) {
+            setUserInfo(resolvedUserInfo)
+            setUser({
+                id: resolvedUserInfo.id,
+                name: resolvedUserInfo.name,
+                studentNumber: resolvedUserInfo.studentNumber,
+                majorDepartments: resolvedUserInfo.majorDepartments,
+            })
             identifyUser({
-                id: query.data.id,
-                email: query.data.mail,
-                name: query.data.name,
-                studentNumber: query.data.studentNumber,
-                degree: query.data.degree,
+                id: resolvedUserInfo.id,
+                email: resolvedUserInfo.mail,
+                name: resolvedUserInfo.name,
+                studentNumber: resolvedUserInfo.studentNumber,
+                degree: resolvedUserInfo.degree,
             })
         } else {
             setUserInfo(null)
             clearUser()
             setEnabled(false)
         }
-    }, [query.data, query.isLoading, enabled])
+    }, [
+        clearUser,
+        enabled,
+        query.data,
+        query.error,
+        query.isError,
+        query.isPending,
+        setUser,
+    ])
 
     useEffect(() => {
         if (!isMobile) setMobileSidebarOpen(false)
@@ -127,9 +180,9 @@ const Header: React.FC = () => {
                     setDeveloperLoginModalOpen={setDeveloperLoginOpen}
                 />
             )}
-            {accountPageOpen && (
+            {accountPageOpen && authenticatedUserInfo && (
                 <AccountPageModal
-                    userInfo={userInfo}
+                    userInfo={authenticatedUserInfo}
                     accountPageOpen={accountPageOpen}
                     setAccountPageOpen={setAccountPageOpen}
                 />
@@ -139,23 +192,28 @@ const Header: React.FC = () => {
                 <Menu setMobileSidebarOpen={() => setMobileSidebarOpen(false)} />
                 <Setting
                     handleAccountButtonClick={handleAccountButtonClick}
-                    userName={userInfo ? userInfo.name : "Sign in"}
+                    userName={authenticatedUserInfo?.name ?? "Sign in"}
                     mobileSidebar={false}
                     isLoading={query.isLoading}
                 />
-                <MobileSidebarButtonWrapper onClick={() => setMobileSidebarOpen(true)}>
+                <MobileSidebarButton
+                    type="button"
+                    aria-label={t("header.openMenu")}
+                    title={t("header.openMenu")}
+                    onClick={() => setMobileSidebarOpen(true)}
+                >
                     <Icon size={18}>
                         <MenuIcon />
                     </Icon>
-                </MobileSidebarButtonWrapper>
+                </MobileSidebarButton>
             </HeaderInner>
             <MobileSidebar
                 setMobileSidebarOpen={setMobileSidebarOpen}
                 mobileSidebarOpen={mobileSidebarOpen}
                 sidebarHeader={
                     <Setting
-                        handleAccountButtonClick={handleAccountButtonClick}
-                        userName={userInfo ? userInfo.name : "Sign in"}
+                        handleAccountButtonClick={handleMobileAccountButtonClick}
+                        userName={authenticatedUserInfo?.name ?? "Sign in"}
                         mobileSidebar={true}
                         isLoading={query.isLoading}
                     />

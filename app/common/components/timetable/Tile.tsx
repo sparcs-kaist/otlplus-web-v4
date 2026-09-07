@@ -62,7 +62,7 @@ const HoverTileWrapper = styled(FlexWrapper)`
 `
 
 const HoverTileInner = styled(FlexWrapper)`
-    background: rgba(229, 76, 101, 0.4);
+    background: ${({ theme }) => theme.colors.Highlight.medium};
     border-radius: 4px;
 `
 
@@ -82,11 +82,11 @@ export const LectureTileHoverCss = (theme: Theme) => css`
     background: ${theme.colors.Highlight.default};
 
     .lecture-title {
-        color: #ffffff;
+        color: ${theme.colors.Text.onHighlight.default};
     }
 
     .lecture-info {
-        color: rgba(255, 255, 255, 0.5);
+        color: ${theme.colors.Text.onHighlight.muted};
     }
 
     .lecture-delete-wrapper {
@@ -117,7 +117,7 @@ const LectureTileWrapper = styled(FlexWrapper)<{
 
     [data-selected-lectures~="${({ lectureId }) => lectureId}"] & {
         transform: translateY(-2px);
-        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        box-shadow: ${({ theme }) => theme.elevation.raised};
     }
 
     [data-flash-lectures~="${({ lectureId }) => lectureId}"] & {
@@ -414,7 +414,7 @@ const OverflowTileInner = styled(FlexWrapper)<{ courseId: number; lectureId: num
 
     [data-selected-lectures~="${({ lectureId }) => lectureId}"] & {
         transform: translateY(-2px);
-        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        box-shadow: ${({ theme }) => theme.elevation.raised};
         opacity: 1;
     }
 

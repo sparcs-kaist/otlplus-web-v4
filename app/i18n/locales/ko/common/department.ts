@@ -19,5 +19,6 @@ export const department = {
     tsShort: "융인",
     ssShort: "반시공",
     bcsShort: "뇌인지",
+    aicShort: "AI컴",
     etcShort: "기타",
 }

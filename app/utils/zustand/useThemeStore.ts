@@ -4,6 +4,7 @@ import { create } from "zustand"
 
 import type { ThemeKeys } from "@/styles/themes"
 import { getLocalStorageItem, setLocalStorageItem } from "@/utils/localStorage"
+import { localStorageKeys } from "@/utils/storageKeys"
 
 export type ThemeKeysWithSystem = ThemeKeys | "system"
 
@@ -21,7 +22,8 @@ const resolveThemeSetting = (value: ThemeKeysWithSystem): ThemeKeys =>
     value === "system" ? getSystemTheme() : value
 
 const storedTheme =
-    (getLocalStorageItem("theme") as ThemeKeysWithSystem | null) ?? "system"
+    (getLocalStorageItem(localStorageKeys.theme) as ThemeKeysWithSystem | null) ??
+    "system"
 
 type ThemeState = {
     displayedTheme: ThemeKeys
@@ -36,7 +38,7 @@ const useThemeStoreBase = create<ThemeState>((set) => ({
     setTheme: (newTheme) => {
         const resolvedTheme = resolveThemeSetting(newTheme)
         if (typeof window !== "undefined") {
-            setLocalStorageItem("theme", newTheme)
+            setLocalStorageItem(localStorageKeys.theme, newTheme)
         }
         set({ themeSetting: newTheme, displayedTheme: resolvedTheme })
     },

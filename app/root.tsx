@@ -15,7 +15,9 @@ import {
 import Header from "@/common/components/guideline/Header"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import { clientEnv } from "@/env"
+import { DEFAULT_DOCUMENT_LANGUAGE } from "@/libs/i18n/resolveDocumentLanguage"
 import { initMixpanel } from "@/libs/mixpanel"
+import { colors } from "@/styles/themes/_base/variables/colors"
 import { useGoogleAnalytics } from "@/utils/googleAnalytics"
 
 import type { Route } from "./+types/root"
@@ -61,11 +63,11 @@ export const links: Route.LinksFunction = () => [
 
 export function Layout({ children }: { children: React.ReactNode }) {
     return (
-        <html lang="en">
+        <html lang={DEFAULT_DOCUMENT_LANGUAGE}>
             <head>
                 <meta charSet="utf-8" />
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
-                <meta name="theme-color" content="#F9F0F0" />
+                <meta name="theme-color" content={colors.Notice.background} />
                 <link
                     rel="stylesheet"
                     as="style"

@@ -19,5 +19,6 @@ export const department = {
     tsShort: "TS",
     ssShort: "SS",
     bcsShort: "BCS",
+    aicShort: "AIC",
     etcShort: "ETC",
 }

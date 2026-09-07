@@ -1,8 +1,9 @@
 import { clientEnv } from "@/env"
 import { axiosClient } from "@/libs/axios"
-import { resetUser, trackEvent } from "@/libs/mixpanel"
-import { clearQueryCache } from "@/libs/offline"
+import { trackEvent } from "@/libs/mixpanel"
+import { clearClientSession } from "@/utils/handleSessionExpired"
 import { removeLocalStorageItem } from "@/utils/localStorage"
+import { localStorageKeys } from "@/utils/storageKeys"
 
 export function handleLogin() {
     const next = window.location.pathname + window.location.search + window.location.hash
@@ -15,14 +16,13 @@ export function handleLogin() {
 
 export async function handleLogout() {
     await trackEvent("Sign Out")
-    resetUser()
-    await clearQueryCache()
+    await clearClientSession()
 
     if (process.env.NODE_ENV === "production") {
         location.href =
             clientEnv.VITE_APP_API_URL + `/session/logout?next=${window.location.origin}`
     } else {
-        removeLocalStorageItem("devStudentId")
+        removeLocalStorageItem(localStorageKeys.devStudentId)
         delete axiosClient.defaults.headers.common["X-AUTH-SID"]
         delete axiosClient.defaults.headers.common["X-SID-AUTH-TOKEN"]
         location.reload()

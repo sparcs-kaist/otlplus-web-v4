@@ -201,6 +201,12 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
     const resetAutoSelectedSemesters = useTimetableUIStore(
         (s) => s.resetAutoSelectedSemesters,
     )
+    const pendingMyTimetableSelection = useTimetableUIStore(
+        (s) => s.pendingMyTimetableSelection,
+    )
+    const setPendingMyTimetableSelection = useTimetableUIStore(
+        (s) => s.setPendingMyTimetableSelection,
+    )
     const { requestFunction: addTimetable } = useAPI("POST", "/timetables", {
         onSuccess: (data) => {
             timetables.refetch()
@@ -262,11 +268,19 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
         }
 
         const semesterKey = `${year}-${semester}`
+        if (pendingMyTimetableSelection) {
+            if (year < 0) return
+            markSemesterAutoSelected(semesterKey)
+            setPendingMyTimetableSelection(false)
+            return
+        }
+
         const autoSelection = getTimetableAutoSelection({
             status,
             currentTimetableId,
             semesterKey,
             autoSelectedSemesterKeys,
+            preserveMyTimetableSelection: false,
             timetables: semesterTimetables,
         })
         if (autoSelection == null) return
@@ -286,6 +300,8 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
         autoSelectedSemesterKeys,
         markSemesterAutoSelected,
         resetAutoSelectedSemesters,
+        pendingMyTimetableSelection,
+        setPendingMyTimetableSelection,
         setCurrentTimetableId,
     ])
 
@@ -295,7 +311,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                 ? t("timetable.myTimetable")
                 : localTimetables.find((t) => t.id === currentTimetableId)?.name || "",
         )
-    }, [currentTimetableId])
+    }, [currentTimetableId, localTimetables, setCurrentTimetableName, t])
 
     const handleDragStart = (event: DragStartEvent) => {
         setActiveId(event.active.id as number)
@@ -345,7 +361,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                     key="my-timetable"
                     type={currentTimetableId == null ? "selected" : "default"}
                     onClick={() => {
-                        markSemesterAutoSelected(`${year}-${semester}`)
+                        setPendingMyTimetableSelection(true)
                         setCurrentTimetableId(null)
                     }}
                 >

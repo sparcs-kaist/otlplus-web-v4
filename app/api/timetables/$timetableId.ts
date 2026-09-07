@@ -1,5 +1,6 @@
 import { z } from "zod"
 
+import { LectureActionEnum } from "@/common/enum/lectureActionEnum"
 import { LectureSchema } from "@/common/schemas/lecture"
 
 //GET /api/timetables/:timetableId
@@ -14,7 +15,7 @@ export type GETTimetableByIdResponse = z.infer<typeof GETResponse>
 // PATCH /api/timetables/:timetableId
 export const PATCHRequest = z.object({
     lectureId: z.number().int(),
-    action: z.enum(["add", "delete"]),
+    action: z.enum(LectureActionEnum),
 })
 
 export const PATCHResponse = LectureSchema

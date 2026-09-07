@@ -6,6 +6,7 @@ import { Link } from "react-router-dom"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
+import { useFeatureFlag } from "@/libs/featureFlags"
 import { media } from "@/styles/themes/media"
 import useIsDevice from "@/utils/useIsDevice"
 import useBackendStatusStore from "@/utils/zustand/useBackendStatusStore"
@@ -72,7 +73,7 @@ const DisabledLink = styled.span`
         white-space: nowrap;
         z-index: 1000;
         color: ${({ theme }) => theme.colors.Text.placeholder};
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        box-shadow: ${({ theme }) => theme.elevation.dropdown};
     }
 `
 
@@ -93,6 +94,7 @@ const Menu: React.FC<MenuProps> = ({ setMobileSidebarOpen }) => {
     const isMobile = useIsDevice("mobile")
 
     const isOfflineMode = !isBackendReachable && status === "success"
+    const { enabled: plannerEnabled } = useFeatureFlag("planner-enabled")
 
     const renderNavLink = (path: string, label: string) => {
         if (isOfflineMode && path !== "/" && path !== "/timetable") {
@@ -120,6 +122,7 @@ const Menu: React.FC<MenuProps> = ({ setMobileSidebarOpen }) => {
                 {renderNavLink("/write-reviews", t("header.writeReviews"))}
                 {renderNavLink("/timetable", t("header.timetable"))}
                 {renderNavLink("/friends", t("header.friends"))}
+                {plannerEnabled && renderNavLink("/planner", t("header.planner"))}
                 {isOfflineMode && (
                     <OfflineIndicator direction="row" align="center" gap={6}>
                         <Icon size={14} color="inherit">

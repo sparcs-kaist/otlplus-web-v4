@@ -11,6 +11,7 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import TextInputArea from "@/common/primitives/TextInputArea"
 import Typography from "@/common/primitives/Typography"
 import { trackEvent } from "@/libs/mixpanel"
+import { queryKeys } from "@/libs/query/queryKeys"
 import { useAPI } from "@/utils/api/useAPI"
 import useUserStore from "@/utils/zustand/useUserStore"
 
@@ -75,8 +76,12 @@ function ReviewSection() {
             speech: reviewSpeech,
             source: "Home",
         })
-        queryClient.invalidateQueries({ queryKey: [`/users/written-reviews`] })
-        queryClient.invalidateQueries({ queryKey: [`/users/${user?.id}/lectures`] })
+        queryClient.invalidateQueries({ queryKey: [queryKeys.writtenReviews] })
+        if (user) {
+            queryClient.invalidateQueries({
+                queryKey: [queryKeys.userLectures(user.id)],
+            })
+        }
     }
 
     if (!query.data) {
