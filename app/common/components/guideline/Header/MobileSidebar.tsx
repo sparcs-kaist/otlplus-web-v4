@@ -156,6 +156,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
                                     t("header.writeReviews"),
                                 )}
                                 {renderNavLink("/timetable", t("header.timetable"))}
+                                {renderNavLink("/friends", t("header.friends"))}
                             </FlexWrapper>
                             {isOfflineMode && (
                                 <OfflineBanner

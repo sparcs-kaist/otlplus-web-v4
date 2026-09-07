@@ -2,6 +2,7 @@ import { account } from "./account"
 import { common } from "./common"
 import { credits } from "./credits"
 import { dictionary } from "./dictionary"
+import { friends } from "./friends"
 import { header } from "./header"
 import { main } from "./main"
 import { timetable } from "./timetable"
@@ -13,6 +14,7 @@ export const i18nEn = {
     credits,
     dictionary,
     header,
+    friends,
     main,
     writeReviews,
     timetable,

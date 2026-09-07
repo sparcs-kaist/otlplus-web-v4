@@ -5,6 +5,10 @@ import { clearQueryCache } from "@/libs/offline"
 import { removeLocalStorageItem } from "@/utils/localStorage"
 
 export function handleLogin() {
+    const next = window.location.pathname + window.location.search + window.location.hash
+    if (next.startsWith("/") && !next.startsWith("//") && next !== "/login/success") {
+        sessionStorage.setItem("loginNext", next)
+    }
     document.cookie = "loginFromBeta=true; Domain=.otl.sparcs.org; Path=/"
     location.href = clientEnv.VITE_APP_API_URL + `/session/login`
 }
