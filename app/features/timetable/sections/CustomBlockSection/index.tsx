@@ -51,7 +51,7 @@ function CustomBlockSection({ customBlocks }: { customBlocks: CustomBlock[] }) {
 
     const refreshAndClose = useCallback(() => {
         void queryClient.invalidateQueries({
-            queryKey: ["/api/v2", `/timetables/${currentTimetableId}/custom-blocks`],
+            queryKey: [`/timetables/${currentTimetableId}/custom-blocks`],
         })
         closeEditor()
     }, [closeEditor, currentTimetableId, queryClient])

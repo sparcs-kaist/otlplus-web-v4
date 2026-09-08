@@ -250,9 +250,9 @@ function CourseListSection({
                         </SortWrapper>
                     </FlexWrapper>
                     <CourseBlockWrapper direction="column" gap={12} ref={scrollRef}>
-                        {searchResult.courses.map((course, idx) => (
+                        {searchResult.courses.map((course) => (
                             <CourseBlock
-                                key={idx}
+                                key={course.id}
                                 course={course}
                                 isSelected={selectedCourseId == course.id}
                                 selectCourseId={setSelectedCourseId}

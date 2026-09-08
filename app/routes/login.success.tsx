@@ -40,7 +40,7 @@ export default function LoginSuccessPage() {
                 qc.removeQueries({ queryKey: [queryKeys.timetables] })
 
                 await qc.prefetchQuery({
-                    queryKey: [queryKeys.userInfo, null, lang],
+                    queryKey: [queryKeys.userInfo, null, lang, "/api/v2"],
                     queryFn: async () => {
                         const { data } = await axiosClient.get("/api/v2/users/info", {
                             headers: { "Cache-Control": "no-cache" },
@@ -53,6 +53,7 @@ export default function LoginSuccessPage() {
                     queryKeys.userInfo,
                     null,
                     lang,
+                    "/api/v2",
                 ])
                 if (userInfo) {
                     identifyUser({
@@ -88,6 +89,7 @@ export default function LoginSuccessPage() {
                                         semester: latestSemester.semester,
                                     },
                                     lang,
+                                    "/api/v2",
                                 ],
                                 queryFn: async () => {
                                     const { data } = await axiosClient.get(

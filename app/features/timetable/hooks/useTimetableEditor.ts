@@ -153,7 +153,9 @@ export function useTimetableEditor({
             await queryClient.cancelQueries({
                 queryKey: [timetablePath],
             })
-            const previousTimetable = queryClient.getQueryData([timetablePath])
+            const previousTimetables = queryClient.getQueriesData({
+                queryKey: [timetablePath],
+            })
 
             if (variables.lecture) {
                 queryClient.setQueriesData({ queryKey: [timetablePath] }, (old: any) => {
@@ -165,13 +167,14 @@ export function useTimetableEditor({
                 })
             }
 
-            return { previousTimetable }
+            return { previousTimetables }
         },
         onError: (err, variables, context: any) => {
-            queryClient.setQueriesData(
-                { queryKey: [timetablePath] },
-                context?.previousTimetable,
-            )
+            if (context?.previousTimetables) {
+                context.previousTimetables.forEach(([queryKey, data]: any) => {
+                    queryClient.setQueryData(queryKey, data)
+                })
+            }
         },
         onSettled: debounceInvalidate,
     })
@@ -181,7 +184,9 @@ export function useTimetableEditor({
             await queryClient.cancelQueries({
                 queryKey: [timetablePath],
             })
-            const previousTimetable = queryClient.getQueryData([timetablePath])
+            const previousTimetables = queryClient.getQueriesData({
+                queryKey: [timetablePath],
+            })
 
             queryClient.setQueriesData(
                 { queryKey: [timetablePath] },
@@ -196,13 +201,14 @@ export function useTimetableEditor({
                 },
             )
 
-            return { previousTimetable }
+            return { previousTimetables }
         },
         onError: (err, variables, context: any) => {
-            queryClient.setQueriesData(
-                { queryKey: [timetablePath] },
-                context?.previousTimetable,
-            )
+            if (context?.previousTimetables) {
+                context.previousTimetables.forEach(([queryKey, data]: any) => {
+                    queryClient.setQueryData(queryKey, data)
+                })
+            }
         },
         onSettled: debounceInvalidate,
     })
