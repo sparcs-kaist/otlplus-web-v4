@@ -84,7 +84,7 @@ export function useAPI<
         const retry = (ops as UseAPIQueryOptions<Res>).retry ?? 1
         const [params, setParams] = useState<Req>(null as Req)
         const query = useQuery<Res>({
-            queryKey: [apiPrefix, apiPath ?? path, params, i18n.resolvedLanguage],
+            queryKey: [apiPath ?? path, params, i18n.resolvedLanguage, apiPrefix],
             queryFn: async () => {
                 const { data } = await axiosClient.request<Res>({
                     method,
