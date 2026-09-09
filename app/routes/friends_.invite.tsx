@@ -8,6 +8,7 @@ import { useLocation, useNavigate } from "react-router-dom"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import FriendLoginButton from "@/features/friends/FriendLoginButton"
+import { invalidateFriendQueries } from "@/features/friends/friendQueries"
 import { useAPI } from "@/utils/api/useAPI"
 import useUserStore from "@/utils/zustand/useUserStore"
 
@@ -59,10 +60,7 @@ export default function FriendInvitePage() {
     const acceptingToken = useRef<string | null>(null)
     const { mutation, requestFunction } = useAPI("POST", "/friends/invites/accept", {
         onSuccess: async ({ friend }) => {
-            await queryClient.invalidateQueries({
-                queryKey: ["/api/v2", "/friends"],
-                refetchType: "all",
-            })
+            await invalidateFriendQueries(queryClient)
             navigate(`/friends?friendId=${friend.id}`, {
                 replace: true,
                 state: { friendAddedName: friend.name },

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 import styled from "@emotion/styled"
 import DeleteIcon from "@mui/icons-material/Delete"
@@ -23,6 +23,10 @@ import type { Lecture } from "@/common/schemas/lecture"
 import FriendInviteModal from "@/features/friends/FriendInviteModal"
 import FriendLectureDetail from "@/features/friends/FriendLectureDetail"
 import FriendLoginButton from "@/features/friends/FriendLoginButton"
+import {
+    invalidateFriendQueries,
+    removeFriendTimetableQueries,
+} from "@/features/friends/friendQueries"
 import SemesterButton from "@/features/timetable/sections/TabsRowSubSection/SemesterButton"
 import TabButton from "@/features/timetable/sections/TabsRowSubSection/TabButton"
 import { media } from "@/styles/themes/media"
@@ -190,6 +194,12 @@ const RowIconButton = styled.button`
     &:hover {
         color: ${({ theme }) => theme.colors.Highlight.default};
     }
+
+    ${media.tablet} {
+        width: 44px;
+        height: 44px;
+        flex-shrink: 0;
+    }
 `
 
 const InviteButton = styled.button`
@@ -224,21 +234,42 @@ const TimetableGrid = styled.div`
 
 const MobileOnly = styled.div`
     display: none;
-    min-width: 0;
-    max-width: 100%;
-
-    & > div {
-        max-width: 100%;
-    }
-
-    & > div > div {
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
+    flex-shrink: 0;
+    gap: 8px;
+    margin-bottom: 8px;
 
     ${media.tablet} {
-        display: block;
+        display: flex;
     }
+`
+
+const MobileAction = styled.button`
+    min-height: 44px;
+    min-width: 0;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border: 1px solid ${({ theme }) => theme.colors.Line.default};
+    border-radius: 8px;
+    background: ${({ theme }) => theme.colors.Background.Button.default};
+    color: ${({ theme }) => theme.colors.Text.default};
+    font: inherit;
+    cursor: pointer;
+
+    &:focus-visible {
+        outline: 2px solid ${({ theme }) => theme.colors.Highlight.default};
+        outline-offset: 2px;
+    }
+`
+
+const LectureChoice = styled(MobileAction)`
+    flex: none;
+    width: 100%;
+    justify-content: flex-start;
+    text-align: left;
 `
 
 const Empty = styled(FlexWrapper)`
@@ -265,8 +296,7 @@ function FriendRow({ friend, selected, onSelect, onDelete }: FriendRowProps) {
         "PATCH",
         `/friends/${friend.id}/favorite`,
         {
-            onSuccess: () =>
-                queryClient.invalidateQueries({ queryKey: ["/api/v2", "/friends"] }),
+            onSuccess: () => invalidateFriendQueries(queryClient),
         },
     )
 
@@ -418,11 +448,16 @@ export default function FriendsPage() {
     const [selectedLecture, setSelectedLecture] = useState<Lecture | null>(null)
     const [friendListOpen, setFriendListOpen] = useState(false)
     const [detailOpen, setDetailOpen] = useState(false)
+    const detailActionRef = useRef<HTMLButtonElement>(null)
     const [inviteOpen, setInviteOpen] = useState(false)
     const [deletingFriend, setDeletingFriend] = useState<Friend | null>(null)
     const [addedFriendName, setAddedFriendName] = useState<string | null>(
         (location.state as { friendAddedName?: string } | null)?.friendAddedName ?? null,
     )
+
+    useEffect(() => {
+        if (isTablet && detailOpen) detailActionRef.current?.focus()
+    }, [isTablet, detailOpen, selectedLecture])
 
     const { query: friendsQuery } = useAPI("GET", "/friends", {
         enabled: status === "success",
@@ -486,20 +521,10 @@ export default function FriendsPage() {
         {
             onSuccess: () => {
                 if (deletingFriend?.id === selectedFriendId) setSearchParams({})
-                queryClient.removeQueries({
-                    predicate: ({ queryKey }) =>
-                        queryKey[0] === "/api/v2" &&
-                        typeof queryKey[1] === "string" &&
-                        queryKey[1].startsWith(`/friends/${deletingFriend?.id}/`),
-                })
+                if (deletingFriend)
+                    removeFriendTimetableQueries(queryClient, deletingFriend.id)
                 setDeletingFriend(null)
-                queryClient.invalidateQueries({
-                    predicate: ({ queryKey }) =>
-                        queryKey[0] === "/api/v2" &&
-                        typeof queryKey[1] === "string" &&
-                        (queryKey[1] === "/friends" ||
-                            queryKey[1].startsWith("/friends/lectures/")),
-                })
+                invalidateFriendQueries(queryClient)
             },
         },
     )
@@ -587,33 +612,48 @@ export default function FriendsPage() {
     return (
         <Page>
             <Layout>
-                <SidePanel>
-                    <FriendListContent
-                        friends={friendsQuery.data?.friends ?? []}
-                        selectedFriendId={selectedFriendId}
-                        onSelect={handleSelectFriend}
-                        onDelete={setDeletingFriend}
-                        onInvite={() => setInviteOpen(true)}
-                    />
-                </SidePanel>
+                {!isTablet && (
+                    <SidePanel>
+                        <FriendListContent
+                            friends={friendsQuery.data?.friends ?? []}
+                            selectedFriendId={selectedFriendId}
+                            onSelect={handleSelectFriend}
+                            onDelete={setDeletingFriend}
+                            onInvite={() => setInviteOpen(true)}
+                        />
+                    </SidePanel>
+                )}
                 <TimetablePanel>
+                    <MobileOnly>
+                        <MobileAction
+                            type="button"
+                            aria-haspopup="dialog"
+                            aria-expanded={friendListOpen}
+                            onClick={() => setFriendListOpen(true)}
+                        >
+                            <Icon size={18}>
+                                <GroupIcon />
+                            </Icon>
+                            {t("friends.selectFriend")}
+                        </MobileAction>
+                        <MobileAction
+                            type="button"
+                            aria-haspopup="dialog"
+                            aria-expanded={detailOpen}
+                            onClick={() => setDetailOpen(true)}
+                        >
+                            {t("friends.viewOverlaps")}
+                        </MobileAction>
+                    </MobileOnly>
                     <TimetableHeader
                         direction="row"
                         gap={8}
                         align="center"
                         justify="space-between"
                     >
-                        <MobileOnly>
-                            <Button onClick={() => setFriendListOpen(true)}>
-                                <Icon size={16}>
-                                    <GroupIcon />
-                                </Icon>
-                                {selectedFriend?.name ??
-                                    t("friends.friendList", {
-                                        count: friendsQuery.data?.friends.length ?? 0,
-                                    })}
-                            </Button>
-                        </MobileOnly>
+                        <Typography type="NormalBold" color="Text.default">
+                            {selectedFriend?.name ?? t("friends.myTimetable")}
+                        </Typography>
                         <SemesterButton
                             year={year}
                             semester={semester}
@@ -667,13 +707,15 @@ export default function FriendsPage() {
                         />
                     </TimetableGrid>
                 </TimetablePanel>
-                <DetailPanel>
-                    <FriendLectureDetail lecture={selectedLecture} />
-                </DetailPanel>
+                {!isTablet && (
+                    <DetailPanel>
+                        <FriendLectureDetail lecture={selectedLecture} />
+                    </DetailPanel>
+                )}
             </Layout>
 
             <Modal
-                isOpen={friendListOpen}
+                isOpen={isTablet && friendListOpen}
                 onClose={() => setFriendListOpen(false)}
                 title={t("friends.title")}
                 fullScreen
@@ -693,12 +735,51 @@ export default function FriendsPage() {
                 />
             </Modal>
             <Modal
-                isOpen={detailOpen}
+                isOpen={isTablet && detailOpen}
                 onClose={() => setDetailOpen(false)}
-                title={selectedLecture?.name ?? ""}
+                title={t("friends.viewOverlaps")}
                 fullScreen
             >
-                <FriendLectureDetail lecture={selectedLecture} />
+                {selectedLecture ? (
+                    <>
+                        <LectureChoice
+                            ref={detailActionRef}
+                            type="button"
+                            onClick={() => setSelectedLecture(null)}
+                        >
+                            {t("friends.chooseAnotherLecture")}
+                        </LectureChoice>
+                        <FriendLectureDetail lecture={selectedLecture} />
+                    </>
+                ) : (
+                    <FlexWrapper direction="column" gap={8} align="stretch">
+                        <Typography type="Normal" color="Text.default">
+                            {t("friends.chooseLecture")}
+                        </Typography>
+                        {lectureQuery.isPending ? (
+                            <Typography role="status">
+                                {t("friends.loadingLectures")}
+                            </Typography>
+                        ) : lectureQuery.isError ? (
+                            <Typography role="alert">{t("friends.loadError")}</Typography>
+                        ) : lectures.length === 0 ? (
+                            <Typography>{t("friends.noLectures")}</Typography>
+                        ) : (
+                            lectures.map((lecture, index) => (
+                                <LectureChoice
+                                    key={lecture.id}
+                                    ref={index === 0 ? detailActionRef : undefined}
+                                    type="button"
+                                    onClick={() => setSelectedLecture(lecture)}
+                                >
+                                    {lecture.name}
+                                    {lecture.subtitle}{" "}
+                                    {lecture.classNo && `(${lecture.classNo})`}
+                                </LectureChoice>
+                            ))
+                        )}
+                    </FlexWrapper>
+                )}
             </Modal>
             <FriendInviteModal
                 isOpen={inviteOpen}

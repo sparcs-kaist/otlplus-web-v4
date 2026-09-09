@@ -86,28 +86,31 @@ export default function FriendLectureDetail({ lecture }: { lecture: Lecture | nu
                     {t("header.dictionary")}
                 </StyledLink>
             </FlexWrapper>
-            <LectureInfoSubsection selectedLecture={lecture} />
-            {query.isError && (
+            {query.isPending ? (
+                <Typography type="Small" color="Text.placeholder" role="status">
+                    {t("friends.loadingOverlaps")}
+                </Typography>
+            ) : query.isError ? (
                 <Typography type="Small" color="Highlight.default" role="alert">
                     {t("friends.loadError")}
                 </Typography>
+            ) : (
+                <>
+                    <FriendGroup
+                        title={t("friends.sameLecture")}
+                        friends={query.data?.sameLecture ?? []}
+                    />
+                    <FriendGroup
+                        title={t("friends.sameCourseDifferentSection")}
+                        friends={query.data?.sameCourseDifferentSection ?? []}
+                    />
+                    <FriendGroup
+                        title={t("friends.previousSemesterSameProfessor")}
+                        friends={query.data?.previousSemesterSameProfessor ?? []}
+                    />
+                </>
             )}
-            <FriendGroup
-                title={t("friends.sameLecture")}
-                friends={query.isError ? [] : (query.data?.sameLecture ?? [])}
-            />
-            <FriendGroup
-                title={t("friends.sameCourseDifferentSection")}
-                friends={
-                    query.isError ? [] : (query.data?.sameCourseDifferentSection ?? [])
-                }
-            />
-            <FriendGroup
-                title={t("friends.previousSemesterSameProfessor")}
-                friends={
-                    query.isError ? [] : (query.data?.previousSemesterSameProfessor ?? [])
-                }
-            />
+            <LectureInfoSubsection selectedLecture={lecture} />
         </Detail>
     )
 }
