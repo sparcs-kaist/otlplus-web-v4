@@ -1,6 +1,13 @@
 export const friends = {
     title: "Friends' Timetables",
     friendList: "Friends ({{count}})",
+    selectFriend: "Choose friend",
+    viewOverlaps: "Classmates",
+    chooseLecture: "Choose a lecture to see classmates.",
+    chooseAnotherLecture: "Choose another lecture",
+    loadingLectures: "Loading timetable…",
+    noLectures: "This timetable has no lectures. Choose another timetable.",
+    loadingOverlaps: "Loading classmates…",
     myTimetable: "My Timetable",
     searchPlaceholder: "Search friends",
     noFriends: "You don't have any timetable friends yet.",
