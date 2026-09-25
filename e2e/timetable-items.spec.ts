@@ -47,7 +47,7 @@ const lecture: Lecture = {
     })),
 }
 
-async function setup(page: Page) {
+async function setup(page: Page, initialHomeId: number | null = null) {
     const tables = new Map<number, TimetableItem[]>([
         [
             1,
@@ -68,7 +68,7 @@ async function setup(page: Page) {
         ],
     ])
     let nextBlockId = 20
-    let homeId: number | null = null
+    let homeId = initialHomeId
     const cloneRequests: unknown[] = []
     const home = () => ({
         source: homeId === null ? "enrolled" : "saved",
@@ -237,34 +237,43 @@ test("mixed selection deletes whole items and undo remaps recreated blocks", asy
     await expect(page.locator(".block-title", { hasText: "Study time" })).toBeVisible()
 })
 
-test("home saves a selected timetable with blocks and falls back to enrolled", async ({
+test("home shows enrolled lectures without a saved timetable selector", async ({
     page,
 }) => {
-    const state = await setup(page)
-    const custom = state.tables.get(1)!.find((item) => item.kind === "custom")!
-    if (custom.kind === "custom")
-        custom.data.times = [
-            { day: custom.data.day, begin: custom.data.begin, end: custom.data.end },
-            { day: 4, begin: 720, end: 780 },
-        ]
-    await Promise.all([
-        page.waitForResponse(/\/api\/v2\/timetables\/home(?:\?|$)/),
-        page.goto("/"),
-    ])
-    const selector = page.getByRole("combobox", {
-        name: /Timetable shown on home|홈에 표시할 시간표/,
+    const state = await setup(page, 1)
+    const requestedPaths: string[] = []
+    page.on("request", (request) => {
+        requestedPaths.push(new URL(request.url()).pathname)
     })
-    await expect(selector).toBeEnabled()
-    await selector.selectOption("1")
-    await expect(page.locator(".block-title", { hasText: "Study time" })).toHaveCount(2)
+
+    for (const viewport of [
+        { width: 1280, height: 900 },
+        { width: 390, height: 844 },
+    ]) {
+        await page.setViewportSize(viewport)
+        await Promise.all([
+            page.waitForResponse(/\/api\/v2\/timetables\/my-timetable(?:\?|$)/),
+            page.goto("/"),
+        ])
+        await expect(
+            page.locator(".lecture-title", { hasText: "Algorithms" }),
+        ).toHaveCount(2)
+        await expect(
+            page.getByRole("combobox", {
+                name: /Timetable shown on home|홈에 표시할 시간표/,
+            }),
+        ).toHaveCount(0)
+        await expect(page.locator(".block-title")).toHaveCount(0)
+        await expect(page.locator(".lecture-delete-wrapper")).toHaveCount(0)
+        await page.reload()
+        await expect(
+            page.locator(".lecture-title", { hasText: "Algorithms" }),
+        ).toHaveCount(2)
+    }
+    expect(requestedPaths).toContain("/api/v2/timetables/my-timetable")
+    expect(requestedPaths).not.toContain("/api/v2/timetables/home")
+    expect(requestedPaths).not.toContain("/api/v2/timetables")
     expect(state.getHomeId()).toBe(1)
-    await page.reload()
-    await expect(selector).toHaveValue("1")
-    await expect(page.locator(".block-title", { hasText: "Study time" })).toHaveCount(2)
-    await selector.selectOption("")
-    await expect(page.locator(".block-title")).toHaveCount(0)
-    await expect(page.locator(".lecture-title", { hasText: "Algorithms" })).toHaveCount(2)
-    expect(state.getHomeId()).toBeNull()
 })
 
 test("keeps zero-time lectures and off-grid blocks visible as separate items", async ({
@@ -457,21 +466,6 @@ for (const theme of ["light", "dark"] as const) {
             3,
         )
         expect(state.tables.get(1)).toHaveLength(3)
-
-        await page.goto("/")
-        await page
-            .getByRole("combobox", { name: /Timetable shown on home|홈에 표시할 시간표/ })
-            .selectOption("1")
-        await expect(page.locator(".block-title", { hasText: "Study time" })).toHaveCount(
-            3,
-        )
-        await page.locator(".custom-block-tile").first().hover({ force: true })
-        await expect(
-            page.getByRole("button", {
-                name: /^Delete custom block:/,
-                includeHidden: true,
-            }),
-        ).toHaveCount(0)
     })
 }
 

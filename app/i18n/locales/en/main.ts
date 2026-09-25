@@ -1,10 +1,5 @@
 export const main = {
     hisTimeTable: "<name>{{name}}</name><space/><normal>'s Timetable</normal>",
-    homeTimetable: {
-        label: "Timetable shown on home",
-        enrolled: "Enrolled timetable",
-        error: "Could not load the timetable or save your selection. Please try again.",
-    },
     schedule: {
         title: "Due to {{content}}",
         link: "Go to Student Portal",
