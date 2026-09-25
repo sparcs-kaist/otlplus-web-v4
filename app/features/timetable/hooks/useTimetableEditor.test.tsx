@@ -218,6 +218,7 @@ it("remaps recreated custom IDs through older history and the source clipboard",
                 day: 1,
                 begin: 600,
                 end: 660,
+                times: [{ day: 1, begin: 600, end: 660 }],
             },
         },
     ])
@@ -233,7 +234,74 @@ it("remaps recreated custom IDs through older history and the source clipboard",
     })
     expect(useTimetableUIStore.getState().clipboard?.items[0]?.data.id).toBe(102)
     expect(result.current.query.data?.timetableItems).toEqual([
-        { kind: "custom", data: { ...block.data, id: 102, place: "Edited" } },
+        {
+            kind: "custom",
+            data: {
+                ...block.data,
+                id: 102,
+                place: "Edited",
+                times: [{ day: 1, begin: 600, end: 660 }],
+            },
+        },
+    ])
+})
+
+it("keeps every time slot under one ID through updates, deletion, undo and clipboard remapping", async () => {
+    const { result, writes } = await setup([block])
+    const times = [
+        { day: 1, begin: 600, end: 660 },
+        { day: 1, begin: 780, end: 840 },
+        { day: 5, begin: 1380, end: 1440 },
+    ]
+    await act(async () => {
+        expect(
+            await result.current.editor.updateCustomBlock(10, {
+                block_name: "Study",
+                place: "Original",
+                ...times[0]!,
+                times,
+            }),
+        ).toBe(true)
+    })
+    expect(writes.at(-1)?.changes).toEqual([
+        expect.objectContaining({
+            op: "update",
+            id: 10,
+            data: expect.objectContaining({ times }),
+        }),
+    ])
+    const multiTimeBlock = result.current.query.data!.timetableItems[0]!
+    expect(result.current.query.data!.timetableItems).toHaveLength(1)
+    useTimetableUIStore
+        .getState()
+        .setClipboard({ sourceKey: "1-2026-1", items: [multiTimeBlock] })
+    await act(async () => {
+        await result.current.editor.removeItems([multiTimeBlock])
+    })
+    expect(writes.at(-1)?.changes).toEqual([{ op: "remove", kind: "custom", id: 10 }])
+    await act(async () => {
+        await result.current.editor.undo()
+    })
+    expect(result.current.query.data!.timetableItems).toEqual([
+        { kind: "custom", data: { ...multiTimeBlock.data, id: 101 } },
+    ])
+    expect(useTimetableUIStore.getState().clipboard?.items).toEqual([
+        { kind: "custom", data: { ...multiTimeBlock.data, id: 101 } },
+    ])
+    await act(async () => {
+        await result.current.editor.undo()
+    })
+    expect(writes.at(-1)?.changes).toEqual([
+        expect.objectContaining({
+            id: 101,
+            data: expect.objectContaining({ times: [times[0]] }),
+        }),
+    ])
+    await act(async () => {
+        await result.current.editor.redo()
+    })
+    expect(result.current.query.data!.timetableItems).toEqual([
+        { kind: "custom", data: { ...multiTimeBlock.data, id: 101 } },
     ])
 })
 

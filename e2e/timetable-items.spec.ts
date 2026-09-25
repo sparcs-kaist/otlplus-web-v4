@@ -241,6 +241,12 @@ test("home saves a selected timetable with blocks and falls back to enrolled", a
     page,
 }) => {
     const state = await setup(page)
+    const custom = state.tables.get(1)!.find((item) => item.kind === "custom")!
+    if (custom.kind === "custom")
+        custom.data.times = [
+            { day: custom.data.day, begin: custom.data.begin, end: custom.data.end },
+            { day: 4, begin: 720, end: 780 },
+        ]
     await Promise.all([
         page.waitForResponse(/\/api\/v2\/timetables\/home(?:\?|$)/),
         page.goto("/"),
@@ -250,11 +256,11 @@ test("home saves a selected timetable with blocks and falls back to enrolled", a
     })
     await expect(selector).toBeEnabled()
     await selector.selectOption("1")
-    await expect(page.locator(".block-title", { hasText: "Study time" })).toBeVisible()
+    await expect(page.locator(".block-title", { hasText: "Study time" })).toHaveCount(2)
     expect(state.getHomeId()).toBe(1)
     await page.reload()
     await expect(selector).toHaveValue("1")
-    await expect(page.locator(".block-title", { hasText: "Study time" })).toBeVisible()
+    await expect(page.locator(".block-title", { hasText: "Study time" })).toHaveCount(2)
     await selector.selectOption("")
     await expect(page.locator(".block-title")).toHaveCount(0)
     await expect(page.locator(".lecture-title", { hasText: "Algorithms" })).toHaveCount(2)

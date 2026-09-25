@@ -13,6 +13,7 @@ import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
+import { getCustomBlockTimes } from "@/common/utils/timetableItems"
 import KeyboardShortcutModal from "@/features/timetable/components/KeyboardShortcutModal"
 import { useTimetableClone } from "@/features/timetable/hooks/useTimetableClone"
 import { useTimetableEditor } from "@/features/timetable/hooks/useTimetableEditor"
@@ -393,11 +394,7 @@ export default function Timetable() {
                 event?.ctrlKey || event?.metaKey || event?.shiftKey
             if (item.kind === TimetableItemKind.CUSTOM && !isMultipleSelection) {
                 setSelectedCustomBlock(item.data)
-                setTimeFilter({
-                    day: item.data.day,
-                    begin: item.data.begin,
-                    end: item.data.end,
-                })
+                setTimeFilter(getCustomBlockTimes(item.data)[0] ?? null)
                 setIsCustomBlockSectionOpen(true)
             } else {
                 setIsCustomBlockSectionOpen(false)

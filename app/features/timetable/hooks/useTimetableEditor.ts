@@ -10,7 +10,7 @@ import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import type { CustomBlock } from "@/common/schemas/customBlock"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimetableChange, TimetableItem } from "@/common/schemas/timetableItem"
-import { timetableItemKey } from "@/common/utils/timetableItems"
+import { getCustomBlockTimes, timetableItemKey } from "@/common/utils/timetableItems"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
 import { queryKeys } from "@/libs/query/queryKeys"
 import { useAPI } from "@/utils/api/useAPI"
@@ -20,7 +20,11 @@ export type TimetableEdit = { before?: TimetableItem; after?: TimetableItem }
 type Transaction = TimetableEdit[]
 type Stack = { undo: Transaction[]; redo: Transaction[] }
 const emptyStack = (): Stack => ({ undo: [], redo: [] })
-const customInput = ({ id: _id, ...data }: CustomBlock) => data
+const customInput = (block: CustomBlock) => {
+    const { id: _id, ...data } = block
+    const times = getCustomBlockTimes(block)
+    return { ...data, ...times[0], times }
+}
 
 export const timetableHistoryKey = (id: number | null, year: number, semester: number) =>
     `${id ?? "my"}-${year}-${semester}`

@@ -8,6 +8,7 @@ import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import type { CustomBlock } from "@/common/schemas/customBlock"
+import type { TimeBlock } from "@/common/schemas/timeblock"
 import { timetableItemKey } from "@/common/utils/timetableItems"
 import lightTheme from "@/styles/themes/light"
 
@@ -83,10 +84,12 @@ const CustomBlockTileInner = styled(TimetableItemTile)<{ blockId: number }>`
 
 function CustomBlockTile({
     block,
+    time,
     onSelect,
     overflow = false,
 }: {
     block: CustomBlock
+    time: TimeBlock
     onSelect?: (block: CustomBlock, event?: React.PointerEvent) => void
     overflow?: boolean
 }) {
@@ -99,12 +102,12 @@ function CustomBlockTile({
         "friday",
         "saturday",
         "sunday",
-    ][block.day]
+    ][time.day]
     const formatTime = (minutes: number) =>
         `${Math.floor(minutes / 60)
             .toString()
             .padStart(2, "0")}:${(minutes % 60).toString().padStart(2, "0")}`
-    const timeLabel = `${t(`common.days.${day}`)} ${formatTime(block.begin)}–${formatTime(block.end)}`
+    const timeLabel = `${t(`common.days.${day}`)} ${formatTime(time.begin)}–${formatTime(time.end)}`
     return (
         <CustomBlockTileWrapper
             direction="column"
@@ -112,12 +115,13 @@ function CustomBlockTile({
             padding="1px 0"
             justify="stretch"
             align="stretch"
-            col={Math.min(block.day, 4) + 1}
-            rowStart={overflow ? undefined : block.begin / 30 - 14}
-            rowEnd={overflow ? undefined : block.end / 30 - 14}
+            col={Math.min(time.day, 4) + 1}
+            rowStart={overflow ? undefined : time.begin / 30 - 14}
+            rowEnd={overflow ? undefined : time.end / 30 - 14}
             blockId={block.id}
             onPointerDown={(event) => onSelect?.(block, event)}
             data-custom-block-id={block.id}
+            data-class-time={time.day * 1440 + time.begin}
             title={`${block.block_name} · ${timeLabel}`}
         >
             <CustomBlockTileInner

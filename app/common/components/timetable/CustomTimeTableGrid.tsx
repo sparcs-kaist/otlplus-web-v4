@@ -12,7 +12,11 @@ import { type CustomBlock } from "@/common/schemas/customBlock"
 import { type Lecture } from "@/common/schemas/lecture"
 import { type TimeBlock } from "@/common/schemas/timeblock"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
-import { getTimetableItemTimes, timetableItemKey } from "@/common/utils/timetableItems"
+import {
+    getCustomBlockTimes,
+    getTimetableItemTimes,
+    timetableItemKey,
+} from "@/common/utils/timetableItems"
 
 import CustomBlockTile from "./CustomBlockTile"
 import {
@@ -488,6 +492,13 @@ function CustomTimeTableGrid({
             ),
         [items],
     )
+    const customBlockSlots = useMemo(
+        () =>
+            customBlocks.flatMap((block) =>
+                getCustomBlockTimes(block).map((time, index) => ({ block, time, index })),
+            ),
+        [customBlocks],
+    )
     const activeItems = useMemo<TimetableItem[]>(
         () =>
             selectedItems ?? [
@@ -627,7 +638,7 @@ function CustomTimeTableGrid({
             (lecture) =>
                 lecture.classes.length === 0 ||
                 lecture.classes.some((time) => !validTime(time)),
-        ) || customBlocks.some((block) => !validTime(block))
+        ) || customBlockSlots.some(({ time }) => !validTime(time))
 
     const handlePointerDown = useCallback((x: number, y: number) => {
         const target = document.elementFromPoint(x, y)
@@ -940,12 +951,13 @@ function CustomTimeTableGrid({
                                     }
                                 />
                             ))}
-                            {customBlocks
-                                .filter((block) => validTime(block))
-                                .map((block) => (
+                            {customBlockSlots
+                                .filter(({ time }) => validTime(time))
+                                .map(({ block, time, index }) => (
                                     <CustomBlockTile
-                                        key={`custom-block-${block.id}`}
+                                        key={`custom-block-${block.id}-${index}`}
                                         block={block}
+                                        time={time}
                                         onSelect={handleCustomBlockSelect}
                                     />
                                 ))}
@@ -990,12 +1002,13 @@ function CustomTimeTableGrid({
                         justifyItems="stretch"
                         style={{ height: "auto", gridAutoRows: "minmax(56px, auto)" }}
                     >
-                        {customBlocks
-                            .filter((block) => !validTime(block))
-                            .map((block) => (
+                        {customBlockSlots
+                            .filter(({ time }) => !validTime(time))
+                            .map(({ block, time, index }) => (
                                 <CustomBlockTile
-                                    key={`custom-overflow-${block.id}`}
+                                    key={`custom-overflow-${block.id}-${index}`}
                                     block={block}
+                                    time={time}
                                     onSelect={handleCustomBlockSelect}
                                     overflow
                                 />

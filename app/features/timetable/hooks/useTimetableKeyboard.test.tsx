@@ -157,6 +157,55 @@ it("pastes mixed items and removes both kinds of conflicts with one atomic edito
     expect(operations.removeItems).not.toHaveBeenCalled()
 })
 
+it("leaves native time selectors in control of keys instead of deleting blocks or changing tabs", () => {
+    const { operations } = setup()
+    act(() => useTimetableUIStore.setState({ selectedItems: [custom(7)] }))
+    const select = document.createElement("select")
+    document.body.append(select)
+    fireEvent.keyDown(select, { key: "Delete" })
+    fireEvent.keyDown(select, { key: "1" })
+    expect(operations.removeItems).not.toHaveBeenCalled()
+    expect(useTimetableUIStore.getState().currentTimetableId).toBe(1)
+    select.remove()
+})
+
+it.each([
+    ["Enter", false],
+    [" ", false],
+    ["Enter", true],
+    [" ", true],
+] as const)(
+    "preserves button activation for %j with enrolled=%s and keeps undo available",
+    (key, enrolled) => {
+        const item = lecture(7)
+        const { operations } = setup(enrolled ? [item] : [])
+        act(() =>
+            useTimetableUIStore.setState({
+                searchLectures: [item.data as Lecture],
+                hoveredLectures: [item.data as Lecture],
+            }),
+        )
+        const button = document.createElement("button")
+        document.body.append(button)
+        try {
+            const activation = new KeyboardEvent("keydown", {
+                key,
+                bubbles: true,
+                cancelable: true,
+            })
+            fireEvent(button, activation)
+            expect(activation.defaultPrevented).toBe(false)
+            expect(operations.addLectures).not.toHaveBeenCalled()
+            expect(operations.removeLectures).not.toHaveBeenCalled()
+
+            fireEvent.keyDown(button, { key: "z", ctrlKey: true, metaKey: true })
+            expect(operations.undo).toHaveBeenCalledOnce()
+        } finally {
+            button.remove()
+        }
+    },
+)
+
 it("shares duplication with the copy button callback and clears the block editor on Escape inside an input", () => {
     const { operations } = setup()
     shortcut("d")

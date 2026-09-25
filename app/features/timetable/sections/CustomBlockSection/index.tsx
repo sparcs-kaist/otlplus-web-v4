@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useState } from "react"
+import { memo, useCallback, useEffect, useRef, useState } from "react"
 
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
@@ -8,15 +8,17 @@ import { useTranslation } from "react-i18next"
 
 import Button from "@/common/components/Button"
 import TextInput from "@/common/components/search/TextInput"
-import TimeFilterArea from "@/common/components/search/TimeFilterArea"
 import { TimetableItemKind } from "@/common/enum/timetableItemKind"
+import { weekdayToString } from "@/common/enum/weekdayEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import { IconButton } from "@/common/primitives/IconButton"
 import TextInputArea from "@/common/primitives/TextInputArea"
 import Typography from "@/common/primitives/Typography"
 import type { CustomBlock } from "@/common/schemas/customBlock"
+import type { TimeBlock } from "@/common/schemas/timeblock"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
+import { getCustomBlockTimes } from "@/common/utils/timetableItems"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
 
 const CustomBlockSectionInner = styled(FlexWrapper)`
@@ -25,6 +27,56 @@ const CustomBlockSectionInner = styled(FlexWrapper)`
         width: 0;
     }
 `
+
+const TimeRangeRow = styled.fieldset`
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) 24px;
+    align-items: end;
+    gap: 6px;
+    margin: 0;
+    padding: 8px;
+    border: 1px solid ${({ theme }) => theme.colors.Line.block};
+    border-radius: 6px;
+    color: ${({ theme }) => theme.colors.Text.default};
+    font-size: 12px;
+
+    label {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        min-width: 0;
+    }
+`
+
+const TimeSelect = styled.select`
+    width: 100%;
+    min-width: 0;
+    padding: 8px 2px;
+    border: 1px solid ${({ theme }) => theme.colors.Line.block};
+    border-radius: 4px;
+    color: ${({ theme }) => theme.colors.Text.default};
+    background: ${({ theme }) => theme.colors.Background.Button.default};
+    font: inherit;
+`
+
+const TimeRangeButton = styled.button`
+    border: 0;
+    border-radius: 6px;
+    padding: 8px 0;
+    color: ${({ theme }) => theme.colors.Highlight.default};
+    background: ${({ theme }) => theme.colors.Background.Button.default};
+    font: inherit;
+    cursor: pointer;
+
+    &:disabled {
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+`
+
+const timeOptions = Array.from({ length: 49 }, (_, index) => index * 30)
+const formatTime = (minutes: number) =>
+    `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`
 
 interface CustomBlockSectionProps {
     addCustomBlock: (data: Omit<CustomBlock, "id">) => Promise<boolean>
@@ -54,6 +106,10 @@ function CustomBlockSection({
 
     const [title, setTitle] = useState(customBlock?.block_name ?? "")
     const [place, setPlace] = useState(customBlock?.place ?? "")
+    const [times, setTimes] = useState<TimeBlock[]>(() =>
+        customBlock ? getCustomBlockTimes(customBlock) : timeBlock ? [timeBlock] : [],
+    )
+    const consumedTimeBlock = useRef(timeBlock)
 
     const closeEditor = useCallback(() => {
         setIsCustomBlockSectionOpen(false)
@@ -64,26 +120,67 @@ function CustomBlockSection({
     useEffect(() => {
         setTitle(customBlock?.block_name ?? "")
         setPlace(customBlock?.place ?? "")
-        if (customBlock) {
-            setTimeBlock({
-                day: customBlock.day,
-                begin: customBlock.begin,
-                end: customBlock.end,
-            })
-        }
-    }, [customBlock, setTimeBlock])
+        const currentTime = useTimetableUIStore.getState().timeFilter
+        consumedTimeBlock.current = currentTime
+        setTimes(
+            customBlock
+                ? getCustomBlockTimes(customBlock)
+                : currentTime
+                  ? [currentTime]
+                  : [],
+        )
+    }, [customBlock, currentTimetableId])
+
+    useEffect(() => {
+        if (consumedTimeBlock.current === timeBlock) return
+        consumedTimeBlock.current = timeBlock
+        if (!timeBlock || isPending) return
+        setTimes((previous) =>
+            previous.some(
+                (time) =>
+                    time.day === timeBlock.day &&
+                    time.begin === timeBlock.begin &&
+                    time.end === timeBlock.end,
+            )
+                ? previous
+                : [...previous, timeBlock],
+        )
+    }, [timeBlock, isPending])
+
+    const updateTime = (index: number, patch: Partial<TimeBlock>) => {
+        setTimes((previous) =>
+            previous.map((time, timeIndex) =>
+                timeIndex === index ? { ...time, ...patch } : time,
+            ),
+        )
+    }
 
     const validate = useCallback(() => {
         if (!title.trim()) {
             alert(t("timetable.customBlock.errorNameRequired"))
             return false
         }
-        if (!timeBlock || timeBlock.begin >= timeBlock.end) {
+        if (!times.length || times.some((time) => time.begin >= time.end)) {
             alert(t("timetable.customBlock.errorTimeInvalid"))
             return false
         }
+        if (
+            times.some((time, index) =>
+                times
+                    .slice(index + 1)
+                    .some(
+                        (other) =>
+                            time.day === other.day &&
+                            time.begin < other.end &&
+                            other.begin < time.end,
+                    ),
+            )
+        ) {
+            alert(t("timetable.customBlock.errorTimeOverlap"))
+            return false
+        }
         return true
-    }, [t, timeBlock, title])
+    }, [t, times, title])
 
     const closeAfterSuccess = useCallback(() => {
         const current = useTimetableUIStore.getState()
@@ -97,13 +194,12 @@ function CustomBlockSection({
     }, [closeEditor, currentTimetableId, customBlock?.id])
 
     const handleSubmit = useCallback(async () => {
-        if (isPending || !timeBlock || !validate()) return
+        if (isPending || !times[0] || !validate()) return
         const data = {
             block_name: title.trim(),
             place: place.trim(),
-            day: timeBlock.day,
-            begin: timeBlock.begin,
-            end: timeBlock.end,
+            ...times[0],
+            times,
         }
         const saved = customBlock
             ? await updateCustomBlock(customBlock.id, data)
@@ -115,7 +211,7 @@ function CustomBlockSection({
         customBlock,
         isPending,
         place,
-        timeBlock,
+        times,
         title,
         updateCustomBlock,
         validate,
@@ -127,7 +223,7 @@ function CustomBlockSection({
             closeAfterSuccess()
     }, [closeAfterSuccess, customBlock, isPending, removeItems])
 
-    const canSubmit = Boolean(title.trim() && timeBlock && !isPending)
+    const canSubmit = Boolean(title.trim() && times.length && !isPending)
 
     return (
         <CustomBlockSectionInner
@@ -199,14 +295,106 @@ function CustomBlockSection({
                             {currentTimetableName}
                         </Typography>
                     </FlexWrapper>
-                    <FlexWrapper direction="row" gap={20} align="stretch">
+                    <FlexWrapper direction="column" gap={8} align="stretch">
                         <Typography type="NormalBold" color="Text.light">
                             {t("timetable.customBlock.time")}
                         </Typography>
-                        <TimeFilterArea
-                            timeFilter={timeBlock}
-                            setTimeFilter={setTimeBlock}
-                        />
+                        <Typography type="Small" color="Text.light">
+                            {t("timetable.customBlock.timeHint")}
+                        </Typography>
+                        {times.map((time, index) => (
+                            <TimeRangeRow key={index} disabled={isPending}>
+                                <legend>
+                                    {t("timetable.customBlock.timeRange", {
+                                        index: index + 1,
+                                    })}
+                                </legend>
+                                <label>
+                                    {t("timetable.customBlock.day")}
+                                    <TimeSelect
+                                        value={time.day}
+                                        onChange={(event) =>
+                                            updateTime(index, {
+                                                day: Number(event.target.value),
+                                            })
+                                        }
+                                    >
+                                        {Array.from({ length: 7 }, (_, day) => (
+                                            <option key={day} value={day}>
+                                                {weekdayToString(day, true)}
+                                            </option>
+                                        ))}
+                                    </TimeSelect>
+                                </label>
+                                {(["begin", "end"] as const).map((field) => (
+                                    <label key={field}>
+                                        {t(
+                                            field === "begin"
+                                                ? "timetable.customBlock.startTime"
+                                                : "timetable.customBlock.endTime",
+                                        )}
+                                        <TimeSelect
+                                            value={time[field]}
+                                            onChange={(event) =>
+                                                updateTime(index, {
+                                                    [field]: Number(event.target.value),
+                                                })
+                                            }
+                                        >
+                                            {[...new Set([...timeOptions, time[field]])]
+                                                .filter((minutes) =>
+                                                    field === "begin"
+                                                        ? minutes < 1440
+                                                        : minutes > 0,
+                                                )
+                                                .sort((left, right) => left - right)
+                                                .map((minutes) => (
+                                                    <option key={minutes} value={minutes}>
+                                                        {formatTime(minutes)}
+                                                    </option>
+                                                ))}
+                                        </TimeSelect>
+                                    </label>
+                                ))}
+                                <TimeRangeButton
+                                    type="button"
+                                    aria-label={t("timetable.customBlock.removeTime", {
+                                        index: index + 1,
+                                    })}
+                                    onClick={() => {
+                                        setTimes((previous) =>
+                                            previous.filter(
+                                                (_, timeIndex) => timeIndex !== index,
+                                            ),
+                                        )
+                                        setTimeBlock(null)
+                                    }}
+                                >
+                                    ×
+                                </TimeRangeButton>
+                            </TimeRangeRow>
+                        ))}
+                        <TimeRangeButton
+                            type="button"
+                            disabled={isPending}
+                            onClick={() =>
+                                setTimes((previous) => {
+                                    const last = previous.at(-1)
+                                    return [
+                                        ...previous,
+                                        last
+                                            ? {
+                                                  day: (last.day + 1) % 7,
+                                                  begin: last.begin,
+                                                  end: last.end,
+                                              }
+                                            : { day: 0, begin: 540, end: 600 },
+                                    ]
+                                })
+                            }
+                        >
+                            {t("timetable.customBlock.addTime")}
+                        </TimeRangeButton>
                     </FlexWrapper>
                     <FlexWrapper direction="row" gap={20} align="center">
                         <Typography type="NormalBold" color="Text.light">

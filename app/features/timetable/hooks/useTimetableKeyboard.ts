@@ -175,6 +175,8 @@ export function useTimetableKeyboard({
         if (
             target.tagName === "INPUT" ||
             target.tagName === "TEXTAREA" ||
+            target.tagName === "SELECT" ||
+            (target.tagName === "BUTTON" && ["Enter", " "].includes(event.key)) ||
             target.isContentEditable
         )
             return

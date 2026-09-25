@@ -1,14 +1,7 @@
 import { type Page, expect, test } from "@playwright/test"
 import { readFile } from "node:fs/promises"
 
-type CustomBlock = {
-    id: number
-    block_name: string
-    place: string
-    day: number
-    begin: number
-    end: number
-}
+import type { CustomBlock } from "../app/common/schemas/customBlock"
 
 async function dragTime(page: Page, day: number, beginSlot: number, endSlot: number) {
     const begin = page.locator(
@@ -32,7 +25,9 @@ async function dragTime(page: Page, day: number, beginSlot: number, endSlot: num
     await page.mouse.up()
 }
 
-test("creates, edits, and deletes a custom block", async ({ page }) => {
+test("creates, edits, exports, and deletes one custom block with multiple time slots", async ({
+    page,
+}) => {
     let blocks: CustomBlock[] = []
     let patchBody: Partial<CustomBlock> | null = null
 
@@ -171,10 +166,30 @@ test("creates, edits, and deletes a custom block", async ({ page }) => {
     await page.getByPlaceholder(/Name|일정 이름/).fill("Focus time")
     await page.getByPlaceholder(/Place|장소/).fill("Library")
     await dragTime(page, 0, 4, 6)
+    await dragTime(page, 0, 12, 13)
+    await dragTime(page, 2, 4, 6)
+    await page.getByRole("button", { name: /Add time slot|시간대 추가/ }).click()
+    const lastTime = page.getByRole("group", { name: /Time slot 4|시간대 4/ })
+    await lastTime.getByRole("combobox", { name: /Day|요일/ }).selectOption("6")
+    await lastTime.getByRole("combobox", { name: /Start|시작/ }).selectOption("1380")
+    await lastTime.getByRole("combobox", { name: /End|종료/ }).selectOption("1440")
     await page.getByText(/Add to Timetable|시간표에 추가하기/, { exact: true }).click()
 
-    await expect(page.locator(".block-title", { hasText: "Focus time" })).toBeVisible()
-    expect(blocks[0]).toMatchObject({ day: 0, begin: 600, end: 690 })
+    await expect(page.locator(".block-title", { hasText: "Focus time" })).toHaveCount(4)
+    expect(blocks).toHaveLength(1)
+    expect(blocks[0]).toMatchObject({
+        day: 0,
+        begin: 600,
+        end: 690,
+        times: [
+            { day: 0, begin: 600, end: 690 },
+            { day: 0, begin: 840, end: 900 },
+            { day: 2, begin: 600, end: 690 },
+            { day: 6, begin: 1380, end: 1440 },
+        ],
+    })
+    await page.reload()
+    await expect(page.locator(".block-title", { hasText: "Focus time" })).toHaveCount(4)
 
     await page.getByRole("button", { name: /Copy as Image|이미지로 복사하기/ }).click()
     await expect
@@ -207,8 +222,12 @@ test("creates, edits, and deletes a custom block", async ({ page }) => {
     const calendarContents = await readFile(calendarPath, "utf8")
     expect(calendarContents).toContain("SUMMARY:Focus time")
     expect(calendarContents).toContain("LOCATION:Library")
+    expect(calendarContents.match(/BEGIN:VEVENT/g)).toHaveLength(4)
 
-    await page.locator(".block-title", { hasText: "Focus time" }).click()
+    await page.locator(".block-title", { hasText: "Focus time" }).nth(1).click()
+    await expect(page.getByRole("group", { name: /Time slot|시간대/ })).toHaveCount(4)
+    for (const tile of await page.locator(".custom-block-tile").all())
+        await expect(tile).toHaveCSS("opacity", "1")
     await expect(
         page.getByRole("button", { name: "Delete custom block" }).locator("div").first(),
     ).toHaveCSS("color", "rgb(189, 189, 189)")
@@ -219,15 +238,34 @@ test("creates, edits, and deletes a custom block", async ({ page }) => {
             .first(),
     ).toHaveCSS("color", "rgb(189, 189, 189)")
     await page.getByPlaceholder(/Name|일정 이름/).fill("Focus time updated")
-    await dragTime(page, 1, 8, 10)
+    const firstTime = page.getByRole("group", { name: /Time slot 1|시간대 1/ })
+    await firstTime.getByRole("combobox", { name: /Day|요일/ }).selectOption("1")
+    await firstTime.getByRole("combobox", { name: /Start|시작/ }).selectOption("720")
+    await firstTime.getByRole("combobox", { name: /End|종료/ }).selectOption("810")
+    await page.getByRole("button", { name: /Remove time slot 2|시간대 2 삭제/ }).click()
     await page.getByText(/Save|저장하기/, { exact: true }).click()
 
     await expect(
         page.locator(".block-title", { hasText: "Focus time updated" }),
-    ).toBeVisible()
-    expect(patchBody).toMatchObject({ day: 1, begin: 720, end: 810 })
+    ).toHaveCount(3)
+    expect(patchBody).toMatchObject({
+        day: 1,
+        begin: 720,
+        end: 810,
+        times: [
+            { day: 1, begin: 720, end: 810 },
+            { day: 2, begin: 600, end: 690 },
+            { day: 6, begin: 1380, end: 1440 },
+        ],
+    })
 
-    await page.locator(".block-title", { hasText: "Focus time updated" }).click()
+    await page.locator(".block-title", { hasText: "Focus time updated" }).last().click()
     await page.getByRole("button", { name: "Delete custom block" }).click()
     await expect(page.locator(".block-title")).toHaveCount(0)
+    expect(blocks).toHaveLength(0)
+    await page.keyboard.press("Control+z")
+    await expect(
+        page.locator(".block-title", { hasText: "Focus time updated" }),
+    ).toHaveCount(3)
+    expect(blocks).toHaveLength(1)
 })
