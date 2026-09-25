@@ -435,6 +435,7 @@ interface CustomTimeTableGridProps {
     selectedCustomBlock?: CustomBlock | null
     onCustomBlockSelect?: (block: CustomBlock, e?: React.PointerEvent) => void
     isCustomBlockSectionOpen?: boolean
+    customBlockDraftTimes?: TimeBlock[]
     needCurrentTimeBar?: boolean
     flashLectureIds?: number[]
 }
@@ -460,6 +461,7 @@ function CustomTimeTableGrid({
     selectedCustomBlock = null,
     onCustomBlockSelect,
     isCustomBlockSectionOpen = false,
+    customBlockDraftTimes = [],
     needCurrentTimeBar = false,
     flashLectureIds = [],
 }: CustomTimeTableGridProps) {
@@ -683,10 +685,10 @@ function CustomTimeTableGrid({
                 end: (TIME_BEGIN + timeRef.current[1] * 0.5) * 60,
             })
 
-        if (
-            timeRef.current &&
-            (timeRef.current[1] - timeRef.current[0] > 1 || isCustomBlockSectionOpen)
-        ) {
+        if (isCustomBlockSectionOpen) {
+            overlayRef.current?.setAttribute("data-is-dragging", "false")
+            backgroundRef.current?.setAttribute("data-is-dragging", "false")
+        } else if (timeRef.current && timeRef.current[1] - timeRef.current[0] > 1) {
             overlayRef.current?.setAttribute("data-is-dragging", "wait")
             backgroundRef.current?.setAttribute("data-is-dragging", "wait")
         } else if (
@@ -705,11 +707,11 @@ function CustomTimeTableGrid({
     }, [isCustomBlockSectionOpen, timeFilter, setTimeFilter])
 
     useEffect(() => {
-        if (!timeFilter) {
+        if (!timeFilter || (isCustomBlockSectionOpen && !draggingRef.current)) {
             overlayRef.current?.setAttribute("data-is-dragging", "false")
             backgroundRef.current?.setAttribute("data-is-dragging", "false")
         }
-    }, [timeFilter])
+    }, [timeFilter, isCustomBlockSectionOpen])
 
     const handleMouseDown = useCallback(
         (e: React.PointerEvent<HTMLDivElement>) => {
@@ -937,6 +939,21 @@ function CustomTimeTableGrid({
                             data-is-dragging={false}
                         >
                             {needTimeFilter && <HoverTile />}
+                            {isCustomBlockSectionOpen &&
+                                customBlockDraftTimes
+                                    .filter(validTime)
+                                    .map((time, index) => (
+                                        <HoverTile
+                                            key={index}
+                                            className="custom-block-draft-time"
+                                            style={{
+                                                display: "flex",
+                                                opacity: 0.5,
+                                                gridColumn: time.day + 1,
+                                                gridRow: `${(time.begin / 60 - TIME_BEGIN) * 2 + 2} / ${(time.end / 60 - TIME_BEGIN) * 2 + 2}`,
+                                            }}
+                                        />
+                                    ))}
                             {lectures.map((lecture, lectureIdx) => (
                                 <MemoizedLectureTiles
                                     key={`${lecture.id}-lecture-tile-${lectureIdx}`}

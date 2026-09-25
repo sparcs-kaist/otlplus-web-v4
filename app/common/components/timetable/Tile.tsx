@@ -70,9 +70,16 @@ const HoverTileInner = styled(FlexWrapper)`
     border-radius: 4px;
 `
 
-function HoverTile() {
+function HoverTile({ style, className }: { style?: CSSProperties; className?: string }) {
     return (
-        <HoverTileWrapper direction="column" gap={0} padding="1px 0px" align="stretch">
+        <HoverTileWrapper
+            direction="column"
+            gap={0}
+            padding="1px 0px"
+            align="stretch"
+            style={style}
+            className={className}
+        >
             <HoverTileInner direction="column" gap={0} flex="1 1 auto" />
         </HoverTileWrapper>
     )

@@ -66,6 +66,15 @@ function CustomBlockSection({
         customBlock ? getCustomBlockTimes(customBlock) : timeBlock ? [timeBlock] : [],
     )
     const consumedTimeBlock = useRef(timeBlock)
+    const setCustomBlockDraftTimes = useTimetableUIStore(
+        (s) => s.setCustomBlockDraftTimes,
+    )
+
+    useEffect(() => {
+        setCustomBlockDraftTimes(times)
+    }, [setCustomBlockDraftTimes, times])
+
+    useEffect(() => () => setCustomBlockDraftTimes([]), [setCustomBlockDraftTimes])
 
     const closeEditor = useCallback(() => {
         setIsCustomBlockSectionOpen(false)

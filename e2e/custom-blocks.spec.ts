@@ -3,7 +3,13 @@ import { readFile } from "node:fs/promises"
 
 import type { CustomBlock } from "../app/common/schemas/customBlock"
 
-async function dragTime(page: Page, day: number, beginSlot: number, endSlot: number) {
+async function dragTime(
+    page: Page,
+    day: number,
+    beginSlot: number,
+    endSlot: number,
+    existingDraftCount?: number,
+) {
     const begin = page.locator(
         `.background-grid-block[data-day-idx="${day}"][data-time-idx="${beginSlot}"]`,
     )
@@ -19,6 +25,12 @@ async function dragTime(page: Page, day: number, beginSlot: number, endSlot: num
         beginBox.y + beginBox.height / 2,
     )
     await page.mouse.down()
+    if (existingDraftCount !== undefined) {
+        await expect(page.locator(".custom-block-draft-time")).toHaveCount(
+            existingDraftCount,
+        )
+        await expect(page.locator(".custom-block-draft-time").first()).toBeVisible()
+    }
     await page.mouse.move(endBox.x + endBox.width / 2, endBox.y + endBox.height / 2, {
         steps: 5,
     })
@@ -160,21 +172,51 @@ test("creates, edits, exports, and deletes one custom block with multiple time s
     const addButton = page.getByRole("button", {
         name: /Add Custom Block|커스텀 블록 추가/,
     })
+    const draftTimes = page.locator(".custom-block-draft-time")
     await expect(addButton).toBeEnabled()
+    await addButton.click()
+    await dragTime(page, 3, 4, 6)
+    await expect(draftTimes).toHaveCount(1)
+    await expect(draftTimes.first()).toHaveCSS("pointer-events", "none")
+    await page.getByRole("button", { name: "Close custom block editor" }).click()
+    await expect(draftTimes).toHaveCount(0)
+
+    await addButton.click()
+    await dragTime(page, 3, 4, 6)
+    await expect(draftTimes).toHaveCount(1)
+    await page.keyboard.press("Escape")
+    await expect(draftTimes).toHaveCount(0)
+
+    await addButton.click()
+    await dragTime(page, 3, 4, 6)
+    await expect(draftTimes).toHaveCount(1)
+    await page.getByText(/My Timetable|내 시간표/, { exact: true }).click()
+    await expect(draftTimes).toHaveCount(0)
+    await expect(page.getByPlaceholder(/Name|일정 이름/)).toHaveCount(0)
+    await page.getByText("Test timetable", { exact: true }).click()
     await addButton.click()
 
     await page.getByPlaceholder(/Name|일정 이름/).fill("Focus time")
     await page.getByPlaceholder(/Place|장소/).fill("Library")
     await dragTime(page, 0, 4, 6)
-    await dragTime(page, 0, 12, 13)
+    await expect(draftTimes).toHaveCount(1)
+    await dragTime(page, 0, 12, 13, 1)
+    await expect(draftTimes).toHaveCount(2)
     await dragTime(page, 2, 4, 6)
+    await expect(draftTimes).toHaveCount(3)
     await dragTime(page, 4, 30, 31)
+    await expect(draftTimes).toHaveCount(4)
     const removeTimeButtons = page.getByRole("button", {
         name: /^Remove time slot \d+$|^시간대 \d+ 삭제$/,
     })
     await expect(removeTimeButtons).toHaveCount(4)
+    await page.getByRole("button", { name: /Remove time slot 4|시간대 4 삭제/ }).click()
+    await expect(draftTimes).toHaveCount(3)
+    await dragTime(page, 4, 30, 31)
+    await expect(draftTimes).toHaveCount(4)
     await page.getByText(/Add to Timetable|시간표에 추가하기/, { exact: true }).click()
 
+    await expect(draftTimes).toHaveCount(0)
     await expect(page.locator(".block-title", { hasText: "Focus time" })).toHaveCount(4)
     expect(blocks).toHaveLength(1)
     expect(blocks[0]).toMatchObject({
@@ -189,6 +231,13 @@ test("creates, edits, exports, and deletes one custom block with multiple time s
         ],
     })
     await page.reload()
+    await expect(page.locator(".block-title", { hasText: "Focus time" })).toHaveCount(4)
+    await page.locator(".block-title", { hasText: "Focus time" }).first().click()
+    await expect(draftTimes).toHaveCount(4)
+    await addButton.click()
+    await expect(draftTimes).toHaveCount(0)
+    await expect(page.getByPlaceholder(/Name|일정 이름/)).toHaveValue("")
+    await page.getByRole("button", { name: "Close custom block editor" }).click()
     await expect(page.locator(".block-title", { hasText: "Focus time" })).toHaveCount(4)
 
     await page.getByRole("button", { name: /Copy as Image|이미지로 복사하기/ }).click()
@@ -226,6 +275,7 @@ test("creates, edits, exports, and deletes one custom block with multiple time s
 
     await page.locator(".block-title", { hasText: "Focus time" }).nth(1).click()
     await expect(removeTimeButtons).toHaveCount(4)
+    await expect(draftTimes).toHaveCount(4)
     for (const tile of await page.locator(".custom-block-tile").all())
         await expect(tile).toHaveCSS("opacity", "1")
     await expect(
@@ -239,12 +289,17 @@ test("creates, edits, exports, and deletes one custom block with multiple time s
     ).toHaveCSS("color", "rgb(189, 189, 189)")
     await page.getByPlaceholder(/Name|일정 이름/).fill("Focus time updated")
     await page.getByRole("button", { name: /Remove time slot 2|시간대 2 삭제/ }).click()
+    await expect(draftTimes).toHaveCount(3)
     await page.getByRole("button", { name: /Remove time slot 1|시간대 1 삭제/ }).click()
     await expect(removeTimeButtons).toHaveCount(2)
+    await expect(draftTimes).toHaveCount(2)
+    await expect(page.locator(".custom-block-tile")).toHaveCount(4)
     await dragTime(page, 1, 8, 10)
     await expect(removeTimeButtons).toHaveCount(3)
+    await expect(draftTimes).toHaveCount(3)
     await page.getByText(/Save|저장하기/, { exact: true }).click()
 
+    await expect(draftTimes).toHaveCount(0)
     await expect(
         page.locator(".block-title", { hasText: "Focus time updated" }),
     ).toHaveCount(3)
@@ -261,6 +316,7 @@ test("creates, edits, exports, and deletes one custom block with multiple time s
 
     await page.locator(".block-title", { hasText: "Focus time updated" }).last().click()
     await page.getByRole("button", { name: "Delete custom block" }).click()
+    await expect(draftTimes).toHaveCount(0)
     await expect(page.locator(".block-title")).toHaveCount(0)
     expect(blocks).toHaveLength(0)
     await page.keyboard.press("Control+z")

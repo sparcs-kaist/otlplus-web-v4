@@ -222,6 +222,7 @@ export default function Timetable() {
     )
 
     const timeFilter = useTimetableUIStore((s) => s.timeFilter)
+    const customBlockDraftTimes = useTimetableUIStore((s) => s.customBlockDraftTimes)
     const setTimeFilter = useTimetableUIStore((s) => s.setTimeFilter)
 
     const currentTimetableId = useTimetableUIStore((s) => s.currentTimetableId)
@@ -472,6 +473,7 @@ export default function Timetable() {
                                     setHoveredLectures={setHoveredLectures}
                                     selectedItems={selectedItems}
                                     timeFilter={timeFilter}
+                                    customBlockDraftTimes={customBlockDraftTimes}
                                     setTimeFilter={setTimeFilter}
                                 />
                             </TimetableArea>
@@ -633,6 +635,7 @@ export default function Timetable() {
                                         setHoveredLectures={setHoveredLectures}
                                         selectedItems={selectedItems}
                                         timeFilter={timeFilter}
+                                        customBlockDraftTimes={customBlockDraftTimes}
                                         setTimeFilter={setTimeFilter}
                                     />
                                 </TimetableArea>

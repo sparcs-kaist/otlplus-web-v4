@@ -35,6 +35,7 @@ interface TimetableUIState {
     flashItemKeys: string[] | null
     selectedCustomBlock: CustomBlock | null
     isCustomBlockSectionOpen: boolean
+    customBlockDraftTimes: TimeBlock[]
 
     // Actions
     setHoveredLectures: (
@@ -76,6 +77,7 @@ interface TimetableUIState {
             | ((prev: CustomBlock | null) => CustomBlock | null),
     ) => void
     setIsCustomBlockSectionOpen: (open: boolean) => void
+    setCustomBlockDraftTimes: (times: TimeBlock[]) => void
 
     // Flash Action
     triggerFlash: (ids: string[]) => void
@@ -102,6 +104,7 @@ export const useTimetableUIStore = create<TimetableUIState>((set) => ({
     flashItemKeys: null,
     selectedCustomBlock: null,
     isCustomBlockSectionOpen: false,
+    customBlockDraftTimes: [],
 
     // Actions
     setHoveredLectures: (val) =>
@@ -192,6 +195,7 @@ export const useTimetableUIStore = create<TimetableUIState>((set) => ({
         })),
     setIsCustomBlockSectionOpen: (isCustomBlockSectionOpen) =>
         set({ isCustomBlockSectionOpen }),
+    setCustomBlockDraftTimes: (customBlockDraftTimes) => set({ customBlockDraftTimes }),
 
     triggerFlash: (ids) => {
         set({ flashItemKeys: ids })
