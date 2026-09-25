@@ -13,6 +13,7 @@ import { match } from "ts-pattern"
 
 import Button from "@/common/components/Button"
 import Credits from "@/common/components/Credits"
+import StyledDivider from "@/common/components/StyledDivider"
 import { flattenTimeTableColors } from "@/common/components/timetable/Tile"
 import { LectureActionEnum } from "@/common/enum/lectureActionEnum"
 import { TimetableItemKind } from "@/common/enum/timetableItemKind"
@@ -22,6 +23,7 @@ import { IconButton } from "@/common/primitives/IconButton"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 import { timetableItemKey } from "@/common/utils/timetableItems"
+import LectureFriendOverlaps from "@/features/friends/LectureFriendOverlaps"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
 import isLectureAddDisabled from "@/features/timetable/utils/isLectureAddDisabled"
 import { trackEvent } from "@/libs/mixpanel"
@@ -372,6 +374,14 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                     <LectureDetailWrapper direction="column" gap={10} align="center">
                         <LectureInfoSubsection selectedLecture={selectedLecture} />
                     </LectureDetailWrapper>
+                    {status === "success" &&
+                        selectedItem?.kind === TimetableItemKind.LECTURE && (
+                            <>
+                                <StyledDivider />
+                                <LectureFriendOverlaps lectureId={selectedLecture.id} />
+                                <StyledDivider />
+                            </>
+                        )}
                     <LectureDetailWrapper
                         ref={reviewSectionRef}
                         direction="column"

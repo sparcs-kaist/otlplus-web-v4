@@ -16,7 +16,7 @@ const getMixpanel = async () => {
 
 export const initMixpanel = async () => {
     if (typeof window === "undefined") return
-    // Invitations carry a bearer token in the fragment; don't record this visit's URL.
+    // Invitations carry a private friend code in the fragment; don't record this visit's URL.
     if (/\/friends\/invite\/?$/.test(window.location.pathname)) return
     if (!MIXPANEL_TOKEN || isInitialized) return
 

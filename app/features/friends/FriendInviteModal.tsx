@@ -3,6 +3,7 @@ import { useEffect, useState } from "react"
 import styled from "@emotion/styled"
 import ContentCopyIcon from "@mui/icons-material/ContentCopy"
 import ShareIcon from "@mui/icons-material/Share"
+import { QRCodeSVG } from "qrcode.react"
 import { useTranslation } from "react-i18next"
 
 import Button from "@/common/components/Button"
@@ -43,28 +44,27 @@ export default function FriendInviteModal({
 }: FriendInviteModalProps) {
     const { t } = useTranslation()
     const isMobile = useIsDevice("mobile")
-    const [invite, setInvite] = useState<{ token: string; expiresAt: string } | null>(
-        null,
-    )
     const [copied, setCopied] = useState(false)
     const [actionError, setActionError] = useState(false)
-    const { mutation, requestFunction } = useAPI("POST", "/friends/invites", {
-        onSuccess: setInvite,
+    const { query } = useAPI("GET", "/friends/code", {
+        enabled: isOpen,
+        staleTime: 0,
+        gcTime: 0,
     })
 
     useEffect(() => {
         if (!isOpen) return
-        setInvite(null)
         setCopied(false)
         setActionError(false)
-        requestFunction({})
-    }, [isOpen, requestFunction])
+    }, [isOpen])
 
-    const inviteUrl = invite
-        ? `${new URL("/friends/invite", window.location.origin)}#${encodeURIComponent(invite.token)}`
+    const code = query.isSuccess ? query.data.code : null
+    const inviteUrl = code
+        ? `${new URL("/friends/invite", window.location.origin)}#${code}`
         : ""
 
     const handleCopy = async () => {
+        if (!inviteUrl) return
         try {
             await copyFriendInvite(userName, inviteUrl)
             setCopied(true)
@@ -74,6 +74,7 @@ export default function FriendInviteModal({
     }
 
     const handleShare = async () => {
+        if (!inviteUrl) return
         try {
             const result = await shareFriendInvite(userName, inviteUrl)
             if (result === "copied") setCopied(true)
@@ -93,13 +94,13 @@ export default function FriendInviteModal({
                 <Typography type="Normal" color="Text.placeholder">
                     {t("friends.inviteDescription")}
                 </Typography>
-                {mutation.isPending && (
-                    <Typography type="Normal" color="Text.placeholder">
+                {query.isPending && (
+                    <Typography type="Normal" color="Text.placeholder" role="status">
                         {t("friends.inviteLoading")}
                     </Typography>
                 )}
-                {mutation.isError && (
-                    <Typography type="Normal" color="Highlight.default">
+                {query.isError && (
+                    <Typography type="Normal" color="Highlight.default" role="alert">
                         {t("friends.inviteError")}
                     </Typography>
                 )}
@@ -108,10 +109,29 @@ export default function FriendInviteModal({
                         {t("friends.inviteError")}
                     </Typography>
                 )}
-                {invite && (
-                    <Preview className="mp-block mp-sensitive">
-                        {friendInviteMessage(userName, inviteUrl)}
-                    </Preview>
+                {code && (
+                    <>
+                        <Typography
+                            type="BigBold"
+                            color="Text.default"
+                            className="mp-block mp-sensitive"
+                        >
+                            {t("friends.code")}: {code}
+                        </Typography>
+                        <Preview className="mp-block mp-sensitive">
+                            {friendInviteMessage(userName, inviteUrl)}
+                        </Preview>
+                        <FlexWrapper direction="row" justify="center" gap={0}>
+                            <QRCodeSVG
+                                value={inviteUrl}
+                                title={t("friends.inviteQr")}
+                                role="img"
+                                size={180}
+                                marginSize={4}
+                                className="mp-block mp-sensitive"
+                            />
+                        </FlexWrapper>
+                    </>
                 )}
                 {copied && (
                     <Typography type="Small" color="Highlight.default">
@@ -119,14 +139,14 @@ export default function FriendInviteModal({
                     </Typography>
                 )}
                 <FlexWrapper direction="row" gap={8} justify="flex-end">
-                    <Button type={invite ? "default" : "disabled"} onClick={handleCopy}>
+                    <Button type={code ? "default" : "disabled"} onClick={handleCopy}>
                         <Icon size={16}>
                             <ContentCopyIcon />
                         </Icon>
                         {t("friends.copy")}
                     </Button>
                     <Button
-                        type={invite ? "highlighted" : "disabled"}
+                        type={code ? "highlighted" : "disabled"}
                         onClick={handleShare}
                     >
                         <Icon size={16}>

@@ -2,11 +2,13 @@ import { useEffect, useRef } from "react"
 
 import styled from "@emotion/styled"
 import { useQueryClient } from "@tanstack/react-query"
+import { HttpStatusCode, isAxiosError } from "axios"
 import { useTranslation } from "react-i18next"
 import { useLocation, useNavigate } from "react-router-dom"
 
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
+import { FriendCodeSchema } from "@/common/schemas/friend"
 import FriendLoginButton from "@/features/friends/FriendLoginButton"
 import { invalidateFriendQueries } from "@/features/friends/friendQueries"
 import { useAPI } from "@/utils/api/useAPI"
@@ -48,17 +50,20 @@ const Card = styled(FlexWrapper)`
 export default function FriendInvitePage() {
     const { t } = useTranslation()
     const location = useLocation()
-    let token = ""
+    let code = ""
     try {
-        token = decodeURIComponent(location.hash.slice(1))
+        const parsed = FriendCodeSchema.safeParse(
+            decodeURIComponent(location.hash.slice(1)),
+        )
+        if (parsed.success) code = parsed.data
     } catch {
         // Malformed links should show the invalid-invite message, not crash the page.
     }
     const navigate = useNavigate()
     const queryClient = useQueryClient()
     const { status } = useUserStore()
-    const acceptingToken = useRef<string | null>(null)
-    const { mutation, requestFunction } = useAPI("POST", "/friends/invites/accept", {
+    const acceptingCode = useRef<string | null>(null)
+    const { mutation, requestFunction } = useAPI("POST", "/friends", {
         onSuccess: async ({ friend }) => {
             await invalidateFriendQueries(queryClient)
             navigate(`/friends?friendId=${friend.id}`, {
@@ -69,10 +74,23 @@ export default function FriendInvitePage() {
     })
 
     useEffect(() => {
-        if (status !== "success" || !token || acceptingToken.current === token) return
-        acceptingToken.current = token
-        requestFunction({ token })
-    }, [status, token, requestFunction])
+        if (status === "idle") acceptingCode.current = null
+        if (status !== "success" || !code || acceptingCode.current === code) return
+        acceptingCode.current = code
+        requestFunction({ code })
+    }, [status, code, requestFunction])
+
+    const errorStatus = isAxiosError(mutation.error)
+        ? mutation.error.response?.status
+        : undefined
+    const errorMessage =
+        !code ||
+        errorStatus === HttpStatusCode.BadRequest ||
+        errorStatus === HttpStatusCode.NotFound
+            ? "friends.inviteInvalid"
+            : errorStatus === HttpStatusCode.TooManyRequests
+              ? "friends.inviteRateLimited"
+              : "friends.inviteAddError"
 
     return (
         <Page direction="column" gap={0} align="center" justify="center">
@@ -80,9 +98,9 @@ export default function FriendInvitePage() {
                 <Typography type="BigBold" color="Text.default">
                     {t("friends.inviteTitle")}
                 </Typography>
-                {!token || mutation.isError ? (
-                    <Typography type="Normal" color="Highlight.default">
-                        {t("friends.inviteInvalid")}
+                {!code || (mutation.isError && status !== "idle") ? (
+                    <Typography type="Normal" color="Highlight.default" role="alert">
+                        {t(errorMessage)}
                     </Typography>
                 ) : status === "idle" ? (
                     <>

@@ -4,10 +4,10 @@ import { Link } from "react-router-dom"
 
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
-import type { Friend } from "@/common/schemas/friend"
 import type { Lecture } from "@/common/schemas/lecture"
 import LectureInfoSubsection from "@/features/timetable/sections/LectureDetailSection/LectureInfoSubsection"
-import { useAPI } from "@/utils/api/useAPI"
+
+import LectureFriendOverlaps from "./LectureFriendOverlaps"
 
 const Detail = styled(FlexWrapper)`
     width: 100%;
@@ -21,47 +21,8 @@ const StyledLink = styled(Link)`
     text-decoration: none;
 `
 
-const Chips = styled(FlexWrapper)`
-    flex-wrap: wrap;
-`
-
-const Chip = styled.span`
-    padding: 5px 10px;
-    border-radius: 999px;
-    color: ${({ theme }) => theme.colors.Highlight.default};
-    background: ${({ theme }) => theme.colors.Background.Button.highlight};
-    font-size: 13px;
-`
-
-function FriendGroup({ title, friends }: { title: string; friends: Friend[] }) {
-    const { t } = useTranslation()
-    return (
-        <FlexWrapper direction="column" gap={8} align="stretch">
-            <Typography type="NormalBold" color="Text.default">
-                {title}
-            </Typography>
-            {friends.length ? (
-                <Chips direction="row" gap={6}>
-                    {friends.map((friend) => (
-                        <Chip key={friend.id}>{friend.name}</Chip>
-                    ))}
-                </Chips>
-            ) : (
-                <Typography type="Small" color="Text.disable">
-                    {t("friends.nobody")}
-                </Typography>
-            )}
-        </FlexWrapper>
-    )
-}
-
 export default function FriendLectureDetail({ lecture }: { lecture: Lecture | null }) {
     const { t } = useTranslation()
-    const { query } = useAPI("GET", `/friends/lectures/${lecture?.id ?? 0}/overlaps`, {
-        enabled: lecture !== null,
-        staleTime: 0,
-        gcTime: 0,
-    })
 
     if (!lecture) {
         return (
@@ -86,30 +47,7 @@ export default function FriendLectureDetail({ lecture }: { lecture: Lecture | nu
                     {t("header.dictionary")}
                 </StyledLink>
             </FlexWrapper>
-            {query.isPending ? (
-                <Typography type="Small" color="Text.placeholder" role="status">
-                    {t("friends.loadingOverlaps")}
-                </Typography>
-            ) : query.isError ? (
-                <Typography type="Small" color="Highlight.default" role="alert">
-                    {t("friends.loadError")}
-                </Typography>
-            ) : (
-                <>
-                    <FriendGroup
-                        title={t("friends.sameLecture")}
-                        friends={query.data?.sameLecture ?? []}
-                    />
-                    <FriendGroup
-                        title={t("friends.sameCourseDifferentSection")}
-                        friends={query.data?.sameCourseDifferentSection ?? []}
-                    />
-                    <FriendGroup
-                        title={t("friends.previousSemesterSameProfessor")}
-                        friends={query.data?.previousSemesterSameProfessor ?? []}
-                    />
-                </>
-            )}
+            <LectureFriendOverlaps lectureId={lecture.id} />
             <LectureInfoSubsection selectedLecture={lecture} />
         </Detail>
     )
