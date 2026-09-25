@@ -9,15 +9,19 @@ import FavoriteIcon from "@mui/icons-material/Favorite"
 import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router"
+import { match } from "ts-pattern"
 
 import Button from "@/common/components/Button"
 import Credits from "@/common/components/Credits"
 import { flattenTimeTableColors } from "@/common/components/timetable/Tile"
 import { LectureActionEnum } from "@/common/enum/lectureActionEnum"
+import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
+import { IconButton } from "@/common/primitives/IconButton"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
+import { timetableItemKey } from "@/common/utils/timetableItems"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
 import isLectureAddDisabled from "@/features/timetable/utils/isLectureAddDisabled"
 import { trackEvent } from "@/libs/mixpanel"
@@ -106,17 +110,22 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
     const { user, status } = useUserStore()
     const isTablet = useIsDevice("tablet")
 
-    const selectedLectures = useTimetableUIStore((s) => s.selectedLectures)
+    const selectedItems = useTimetableUIStore((s) => s.selectedItems)
     const hoveredLectures = useTimetableUIStore((s) => s.hoveredLectures)
     const year = useTimetableUIStore((s) => s.year)
     const semester = useTimetableUIStore((s) => s.semesterEnum)
 
+    const selectedItem = selectedItems.length === 1 ? selectedItems[0] : undefined
     const selectedLecture =
-        selectedLectures.length === 1
-            ? selectedLectures[0]
-            : hoveredLectures.length === 1
+        selectedItem?.kind === TimetableItemKind.LECTURE
+            ? selectedItem.data
+            : selectedItems.length === 0 && hoveredLectures.length === 1
               ? hoveredLectures[0]
               : null
+    const showSelectedItems =
+        selectedItems.length > 1 ||
+        (selectedItem !== undefined && selectedItem.kind !== TimetableItemKind.LECTURE)
+    const tileColors = flattenTimeTableColors(theme.colors.Tile.TimeTable.default)
 
     const [wishListIds, setWishListIds] = useState<number[]>([])
 
@@ -214,45 +223,79 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
             direction="column"
             gap={12}
             align={"center"}
-            justify={!selectedLecture && !selectedLectures.length ? "center" : "start"}
+            justify={!selectedLecture && !selectedItems.length ? "center" : "start"}
         >
-            {selectedLectures.length > 1 ? (
+            {showSelectedItems ? (
                 <MultipleSelectWrapper
                     direction="column"
                     gap={16}
                     align="stretch"
                     justify="flex-start"
                 >
-                    <Typography type="Bigger" color="Text.default">
-                        {selectedLectures.length}
-                        {t("timetable.numSelected")}
-                    </Typography>
-                    {selectedLectures.map((l) => {
-                        const tileColors = flattenTimeTableColors(
-                            theme.colors.Tile.TimeTable.default,
-                        )
-                        const color = tileColors[l.courseId % tileColors.length]
-                        return (
-                            <MultipleSelectLectureBlock
-                                key={l.id}
-                                direction="row"
-                                gap={12}
-                                align="center"
+                    <FlexWrapper
+                        direction="row"
+                        gap={8}
+                        align="center"
+                        justify={isTablet ? "space-between" : "center"}
+                    >
+                        {isTablet && <div style={{ width: 20 }} />}
+                        <Typography type="Bigger" color="Text.default">
+                            {selectedItems.length}
+                            {t("timetable.numSelected")}
+                        </Typography>
+                        {isTablet && (
+                            <IconButton
+                                aria-label="Close selected items"
+                                onClick={onMobileModalClose}
                             >
-                                <Icon size={14} color={color as string}>
-                                    <CircleIcon />
+                                <Icon size={20} color={theme.colors.Text.default}>
+                                    <CloseIcon />
                                 </Icon>
-                                <FlexWrapper direction="column" gap={4} flex="1 1 auto">
-                                    <Typography type="BigBold" color="Text.default">
-                                        {l.name} {l.subtitle}
-                                    </Typography>
-                                    <Typography type="Small" color="Text.dark">
+                            </IconButton>
+                        )}
+                    </FlexWrapper>
+                    {selectedItems.map((item) => {
+                        const { colorIndex, title, description } = match(item)
+                            .with({ kind: TimetableItemKind.LECTURE }, ({ data: l }) => ({
+                                colorIndex: l.courseId,
+                                title: `${l.name} ${l.subtitle}`,
+                                description: (
+                                    <>
                                         {l.professors[0]?.name}{" "}
                                         {l.professors.length > 1
                                             ? `${t("common.professors.over")} ${l.professors.length - 1}${t("common.professors.people")} `
                                             : " "}
                                         | {l.department.name} | {l.credit}
                                         {t("common.credit")}
+                                    </>
+                                ),
+                            }))
+                            .with({ kind: TimetableItemKind.CUSTOM }, ({ data }) => ({
+                                colorIndex: data.id * 3 + 7,
+                                title: data.block_name,
+                                description: data.place,
+                            }))
+                            .exhaustive()
+                        return (
+                            <MultipleSelectLectureBlock
+                                key={timetableItemKey(item)}
+                                data-timetable-item-key={timetableItemKey(item)}
+                                direction="row"
+                                gap={12}
+                                align="center"
+                            >
+                                <Icon
+                                    size={14}
+                                    color={tileColors[colorIndex % tileColors.length]}
+                                >
+                                    <CircleIcon />
+                                </Icon>
+                                <FlexWrapper direction="column" gap={4} flex="1 1 auto">
+                                    <Typography type="BigBold" color="Text.default">
+                                        {title}
+                                    </Typography>
+                                    <Typography type="Small" color="Text.dark">
+                                        {description}
                                     </Typography>
                                 </FlexWrapper>
                             </MultipleSelectLectureBlock>

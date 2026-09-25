@@ -1,6 +1,5 @@
-import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
-import { Close } from "@mui/icons-material"
+import Close from "@mui/icons-material/Close"
 import { useTranslation } from "react-i18next"
 
 import FlexWrapper from "@/common/primitives/FlexWrapper"
@@ -20,14 +19,35 @@ const TimeFilterPlaceholder = styled(Typography)`
     background-color: ${({ theme }) => theme.colors.Background.Button.default};
 `
 
+const RemoveButton = styled.button`
+    display: flex;
+    flex-shrink: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: ${({ theme }) => theme.colors.Text.default};
+    cursor: pointer;
+
+    &:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+`
+
 interface TimeFilterProps {
     timeFilter: TimeBlock | undefined | null
     setTimeFilter: ((timeFilter: TimeBlock | null) => void) | undefined
+    removeLabel?: string
+    disabled?: boolean
 }
 
-function TimeFilterArea({ timeFilter, setTimeFilter }: TimeFilterProps) {
+function TimeFilterArea({
+    timeFilter,
+    setTimeFilter,
+    removeLabel,
+    disabled,
+}: TimeFilterProps) {
     const { t } = useTranslation()
-    const theme = useTheme()
 
     return (
         <FlexWrapper direction="column" gap={0} style={{ width: "100%" }}>
@@ -47,16 +67,16 @@ function TimeFilterArea({ timeFilter, setTimeFilter }: TimeFilterProps) {
                             color="Text.default"
                             type="Normal"
                         >{`${formatTimeAreaToString(timeFilter)}`}</Typography>
-                        <Icon
-                            size={15}
-                            onClick={() => {
-                                if (!setTimeFilter) return
-                                setTimeFilter(null)
-                            }}
-                            color={theme.colors.Text.default}
+                        <RemoveButton
+                            type="button"
+                            aria-label={removeLabel ?? t("common.search.reset")}
+                            disabled={disabled || !setTimeFilter}
+                            onClick={() => setTimeFilter?.(null)}
                         >
-                            <Close />
-                        </Icon>
+                            <Icon size={15} style={{ cursor: "inherit" }}>
+                                <Close />
+                            </Icon>
+                        </RemoveButton>
                     </FlexWrapper>
                 )}
             </TimeFilterInner>

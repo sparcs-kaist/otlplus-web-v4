@@ -37,7 +37,7 @@ const BlurWrapper = styled(FlexWrapper)<{ blur: boolean }>`
     filter: ${(props) => (props.blur ? "blur(4px)" : "none")};
     width: 100%;
     height: 100%;
-    pointer-events: none;
+    pointer-events: ${({ blur }) => (blur ? "none" : "auto")};
 `
 
 const LoginWrapper = styled(FlexWrapper)`
@@ -112,7 +112,7 @@ const TimeTableSection = () => {
         }
     }, [currentSemester.data, setMyTimetableParams])
 
-    const lectures = myTimetable.data?.lectures ?? []
+    const timetableItems = myTimetable.data?.timetableItems ?? []
 
     return (
         <StyledWidget direction="column" gap={0} padding="30px 23px" flex="1 1 auto">
@@ -172,7 +172,7 @@ const TimeTableSection = () => {
                     >
                         <TimeTableGridWrapper style={{ overflow: "hidden" }}>
                             <CustomTimeTableGrid
-                                lectures={lectures}
+                                timetableItems={timetableItems}
                                 needLectureDeletable={false}
                                 needTimeFilter={false}
                                 onLectureSelect={(lecture) => setSelectedLecture(lecture)}

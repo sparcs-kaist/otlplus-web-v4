@@ -1,8 +1,11 @@
 import { CanvasRenderingContext2D, createCanvas, loadImage } from "canvas"
 import ical, { ICalAlarmType, ICalEventRepeatingFreq } from "ical-generator"
 
+import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import type { CustomBlock } from "@/common/schemas/customBlock"
 import type { Lecture } from "@/common/schemas/lecture"
+import type { TimetableItem } from "@/common/schemas/timetableItem"
+import { getTimetableItemTimes } from "@/common/utils/timetableItems"
 import { colors } from "@/styles/themes/_base/variables/colors"
 import { darkThemeColors } from "@/styles/themes/dark/variables/colors"
 import professorName from "@/utils/professorName"
@@ -57,26 +60,31 @@ interface DrawTimetableDatas {
 }
 
 function getTimetableExportEntries(lectures: Lecture[], customBlocks: CustomBlock[]) {
-    return [
-        ...lectures.flatMap((lecture) =>
-            lecture.classes.map((classtime) => ({
-                ...classtime,
-                title: lecture.name,
-                professor: professorName(lecture.professors),
-                location: `${classtime.buildingCode} ${classtime.roomName}`.trim(),
-                colorIndex: lecture.courseId,
-            })),
-        ),
-        ...customBlocks.map((block) => ({
-            day: block.day,
-            begin: block.begin,
-            end: block.end,
-            title: block.block_name,
-            professor: "",
-            location: block.place,
-            colorIndex: block.id * 3 + 7,
-        })),
+    const items: TimetableItem[] = [
+        ...lectures.map((data) => ({ kind: TimetableItemKind.LECTURE, data })),
+        ...customBlocks.map((data) => ({ kind: TimetableItemKind.CUSTOM, data })),
     ]
+    return items.flatMap((item) =>
+        getTimetableItemTimes(item).map((time, index) => ({
+            ...time,
+            title:
+                item.kind === TimetableItemKind.LECTURE
+                    ? item.data.name
+                    : item.data.block_name,
+            professor:
+                item.kind === TimetableItemKind.LECTURE
+                    ? professorName(item.data.professors)
+                    : "",
+            location:
+                item.kind === TimetableItemKind.LECTURE
+                    ? `${item.data.classes[index]!.buildingCode} ${item.data.classes[index]!.roomName}`.trim()
+                    : item.data.place,
+            colorIndex:
+                item.kind === TimetableItemKind.LECTURE
+                    ? item.data.courseId
+                    : item.data.id * 3 + 7,
+        })),
+    )
 }
 
 function drawRoundedRectangle(options: RoundedRectangleOptions) {
