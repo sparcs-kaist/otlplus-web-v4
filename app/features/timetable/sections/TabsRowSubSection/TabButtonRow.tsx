@@ -482,9 +482,11 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                 <SemesterButton
                     year={year}
                     semester={semester}
-                    setYear={setYear}
-                    setSemester={setSemester}
-                    setCurrentTimetableId={setCurrentTimetableId}
+                    onChange={(nextYear, nextSemester) => {
+                        setYear(nextYear)
+                        setSemester(nextSemester)
+                        setCurrentTimetableId(null)
+                    }}
                 />
             </FlexWrapper>
         </TabButtonRowWrapper>

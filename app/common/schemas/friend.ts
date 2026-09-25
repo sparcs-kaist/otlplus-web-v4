@@ -1,5 +1,7 @@
 import { z } from "zod"
 
+import { SemesterEnum } from "@/common/enum/semesterEnum"
+
 export const FriendCodeSchema = z
     .string()
     .trim()
@@ -13,3 +15,13 @@ export const FriendSchema = z.object({
 })
 
 export type Friend = z.infer<typeof FriendSchema>
+
+export const OverlapFriendSchema = FriendSchema.extend({
+    timetable: z.object({
+        id: z.number().int().positive().nullable(),
+        year: z.number().int().positive(),
+        semester: z.enum(SemesterEnum),
+    }),
+})
+
+export type OverlapFriend = z.infer<typeof OverlapFriendSchema>

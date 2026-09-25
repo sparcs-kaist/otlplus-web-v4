@@ -34,6 +34,7 @@ const Page = styled(FlexWrapper)`
     padding: 24px;
     box-sizing: border-box;
     text-align: center;
+    overflow-y: auto;
 `
 
 const Card = styled(FlexWrapper)`
@@ -45,6 +46,50 @@ const Card = styled(FlexWrapper)`
     box-shadow:
         0 1px 3px rgba(0, 0, 0, 0.1),
         0 1px 2px rgba(0, 0, 0, 0.06);
+`
+
+const SelfInviteContent = styled(FlexWrapper)`
+    width: min(100%, 560px);
+    flex-shrink: 0;
+    margin: auto;
+`
+
+const SelfInviteImage = styled.img`
+    width: min(100%, 340px);
+    height: auto;
+    max-height: 36svh;
+    object-fit: contain;
+`
+
+const SelfInviteTitle = styled.h1`
+    margin: 0;
+    color: ${({ theme }) => theme.colors.Text.default};
+    font-size: ${({ theme }) => theme.fonts.BiggerBold.fontSize}px;
+    font-weight: ${({ theme }) => theme.fonts.BiggerBold.fontWeight};
+    line-height: 1.5;
+    word-break: keep-all;
+    overflow-wrap: anywhere;
+`
+
+const ReturnButton = styled.button`
+    min-height: 44px;
+    padding: 12px 24px;
+    border: 0;
+    border-radius: 8px;
+    background: ${({ theme }) => theme.colors.Highlight.default};
+    color: ${({ theme }) => theme.colors.Text.onHighlight.default};
+    font: inherit;
+    font-size: ${({ theme }) => theme.fonts.Normal.fontSize}px;
+    cursor: pointer;
+
+    &:hover {
+        background: ${({ theme }) => theme.colors.Highlight.dark};
+    }
+
+    &:focus-visible {
+        outline: 2px solid ${({ theme }) => theme.colors.Highlight.default};
+        outline-offset: 3px;
+    }
 `
 
 export default function FriendInvitePage() {
@@ -61,8 +106,9 @@ export default function FriendInvitePage() {
     }
     const navigate = useNavigate()
     const queryClient = useQueryClient()
-    const { status } = useUserStore()
-    const acceptingCode = useRef<string | null>(null)
+    const { status, user } = useUserStore()
+    const acceptingInvite = useRef<string | null>(null)
+    const inviteKey = user && code ? `${user.id}:${code}` : null
     const { mutation, requestFunction } = useAPI("POST", "/friends", {
         onSuccess: async ({ friend }) => {
             await invalidateFriendQueries(queryClient)
@@ -74,15 +120,24 @@ export default function FriendInvitePage() {
     })
 
     useEffect(() => {
-        if (status === "idle") acceptingCode.current = null
-        if (status !== "success" || !code || acceptingCode.current === code) return
-        acceptingCode.current = code
+        if (status === "idle") acceptingInvite.current = null
+        if (status !== "success" || !inviteKey || acceptingInvite.current === inviteKey)
+            return
+        acceptingInvite.current = inviteKey
         requestFunction({ code })
-    }, [status, code, requestFunction])
+    }, [status, code, inviteKey, requestFunction])
 
-    const errorStatus = isAxiosError(mutation.error)
-        ? mutation.error.response?.status
+    const errorResponse = isAxiosError<{ message?: { code?: string } }>(mutation.error)
+        ? mutation.error.response
         : undefined
+    const errorStatus = errorResponse?.status
+    const isSelfInvite =
+        status === "success" &&
+        inviteKey !== null &&
+        acceptingInvite.current === inviteKey &&
+        mutation.isError &&
+        errorStatus === HttpStatusCode.BadRequest &&
+        errorResponse?.data?.message?.code === "SELF_FRIENDSHIP"
     const errorMessage =
         !code ||
         errorStatus === HttpStatusCode.BadRequest ||
@@ -91,6 +146,35 @@ export default function FriendInvitePage() {
             : errorStatus === HttpStatusCode.TooManyRequests
               ? "friends.inviteRateLimited"
               : "friends.inviteAddError"
+
+    if (isSelfInvite) {
+        return (
+            <Page direction="column" gap={0} align="center" justify="flex-start">
+                <SelfInviteContent direction="column" gap={24} align="center">
+                    <SelfInviteImage
+                        src="/images/friends/self-invite.png"
+                        alt={t("friends.selfInviteImageAlt")}
+                        width={1024}
+                        height={1024}
+                    />
+                    <FlexWrapper direction="column" gap={12} align="center" role="status">
+                        <SelfInviteTitle>
+                            {t("friends.selfInviteTitle", { name: user?.name })}
+                        </SelfInviteTitle>
+                        <Typography type="Big" color="Text.light">
+                            {t("friends.selfInviteDescription")}
+                        </Typography>
+                    </FlexWrapper>
+                    <ReturnButton
+                        type="button"
+                        onClick={() => navigate("/friends", { replace: true })}
+                    >
+                        {t("friends.backToFriends")}
+                    </ReturnButton>
+                </SelfInviteContent>
+            </Page>
+        )
+    }
 
     return (
         <Page direction="column" gap={0} align="center" justify="center">

@@ -24,32 +24,28 @@ const SemesterButtonWrapper = styled(FlexWrapper)`
 interface SemesterButtonProps {
     year: number
     semester: SemesterEnum
-    setYear: React.Dispatch<React.SetStateAction<number>>
-    setSemester: React.Dispatch<React.SetStateAction<SemesterEnum>>
-    setCurrentTimetableId: React.Dispatch<React.SetStateAction<number | null>>
+    onChange: (year: number, semester: SemesterEnum) => void
 }
 
 export default function SemesterButton({
     year,
     semester,
-    setYear,
-    setSemester,
-    setCurrentTimetableId,
+    onChange,
 }: SemesterButtonProps) {
     const theme = useTheme()
 
     const { query: semestersRequest } = useAPI("GET", "/semesters")
 
     useEffect(() => {
+        if (year >= 0) return
         const semesters = semestersRequest.data?.semesters
         if (semesters && semesters.length > 0) {
             const lastSemester = semesters[semesters.length - 1]
             if (lastSemester) {
-                setYear(lastSemester.year)
-                setSemester(lastSemester.semester)
+                onChange(lastSemester.year, lastSemester.semester)
             }
         }
-    }, [semestersRequest.data])
+    }, [semestersRequest.data, year, onChange])
 
     const { isFirstSemester, isLastSemester } = useMemo(() => {
         if (!semestersRequest.data) {
@@ -74,22 +70,18 @@ export default function SemesterButton({
     const onClickPreviousSemester = () => {
         if (isFirstSemester) return
         if (semester === SemesterEnum.SPRING) {
-            setSemester(SemesterEnum.FALL)
-            setYear(year - 1)
+            onChange(year - 1, SemesterEnum.FALL)
         } else {
-            setSemester(SemesterEnum.SPRING)
+            onChange(year, SemesterEnum.SPRING)
         }
-        setCurrentTimetableId(null)
     }
     const onClickNextSemester = () => {
         if (isLastSemester) return
         if (semester === SemesterEnum.FALL) {
-            setSemester(SemesterEnum.SPRING)
-            setYear(year + 1)
+            onChange(year + 1, SemesterEnum.SPRING)
         } else {
-            setSemester(SemesterEnum.FALL)
+            onChange(year, SemesterEnum.FALL)
         }
-        setCurrentTimetableId(null)
     }
 
     return (

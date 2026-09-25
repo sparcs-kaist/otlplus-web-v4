@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import styled from "@emotion/styled"
 import DeleteIcon from "@mui/icons-material/Delete"
@@ -430,6 +430,11 @@ function FriendListContent({
     )
 }
 
+function positiveInteger(value: string | null) {
+    const number = Number(value)
+    return Number.isSafeInteger(number) && number > 0 ? number : null
+}
+
 export default function FriendsPage() {
     const { t } = useTranslation()
     const queryClient = useQueryClient()
@@ -439,12 +444,19 @@ export default function FriendsPage() {
     const location = useLocation()
     const navigate = useNavigate()
 
-    const rawFriendId = Number(searchParams.get("friendId"))
-    const selectedFriendId =
-        Number.isSafeInteger(rawFriendId) && rawFriendId > 0 ? rawFriendId : null
-    const [year, setYear] = useState(-1)
-    const [semester, setSemester] = useState(SemesterEnum.SPRING)
-    const [currentTimetableId, setCurrentTimetableId] = useState<number | null>(null)
+    const selectedFriendId = positiveInteger(searchParams.get("friendId"))
+    const requestedYear = positiveInteger(searchParams.get("year"))
+    const requestedSemester = Number(searchParams.get("semester"))
+    const hasRequestedTerm =
+        requestedYear !== null &&
+        Number.isInteger(requestedSemester) &&
+        requestedSemester >= SemesterEnum.SPRING &&
+        requestedSemester <= SemesterEnum.WINTER
+    const year = hasRequestedTerm ? requestedYear : -1
+    const semester = hasRequestedTerm ? requestedSemester : SemesterEnum.SPRING
+    const currentTimetableId = hasRequestedTerm
+        ? positiveInteger(searchParams.get("timetableId"))
+        : null
     const [selectedLecture, setSelectedLecture] = useState<Lecture | null>(null)
     const [friendListOpen, setFriendListOpen] = useState(false)
     const [detailOpen, setDetailOpen] = useState(false)
@@ -454,6 +466,35 @@ export default function FriendsPage() {
     const [addedFriendName, setAddedFriendName] = useState<string | null>(
         (location.state as { friendAddedName?: string } | null)?.friendAddedName ?? null,
     )
+
+    const handleSelectFriend = useCallback(
+        (friendId: number | null) => {
+            setFriendListOpen(false)
+            setSearchParams((previous) => {
+                const params = new URLSearchParams(previous)
+                if (friendId === null) params.delete("friendId")
+                else params.set("friendId", String(friendId))
+                params.delete("timetableId")
+                return params
+            })
+        },
+        [setSearchParams],
+    )
+
+    const handleSelectTimetable = (timetableId: number | null) => {
+        const params = new URLSearchParams(searchParams)
+        if (timetableId === null) params.delete("timetableId")
+        else params.set("timetableId", String(timetableId))
+        setSearchParams(params)
+    }
+
+    const handleSelectSemester = (nextYear: number, nextSemester: SemesterEnum) => {
+        const params = new URLSearchParams(searchParams)
+        params.set("year", String(nextYear))
+        params.set("semester", String(nextSemester))
+        params.delete("timetableId")
+        setSearchParams(params, { replace: year < 0 })
+    }
 
     useEffect(() => {
         if (isTablet && detailOpen) detailActionRef.current?.focus()
@@ -520,7 +561,7 @@ export default function FriendsPage() {
         `/friends/${deletingFriend?.id ?? 0}`,
         {
             onSuccess: () => {
-                if (deletingFriend?.id === selectedFriendId) setSearchParams({})
+                if (deletingFriend?.id === selectedFriendId) handleSelectFriend(null)
                 if (deletingFriend)
                     removeFriendTimetableQueries(queryClient, deletingFriend.id)
                 setDeletingFriend(null)
@@ -539,16 +580,13 @@ export default function FriendsPage() {
             setFriendTimetableParams(params)
             setFriendActualParams(params)
         }
-        setCurrentTimetableId(null)
-        setSelectedLecture(null)
     }, [year, semester, selectedFriendId])
 
     useEffect(() => {
-        setCurrentTimetableId(null)
         setSelectedLecture(null)
         setDetailOpen(false)
         setFriendListOpen(false)
-    }, [selectedFriendId])
+    }, [selectedFriendId, year, semester, currentTimetableId, location.key])
 
     useEffect(() => {
         if (
@@ -558,14 +596,14 @@ export default function FriendsPage() {
             friendsQuery.data &&
             !friendsQuery.data.friends.some(({ id }) => id === selectedFriendId)
         ) {
-            setSearchParams({})
+            handleSelectFriend(null)
         }
     }, [
         friendsQuery.data,
         friendsQuery.isFetching,
         friendsQuery.isSuccess,
         selectedFriendId,
-        setSearchParams,
+        handleSelectFriend,
     ])
 
     const timetables =
@@ -583,11 +621,6 @@ export default function FriendsPage() {
               ? ownSaved
               : friendSaved
     const lectures = lectureQuery.isError ? [] : (lectureQuery.data?.lectures ?? [])
-
-    const handleSelectFriend = (friendId: number | null) => {
-        setFriendListOpen(false)
-        setSearchParams(friendId === null ? {} : { friendId: String(friendId) })
-    }
 
     const closeAddedModal = () => {
         setAddedFriendName(null)
@@ -657,18 +690,13 @@ export default function FriendsPage() {
                         <SemesterButton
                             year={year}
                             semester={semester}
-                            setYear={setYear}
-                            setSemester={setSemester}
-                            setCurrentTimetableId={setCurrentTimetableId}
+                            onChange={handleSelectSemester}
                         />
                     </TimetableHeader>
                     <Tabs>
                         <TabButton
                             type={currentTimetableId === null ? "selected" : "default"}
-                            onClick={() => {
-                                setCurrentTimetableId(null)
-                                setSelectedLecture(null)
-                            }}
+                            onClick={() => handleSelectTimetable(null)}
                         >
                             {t("friends.actualTimetable")}
                         </TabButton>
@@ -680,10 +708,7 @@ export default function FriendsPage() {
                                         ? "selected"
                                         : "default"
                                 }
-                                onClick={() => {
-                                    setCurrentTimetableId(timetable.id)
-                                    setSelectedLecture(null)
-                                }}
+                                onClick={() => handleSelectTimetable(timetable.id)}
                             >
                                 {timetable.name}
                             </TabButton>

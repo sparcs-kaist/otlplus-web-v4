@@ -1,4 +1,4 @@
-import { MemoryRouter } from "react-router"
+import { MemoryRouter, useLocation } from "react-router"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { Lecture } from "@/common/schemas/lecture"
@@ -93,12 +93,26 @@ beforeEach(() => {
                 isError: false,
                 data: lectureId
                     ? {
-                          sameLecture: [{ id: 11, name: `Same section ${lectureId}` }],
+                          sameLecture: [
+                              {
+                                  id: 11,
+                                  name: `Same section ${lectureId}`,
+                                  timetable: { id: 42, year: 2026, semester: 3 },
+                              },
+                          ],
                           sameCourseDifferentSection: [
-                              { id: 12, name: "Different section" },
+                              {
+                                  id: 12,
+                                  name: "Different section",
+                                  timetable: { id: 43, year: 2026, semester: 3 },
+                              },
                           ],
                           previousSemesterSameProfessor: [
-                              { id: 13, name: "Previous semester" },
+                              {
+                                  id: 13,
+                                  name: "Previous semester",
+                                  timetable: { id: null, year: 2025, semester: 1 },
+                              },
                           ],
                       }
                     : wishlist,
@@ -115,6 +129,11 @@ afterEach(() => {
     useUserStore.setState(useUserStore.getInitialState())
 })
 
+function LocationProbe() {
+    const location = useLocation()
+    return <div data-testid="location">{location.pathname + location.search}</div>
+}
+
 function renderDetail(props = {}) {
     return render(
         <MemoryRouter>
@@ -124,6 +143,7 @@ function renderDetail(props = {}) {
                 timetableLectures={[]}
                 {...props}
             />
+            <LocationProbe />
         </MemoryRouter>,
     )
 }
@@ -205,9 +225,23 @@ describe("timetable lecture friend overlaps", () => {
                 "/friends/lectures/101/overlaps",
                 expect.any(Object),
             ])
-            expect(screen.getByText("Same section 101")).toBeInTheDocument()
-            expect(screen.getByText("Different section")).toBeInTheDocument()
-            expect(screen.getByText("Previous semester")).toBeInTheDocument()
+            for (const [name, target] of [
+                [
+                    "Same section 101",
+                    "/friends?friendId=11&year=2026&semester=3&timetableId=42",
+                ],
+                [
+                    "Different section",
+                    "/friends?friendId=12&year=2026&semester=3&timetableId=43",
+                ],
+                ["Previous semester", "/friends?friendId=13&year=2025&semester=1"],
+            ] as const) {
+                const friendButton = screen.getByRole("button", { name })
+                expect(friendButton).toHaveAttribute("type", "button")
+                expect(friendButton).not.toHaveAttribute("href")
+                fireEvent.click(friendButton)
+                expect(screen.getByTestId("location")).toHaveTextContent(target)
+            }
             for (const title of [
                 "friends.sameLecture",
                 "friends.sameCourseDifferentSection",
