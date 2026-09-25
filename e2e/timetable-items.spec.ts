@@ -192,7 +192,10 @@ test("mixed selection deletes whole items and undo remaps recreated blocks", asy
     page,
 }) => {
     const { tables, cloneRequests } = await setup(page)
-    await page.goto("/timetable")
+    await Promise.all([
+        page.waitForResponse(/\/api\/v2\/timetables\/1(?:\?|$)/),
+        page.goto("/timetable"),
+    ])
     await expect(page.locator(".block-title", { hasText: "Study time" })).toBeVisible()
     await expect(page.locator(".lecture-title", { hasText: "Algorithms" })).toHaveCount(2)
     await page.keyboard.press("Control+a")
@@ -218,7 +221,10 @@ test("home saves a selected timetable with blocks and falls back to enrolled", a
     page,
 }) => {
     const state = await setup(page)
-    await page.goto("/")
+    await Promise.all([
+        page.waitForResponse(/\/api\/v2\/timetables\/home(?:\?|$)/),
+        page.goto("/"),
+    ])
     const selector = page.getByRole("combobox", {
         name: /Timetable shown on home|홈에 표시할 시간표/,
     })
@@ -264,7 +270,10 @@ test("keeps zero-time lectures and off-grid blocks visible as separate items", a
             },
         },
     ])
-    await page.goto("/timetable")
+    await Promise.all([
+        page.waitForResponse(/\/api\/v2\/timetables\/1(?:\?|$)/),
+        page.goto("/timetable"),
+    ])
     await expect(page.locator(".lecture-title", { hasText: "Algorithms" })).toBeVisible()
     const saturday = page.locator('.overflow-grid-wrapper [data-custom-block-id="21"]')
     const sunday = page.locator('.overflow-grid-wrapper [data-custom-block-id="22"]')

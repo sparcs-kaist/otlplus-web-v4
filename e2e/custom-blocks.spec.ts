@@ -157,7 +157,10 @@ test("creates, edits, and deletes a custom block", async ({ page }) => {
         }
     })
 
-    await page.goto("/timetable")
+    await Promise.all([
+        page.waitForResponse(/\/api\/v2\/timetables\/1(?:\?|$)/),
+        page.goto("/timetable"),
+    ])
 
     const addButton = page.getByRole("button", {
         name: /Add Custom Block|커스텀 블록 추가/,
