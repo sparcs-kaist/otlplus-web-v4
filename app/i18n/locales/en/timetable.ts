@@ -48,13 +48,6 @@ export const timetable = {
         place: "Place",
         timetable: "Timetable",
         time: "Time",
-        timeHint:
-            "Drag on the timetable more than once or add time slots below. All time slots belong to one block.",
-        timeRange: "Time slot {{index}}",
-        day: "Day",
-        startTime: "Start",
-        endTime: "End",
-        addTime: "+ Add time slot",
         removeTime: "Remove time slot {{index}}",
         add: "Add to Timetable",
         save: "Save",

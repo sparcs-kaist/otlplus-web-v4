@@ -47,13 +47,6 @@ export const timetable = {
         place: "장소",
         timetable: "시간표",
         time: "시간",
-        timeHint:
-            "시간표를 여러 번 드래그하거나 시간대를 직접 추가하세요. 모든 시간대가 하나의 블록으로 저장됩니다.",
-        timeRange: "시간대 {{index}}",
-        day: "요일",
-        startTime: "시작",
-        endTime: "종료",
-        addTime: "+ 시간대 추가",
         removeTime: "시간대 {{index}} 삭제",
         add: "시간표에 추가하기",
         save: "저장하기",

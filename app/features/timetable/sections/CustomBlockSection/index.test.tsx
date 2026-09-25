@@ -88,10 +88,11 @@ it("keeps edited grouped time slots when a save fails", async () => {
     fireEvent.change(screen.getByPlaceholderText("timetable.customBlock.name"), {
         target: { value: "Revised study" },
     })
-    fireEvent.click(screen.getByRole("button", { name: "timetable.customBlock.addTime" }))
-    fireEvent.change(screen.getAllByLabelText("timetable.customBlock.endTime")[1]!, {
-        target: { value: "660" },
-    })
+    act(() =>
+        useTimetableUIStore.setState({
+            timeFilter: { day: 1, begin: 540, end: 660 },
+        }),
+    )
     fireEvent.click(screen.getByRole("button", { name: "timetable.customBlock.save" }))
     await waitFor(() =>
         expect(callbacks.updateCustomBlock).toHaveBeenCalledExactlyOnceWith(11, {
@@ -105,9 +106,13 @@ it("keeps edited grouped time slots when a save fails", async () => {
     expect(screen.getByPlaceholderText("timetable.customBlock.name")).toHaveValue(
         "Revised study",
     )
-    expect(screen.getAllByLabelText("timetable.customBlock.endTime")).toHaveLength(2)
-    expect(screen.getAllByLabelText("timetable.customBlock.endTime")[1]).toHaveValue(
-        "660",
+    expect(
+        screen.getAllByRole("button", { name: /timetable.customBlock.removeTime/ }),
+    ).toHaveLength(2)
+    fireEvent.click(screen.getByRole("button", { name: "timetable.customBlock.save" }))
+    await waitFor(() => expect(callbacks.updateCustomBlock).toHaveBeenCalledTimes(2))
+    expect(callbacks.updateCustomBlock.mock.calls[1]).toEqual(
+        callbacks.updateCustomBlock.mock.calls[0],
     )
 })
 
@@ -125,7 +130,9 @@ it("appends separate grid drags to one new block and suppresses duplicate ranges
     for (const timeFilter of [...times, { ...times[0]! }]) {
         act(() => useTimetableUIStore.setState({ timeFilter }))
     }
-    expect(screen.getAllByRole("group")).toHaveLength(3)
+    expect(
+        screen.getAllByRole("button", { name: /timetable.customBlock.removeTime/ }),
+    ).toHaveLength(3)
     fireEvent.click(screen.getByRole("button", { name: "timetable.customBlock.add" }))
     await waitFor(() =>
         expect(callbacks.addCustomBlock).toHaveBeenCalledExactlyOnceWith({
@@ -138,7 +145,7 @@ it("appends separate grid drags to one new block and suppresses duplicate ranges
     expect(callbacks.updateCustomBlock).not.toHaveBeenCalled()
 })
 
-it("preserves grouped ranges while editing native controls and removing one range", async () => {
+it("preserves grouped ranges while removing one range and dragging a new one", async () => {
     const secondTime = { day: 2, begin: 615, end: 690 }
     const thirdTime = { day: 4, begin: 1380, end: 1440 }
     useTimetableUIStore.setState({
@@ -146,34 +153,24 @@ it("preserves grouped ranges while editing native controls and removing one rang
         timeFilter: firstTime,
     })
     render(<CustomBlockSection {...callbacks} isPending={false} />)
-    expect(screen.getAllByRole("group")).toHaveLength(3)
-    expect(screen.getAllByLabelText("timetable.customBlock.startTime")[1]).toHaveValue(
-        "615",
-    )
-    expect(screen.getAllByLabelText("timetable.customBlock.endTime")[2]).toHaveValue(
-        "1440",
-    )
-    fireEvent.change(screen.getAllByLabelText("timetable.customBlock.day")[1]!, {
-        target: { value: "6" },
-    })
-    fireEvent.change(screen.getAllByLabelText("timetable.customBlock.startTime")[1]!, {
-        target: { value: "1320" },
-    })
-    fireEvent.change(screen.getAllByLabelText("timetable.customBlock.endTime")[1]!, {
-        target: { value: "1440" },
-    })
+    expect(
+        screen.getAllByRole("button", { name: /timetable.customBlock.removeTime/ }),
+    ).toHaveLength(3)
     fireEvent.click(
         screen.getByRole("button", { name: "timetable.customBlock.removeTime 1" }),
     )
-    expect(screen.getAllByRole("group")).toHaveLength(2)
+    expect(
+        screen.getAllByRole("button", { name: /timetable.customBlock.removeTime/ }),
+    ).toHaveLength(2)
+    const addedTime = { day: 6, begin: 1320, end: 1440 }
+    act(() => useTimetableUIStore.setState({ timeFilter: addedTime }))
     fireEvent.click(screen.getByRole("button", { name: "timetable.customBlock.save" }))
-    const editedTime = { day: 6, begin: 1320, end: 1440 }
     await waitFor(() =>
         expect(callbacks.updateCustomBlock).toHaveBeenCalledExactlyOnceWith(11, {
             block_name: "Study",
             place: "Library",
-            ...editedTime,
-            times: [editedTime, thirdTime],
+            ...secondTime,
+            times: [secondTime, thirdTime, addedTime],
         }),
     )
 })
@@ -190,10 +187,17 @@ it("rejects overlapping draft ranges without losing them, then allows adjacent r
     fireEvent.click(screen.getByRole("button", { name: "timetable.customBlock.save" }))
     expect(alert).toHaveBeenCalledWith("timetable.customBlock.errorTimeOverlap")
     expect(callbacks.updateCustomBlock).not.toHaveBeenCalled()
-    expect(screen.getAllByRole("group")).toHaveLength(2)
-    fireEvent.change(screen.getAllByLabelText("timetable.customBlock.startTime")[1]!, {
-        target: { value: "600" },
-    })
+    expect(
+        screen.getAllByRole("button", { name: /timetable.customBlock.removeTime/ }),
+    ).toHaveLength(2)
+    fireEvent.click(
+        screen.getByRole("button", { name: "timetable.customBlock.removeTime 2" }),
+    )
+    act(() =>
+        useTimetableUIStore.setState({
+            timeFilter: { day: 0, begin: 600, end: 660 },
+        }),
+    )
     fireEvent.click(screen.getByRole("button", { name: "timetable.customBlock.save" }))
     await waitFor(() =>
         expect(callbacks.updateCustomBlock).toHaveBeenCalledExactlyOnceWith(11, {
@@ -244,7 +248,7 @@ it("does not close a different editor when a pending request finishes", async ()
     })
     expect(useTimetableUIStore.getState().isCustomBlockSectionOpen).toBe(true)
     expect(useTimetableUIStore.getState().selectedCustomBlock?.id).toBe(12)
-    expect(screen.getAllByRole("group")).toHaveLength(2)
-    expect(screen.getAllByLabelText("timetable.customBlock.day")[0]).toHaveValue("3")
-    expect(screen.getAllByLabelText("timetable.customBlock.day")[1]).toHaveValue("5")
+    expect(
+        screen.getAllByRole("button", { name: /timetable.customBlock.removeTime/ }),
+    ).toHaveLength(2)
 })

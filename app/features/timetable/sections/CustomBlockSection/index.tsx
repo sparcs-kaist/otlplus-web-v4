@@ -8,8 +8,8 @@ import { useTranslation } from "react-i18next"
 
 import Button from "@/common/components/Button"
 import TextInput from "@/common/components/search/TextInput"
+import TimeFilterArea from "@/common/components/search/TimeFilterArea"
 import { TimetableItemKind } from "@/common/enum/timetableItemKind"
-import { weekdayToString } from "@/common/enum/weekdayEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import { IconButton } from "@/common/primitives/IconButton"
@@ -28,55 +28,11 @@ const CustomBlockSectionInner = styled(FlexWrapper)`
     }
 `
 
-const TimeRangeRow = styled.fieldset`
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr)) 24px;
-    align-items: end;
-    gap: 6px;
-    margin: 0;
-    padding: 8px;
-    border: 1px solid ${({ theme }) => theme.colors.Line.block};
-    border-radius: 6px;
-    color: ${({ theme }) => theme.colors.Text.default};
-    font-size: 12px;
-
-    label {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        min-width: 0;
-    }
+const FieldLabel = styled(Typography)`
+    flex-shrink: 0;
+    min-width: 3em;
+    white-space: nowrap;
 `
-
-const TimeSelect = styled.select`
-    width: 100%;
-    min-width: 0;
-    padding: 8px 2px;
-    border: 1px solid ${({ theme }) => theme.colors.Line.block};
-    border-radius: 4px;
-    color: ${({ theme }) => theme.colors.Text.default};
-    background: ${({ theme }) => theme.colors.Background.Button.default};
-    font: inherit;
-`
-
-const TimeRangeButton = styled.button`
-    border: 0;
-    border-radius: 6px;
-    padding: 8px 0;
-    color: ${({ theme }) => theme.colors.Highlight.default};
-    background: ${({ theme }) => theme.colors.Background.Button.default};
-    font: inherit;
-    cursor: pointer;
-
-    &:disabled {
-        cursor: not-allowed;
-        opacity: 0.5;
-    }
-`
-
-const timeOptions = Array.from({ length: 49 }, (_, index) => index * 30)
-const formatTime = (minutes: number) =>
-    `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`
 
 interface CustomBlockSectionProps {
     addCustomBlock: (data: Omit<CustomBlock, "id">) => Promise<boolean>
@@ -146,14 +102,6 @@ function CustomBlockSection({
                 : [...previous, timeBlock],
         )
     }, [timeBlock, isPending])
-
-    const updateTime = (index: number, patch: Partial<TimeBlock>) => {
-        setTimes((previous) =>
-            previous.map((time, timeIndex) =>
-                timeIndex === index ? { ...time, ...patch } : time,
-            ),
-        )
-    }
 
     const validate = useCallback(() => {
         if (!title.trim()) {
@@ -288,118 +236,58 @@ function CustomBlockSection({
                         </FlexWrapper>
                     </FlexWrapper>
                     <FlexWrapper direction="row" gap={10}>
-                        <Typography type="NormalBold" color="Text.light">
+                        <FieldLabel type="NormalBold" color="Text.light">
                             {t("timetable.customBlock.timetable")}
-                        </Typography>
+                        </FieldLabel>
                         <Typography type="NormalMedium" color="Highlight.default">
                             {currentTimetableName}
                         </Typography>
                     </FlexWrapper>
-                    <FlexWrapper direction="column" gap={8} align="stretch">
-                        <Typography type="NormalBold" color="Text.light">
+                    <FlexWrapper direction="row" gap={10} align="flex-start">
+                        <FieldLabel type="NormalBold" color="Text.light">
                             {t("timetable.customBlock.time")}
-                        </Typography>
-                        <Typography type="Small" color="Text.light">
-                            {t("timetable.customBlock.timeHint")}
-                        </Typography>
-                        {times.map((time, index) => (
-                            <TimeRangeRow key={index} disabled={isPending}>
-                                <legend>
-                                    {t("timetable.customBlock.timeRange", {
-                                        index: index + 1,
-                                    })}
-                                </legend>
-                                <label>
-                                    {t("timetable.customBlock.day")}
-                                    <TimeSelect
-                                        value={time.day}
-                                        onChange={(event) =>
-                                            updateTime(index, {
-                                                day: Number(event.target.value),
-                                            })
-                                        }
-                                    >
-                                        {Array.from({ length: 7 }, (_, day) => (
-                                            <option key={day} value={day}>
-                                                {weekdayToString(day, true)}
-                                            </option>
-                                        ))}
-                                    </TimeSelect>
-                                </label>
-                                {(["begin", "end"] as const).map((field) => (
-                                    <label key={field}>
-                                        {t(
-                                            field === "begin"
-                                                ? "timetable.customBlock.startTime"
-                                                : "timetable.customBlock.endTime",
-                                        )}
-                                        <TimeSelect
-                                            value={time[field]}
-                                            onChange={(event) =>
-                                                updateTime(index, {
-                                                    [field]: Number(event.target.value),
-                                                })
-                                            }
-                                        >
-                                            {[...new Set([...timeOptions, time[field]])]
-                                                .filter((minutes) =>
-                                                    field === "begin"
-                                                        ? minutes < 1440
-                                                        : minutes > 0,
-                                                )
-                                                .sort((left, right) => left - right)
-                                                .map((minutes) => (
-                                                    <option key={minutes} value={minutes}>
-                                                        {formatTime(minutes)}
-                                                    </option>
-                                                ))}
-                                        </TimeSelect>
-                                    </label>
-                                ))}
-                                <TimeRangeButton
-                                    type="button"
-                                    aria-label={t("timetable.customBlock.removeTime", {
-                                        index: index + 1,
-                                    })}
-                                    onClick={() => {
-                                        setTimes((previous) =>
-                                            previous.filter(
-                                                (_, timeIndex) => timeIndex !== index,
-                                            ),
-                                        )
-                                        setTimeBlock(null)
-                                    }}
-                                >
-                                    ×
-                                </TimeRangeButton>
-                            </TimeRangeRow>
-                        ))}
-                        <TimeRangeButton
-                            type="button"
-                            disabled={isPending}
-                            onClick={() =>
-                                setTimes((previous) => {
-                                    const last = previous.at(-1)
-                                    return [
-                                        ...previous,
-                                        last
-                                            ? {
-                                                  day: (last.day + 1) % 7,
-                                                  begin: last.begin,
-                                                  end: last.end,
-                                              }
-                                            : { day: 0, begin: 540, end: 600 },
-                                    ]
-                                })
-                            }
+                        </FieldLabel>
+                        <FlexWrapper
+                            direction="column"
+                            gap={8}
+                            align="stretch"
+                            flex="1"
+                            style={{ minWidth: 0 }}
                         >
-                            {t("timetable.customBlock.addTime")}
-                        </TimeRangeButton>
+                            {times.length === 0 ? (
+                                <TimeFilterArea
+                                    timeFilter={null}
+                                    setTimeFilter={undefined}
+                                />
+                            ) : (
+                                times.map((time, index) => (
+                                    <TimeFilterArea
+                                        key={index}
+                                        timeFilter={time}
+                                        disabled={isPending}
+                                        removeLabel={t(
+                                            "timetable.customBlock.removeTime",
+                                            {
+                                                index: index + 1,
+                                            },
+                                        )}
+                                        setTimeFilter={() => {
+                                            setTimes((previous) =>
+                                                previous.filter(
+                                                    (_, timeIndex) => timeIndex !== index,
+                                                ),
+                                            )
+                                            setTimeBlock(null)
+                                        }}
+                                    />
+                                ))
+                            )}
+                        </FlexWrapper>
                     </FlexWrapper>
-                    <FlexWrapper direction="row" gap={20} align="center">
-                        <Typography type="NormalBold" color="Text.light">
+                    <FlexWrapper direction="row" gap={10} align="center">
+                        <FieldLabel type="NormalBold" color="Text.light">
                             {t("timetable.customBlock.place")}
-                        </Typography>
+                        </FieldLabel>
                         <TextInputArea
                             placeholder={t("timetable.customBlock.place")}
                             style={{ border: "1px solid #ccc", padding: "8px" }}
