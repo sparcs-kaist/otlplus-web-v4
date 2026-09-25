@@ -1,0 +1,9 @@
+(function(){try{var e=typeof window<`u`?window:typeof global<`u`?global:typeof globalThis<`u`?globalThis:typeof self<`u`?self:{};e.SENTRY_RELEASE={id:`bb847b14d7c1c5d83bc31587c22652ecf12452e6`};var t=new e.Error().stack;t&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[t]=`915feba7-79d2-44fa-95ef-ff50042edfb9`,e._sentryDebugIdIdentifier=`sentry-dbid-915feba7-79d2-44fa-95ef-ff50042edfb9`)}catch{}})();import{l as e,n as t,r as n}from"./emotion-react-jsx-runtime.browser.esm-B6DQSma1.js";import{n as r,t as i}from"./FlexWrapper-DnOCdROT.js";import{E as a}from"./axios-Cuc9xWpo.js";import{p as o}from"./useAPI-DephItSB.js";import{t as s}from"./Icon-C7BKq74y.js";import{t as c}from"./useTranslation-CfxTHiDx.js";import{t as l}from"./Close-BUK3H1Gk.js";import{t as u}from"./Typography-BhPxHMQG.js";function d(e,t=!1){let n=Math.floor(e/60),r=(e%60).toString().padStart(2,`0`);return t?`${n<12?a.t(`common.am`):a.t(`common.pm`)} ${(n%12==0?12:n%12).toString().padStart(2,`0`)}:${r}`:n.toString().padStart(2,`0`)+`:`+r}function f(e){return`${o(e.day)} ${d(e.begin,!0)} - ${d(e.end,!0)}`}var p=r(i)`
+    width: 100%;
+`,m=r(u)`
+    width: 100%;
+    border-radius: 6px;
+    padding: 8px 10px;
+    background-color: ${({theme:e})=>e.colors.Background.Button.default};
+`;function h({timeFilter:r,setTimeFilter:a}){let{t:o}=c(),d=e();return t(i,{direction:`column`,gap:0,style:{width:`100%`},children:t(p,{direction:`row`,gap:0,children:r?n(i,{direction:`row`,justify:`space-between`,gap:10,align:`center`,children:[t(u,{color:`Text.default`,type:`Normal`,children:`${f(r)}`}),a&&t(s,{size:15,onClick:()=>a(null),color:d.colors.Text.default,children:t(l,{})})]}):t(m,{color:`Text.light`,type:`Normal`,children:o(`common.search.timeFilterPlaceholder`)})})})}export{h as t};
+//# sourceMappingURL=TimeFilterArea-BATlVcxQ.js.map
