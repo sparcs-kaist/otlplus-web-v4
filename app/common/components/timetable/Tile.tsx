@@ -2,7 +2,7 @@ import { type CSSProperties, memo, useCallback } from "react"
 
 import { type Theme, css, keyframes } from "@emotion/react"
 import styled from "@emotion/styled"
-import { Close } from "@mui/icons-material"
+import Close from "@mui/icons-material/Close"
 import { useTranslation } from "react-i18next"
 
 import { TimetableItemKind } from "@/common/enum/timetableItemKind"
@@ -177,7 +177,7 @@ const LectureTileInner = styled(TimetableItemTile)<{
     }
 `
 
-const LectureDeleteWrapper = styled(FlexWrapper)`
+const TimetableItemDeleteWrapper = styled(FlexWrapper)`
     pointer-events: none;
     visibility: hidden;
     position: absolute;
@@ -190,6 +190,40 @@ const LectureDeleteWrapper = styled(FlexWrapper)`
         display: none !important;
     }
 `
+
+export function TimetableItemDeleteButton({
+    onDelete,
+    ariaLabel,
+    className = "lecture-delete-wrapper",
+}: {
+    onDelete: () => void
+    ariaLabel?: string
+    className?: string
+}) {
+    return (
+        <TimetableItemDeleteWrapper
+            direction="column"
+            flex="1 1 auto"
+            gap={0}
+            className={className}
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
+        >
+            <IconButton aria-label={ariaLabel} styles={{ padding: 3 }} onClick={onDelete}>
+                <Icon
+                    size={12}
+                    style={{
+                        color: "rgba(255, 255, 255, 0.6)",
+                        opacity: 1,
+                        pointerEvents: "auto",
+                    }}
+                >
+                    <Close />
+                </Icon>
+            </IconButton>
+        </TimetableItemDeleteWrapper>
+    )
+}
 
 interface LectureTileProps {
     lecture: Lecture
@@ -298,30 +332,7 @@ function LectureTile({
                 </FlexWrapper>
 
                 {deleteLecture && (
-                    <LectureDeleteWrapper
-                        direction="column"
-                        flex="1 1 auto"
-                        gap={0}
-                        className="lecture-delete-wrapper"
-                        onPointerDown={(e) => e.stopPropagation()}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <IconButton
-                            styles={{ padding: 3 }}
-                            onClick={() => deleteLecture(lecture)}
-                        >
-                            <Icon
-                                size={12}
-                                style={{
-                                    color: "rgba(255, 255, 255, 0.6)",
-                                    opacity: 1,
-                                    pointerEvents: "auto",
-                                }}
-                            >
-                                <Close />
-                            </Icon>
-                        </IconButton>
-                    </LectureDeleteWrapper>
+                    <TimetableItemDeleteButton onDelete={() => deleteLecture(lecture)} />
                 )}
             </LectureTileInner>
         </LectureTileWrapper>
@@ -331,7 +342,8 @@ function LectureTile({
 const MemoizedLectureTile = memo(LectureTile, (prevProps, nextProps) => {
     return (
         prevProps.lecture === nextProps.lecture &&
-        prevProps.classIdx === nextProps.classIdx
+        prevProps.classIdx === nextProps.classIdx &&
+        prevProps.deleteLecture === nextProps.deleteLecture
     )
 })
 
@@ -501,32 +513,7 @@ function OverflowTile({ lecture, classIdx, deleteLecture }: OverflowTileProps) {
                     {cls != null ? `(${cls.buildingCode}) ${cls.roomName}` : ""}
                 </Typography>
 
-                {deleteLecture && (
-                    <LectureDeleteWrapper
-                        direction="column"
-                        flex="1 1 auto"
-                        gap={0}
-                        className="lecture-delete-wrapper"
-                        onPointerDown={(e) => e.stopPropagation()}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <IconButton
-                            styles={{ padding: 3 }}
-                            onClick={() => deleteLecture()}
-                        >
-                            <Icon
-                                size={12}
-                                style={{
-                                    color: "rgba(255, 255, 255, 0.6)",
-                                    opacity: 1,
-                                    pointerEvents: "auto",
-                                }}
-                            >
-                                <Close />
-                            </Icon>
-                        </IconButton>
-                    </LectureDeleteWrapper>
-                )}
+                {deleteLecture && <TimetableItemDeleteButton onDelete={deleteLecture} />}
             </OverflowTileInner>
         </OverflowTileWrapper>
     )

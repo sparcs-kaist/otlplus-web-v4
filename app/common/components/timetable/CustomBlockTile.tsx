@@ -1,6 +1,6 @@
 import { memo } from "react"
 
-import { type Theme, ThemeProvider, css } from "@emotion/react"
+import { type Theme, css } from "@emotion/react"
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
 
@@ -10,9 +10,8 @@ import Typography from "@/common/primitives/Typography"
 import type { CustomBlock } from "@/common/schemas/customBlock"
 import type { TimeBlock } from "@/common/schemas/timeblock"
 import { timetableItemKey } from "@/common/utils/timetableItems"
-import lightTheme from "@/styles/themes/light"
 
-import { flattenTimeTableColors } from "./Tile"
+import { TimetableItemDeleteButton, flattenTimeTableColors } from "./Tile"
 import TimetableItemTile from "./TimetableItemTile"
 
 const CUSTOM_BLOCK_TILE_CLASSNAME = "custom-block-tile"
@@ -21,11 +20,16 @@ const CustomBlockTileHoverCss = (theme: Theme) => css`
     background: ${theme.colors.Highlight.default};
 
     .block-title {
-        color: #ffffff;
+        color: ${theme.colors.Text.onHighlight.default};
     }
 
     .block-info {
-        color: rgba(255, 255, 255, 0.5);
+        color: ${theme.colors.Text.onHighlight.muted};
+    }
+
+    .custom-block-delete-wrapper {
+        pointer-events: auto;
+        visibility: visible;
     }
 `
 
@@ -40,14 +44,11 @@ const CustomBlockTileWrapper = styled(FlexWrapper)<{
         rowStart === undefined ? "auto" : `${rowStart} / ${rowEnd}`};
     overflow: hidden;
     pointer-events: none;
-
-    &:has(.${CUSTOM_BLOCK_TILE_CLASSNAME}:hover) .${CUSTOM_BLOCK_TILE_CLASSNAME} {
-        ${({ theme }) => CustomBlockTileHoverCss(theme)}
-    }
+    position: relative;
 
     [data-selected-custom-blocks~="${({ blockId }) => blockId}"] & {
         transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        box-shadow: ${({ theme }) => theme.elevation.raised};
     }
 `
 
@@ -63,8 +64,14 @@ const CustomBlockTileInner = styled(TimetableItemTile)<{ blockId: number }>`
     [data-interaction="true"] & {
         pointer-events: auto;
         cursor: pointer;
+    }
 
-        &:hover {
+    @media (hover: hover) {
+        .custom-timetable[data-interaction="true"]:has(
+                [data-custom-block-id="${({ blockId }) => blockId}"]
+                    .${CUSTOM_BLOCK_TILE_CLASSNAME}:hover
+            )
+            & {
             ${({ theme }) => CustomBlockTileHoverCss(theme)}
         }
     }
@@ -86,11 +93,13 @@ function CustomBlockTile({
     block,
     time,
     onSelect,
+    onDelete,
     overflow = false,
 }: {
     block: CustomBlock
     time: TimeBlock
     onSelect?: (block: CustomBlock, event?: React.PointerEvent) => void
+    onDelete?: (block: CustomBlock) => void
     overflow?: boolean
 }) {
     const { t } = useTranslation()
@@ -129,38 +138,62 @@ function CustomBlockTile({
                     kind: TimetableItemKind.CUSTOM,
                     data: block,
                 })}
-                direction="column"
+                direction="row"
                 gap={0}
                 flex="1 1 auto"
-                align="flex-start"
-                justify="flex-start"
-                padding="6px"
+                align="stretch"
+                justify="stretch"
+                padding="2px"
                 blockId={block.id}
                 className={CUSTOM_BLOCK_TILE_CLASSNAME}
             >
-                <ThemeProvider theme={lightTheme}>
-                    <Typography type="Small" color="Text.dark" className="block-title">
-                        {block.block_name}
-                    </Typography>
-                    {overflow && (
+                <FlexWrapper
+                    direction="column"
+                    justify="center"
+                    flex="1 1 auto"
+                    gap={0}
+                    padding="4px"
+                >
+                    <FlexWrapper
+                        direction="column"
+                        gap={0}
+                        align="flex-start"
+                        style={{ overflow: "hidden" }}
+                    >
                         <Typography
-                            type="Small"
-                            color="Text.lighter"
-                            className="block-info"
+                            type="SmallMedium"
+                            color="TimeTable.title"
+                            className="block-title"
                         >
-                            {timeLabel}
+                            {block.block_name}
                         </Typography>
-                    )}
-                    {block.place && (
-                        <Typography
-                            type="Small"
-                            color="Text.lighter"
-                            className="block-info"
-                        >
-                            {block.place}
-                        </Typography>
-                    )}
-                </ThemeProvider>
+                        {block.place && (
+                            <Typography
+                                type="Small"
+                                color="TimeTable.detail"
+                                className="block-info"
+                            >
+                                {block.place}
+                            </Typography>
+                        )}
+                        {overflow && (
+                            <Typography
+                                type="Small"
+                                color="TimeTable.detail"
+                                className="block-info"
+                            >
+                                {timeLabel}
+                            </Typography>
+                        )}
+                    </FlexWrapper>
+                </FlexWrapper>
+                {onDelete && (
+                    <TimetableItemDeleteButton
+                        onDelete={() => onDelete(block)}
+                        ariaLabel={`Delete custom block: ${block.block_name}`}
+                        className="custom-block-delete-wrapper"
+                    />
+                )}
             </CustomBlockTileInner>
         </CustomBlockTileWrapper>
     )

@@ -327,3 +327,188 @@ test("keeps zero-time lectures and off-grid blocks visible as separate items", a
     await expect(page.locator(".lecture-title")).toHaveCount(0)
     expect(state.tables.get(1)).toHaveLength(0)
 })
+
+async function setupGroupedBlocks(page: Page) {
+    const state = await setup(page)
+    const custom = state.tables.get(1)!.find((item) => item.kind === "custom")!
+    if (custom.kind !== "custom") throw new Error("Missing custom fixture")
+    custom.data.times = [
+        { day: 1, begin: 720, end: 780 },
+        { day: 4, begin: 720, end: 780 },
+        { day: 6, begin: 720, end: 780 },
+    ]
+    state.tables.get(1)!.push({
+        kind: "custom",
+        data: {
+            id: 8,
+            block_name: "Team meeting",
+            place: "Study room",
+            day: 3,
+            begin: 840,
+            end: 900,
+        },
+    })
+    return state
+}
+
+for (const theme of ["light", "dark"] as const) {
+    test(`custom blocks share hover, selection cards, and whole-item delete in ${theme} mode`, async ({
+        page,
+    }) => {
+        const state = await setupGroupedBlocks(page)
+        await page.addInitScript((value) => localStorage.setItem("theme", value), theme)
+        await Promise.all([
+            page.waitForResponse(/\/api\/v2\/timetables\/1(?:\?|$)/),
+            page.goto("/timetable"),
+        ])
+        const group = page.locator('[data-custom-block-id="7"] .custom-block-tile')
+        const other = page.locator('[data-custom-block-id="8"] .custom-block-tile')
+        const lectures = page.locator(".lecture-tile")
+        const deletes = group.locator(
+            'button[aria-label="Delete custom block: Study time"]',
+        )
+        await expect(group).toHaveCount(3)
+        await expect(deletes).toHaveCount(3)
+        await page.mouse.move(1, 1)
+        for (const button of await deletes.all()) await expect(button).toBeHidden()
+        const lectureColor = await lectures
+            .first()
+            .evaluate((tile) => getComputedStyle(tile).backgroundColor)
+        const otherColor = await other.evaluate(
+            (tile) => getComputedStyle(tile).backgroundColor,
+        )
+        await lectures.first().hover()
+        const hoverColor = await lectures
+            .first()
+            .evaluate((tile) => getComputedStyle(tile).backgroundColor)
+        const titleColor = await lectures
+            .first()
+            .locator(".lecture-title")
+            .evaluate((title) => getComputedStyle(title).color)
+        const detailColor = await lectures
+            .first()
+            .locator(".lecture-info")
+            .first()
+            .evaluate((detail) => getComputedStyle(detail).color)
+
+        await group.first().hover()
+        for (const tile of await group.all()) {
+            await expect(tile).toHaveCSS("background-color", hoverColor)
+            await expect(tile.locator(".block-title")).toHaveCSS("color", titleColor)
+            await expect(tile.locator(".block-info", { hasText: "Library" })).toHaveCSS(
+                "color",
+                detailColor,
+            )
+        }
+        for (const button of await deletes.all()) await expect(button).toBeVisible()
+        await expect(other).toHaveCSS("background-color", otherColor)
+        for (const tile of await lectures.all())
+            await expect(tile).toHaveCSS("background-color", lectureColor)
+
+        await group.first().click()
+        await page.mouse.move(1, 1)
+        for (const button of await deletes.all()) await expect(button).toBeVisible()
+        await lectures.first().click({ modifiers: ["Control"] })
+        await expect(
+            page.getByText(/^2(?:개 과목 선택됨| Lectures Selected)$/),
+        ).toBeVisible()
+        const cards = page.locator("[data-timetable-item-key]")
+        await expect(cards).toHaveCount(2)
+        await expect(page.locator('[data-timetable-item-key="custom:7"]')).toContainText(
+            "Study time",
+        )
+        await expect(page.locator('[data-timetable-item-key="custom:7"]')).toContainText(
+            "Library",
+        )
+        await expect(page.locator('[data-timetable-item-key="lecture:7"]')).toContainText(
+            "Algorithms",
+        )
+        await other.click({ modifiers: ["Control"] })
+        await expect(
+            page.getByText(/^3(?:개 과목 선택됨| Lectures Selected)$/),
+        ).toBeVisible()
+        await expect(cards).toHaveCount(3)
+
+        await page.keyboard.press("Escape")
+        await group.first().click()
+        await page.keyboard.press("Control+a")
+        await expect(cards).toHaveCount(3)
+        await expect(page.getByPlaceholder(/Name|일정 이름/)).toHaveCount(0)
+        await page.keyboard.press("Escape")
+        await group.first().click({ modifiers: ["Control"] })
+        await other.click({ modifiers: ["Control"] })
+        await expect(
+            page.getByText(/^2(?:개 과목 선택됨| Lectures Selected)$/),
+        ).toBeVisible()
+        await expect(cards).toHaveCount(2)
+        await expect(page.locator('[data-timetable-item-key="lecture:7"]')).toHaveCount(0)
+
+        await deletes.first().click()
+        await expect(group).toHaveCount(0)
+        await expect(lectures).toHaveCount(2)
+        await expect(other).toBeVisible()
+        await expect(cards).toHaveCount(1)
+        await expect(page.locator('[data-timetable-item-key="custom:8"]')).toContainText(
+            "Study room",
+        )
+        expect(state.tables.get(1)).toHaveLength(2)
+        await page.keyboard.press("Control+z")
+        await expect(page.locator(".block-title", { hasText: "Study time" })).toHaveCount(
+            3,
+        )
+        expect(state.tables.get(1)).toHaveLength(3)
+
+        await page.goto("/")
+        await page
+            .getByRole("combobox", { name: /Timetable shown on home|홈에 표시할 시간표/ })
+            .selectOption("1")
+        await expect(page.locator(".block-title", { hasText: "Study time" })).toHaveCount(
+            3,
+        )
+        await page.locator(".custom-block-tile").first().hover({ force: true })
+        await expect(
+            page.getByRole("button", {
+                name: /^Delete custom block:/,
+                includeHidden: true,
+            }),
+        ).toHaveCount(0)
+    })
+}
+
+test("mobile selection details include custom blocks and can be closed", async ({
+    page,
+}) => {
+    await setupGroupedBlocks(page)
+    await Promise.all([
+        page.waitForResponse(/\/api\/v2\/timetables\/1(?:\?|$)/),
+        page.goto("/timetable"),
+    ])
+    await page.keyboard.press("Control+a")
+    await expect(page.locator("[data-timetable-item-key]")).toHaveCount(3)
+    await page.setViewportSize({ width: 390, height: 844 })
+    const modal = page.getByRole("dialog")
+    await expect(modal).toBeVisible()
+    await expect(
+        modal.getByText(/^3(?:개 과목 선택됨| Lectures Selected)$/),
+    ).toBeVisible()
+    await expect(modal.locator("[data-timetable-item-key]")).toHaveCount(3)
+    await expect(modal.locator('[data-timetable-item-key="custom:7"]')).toContainText(
+        "Library",
+    )
+    await modal.getByRole("button", { name: "Close selected items" }).click()
+    await expect(modal).toHaveCount(0)
+    await expect(page.locator(".custom-block-tile").first()).toBeVisible()
+    await expect(page.getByText("과목 검색하기", { exact: true })).toBeVisible()
+
+    await page.locator('[data-custom-block-id="7"] .custom-block-tile').first().click()
+    await expect(page.getByPlaceholder(/Name|일정 이름/)).toBeVisible()
+    await page
+        .locator(".lecture-tile")
+        .first()
+        .click({ modifiers: ["Control"] })
+    await expect(modal).toBeVisible()
+    await expect(modal.locator("[data-timetable-item-key]")).toHaveCount(2)
+    await expect(page.getByPlaceholder(/Name|일정 이름/)).toHaveCount(0)
+    await modal.getByRole("button", { name: "Close selected items" }).click()
+    await expect(page.getByText("과목 검색하기", { exact: true })).toBeVisible()
+})

@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import SearchIcon from "@mui/icons-material/Search"
+import { match } from "ts-pattern"
 
 import Modal from "@/common/components/Modal"
 import StyledDivider from "@/common/components/StyledDivider"
@@ -213,13 +214,6 @@ export default function Timetable() {
     const setHoveredLectures = useTimetableUIStore((s) => s.setHoveredLectures)
     const selectedItems = useTimetableUIStore((s) => s.selectedItems)
     const setSelectedItems = useTimetableUIStore((s) => s.setSelectedItems)
-    const selectedLectures = useMemo(
-        () =>
-            selectedItems.flatMap((item) =>
-                item.kind === TimetableItemKind.LECTURE ? [item.data] : [],
-            ),
-        [selectedItems],
-    )
 
     const timeFilter = useTimetableUIStore((s) => s.timeFilter)
     const customBlockDraftTimes = useTimetableUIStore((s) => s.customBlockDraftTimes)
@@ -364,10 +358,30 @@ export default function Timetable() {
         () => (canDeleteLecture ? (id: number) => removeLectures([id]) : undefined),
         [canDeleteLecture, removeLectures],
     )
+    const handleDeleteItem = useMemo(
+        () =>
+            canDeleteLecture
+                ? (item: TimetableItem) => void removeItems([item])
+                : undefined,
+        [canDeleteLecture, removeItems],
+    )
     const closeMobileLectureModal = useCallback(() => {
         setHoveredLectures([])
         setSelectedItems([])
     }, [setHoveredLectures, setSelectedItems])
+
+    useEffect(() => {
+        if (!isCustomBlockSectionOpen || selectedItems.length < 2) return
+        setIsCustomBlockSectionOpen(false)
+        setSelectedCustomBlock(null)
+        setTimeFilter(null)
+    }, [
+        isCustomBlockSectionOpen,
+        selectedItems.length,
+        setIsCustomBlockSectionOpen,
+        setSelectedCustomBlock,
+        setTimeFilter,
+    ])
 
     const { onItemSelect } = useTimetableKeyboard({
         currentTimetableItems,
@@ -400,6 +414,7 @@ export default function Timetable() {
             } else {
                 setIsCustomBlockSectionOpen(false)
                 setSelectedCustomBlock(null)
+                setTimeFilter(null)
             }
         },
         [
@@ -466,6 +481,7 @@ export default function Timetable() {
                                     timetableItems={currentTimetableItems}
                                     needLectureDeletable={canDeleteLecture}
                                     onItemSelect={handleItemSelect}
+                                    onItemDelete={handleDeleteItem}
                                     isCustomBlockSectionOpen={isCustomBlockSectionOpen}
                                     flashItemKeys={flashItemKeys ?? undefined}
                                     deleteLecture={handleDeleteLecture}
@@ -536,12 +552,23 @@ export default function Timetable() {
                     )}
 
                     {/* 모달 */}
-                    {selectedLectures.length > 0 && (
+                    {selectedItems.length > 0 && !isCustomBlockSectionOpen && (
                         <Modal
-                            ariaLabel={selectedLectures
-                                .map((lecture) => lecture.name)
+                            ariaLabel={selectedItems
+                                .map((item) =>
+                                    match(item)
+                                        .with(
+                                            { kind: TimetableItemKind.LECTURE },
+                                            ({ data }) => data.name,
+                                        )
+                                        .with(
+                                            { kind: TimetableItemKind.CUSTOM },
+                                            ({ data }) => data.block_name,
+                                        )
+                                        .exhaustive(),
+                                )
                                 .join(", ")}
-                            isOpen={selectedLectures.length > 0}
+                            isOpen={true}
                             onClose={closeMobileLectureModal}
                             fullScreen={true}
                             header={false}
@@ -626,6 +653,7 @@ export default function Timetable() {
                                         timetableItems={currentTimetableItems}
                                         needLectureDeletable={canDeleteLecture}
                                         onItemSelect={handleItemSelect}
+                                        onItemDelete={handleDeleteItem}
                                         isCustomBlockSectionOpen={
                                             isCustomBlockSectionOpen
                                         }

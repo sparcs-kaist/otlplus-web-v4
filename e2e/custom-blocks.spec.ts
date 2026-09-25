@@ -279,7 +279,10 @@ test("creates, edits, exports, and deletes one custom block with multiple time s
     for (const tile of await page.locator(".custom-block-tile").all())
         await expect(tile).toHaveCSS("opacity", "1")
     await expect(
-        page.getByRole("button", { name: "Delete custom block" }).locator("div").first(),
+        page
+            .getByRole("button", { name: "Delete custom block", exact: true })
+            .locator("div")
+            .first(),
     ).toHaveCSS("color", "rgb(189, 189, 189)")
     await expect(
         page
@@ -315,7 +318,7 @@ test("creates, edits, exports, and deletes one custom block with multiple time s
     })
 
     await page.locator(".block-title", { hasText: "Focus time updated" }).last().click()
-    await page.getByRole("button", { name: "Delete custom block" }).click()
+    await page.getByRole("button", { name: "Delete custom block", exact: true }).click()
     await expect(draftTimes).toHaveCount(0)
     await expect(page.locator(".block-title")).toHaveCount(0)
     expect(blocks).toHaveLength(0)

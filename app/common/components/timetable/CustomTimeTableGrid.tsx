@@ -383,7 +383,10 @@ const MemoizedOverflowTiles = memo(
         ) : null
     },
     (prevProps, nextProps) => {
-        return prevProps.lecture === nextProps.lecture
+        return (
+            prevProps.lecture === nextProps.lecture &&
+            prevProps.deleteLecture === nextProps.deleteLecture
+        )
     },
 )
 
@@ -419,6 +422,7 @@ interface CustomTimeTableGridProps {
     selectedItems?: TimetableItem[]
     flashItemKeys?: string[]
     onItemSelect?: (item: TimetableItem, e?: React.PointerEvent) => void
+    onItemDelete?: (item: TimetableItem) => void
     lectures?: Lecture[]
     customBlocks?: CustomBlock[]
     cellWidth?: string
@@ -445,6 +449,7 @@ function CustomTimeTableGrid({
     selectedItems,
     flashItemKeys,
     onItemSelect,
+    onItemDelete,
     lectures: legacyLectures = [],
     customBlocks: legacyCustomBlocks = [],
     cellWidth,
@@ -768,10 +773,33 @@ function CustomTimeTableGrid({
         (lecture: Lecture) => {
             if (needLectureInteraction && needLectureDeletable) {
                 clearHoveredLecturesCallback()
-                deleteLecture?.(lecture.id)
+                if (onItemDelete)
+                    onItemDelete({ kind: TimetableItemKind.LECTURE, data: lecture })
+                else deleteLecture?.(lecture.id)
             }
         },
-        [needLectureDeletable, deleteLecture, clearHoveredLecturesCallback],
+        [
+            needLectureInteraction,
+            needLectureDeletable,
+            onItemDelete,
+            deleteLecture,
+            clearHoveredLecturesCallback,
+        ],
+    )
+
+    const deleteCustomBlockCallback = useCallback(
+        (block: CustomBlock) => {
+            if (needLectureInteraction && needLectureDeletable) {
+                clearHoveredLecturesCallback()
+                onItemDelete?.({ kind: TimetableItemKind.CUSTOM, data: block })
+            }
+        },
+        [
+            needLectureInteraction,
+            needLectureDeletable,
+            onItemDelete,
+            clearHoveredLecturesCallback,
+        ],
     )
 
     const handleCustomBlockSelect = useCallback(
@@ -958,7 +986,13 @@ function CustomTimeTableGrid({
                                 <MemoizedLectureTiles
                                     key={`${lecture.id}-lecture-tile-${lectureIdx}`}
                                     lecture={lecture}
-                                    deleteLecture={deleteLectureCallback}
+                                    deleteLecture={
+                                        needLectureInteraction &&
+                                        needLectureDeletable &&
+                                        (onItemDelete || deleteLecture)
+                                            ? deleteLectureCallback
+                                            : undefined
+                                    }
                                     handleLectureTileHover={
                                         handleLectureTileHoverCallBack
                                     }
@@ -976,6 +1010,13 @@ function CustomTimeTableGrid({
                                         block={block}
                                         time={time}
                                         onSelect={handleCustomBlockSelect}
+                                        onDelete={
+                                            needLectureInteraction &&
+                                            needLectureDeletable &&
+                                            onItemDelete
+                                                ? deleteCustomBlockCallback
+                                                : undefined
+                                        }
                                     />
                                 ))}
                             {ghostLectures.map((ghostLecture) => (
@@ -1027,6 +1068,13 @@ function CustomTimeTableGrid({
                                     block={block}
                                     time={time}
                                     onSelect={handleCustomBlockSelect}
+                                    onDelete={
+                                        needLectureInteraction &&
+                                        needLectureDeletable &&
+                                        onItemDelete
+                                            ? deleteCustomBlockCallback
+                                            : undefined
+                                    }
                                     overflow
                                 />
                             ))}
@@ -1035,7 +1083,13 @@ function CustomTimeTableGrid({
                                 key={`${lecture.id}-overflow-${lectureIdx}`}
                                 lecture={lecture}
                                 isGhost={lectures.every((lec) => lec.id !== lecture.id)}
-                                deleteLecture={deleteLectureCallback}
+                                deleteLecture={
+                                    needLectureInteraction &&
+                                    needLectureDeletable &&
+                                    (onItemDelete || deleteLecture)
+                                        ? deleteLectureCallback
+                                        : undefined
+                                }
                                 handleLectureTileSelect={handleLectureTileSelectCallback}
                                 handleLectureTileHover={handleLectureTileHoverCallBack}
                                 handleLectureTileLeave={clearHoveredLecturesCallback}
