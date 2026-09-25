@@ -96,12 +96,14 @@ function CustomBlockTile({
     onSelect,
     onDelete,
     overflow = false,
+    displayedDayCount = 5,
 }: {
     block: CustomBlock
     time: TimeBlock
     onSelect?: (block: CustomBlock, event?: React.PointerEvent) => void
     onDelete?: (block: CustomBlock) => void
     overflow?: boolean
+    displayedDayCount?: 5 | 7
 }) {
     const { t } = useTranslation()
     const day = [
@@ -125,7 +127,7 @@ function CustomBlockTile({
             padding="1px 0"
             justify="stretch"
             align="stretch"
-            col={Math.min(time.day, 4) + 1}
+            col={Math.min(time.day, displayedDayCount - 1) + 1}
             rowStart={overflow ? undefined : time.begin / 30 - 14}
             rowEnd={overflow ? undefined : time.end / 30 - 14}
             blockId={block.id}

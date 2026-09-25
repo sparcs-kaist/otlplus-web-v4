@@ -506,3 +506,106 @@ test("mobile selection details include custom blocks and can be closed", async (
     await modal.getByRole("button", { name: "Close selected items" }).click()
     await expect(page.getByText("과목 검색하기", { exact: true })).toBeVisible()
 })
+
+for (const viewport of [
+    { name: "desktop", width: 1920, height: 1080 },
+    { name: "mobile", width: 390, height: 844 },
+]) {
+    test(`${viewport.name} own timetable shows classmates between course information and reviews`, async ({
+        page,
+    }) => {
+        const pageErrors: string[] = []
+        page.on("pageerror", (error) => pageErrors.push(error.message))
+        await page.setViewportSize(viewport)
+        await page.addInitScript(() => localStorage.setItem("i18nextLng", "en"))
+        await setup(page)
+        const friend = { id: 7, name: "Alex", isFavorite: false }
+        const linkedTimetable = { id: 42, year: 2025, semester: 3 }
+        const reviewContent = "Helpful explanations and well-organized assignments."
+        await page.route("**/api/v2/friends**", async (route) => {
+            const path = new URL(route.request().url()).pathname
+            const json = path.endsWith("/overlaps")
+                ? {
+                      sameLecture: [{ ...friend, timetable: linkedTimetable }],
+                      sameCourseDifferentSection: [],
+                      previousSemesterSameProfessor: [],
+                  }
+                : path === "/api/v2/friends"
+                  ? { friends: [friend], checkedAt: new Date().toISOString() }
+                  : path.endsWith("/timetables")
+                    ? {
+                          timetables: [{ ...linkedTimetable, name: "Alex's timetable" }],
+                      }
+                    : {
+                          lectures: [lecture],
+                          timetableItems: [{ kind: "lecture", data: lecture }],
+                      }
+            await route.fulfill({ json })
+        })
+        await page.route("**/api/users/1/timetables**", (route) =>
+            route.fulfill({ json: [{ id: 1, lectures: [{ id: lecture.id }] }] }),
+        )
+        await page.route("**/api/v2/users/written-reviews**", (route) =>
+            route.fulfill({ json: { reviews: [] } }),
+        )
+        await page.route("**/api/v2/reviews**", (route) =>
+            route.fulfill({
+                json: {
+                    averageGrade: 4,
+                    averageLoad: 4,
+                    averageSpeech: 4,
+                    totalCount: 1,
+                    reviews: [
+                        {
+                            id: 1,
+                            courseId: lecture.courseId,
+                            lectureId: lecture.id,
+                            courseName: lecture.name,
+                            professors: [],
+                            year: 2025,
+                            semester: 3,
+                            content: reviewContent,
+                            like: 0,
+                            grade: 4,
+                            load: 4,
+                            speech: 4,
+                            isDeleted: false,
+                            likedByUser: false,
+                        },
+                    ],
+                },
+            }),
+        )
+        await page.goto("/timetable")
+        const lectureTile = page.locator(".lecture-tile").first()
+        if (viewport.name === "desktop") {
+            await lectureTile.hover()
+            await expect(
+                page.getByRole("button", { name: "Alex", exact: true }),
+            ).toBeVisible()
+        }
+        await lectureTile.click()
+        const detail = viewport.name === "mobile" ? page.getByRole("dialog") : page
+        await expect(detail.getByText("CS300 (A)", { exact: true })).toBeVisible()
+        const courseInfo = detail.getByText("Major Required", { exact: true })
+        const classmate = detail.getByRole("button", { name: "Alex", exact: true })
+        const review = detail.getByText(reviewContent, { exact: true })
+        await expect(classmate).toBeVisible()
+        await expect(review).toBeVisible()
+        const infoBox = await courseInfo.boundingBox()
+        const classmateBox = await classmate.boundingBox()
+        const reviewBox = await review.boundingBox()
+        expect(classmateBox!.y).toBeGreaterThan(infoBox!.y + infoBox!.height)
+        expect(reviewBox!.y).toBeGreaterThan(classmateBox!.y + classmateBox!.height)
+
+        await classmate.click()
+        await expect(page).toHaveURL(
+            /\/friends\?friendId=7&year=2025&semester=3&timetableId=42$/,
+        )
+        await expect(page.getByRole("tab", { name: "Alex's timetable" })).toHaveAttribute(
+            "aria-selected",
+            "true",
+        )
+        expect(pageErrors).toEqual([])
+    })
+}

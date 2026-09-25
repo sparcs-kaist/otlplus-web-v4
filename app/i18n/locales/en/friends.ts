@@ -1,4 +1,10 @@
 export const friends = {
+    overlapLabel: "Shared",
+    currentLectureFriends: "Friends taking this course",
+    pastLectureFriends: "Friends who took this course",
+    semesterLabel: "{{year}} {{semester}}",
+    previousSemester: "Previous semester",
+    nextSemester: "Next semester",
     title: "Friends' Timetables",
     friendList: "Friends ({{count}})",
     selectFriend: "Choose friend",
@@ -10,10 +16,10 @@ export const friends = {
     noLectures: "This timetable has no lectures. Choose another timetable.",
     loadingOverlaps: "Loading classmates…",
     myTimetable: "My Timetable",
-    searchPlaceholder: "Search friends",
+    searchPlaceholder: "Search",
     noFriends: "You don't have any timetable friends yet.",
     scheduleNow: "Has a scheduled event right now",
-    invite: "Share friend invite",
+    invite: "Copy friend invite link",
     inviteTitle: "Invite a timetable friend",
     inviteDescription:
         "Your friend code and link do not expire. Only share them with people you want to share your timetable with.",

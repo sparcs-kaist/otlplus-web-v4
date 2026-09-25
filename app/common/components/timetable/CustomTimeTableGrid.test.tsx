@@ -6,6 +6,7 @@ import { GETResponse as FriendActualResponse } from "@/api/friends/$friendId/tim
 import type { CustomBlock } from "@/common/schemas/customBlock"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
+import themes from "@/styles/themes"
 import { fireEvent, render, screen } from "@/test/test-utils"
 
 import CustomTimeTableGrid from "./CustomTimeTableGrid"
@@ -361,5 +362,135 @@ describe("unified timetable item reads", () => {
         expect(previousSelect).not.toHaveBeenCalled()
         expect(nextSelect).toHaveBeenCalledTimes(2)
         expect(nextSelect).toHaveBeenLastCalledWith(timetableItems[0], expect.anything())
+    })
+
+    it("marks matching friend lectures in normal and overflow tiles, without marking custom blocks or ordinary timetables", () => {
+        const sharedLecture = {
+            ...lecture,
+            classes: [...lecture.classes, { ...lecture.classes[0]!, day: 6 }],
+        }
+        const otherLecture = { ...lecture, id: 8, name: "Another section" }
+        const timetableItems: TimetableItem[] = [
+            { kind: "lecture", data: sharedLecture },
+            { kind: "lecture", data: otherLecture },
+            { kind: "custom", data: block },
+        ]
+        const { container, rerender } = render(
+            <CustomTimeTableGrid
+                timetableItems={timetableItems}
+                overlappedLectureIds={[sharedLecture.id]}
+                needLectureDeletable={false}
+                needTimeFilter={false}
+            />,
+        )
+
+        expect(screen.getAllByText("friends.overlapLabel")).toHaveLength(2)
+        const overlapTiles = container.querySelectorAll('[data-friend-overlap="true"]')
+        expect(overlapTiles).toHaveLength(2)
+        const ordinaryTile = screen.getByText("Another section").closest(".lecture-tile")!
+        const originalBackground = getComputedStyle(ordinaryTile).backgroundColor
+        for (const tile of overlapTiles) {
+            expect(tile).toHaveStyle({
+                backgroundColor: originalBackground,
+            })
+            expect(tile).not.toHaveStyle({ boxShadow: themes.light.elevation.raised })
+            expect(tile.querySelector(".friend-overlap-label")).toHaveStyle({
+                color: themes.light.colors.TimeTable.title,
+            })
+        }
+        expect(ordinaryTile).not.toHaveAttribute("data-friend-overlap")
+        for (const tile of container.querySelectorAll(".custom-block-tile")) {
+            expect(tile).not.toHaveAttribute("data-friend-overlap")
+        }
+        expect(container.querySelectorAll("button")).toHaveLength(0)
+
+        for (const selectedItem of timetableItems) {
+            rerender(
+                <CustomTimeTableGrid
+                    timetableItems={timetableItems}
+                    overlappedLectureIds={[sharedLecture.id]}
+                    selectedItems={[selectedItem]}
+                    needLectureDeletable={false}
+                    needTimeFilter={false}
+                />,
+            )
+            const sharedIsSelected =
+                selectedItem.kind === "lecture" &&
+                selectedItem.data.id === sharedLecture.id
+            for (const tile of container.querySelectorAll(
+                '[data-friend-overlap="true"]',
+            )) {
+                expect(tile).toHaveStyle({ opacity: sharedIsSelected ? "1" : "0.5" })
+            }
+            expect(ordinaryTile).toHaveStyle({
+                opacity:
+                    selectedItem.kind === "lecture" &&
+                    selectedItem.data.id === otherLecture.id
+                        ? "1"
+                        : "0.5",
+            })
+        }
+
+        rerender(
+            <CustomTimeTableGrid
+                timetableItems={timetableItems}
+                needLectureDeletable={false}
+                needTimeFilter={false}
+            />,
+        )
+        expect(screen.queryByText("friends.overlapLabel")).not.toBeInTheDocument()
+        expect(container.querySelectorAll("[data-friend-overlap]")).toHaveLength(0)
+    })
+
+    it("shows weekend lecture and custom slots in a seven-day grid while keeping exact-minute slots in overflow", () => {
+        const weekendLecture = {
+            ...lecture,
+            classes: [
+                { ...lecture.classes[0]!, day: 5 },
+                { ...lecture.classes[0]!, day: 6 },
+            ],
+        }
+        const weekendBlock = {
+            ...block,
+            times: [
+                { day: 6, begin: 840, end: 900 },
+                { day: 5, begin: 635, end: 695 },
+            ],
+        }
+        const timetableItems: TimetableItem[] = [
+            { kind: "lecture", data: weekendLecture },
+            { kind: "custom", data: weekendBlock },
+        ]
+        const { container, rerender } = render(
+            <CustomTimeTableGrid timetableItems={timetableItems} displayedDayCount={7} />,
+        )
+        const mainGrid = container.querySelector(".timetable-grid-wrapper")!
+        const overflowGrid = container.querySelector(".overflow-grid-wrapper")!
+        expect(screen.getByText("common.days.saturday")).toBeInTheDocument()
+        expect(screen.getByText("common.days.sunday")).toBeInTheDocument()
+        expect(mainGrid.querySelectorAll(".background-grid-block")).toHaveLength(7 * 32)
+        expect(mainGrid.querySelectorAll(".lecture-tile")).toHaveLength(2)
+        expect(mainGrid.querySelectorAll(".custom-block-tile")).toHaveLength(1)
+        expect(mainGrid.querySelector('[data-custom-block-id="7"]')).toHaveStyle({
+            gridColumn: "7",
+        })
+        expect(overflowGrid.querySelectorAll(".lecture-tile")).toHaveLength(0)
+        expect(overflowGrid.querySelectorAll(".custom-block-tile")).toHaveLength(1)
+        expect(overflowGrid.querySelector('[data-custom-block-id="7"]')).toHaveStyle({
+            gridColumn: "6",
+        })
+
+        rerender(<CustomTimeTableGrid timetableItems={timetableItems} />)
+        expect(screen.queryByText("common.days.saturday")).not.toBeInTheDocument()
+        expect(screen.queryByText("common.days.sunday")).not.toBeInTheDocument()
+        expect(mainGrid.querySelectorAll(".background-grid-block")).toHaveLength(5 * 32)
+        expect(
+            mainGrid.querySelectorAll(".lecture-tile, .custom-block-tile"),
+        ).toHaveLength(0)
+        expect(overflowGrid.querySelectorAll(".lecture-tile")).toHaveLength(2)
+        expect(overflowGrid.querySelectorAll(".custom-block-tile")).toHaveLength(2)
+        for (const tile of overflowGrid.querySelectorAll('[data-custom-block-id="7"]')) {
+            expect(tile).toHaveStyle({ gridColumn: "5" })
+        }
     })
 })

@@ -374,14 +374,13 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                     <LectureDetailWrapper direction="column" gap={10} align="center">
                         <LectureInfoSubsection selectedLecture={selectedLecture} />
                     </LectureDetailWrapper>
-                    {status === "success" &&
-                        selectedItem?.kind === TimetableItemKind.LECTURE && (
-                            <>
-                                <StyledDivider />
-                                <LectureFriendOverlaps lectureId={selectedLecture.id} />
-                                <StyledDivider />
-                            </>
-                        )}
+                    {status === "success" && (
+                        <>
+                            <StyledDivider />
+                            <LectureFriendOverlaps lectureId={selectedLecture.id} />
+                            <StyledDivider />
+                        </>
+                    )}
                     <LectureDetailWrapper
                         ref={reviewSectionRef}
                         direction="column"

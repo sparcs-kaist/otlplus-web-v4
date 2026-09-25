@@ -243,9 +243,8 @@ describe("timetable lecture friend overlaps", () => {
                 expect(screen.getByTestId("location")).toHaveTextContent(target)
             }
             for (const title of [
-                "friends.sameLecture",
-                "friends.sameCourseDifferentSection",
-                "friends.previousSemesterSameProfessor",
+                "friends.currentLectureFriends",
+                "friends.pastLectureFriends",
             ]) {
                 const group = screen.getByText(title)
                 expect(
@@ -263,7 +262,6 @@ describe("timetable lecture friend overlaps", () => {
     )
 
     it.each([
-        { name: "hover only", selected: [], hovered: [lecture], status: "success" },
         {
             name: "multiple selection",
             selected: [lecture, otherLecture],
@@ -289,7 +287,7 @@ describe("timetable lecture friend overlaps", () => {
         },
     )
 
-    it("changes the lookup with the selected lecture and removes it for hover-only previews", () => {
+    it("keeps overlaps between information and reviews when switching to a hovered lecture", () => {
         renderDetail()
         act(() =>
             useTimetableUIStore.setState({
@@ -308,8 +306,18 @@ describe("timetable lecture friend overlaps", () => {
                 hoveredLectures: [lecture],
             }),
         )
-        expect(overlapCalls()).toHaveLength(0)
-        expect(screen.queryByText("friends.sameLecture")).not.toBeInTheDocument()
+        expect(overlapCalls().at(-1)?.[1]).toBe("/friends/lectures/101/overlaps")
+        expect(screen.getByText("Same section 101")).toBeInTheDocument()
+        expect(screen.queryByText("Same section 202")).not.toBeInTheDocument()
+        const group = screen.getByText("friends.currentLectureFriends")
+        expect(
+            screen.getByText("lecture information").compareDocumentPosition(group) &
+                Node.DOCUMENT_POSITION_FOLLOWING,
+        ).toBeTruthy()
+        expect(
+            group.compareDocumentPosition(screen.getByText("lecture reviews")) &
+                Node.DOCUMENT_POSITION_FOLLOWING,
+        ).toBeTruthy()
     })
 
     it("shows overlaps after login and removes them when the user logs out", () => {

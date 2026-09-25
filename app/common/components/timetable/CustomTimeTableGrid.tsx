@@ -40,7 +40,15 @@ const TIMES = TIMES24.map((time) => (time % 12 || 12).toString())
 
 const SLOT_COUNT = (TIMES.length - 1) * 2
 
-const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday"]
+const DAYS = [
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+]
 
 const HEADER_HEIGHT = 20
 const HEADER_CALIBRATION = 0.8
@@ -165,6 +173,8 @@ const LectureTileWrapper = styled.div<{ lectureId: number }>`
 
 interface LectureTilesProps {
     lecture: Lecture
+    displayedDayCount: 5 | 7
+    overlapLabel?: string
     handleLectureTileHover?: (lecture: Lecture) => void
     handleLectureTileLeave?: () => void
     handleLectureTileSelect?: (lecture: Lecture, e?: React.PointerEvent) => void
@@ -175,6 +185,8 @@ interface LectureTilesProps {
 const MemoizedLectureTiles = memo(
     ({
         lecture,
+        displayedDayCount,
+        overlapLabel,
         handleLectureTileHover,
         handleLectureTileLeave,
         handleLectureTileSelect,
@@ -212,15 +224,12 @@ const MemoizedLectureTiles = memo(
                 {...(isGhost ? { "data-ghost": true } : {})}
             >
                 {lecture.classes.map((cls, classIdx) =>
-                    validTime({
-                        day: cls.day,
-                        begin: cls.begin,
-                        end: cls.end,
-                    }) ? (
+                    validTime(cls, displayedDayCount) ? (
                         <LectureTile
                             key={`${classIdx}-lecture`}
                             lecture={lecture}
                             classIdx={classIdx}
+                            overlapLabel={overlapLabel}
                             deleteLecture={
                                 deleteLecture ? deleteLectureCallback : undefined
                             }
@@ -259,7 +268,7 @@ const MemoizedOverlapTiles = memo(({ overlaps }: OverlapTileProps) => {
     )
 })
 
-function validTime(time: TimeBlock | null) {
+function validTime(time: TimeBlock | null, displayedDayCount: 5 | 7) {
     if (!time) return false
     const begin = time.begin / 60 - TIME_BEGIN
     const end = time.end / 60 - TIME_BEGIN
@@ -268,7 +277,7 @@ function validTime(time: TimeBlock | null) {
 
     return (
         WeekdayEnum.Mon <= day &&
-        day <= WeekdayEnum.Fri &&
+        day < displayedDayCount &&
         begin >= 0 &&
         end <= TIME_END - TIME_BEGIN &&
         end - begin >= 0.5 &&
@@ -295,6 +304,8 @@ const OverflowTileWrapper = styled.div<{ lectureId: number }>`
 
 interface OverflowTileProps {
     lecture: Lecture
+    displayedDayCount: 5 | 7
+    overlapLabel?: string
     isGhost?: boolean
     deleteLecture?: (lecture: Lecture) => void
     handleLectureTileHover?: (lecture: Lecture) => void
@@ -305,6 +316,8 @@ interface OverflowTileProps {
 const MemoizedOverflowTiles = memo(
     ({
         lecture,
+        displayedDayCount,
+        overlapLabel,
         isGhost,
         deleteLecture,
         handleLectureTileHover,
@@ -331,7 +344,7 @@ const MemoizedOverflowTiles = memo(
         }, [deleteLecture, lecture])
 
         return lecture.classes.length === 0 ||
-            lecture.classes.filter((cls) => !validTime({ ...cls })).length > 0 ? (
+            lecture.classes.some((cls) => !validTime(cls, displayedDayCount)) ? (
             <OverflowTileWrapper
                 lectureId={lecture.id}
                 data-lecture-id={lecture.id}
@@ -346,6 +359,7 @@ const MemoizedOverflowTiles = memo(
                     <OverflowTile
                         key={lecture.id}
                         lecture={lecture}
+                        overlapLabel={overlapLabel}
                         deleteLecture={
                             isGhost || !deleteLecture ? undefined : deleteLectureCallback
                         }
@@ -359,13 +373,14 @@ const MemoizedOverflowTiles = memo(
                             end,
                         }
 
-                        if (validTime(time)) return null
+                        if (validTime(time, displayedDayCount)) return null
 
                         return (
                             <OverflowTile
                                 key={idx}
                                 lecture={lecture}
                                 classIdx={idx}
+                                overlapLabel={overlapLabel}
                                 deleteLecture={
                                     isGhost || !deleteLecture
                                         ? undefined
@@ -409,6 +424,8 @@ const CurrentTimeBar = styled.div<{ ratio: number; dayIndex: number }>`
 
 interface CustomTimeTableGridProps {
     timetableItems?: TimetableItem[]
+    overlappedLectureIds?: readonly number[]
+    displayedDayCount?: 5 | 7
     selectedItems?: TimetableItem[]
     flashItemKeys?: string[]
     onItemSelect?: (item: TimetableItem, e?: React.PointerEvent) => void
@@ -436,6 +453,8 @@ interface CustomTimeTableGridProps {
 
 function CustomTimeTableGrid({
     timetableItems,
+    overlappedLectureIds = [],
+    displayedDayCount = 5,
     selectedItems,
     flashItemKeys,
     onItemSelect,
@@ -461,6 +480,11 @@ function CustomTimeTableGrid({
     flashLectureIds = [],
 }: CustomTimeTableGridProps) {
     const { t } = useTranslation()
+    const days = DAYS.slice(0, displayedDayCount)
+    const overlappedLectureIdSet = useMemo(
+        () => new Set(overlappedLectureIds),
+        [overlappedLectureIds],
+    )
     const items = useMemo<TimetableItem[]>(
         () =>
             timetableItems ?? [
@@ -540,14 +564,13 @@ function CustomTimeTableGrid({
     const updateCurrentTime = useCallback(() => {
         const now = new Date()
         const jsDay = now.getDay() // 0=Sun, 1=Mon, ..., 6=Sat
-        const dayIndex = jsDay - 1 // 0=Mon, ..., 4=Fri
+        const dayIndex = (jsDay + 6) % 7 // 0=Mon, ..., 6=Sun
 
         const currentHour = now.getHours() + now.getMinutes() / 60
         if (
             currentHour < TIME_BEGIN ||
             currentHour > TIME_END ||
-            dayIndex < 0 ||
-            dayIndex > 4
+            dayIndex >= displayedDayCount
         ) {
             setCurrentTimeRatio(null)
             return
@@ -558,7 +581,7 @@ function CustomTimeTableGrid({
         const ratio = elapsedHours / totalHours
         setCurrentTimeRatio(ratio)
         setCurrentDayIndex(dayIndex)
-    }, [])
+    }, [displayedDayCount])
 
     useEffect(() => {
         if (!needCurrentTimeBar) return
@@ -634,8 +657,8 @@ function CustomTimeTableGrid({
         overflowLectures.some(
             (lecture) =>
                 lecture.classes.length === 0 ||
-                lecture.classes.some((time) => !validTime(time)),
-        ) || customBlockSlots.some(({ time }) => !validTime(time))
+                lecture.classes.some((time) => !validTime(time, displayedDayCount)),
+        ) || customBlockSlots.some(({ time }) => !validTime(time, displayedDayCount))
 
     const handlePointerDown = useCallback((x: number, y: number) => {
         const target = document.elementFromPoint(x, y)
@@ -885,7 +908,7 @@ function CustomTimeTableGrid({
                         className="timetable-grid-wrapper"
                     >
                         <BackgroundGrid
-                            columns={`repeat(${DAYS.length}, ${cellWidth || "1fr"})`}
+                            columns={`repeat(${displayedDayCount}, ${cellWidth || "1fr"})`}
                             rows={`${HEADER_HEIGHT}px repeat(${SLOT_COUNT}, 1fr)`}
                             flow="column"
                             gap={`0px ${ROW_GAP}px`}
@@ -905,7 +928,7 @@ function CustomTimeTableGrid({
                                   }
                                 : {})}
                         >
-                            {DAYS.map((day, dayIdx) => (
+                            {days.map((day, dayIdx) => (
                                 <Fragment key={`${day}-${dayIdx}`}>
                                     <FlexWrapper
                                         direction="column"
@@ -946,7 +969,7 @@ function CustomTimeTableGrid({
                             ))}
                         </BackgroundGrid>
                         <OverlayGrid
-                            columns={`repeat(${DAYS.length}, ${cellWidth || "1fr"})`}
+                            columns={`repeat(${displayedDayCount}, ${cellWidth || "1fr"})`}
                             rows={`${HEADER_HEIGHT}px repeat(${SLOT_COUNT}, 1fr)`}
                             flow="column"
                             gap={`${LINE_HEIGHT}px ${ROW_GAP}px`}
@@ -959,7 +982,7 @@ function CustomTimeTableGrid({
                             {needTimeFilter && <HoverTile />}
                             {isCustomBlockSectionOpen &&
                                 customBlockDraftTimes
-                                    .filter(validTime)
+                                    .filter((time) => validTime(time, displayedDayCount))
                                     .map((time, index) => (
                                         <HoverTile
                                             key={index}
@@ -976,6 +999,12 @@ function CustomTimeTableGrid({
                                 <MemoizedLectureTiles
                                     key={`${lecture.id}-lecture-tile-${lectureIdx}`}
                                     lecture={lecture}
+                                    displayedDayCount={displayedDayCount}
+                                    overlapLabel={
+                                        overlappedLectureIdSet.has(lecture.id)
+                                            ? t("friends.overlapLabel")
+                                            : undefined
+                                    }
                                     deleteLecture={
                                         needLectureInteraction &&
                                         needLectureDeletable &&
@@ -993,12 +1022,13 @@ function CustomTimeTableGrid({
                                 />
                             ))}
                             {customBlockSlots
-                                .filter(({ time }) => validTime(time))
+                                .filter(({ time }) => validTime(time, displayedDayCount))
                                 .map(({ block, time, index }) => (
                                     <CustomBlockTile
                                         key={`custom-block-${block.id}-${index}`}
                                         block={block}
                                         time={time}
+                                        displayedDayCount={displayedDayCount}
                                         onSelect={
                                             needLectureInteraction &&
                                             (onItemSelect || onCustomBlockSelect)
@@ -1018,6 +1048,7 @@ function CustomTimeTableGrid({
                                 <MemoizedLectureTiles
                                     key={`ghost-${ghostLecture.id}`}
                                     lecture={ghostLecture}
+                                    displayedDayCount={displayedDayCount}
                                     isGhost={true}
                                     handleLectureTileLeave={clearHoveredLecturesCallback}
                                 />
@@ -1047,7 +1078,7 @@ function CustomTimeTableGrid({
                     }
                 >
                     <GridWrapper
-                        columns={`repeat(${DAYS.length}, ${cellWidth || "1fr"})`}
+                        columns={`repeat(${displayedDayCount}, ${cellWidth || "1fr"})`}
                         rows="minmax(56px, auto)"
                         gap={`4px ${ROW_GAP}px`}
                         flow="row"
@@ -1056,12 +1087,13 @@ function CustomTimeTableGrid({
                         style={{ height: "auto", gridAutoRows: "minmax(56px, auto)" }}
                     >
                         {customBlockSlots
-                            .filter(({ time }) => !validTime(time))
+                            .filter(({ time }) => !validTime(time, displayedDayCount))
                             .map(({ block, time, index }) => (
                                 <CustomBlockTile
                                     key={`custom-overflow-${block.id}-${index}`}
                                     block={block}
                                     time={time}
+                                    displayedDayCount={displayedDayCount}
                                     onSelect={
                                         needLectureInteraction &&
                                         (onItemSelect || onCustomBlockSelect)
@@ -1082,6 +1114,13 @@ function CustomTimeTableGrid({
                             <MemoizedOverflowTiles
                                 key={`${lecture.id}-overflow-${lectureIdx}`}
                                 lecture={lecture}
+                                displayedDayCount={displayedDayCount}
+                                overlapLabel={
+                                    overlappedLectureIdSet.has(lecture.id) &&
+                                    lectures.some((item) => item.id === lecture.id)
+                                        ? t("friends.overlapLabel")
+                                        : undefined
+                                }
                                 isGhost={lectures.every((lec) => lec.id !== lecture.id)}
                                 deleteLecture={
                                     needLectureInteraction &&

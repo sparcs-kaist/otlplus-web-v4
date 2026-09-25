@@ -1,19 +1,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import styled from "@emotion/styled"
-import DeleteIcon from "@mui/icons-material/Delete"
 import EventNoteIcon from "@mui/icons-material/EventNote"
 import GroupIcon from "@mui/icons-material/Group"
-import PersonIcon from "@mui/icons-material/Person"
-import SearchIcon from "@mui/icons-material/Search"
-import StarIcon from "@mui/icons-material/Star"
-import StarBorderIcon from "@mui/icons-material/StarBorder"
 import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom"
 
 import Button from "@/common/components/Button"
 import Modal from "@/common/components/Modal"
+import StyledDivider from "@/common/components/StyledDivider"
+import TextInput from "@/common/components/search/TextInput"
 import CustomTimeTableGrid from "@/common/components/timetable/CustomTimeTableGrid"
 import { SemesterEnum } from "@/common/enum/semesterEnum"
 import { TimetableItemKind } from "@/common/enum/timetableItemKind"
@@ -49,11 +46,11 @@ const Page = styled.div`
     width: 100%;
     height: 100%;
     min-height: 0;
-    padding: 20px;
+    padding: 0 20px 12px;
     box-sizing: border-box;
 
     ${media.tablet} {
-        padding: 8px;
+        padding: 0 8px 8px;
     }
 `
 
@@ -64,11 +61,11 @@ const Layout = styled.div`
     min-height: 0;
     margin: 0 auto;
     display: grid;
-    grid-template-columns: minmax(220px, 288px) minmax(520px, 1fr) minmax(300px, 454px);
+    grid-template-columns: 288px minmax(0, 1fr) 454px;
     gap: 12px;
 
     ${media.laptop} {
-        grid-template-columns: minmax(180px, 220px) minmax(0, 1fr) minmax(220px, 300px);
+        grid-template-columns: 220px minmax(0, 1fr) 300px;
     }
 
     ${media.tablet} {
@@ -81,32 +78,41 @@ const Panel = styled.div`
     min-height: 0;
     background: ${({ theme }) => theme.colors.Background.Section.default};
     border-radius: 12px;
-    box-shadow:
-        0 1px 3px rgba(0, 0, 0, 0.1),
-        0 1px 2px rgba(0, 0, 0, 0.06);
 `
 
 const SidePanel = styled(Panel)`
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    padding: 16px 0 0;
+    padding: 16px;
+    gap: 12px;
 
     ${media.tablet} {
         display: none;
     }
 `
 
-const TimetablePanel = styled(Panel)`
+const TimetableColumn = styled.div`
+    min-width: 0;
+    min-height: 0;
     display: flex;
     flex-direction: column;
-    overflow: hidden;
-    padding: 16px;
 
     ${media.tablet} {
         width: 100%;
         height: 100%;
-        box-sizing: border-box;
+    }
+`
+
+const TimetablePanel = styled(Panel)`
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 16px;
+    border-top-left-radius: 0;
+
+    ${media.tablet} {
         padding: 8px;
     }
 `
@@ -120,42 +126,63 @@ const DetailPanel = styled(Panel)`
     }
 `
 
-const SidebarHeader = styled(FlexWrapper)`
-    padding: 0 16px 12px;
+const SidebarHeading = styled(Typography)`
+    align-self: center;
 `
 
 const SearchBox = styled.label`
-    height: 34px;
+    height: 40px;
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 0 10px;
+    padding: 0 16px;
     border-radius: 6px;
-    background: ${({ theme }) => theme.colors.Background.Block.default};
-    color: ${({ theme }) => theme.colors.Text.placeholder};
+    border: 1px solid ${({ theme }) => theme.colors.Line.divider};
+    background: ${({ theme }) => theme.colors.Background.Section.default};
+    color: ${({ theme }) => theme.colors.Highlight.default};
 `
 
-const SearchInput = styled.input`
+const SearchInput = styled(TextInput)`
     min-width: 0;
     flex: 1;
     border: 0;
     outline: 0;
     background: transparent;
     color: ${({ theme }) => theme.colors.Text.default};
+    padding: 0;
     font: inherit;
+    font-size: ${({ theme }) => theme.fonts.Normal.fontSize}px;
+
+    &::placeholder {
+        color: ${({ theme }) => theme.colors.Highlight.default};
+    }
 `
 
 const FriendList = styled.div`
     min-height: 0;
     flex: 1;
     overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+`
+
+const FriendListLayout = styled.div`
+    min-height: 0;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
 `
 
 const FriendRowButton = styled.div<{ $selected: boolean }>`
     width: 100%;
     height: 46px;
+    flex-shrink: 0;
     border: 0;
-    padding: 0 12px 0 16px;
+    border-radius: 6px;
+    padding: 0 16px;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -165,21 +192,25 @@ const FriendRowButton = styled.div<{ $selected: boolean }>`
     color: ${({ theme }) => theme.colors.Text.default};
     background: ${({ $selected, theme }) =>
         $selected
-            ? theme.colors.Background.Block.default
-            : theme.colors.Background.Section.default};
+            ? theme.colors.Background.Block.dark
+            : theme.colors.Background.Block.default};
 
     &:hover {
-        background: ${({ theme }) => theme.colors.Background.Block.default};
+        background: ${({ theme }) => theme.colors.Background.Block.dark};
     }
 `
 
-const FriendName = styled.span`
+const FriendName = styled(Typography)`
     min-width: 0;
     flex: 1;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    font-size: 13px;
+    line-height: 14px;
 `
+
+const MyTimetableButton = FriendRowButton.withComponent("button")
 
 const ScheduleIcon = styled(Icon)`
     flex-shrink: 0;
@@ -187,9 +218,10 @@ const ScheduleIcon = styled(Icon)`
 `
 
 const RowIconButton = styled.button`
-    width: 28px;
-    height: 28px;
-    padding: 4px;
+    width: 26px;
+    height: 32px;
+    flex-shrink: 0;
+    padding: 0;
     border: 0;
     border-radius: 4px;
     display: inline-flex;
@@ -203,41 +235,55 @@ const RowIconButton = styled.button`
         color: ${({ theme }) => theme.colors.Highlight.default};
     }
 
-    ${media.tablet} {
-        width: 44px;
-        height: 44px;
-        flex-shrink: 0;
+    &:disabled {
+        cursor: wait;
     }
+`
+
+const FriendAsset = styled.img`
+    display: block;
+    flex-shrink: 0;
 `
 
 const InviteButton = styled.button`
     height: 48px;
+    flex-shrink: 0;
     border: 0;
-    border-top: 1px solid ${({ theme }) => theme.colors.Line.block};
-    background: transparent;
+    border-radius: 6px;
+    background: ${({ theme }) => theme.colors.Background.Button.highlight};
     color: ${({ theme }) => theme.colors.Highlight.default};
     cursor: pointer;
     font: inherit;
+    font-size: ${({ theme }) => theme.fonts.NormalMedium.fontSize}px;
+    font-weight: ${({ theme }) => theme.fonts.NormalMedium.fontWeight};
 `
 
 const TimetableHeader = styled(FlexWrapper)`
     width: 100%;
     flex-shrink: 0;
-    flex-wrap: wrap;
+    height: 34px;
+    min-width: 0;
 `
 
 const Tabs = styled.div`
     min-width: 0;
+    flex: 1;
     display: flex;
+    gap: 6px;
     overflow-x: auto;
     scrollbar-width: none;
+`
+
+const TimetableTab = styled(TabButton)`
+    height: 34px;
+    flex-shrink: 0;
+    padding: 8px 12px;
 `
 
 const TimetableGrid = styled.div`
     min-height: 0;
     flex: 1;
     display: flex;
-    padding-top: 8px;
 `
 
 const MobileOnly = styled.div`
@@ -329,10 +375,7 @@ function FriendRow({
                 }
             }}
         >
-            <Icon size={18}>
-                <PersonIcon />
-            </Icon>
-            <FriendName>{friend.name}</FriendName>
+            <FriendName type="NormalBold">{friend.name}</FriendName>
             {showSchedule && friend.hasScheduleNow === true && (
                 <ScheduleIcon
                     size={18}
@@ -351,9 +394,7 @@ function FriendRow({
                         onDelete()
                     }}
                 >
-                    <Icon size={20}>
-                        <DeleteIcon />
-                    </Icon>
+                    <FriendAsset src="/images/friends/design/delete.svg" alt="" />
                 </RowIconButton>
             )}
             <RowIconButton
@@ -365,9 +406,10 @@ function FriendRow({
                     requestFunction({ isFavorite: !friend.isFavorite })
                 }}
             >
-                <Icon size={20}>
-                    {friend.isFavorite ? <StarIcon /> : <StarBorderIcon />}
-                </Icon>
+                <FriendAsset
+                    src={`/images/friends/design/star-${friend.isFavorite ? "filled" : "empty"}.svg`}
+                    alt=""
+                />
             </RowIconButton>
         </FriendRowButton>
     )
@@ -401,47 +443,38 @@ function FriendListContent({
     )
 
     return (
-        <>
-            <SidebarHeader direction="column" gap={12} align="stretch">
-                <Typography type="BigBold" color="Text.default">
-                    {t("friends.friendList", { count: friends.length })}
-                </Typography>
-                <SearchBox>
-                    <Icon size={18}>
-                        <SearchIcon />
-                    </Icon>
-                    <SearchInput
-                        value={search}
-                        onChange={(event) => setSearch(event.target.value)}
-                        placeholder={t("friends.searchPlaceholder")}
-                    />
-                </SearchBox>
-            </SidebarHeader>
+        <FriendListLayout>
+            <SidebarHeading type="Big" color="Text.default" role="heading" aria-level={2}>
+                {t("friends.friendList", { count: friends.length })}
+            </SidebarHeading>
+            <StyledDivider />
+            <SearchBox>
+                <FriendAsset src="/images/friends/design/search.svg" alt="" />
+                <SearchInput
+                    value={search}
+                    handleChange={setSearch}
+                    placeholder={t("friends.searchPlaceholder")}
+                    aria-label={t("friends.searchPlaceholder")}
+                />
+            </SearchBox>
             <FriendList>
-                <FriendRowButton
+                <MyTimetableButton
+                    type="button"
                     $selected={selectedFriendId === null}
-                    role="button"
-                    tabIndex={0}
+                    aria-pressed={selectedFriendId === null}
                     onClick={() => onSelect(null)}
-                    onKeyDown={(event) => {
-                        if (event.key === "Enter" || event.key === " ") {
-                            event.preventDefault()
-                            onSelect(null)
-                        }
-                    }}
                 >
-                    <Icon size={18}>
-                        <PersonIcon />
-                    </Icon>
-                    <FriendName>{t("friends.myTimetable")}</FriendName>
-                </FriendRowButton>
+                    <FriendName type="NormalBold">{t("friends.myTimetable")}</FriendName>
+                </MyTimetableButton>
                 {filtered.map((friend) => (
                     <FriendRow
                         key={friend.id}
                         friend={friend}
                         showSchedule={showSchedule}
                         selected={selectedFriendId === friend.id}
-                        onSelect={() => onSelect(friend.id)}
+                        onSelect={() =>
+                            onSelect(selectedFriendId === friend.id ? null : friend.id)
+                        }
                         onDelete={() => onDelete(friend)}
                     />
                 ))}
@@ -454,7 +487,7 @@ function FriendListContent({
                 )}
             </FriendList>
             <InviteButton onClick={onInvite}>{t("friends.invite")}</InviteButton>
-        </>
+        </FriendListLayout>
     )
 }
 
@@ -601,7 +634,17 @@ export default function FriendsPage() {
     const { query: ownActual, setParams: setOwnActualParams } = useAPI(
         "GET",
         "/timetables/my-timetable",
-        { enabled: status === "success" && selectedFriendId === null },
+        { enabled: status === "success" },
+    )
+    // The existing v1 list includes every saved timetable's lecture IDs in one read.
+    const { query: ownAllSaved, setParams: setOwnAllSavedParams } = useAPI(
+        "GET",
+        `/users/${user?.id ?? 0}/timetables`,
+        {
+            apiPrefix: "/api",
+            enabled: status === "success" && selectedFriendId !== null,
+            staleTime: 0,
+        },
     )
     const { query: ownSaved } = useAPI("GET", `/timetables/${currentTimetableId ?? 0}`, {
         enabled:
@@ -658,9 +701,10 @@ export default function FriendsPage() {
     useEffect(() => {
         if (year < 0) return
         const params = { year, semester }
+        setOwnActualParams(params)
+        setOwnAllSavedParams(params)
         if (selectedFriendId === null) {
             setOwnTimetableParams(params)
-            setOwnActualParams(params)
         } else {
             setFriendTimetableParams(params)
             setFriendActualParams(params)
@@ -711,6 +755,29 @@ export default function FriendsPage() {
     const lectures = timetableItems.flatMap((item) =>
         item.kind === TimetableItemKind.LECTURE ? [item.data] : [],
     )
+    const overlappedLectureIds = useMemo(() => {
+        if (selectedFriendId === null) return []
+        const ownLectureIds = new Set([
+            ...(ownAllSaved.isError ? [] : (ownAllSaved.data ?? [])).flatMap(
+                (timetable) => timetable.lectures?.map(({ id }) => id) ?? [],
+            ),
+            ...(ownActual.isError ? [] : (ownActual.data?.timetableItems ?? [])).flatMap(
+                (item) => (item.kind === TimetableItemKind.LECTURE ? [item.data.id] : []),
+            ),
+        ])
+        return timetableItems.flatMap((item) =>
+            item.kind === TimetableItemKind.LECTURE && ownLectureIds.has(item.data.id)
+                ? [item.data.id]
+                : [],
+        )
+    }, [
+        selectedFriendId,
+        ownAllSaved.data,
+        ownAllSaved.isError,
+        ownActual.data,
+        ownActual.isError,
+        timetableItems,
+    ])
     const timetableName =
         currentTimetableId === null
             ? t("friends.actualTimetable")
@@ -751,7 +818,7 @@ export default function FriendsPage() {
                         />
                     </SidePanel>
                 )}
-                <TimetablePanel>
+                <TimetableColumn>
                     <MobileOnly>
                         <MobileAction
                             type="button"
@@ -782,65 +849,96 @@ export default function FriendsPage() {
                         align="center"
                         justify="space-between"
                     >
-                        <Typography type="NormalBold" color="Text.default">
-                            {selectedFriend?.name ?? t("friends.myTimetable")}
-                        </Typography>
+                        <Tabs
+                            role="tablist"
+                            aria-label={selectedFriend?.name ?? t("friends.myTimetable")}
+                        >
+                            <TimetableTab
+                                role="tab"
+                                tabIndex={0}
+                                aria-selected={currentTimetableId === null}
+                                type={
+                                    currentTimetableId === null ? "selected" : "default"
+                                }
+                                onClick={() => handleSelectTimetable(null)}
+                                onKeyDown={(event) => {
+                                    if (event.key === "Enter" || event.key === " ") {
+                                        event.preventDefault()
+                                        handleSelectTimetable(null)
+                                    }
+                                }}
+                            >
+                                {t("friends.actualTimetable")}
+                            </TimetableTab>
+                            {timetables.map((timetable) => (
+                                <TimetableTab
+                                    key={timetable.id}
+                                    role="tab"
+                                    tabIndex={0}
+                                    aria-selected={currentTimetableId === timetable.id}
+                                    type={
+                                        currentTimetableId === timetable.id
+                                            ? "selected"
+                                            : "default"
+                                    }
+                                    onClick={() => handleSelectTimetable(timetable.id)}
+                                    onKeyDown={(event) => {
+                                        if (event.key === "Enter" || event.key === " ") {
+                                            event.preventDefault()
+                                            handleSelectTimetable(timetable.id)
+                                        }
+                                    }}
+                                >
+                                    {timetable.name || "No Title"}
+                                </TimetableTab>
+                            ))}
+                        </Tabs>
                         <SemesterButton
+                            variant="outlined"
                             year={year}
                             semester={semester}
                             onChange={handleSelectSemester}
                         />
                     </TimetableHeader>
-                    <Tabs>
-                        <TabButton
-                            type={currentTimetableId === null ? "selected" : "default"}
-                            onClick={() => handleSelectTimetable(null)}
-                        >
-                            {t("friends.actualTimetable")}
-                        </TabButton>
-                        {timetables.map((timetable) => (
-                            <TabButton
-                                key={timetable.id}
-                                type={
-                                    currentTimetableId === timetable.id
-                                        ? "selected"
-                                        : "default"
-                                }
-                                onClick={() => handleSelectTimetable(timetable.id)}
+                    <TimetablePanel>
+                        {timetableQuery.isError && (
+                            <Typography
+                                type="Small"
+                                color="Highlight.default"
+                                role="alert"
                             >
-                                {timetable.name || "No Title"}
-                            </TabButton>
-                        ))}
-                    </Tabs>
-                    {timetableQuery.isError && (
-                        <Typography type="Small" color="Highlight.default" role="alert">
-                            {t("friends.loadError")}
-                        </Typography>
-                    )}
-                    <TimetableGrid>
-                        <CustomTimeTableGrid
-                            timetableItems={timetableItems}
-                            needTimeFilter={false}
-                            needLectureDeletable={false}
-                            selectedLectures={selectedLecture ? [selectedLecture] : []}
-                            selectedCustomBlock={selectedCustomBlock}
-                            onLectureSelect={(lecture) => {
-                                setSelectedItem({
-                                    kind: TimetableItemKind.LECTURE,
-                                    data: lecture,
-                                })
-                                if (isTablet) setDetailOpen(true)
-                            }}
-                            onCustomBlockSelect={(block) => {
-                                setSelectedItem({
-                                    kind: TimetableItemKind.CUSTOM,
-                                    data: block,
-                                })
-                                if (isTablet) setDetailOpen(true)
-                            }}
-                        />
-                    </TimetableGrid>
-                </TimetablePanel>
+                                {t("friends.loadError")}
+                            </Typography>
+                        )}
+                        <TimetableGrid>
+                            <CustomTimeTableGrid
+                                timetableItems={timetableItems}
+                                overlappedLectureIds={overlappedLectureIds}
+                                displayedDayCount={7}
+                                needTimeFilter={false}
+                                needLectureDeletable={false}
+                                selectedLectures={
+                                    selectedLecture ? [selectedLecture] : []
+                                }
+                                selectedCustomBlock={selectedCustomBlock}
+                                onLectureSelect={(lecture) => {
+                                    setSelectedItem({
+                                        kind: TimetableItemKind.LECTURE,
+                                        data: lecture,
+                                    })
+                                    if (isTablet) setDetailOpen(true)
+                                }}
+                                onCustomBlockSelect={(block) => {
+                                    setSelectedItem({
+                                        kind: TimetableItemKind.CUSTOM,
+                                        data: block,
+                                    })
+                                    if (isTablet) setDetailOpen(true)
+                                }}
+                            />
+                        </TimetableGrid>
+                    </TimetablePanel>
+                </TimetableColumn>
                 {!isTablet && (
                     <DetailPanel>
                         {selectedCustomBlock ? (
@@ -850,7 +948,11 @@ export default function FriendsPage() {
                                 onClose={() => setSelectedItem(null)}
                             />
                         ) : (
-                            <FriendLectureDetail lecture={selectedLecture} />
+                            <FriendLectureDetail
+                                lecture={selectedLecture}
+                                year={year}
+                                semester={semester}
+                            />
                         )}
                     </DetailPanel>
                 )}
@@ -901,7 +1003,11 @@ export default function FriendsPage() {
                         >
                             {t("friends.chooseAnotherLecture")}
                         </LectureChoice>
-                        <FriendLectureDetail lecture={selectedLecture} />
+                        <FriendLectureDetail
+                            lecture={selectedLecture}
+                            year={year}
+                            semester={semester}
+                        />
                     </>
                 ) : (
                     <FlexWrapper direction="column" gap={8} align="stretch">

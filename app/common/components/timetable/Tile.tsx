@@ -12,6 +12,7 @@ import { IconButton } from "@/common/primitives/IconButton"
 import Typography from "@/common/primitives/Typography"
 import { type Lecture } from "@/common/schemas/lecture"
 import { timetableItemKey } from "@/common/utils/timetableItems"
+import { media } from "@/styles/themes/media"
 
 import TimetableItemTile from "./TimetableItemTile"
 
@@ -92,7 +93,8 @@ export const LECTURE_TILE_CLASSNAME = "lecture-tile"
 export const LectureTileHoverCss = (theme: Theme) => css`
     background: ${theme.colors.Highlight.default};
 
-    .lecture-title {
+    .lecture-title,
+    .friend-overlap-label {
         color: ${theme.colors.Text.onHighlight.default};
     }
 
@@ -175,7 +177,75 @@ const LectureTileInner = styled(TimetableItemTile)<{
             ${({ theme }) => LectureTileHoverCss(theme)}
         }
     }
+
+    &[data-friend-overlap] .lecture-content {
+        min-width: 0;
+        min-height: 0;
+
+        ${media.tablet} {
+            padding: 2px;
+        }
+    }
 `
+
+const LectureTitleRow = styled.div`
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 4px;
+    align-items: start;
+    width: 100%;
+    min-width: 0;
+    flex-shrink: 0;
+
+    .lecture-title {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .friend-overlap-label {
+        white-space: nowrap;
+    }
+
+    ${media.tablet} {
+        display: flex;
+        flex-direction: column;
+
+        .friend-overlap-label {
+            order: -1;
+            align-self: flex-end;
+            font-size: ${({ theme }) => theme.fonts.Smaller.fontSize}px;
+            line-height: ${({ theme }) => theme.fonts.Smaller.lineHeight}px;
+        }
+    }
+`
+
+function LectureTileTitle({
+    lecture,
+    overlapLabel,
+}: {
+    lecture: Lecture
+    overlapLabel?: string
+}) {
+    const title = (
+        <Typography type="SmallMedium" className="lecture-title" color="TimeTable.title">
+            {lecture.name + " " + lecture.subtitle}
+        </Typography>
+    )
+    return overlapLabel ? (
+        <LectureTitleRow>
+            {title}
+            <Typography
+                type="SmallBold"
+                className="friend-overlap-label"
+                color="TimeTable.title"
+            >
+                {overlapLabel}
+            </Typography>
+        </LectureTitleRow>
+    ) : (
+        title
+    )
+}
 
 const TimetableItemDeleteWrapper = styled(FlexWrapper)`
     pointer-events: none;
@@ -228,6 +298,7 @@ export function TimetableItemDeleteButton({
 interface LectureTileProps {
     lecture: Lecture
     classIdx: number
+    overlapLabel?: string
     handleLectureTileHover?: (lecture: Lecture) => void
     handleLectureTileLeave?: () => void
     handleLectureTileSelect?: (lecture: Lecture, e?: React.PointerEvent) => void
@@ -237,6 +308,7 @@ interface LectureTileProps {
 function LectureTile({
     lecture,
     classIdx,
+    overlapLabel,
     deleteLecture,
     handleLectureTileSelect,
     handleLectureTileHover,
@@ -291,8 +363,10 @@ function LectureTile({
                 courseId={lecture.courseId}
                 lectureId={lecture.id}
                 className={LECTURE_TILE_CLASSNAME}
+                data-friend-overlap={overlapLabel ? true : undefined}
             >
                 <FlexWrapper
+                    className="lecture-content"
                     direction="column"
                     justify="center"
                     flex="1 1 auto"
@@ -305,13 +379,7 @@ function LectureTile({
                         align="flex-start"
                         style={{ overflow: "hidden" }}
                     >
-                        <Typography
-                            type="SmallMedium"
-                            className="lecture-title"
-                            color="TimeTable.title"
-                        >
-                            {lecture.name + " " + lecture.subtitle}
-                        </Typography>
+                        <LectureTileTitle lecture={lecture} overlapLabel={overlapLabel} />
                         <Typography
                             type="Small"
                             className="lecture-info"
@@ -390,6 +458,7 @@ const OverflowTileInner = styled(TimetableItemTile)<{
     courseId: number
     lectureId: number
 }>`
+    position: relative;
     border-radius: 2px;
     overflow: hidden;
     min-width: 0;
@@ -436,15 +505,27 @@ const OverflowTileInner = styled(TimetableItemTile)<{
     [data-flash-lectures~="${({ lectureId }) => lectureId}"] & {
         animation: ${tileFlash} 0.3s ease-out forwards;
     }
+
+    &[data-friend-overlap] {
+        ${media.tablet} {
+            padding: 2px;
+        }
+    }
 `
 
 interface OverflowTileProps {
     lecture: Lecture
     classIdx?: number
+    overlapLabel?: string
     deleteLecture?: () => void
 }
 
-function OverflowTile({ lecture, classIdx, deleteLecture }: OverflowTileProps) {
+function OverflowTile({
+    lecture,
+    classIdx,
+    overlapLabel,
+    deleteLecture,
+}: OverflowTileProps) {
     const cls = classIdx == null ? null : lecture.classes[classIdx]
     const { t } = useTranslation()
 
@@ -484,14 +565,9 @@ function OverflowTile({ lecture, classIdx, deleteLecture }: OverflowTileProps) {
                 lectureId={lecture.id}
                 flex="1 1 auto"
                 className={LECTURE_TILE_CLASSNAME}
+                data-friend-overlap={overlapLabel ? true : undefined}
             >
-                <Typography
-                    type="SmallMedium"
-                    className="lecture-title"
-                    color="TimeTable.title"
-                >
-                    {lecture.name + " " + lecture.subtitle}
-                </Typography>
+                <LectureTileTitle lecture={lecture} overlapLabel={overlapLabel} />
                 <Typography
                     type="Small"
                     className="lecture-info"

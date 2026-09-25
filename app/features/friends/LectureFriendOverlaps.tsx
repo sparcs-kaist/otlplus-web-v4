@@ -17,6 +17,7 @@ const Chips = styled(FlexWrapper)`
 `
 
 const Chip = styled.button`
+    min-height: 28px;
     padding: 5px 16px;
     border: 0;
     border-radius: 16px;
@@ -34,7 +35,9 @@ const Chip = styled.button`
     }
 `
 
-function FriendGroup({ title, friends }: { title: string; friends: OverlapFriend[] }) {
+type ClassifiedFriend = OverlapFriend & { description: string }
+
+function FriendGroup({ title, friends }: { title: string; friends: ClassifiedFriend[] }) {
     const { t } = useTranslation()
     const navigate = useNavigate()
     return (
@@ -56,6 +59,8 @@ function FriendGroup({ title, friends }: { title: string; friends: OverlapFriend
                             <Chip
                                 key={friend.id}
                                 type="button"
+                                title={friend.description}
+                                aria-description={friend.description}
                                 onClick={() => navigate(`/friends?${params}`)}
                             >
                                 <Typography type="Normal" color="Text.light">
@@ -80,6 +85,20 @@ export default function LectureFriendOverlaps({ lectureId }: { lectureId: number
         staleTime: 0,
         gcTime: 0,
     })
+    const currentFriends = new Map<number, ClassifiedFriend>()
+    for (const [description, friends] of [
+        [t("friends.sameLecture"), query.data?.sameLecture ?? []],
+        [
+            t("friends.sameCourseDifferentSection"),
+            query.data?.sameCourseDifferentSection ?? [],
+        ],
+    ] as const) {
+        for (const friend of friends) {
+            if (!currentFriends.has(friend.id)) {
+                currentFriends.set(friend.id, { ...friend, description })
+            }
+        }
+    }
 
     return (
         <Groups direction="column" gap={24} align="stretch">
@@ -94,16 +113,17 @@ export default function LectureFriendOverlaps({ lectureId }: { lectureId: number
             ) : (
                 <>
                     <FriendGroup
-                        title={t("friends.sameLecture")}
-                        friends={query.data?.sameLecture ?? []}
+                        title={t("friends.currentLectureFriends")}
+                        friends={[...currentFriends.values()]}
                     />
                     <FriendGroup
-                        title={t("friends.sameCourseDifferentSection")}
-                        friends={query.data?.sameCourseDifferentSection ?? []}
-                    />
-                    <FriendGroup
-                        title={t("friends.previousSemesterSameProfessor")}
-                        friends={query.data?.previousSemesterSameProfessor ?? []}
+                        title={t("friends.pastLectureFriends")}
+                        friends={(query.data?.previousSemesterSameProfessor ?? []).map(
+                            (friend) => ({
+                                ...friend,
+                                description: t("friends.previousSemesterSameProfessor"),
+                            }),
+                        )}
                     />
                 </>
             )}
