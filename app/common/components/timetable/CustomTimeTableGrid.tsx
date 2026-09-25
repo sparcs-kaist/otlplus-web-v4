@@ -488,17 +488,29 @@ function CustomTimeTableGrid({
             ),
         [items],
     )
+    const activeItems = useMemo<TimetableItem[]>(
+        () =>
+            selectedItems ?? [
+                ...selectedLectures.map((data) => ({
+                    kind: TimetableItemKind.LECTURE,
+                    data,
+                })),
+                ...(selectedCustomBlock
+                    ? [{ kind: TimetableItemKind.CUSTOM, data: selectedCustomBlock }]
+                    : []),
+            ],
+        [selectedItems, selectedLectures, selectedCustomBlock],
+    )
     const activeLectures = useMemo(
         () =>
-            selectedItems?.flatMap((item) =>
+            activeItems.flatMap((item) =>
                 item.kind === TimetableItemKind.LECTURE ? [item.data] : [],
-            ) ?? selectedLectures,
-        [selectedItems, selectedLectures],
+            ),
+        [activeItems],
     )
-    const activeCustomIds =
-        selectedItems?.flatMap((item) =>
-            item.kind === TimetableItemKind.CUSTOM ? [item.data.id] : [],
-        ) ?? (selectedCustomBlock ? [selectedCustomBlock.id] : [])
+    const activeCustomIds = activeItems.flatMap((item) =>
+        item.kind === TimetableItemKind.CUSTOM ? [item.data.id] : [],
+    )
     const highlightedLectureIds =
         flashItemKeys
             ?.filter((key) => key.startsWith("lecture:"))
@@ -779,8 +791,12 @@ function CustomTimeTableGrid({
                     ? activeLectures.map((lec) => lec.id).join(" ")
                     : ""
             }
-            data-selected-custom-blocks={activeCustomIds.join(" ")}
-            data-selected-items={(selectedItems ?? []).map(timetableItemKey).join(" ")}
+            data-selected-custom-blocks={
+                needLectureInteraction ? activeCustomIds.join(" ") : ""
+            }
+            data-selected-items={
+                needLectureInteraction ? activeItems.map(timetableItemKey).join(" ") : ""
+            }
             data-flash-custom-blocks={(flashItemKeys ?? [])
                 .filter((key) => key.startsWith("custom:"))
                 .map((key) => key.split(":")[1])

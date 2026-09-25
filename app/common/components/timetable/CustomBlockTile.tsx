@@ -4,12 +4,15 @@ import { type Theme, ThemeProvider, css } from "@emotion/react"
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
 
+import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import type { CustomBlock } from "@/common/schemas/customBlock"
+import { timetableItemKey } from "@/common/utils/timetableItems"
 import lightTheme from "@/styles/themes/light"
 
 import { flattenTimeTableColors } from "./Tile"
+import TimetableItemTile from "./TimetableItemTile"
 
 const CUSTOM_BLOCK_TILE_CLASSNAME = "custom-block-tile"
 
@@ -47,7 +50,7 @@ const CustomBlockTileWrapper = styled(FlexWrapper)<{
     }
 `
 
-const CustomBlockTileInner = styled(FlexWrapper)<{ blockId: number }>`
+const CustomBlockTileInner = styled(TimetableItemTile)<{ blockId: number }>`
     background: ${({ theme, blockId }) => {
         const colors = flattenTimeTableColors(theme.colors.Tile.TimeTable.default)
         return colors[(blockId * 3 + 7) % colors.length]
@@ -55,7 +58,6 @@ const CustomBlockTileInner = styled(FlexWrapper)<{ blockId: number }>`
     border-radius: 2px;
     overflow: hidden;
     pointer-events: none;
-    opacity: 0.5;
 
     [data-interaction="true"] & {
         pointer-events: auto;
@@ -64,11 +66,6 @@ const CustomBlockTileInner = styled(FlexWrapper)<{ blockId: number }>`
         &:hover {
             ${({ theme }) => CustomBlockTileHoverCss(theme)}
         }
-    }
-
-    [data-selected-custom-blocks=""] &,
-    [data-selected-custom-blocks~="${({ blockId }) => blockId}"] & {
-        opacity: 1;
     }
 
     [data-flash-custom-blocks~="${({ blockId }) => blockId}"] & {
@@ -124,6 +121,10 @@ function CustomBlockTile({
             title={`${block.block_name} · ${timeLabel}`}
         >
             <CustomBlockTileInner
+                itemKey={timetableItemKey({
+                    kind: TimetableItemKind.CUSTOM,
+                    data: block,
+                })}
                 direction="column"
                 gap={0}
                 flex="1 1 auto"

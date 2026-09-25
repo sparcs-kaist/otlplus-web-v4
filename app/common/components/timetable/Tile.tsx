@@ -5,11 +5,15 @@ import styled from "@emotion/styled"
 import { Close } from "@mui/icons-material"
 import { useTranslation } from "react-i18next"
 
+import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import { IconButton } from "@/common/primitives/IconButton"
 import Typography from "@/common/primitives/Typography"
 import { type Lecture } from "@/common/schemas/lecture"
+import { timetableItemKey } from "@/common/utils/timetableItems"
+
+import TimetableItemTile from "./TimetableItemTile"
 
 const DAYS = [
     "monday",
@@ -125,7 +129,7 @@ const LectureTileWrapper = styled(FlexWrapper)<{
     }
 `
 
-const LectureTileInner = styled(FlexWrapper)<{
+const LectureTileInner = styled(TimetableItemTile)<{
     courseId: number
     lectureId: number
 }>`
@@ -152,14 +156,6 @@ const LectureTileInner = styled(FlexWrapper)<{
         }
     }
 
-    transition: opacity 0.2s ease;
-
-    opacity: 0.5;
-
-    .custom-timetable[data-selected-lectures=""] & {
-        opacity: 1;
-    }
-
     [data-is-dragging="true"] & {
         pointer-events: none;
     }
@@ -171,10 +167,6 @@ const LectureTileInner = styled(FlexWrapper)<{
         [data-selected-lectures~="${({ lectureId }) => lectureId}"] & {
             ${({ theme }) => LectureTileHoverCss(theme)}
         }
-    }
-
-    [data-selected-lectures~="${({ lectureId }) => lectureId}"] & {
-        opacity: 1;
     }
 `
 
@@ -245,6 +237,10 @@ function LectureTile({
             onPointerLeave={handlePointerLeave}
         >
             <LectureTileInner
+                itemKey={timetableItemKey({
+                    kind: TimetableItemKind.LECTURE,
+                    data: lecture,
+                })}
                 direction="row"
                 gap={0}
                 flex="1 1 auto"
@@ -377,10 +373,12 @@ const OverflowTileWrapper = styled(FlexWrapper)<{ lectureId: number }>`
     height: 100%;
 `
 
-const OverflowTileInner = styled(FlexWrapper)<{ courseId: number; lectureId: number }>`
+const OverflowTileInner = styled(TimetableItemTile)<{
+    courseId: number
+    lectureId: number
+}>`
     border-radius: 2px;
     overflow: hidden;
-    opacity: 0.5;
     min-width: 0;
     min-height: 0;
     width: 100%;
@@ -415,13 +413,11 @@ const OverflowTileInner = styled(FlexWrapper)<{ courseId: number; lectureId: num
     [data-selected-lectures~="${({ lectureId }) => lectureId}"] & {
         transform: translateY(-2px);
         box-shadow: ${({ theme }) => theme.elevation.raised};
-        opacity: 1;
     }
 
     .custom-timetable[data-selected-lectures=""] & {
         transform: none;
         box-shadow: none;
-        opacity: 1;
     }
 
     [data-flash-lectures~="${({ lectureId }) => lectureId}"] & {
@@ -463,6 +459,10 @@ function OverflowTile({ lecture, classIdx, deleteLecture }: OverflowTileProps) {
                 )}
             </FlexWrapper>
             <OverflowTileInner
+                itemKey={timetableItemKey({
+                    kind: TimetableItemKind.LECTURE,
+                    data: lecture,
+                })}
                 direction="column"
                 gap={0}
                 align="flex-start"
