@@ -3,6 +3,7 @@ import { Fragment, memo, useCallback, useEffect, useMemo, useRef, useState } fro
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
 
+import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import { WeekdayEnum } from "@/common/enum/weekdayEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import GridWrapper from "@/common/primitives/GridWrapper"
@@ -10,6 +11,8 @@ import Typography from "@/common/primitives/Typography"
 import { type CustomBlock } from "@/common/schemas/customBlock"
 import { type Lecture } from "@/common/schemas/lecture"
 import { type TimeBlock } from "@/common/schemas/timeblock"
+import type { TimetableItem } from "@/common/schemas/timetableItem"
+import { getTimetableItemTimes, timetableItemKey } from "@/common/utils/timetableItems"
 
 import CustomBlockTile from "./CustomBlockTile"
 import {
@@ -45,27 +48,20 @@ const BackgroundGrid = styled(GridWrapper)`
 `
 
 const TimetableGridWrapper = styled(FlexWrapper)`
-    grid-row: 1 / ${SLOT_COUNT + 5};
+    grid-row: 1;
     user-select: none;
     overflow: hidden;
-    grid-template-rows: subgrid;
-
-    &.has-overflow {
-        grid-row: 1 / ${SLOT_COUNT + 2};
-    }
 `
 
 const OverflowGridWrapper = styled(FlexWrapper)`
-    overflow: hidden;
+    overflow: auto;
     user-select: none;
     min-width: 0;
     min-height: 0;
-    grid-row: -1 / -1;
+    grid-row: 2;
     display: none;
-    grid-template-rows: subgrid;
 
     &.has-overflow {
-        grid-row: ${SLOT_COUNT + 2} / ${SLOT_COUNT + 5};
         display: flex;
     }
 `
@@ -274,7 +270,15 @@ function validTime(time: TimeBlock | null) {
 
     const { day } = time
 
-    return WeekdayEnum.Mon <= day && day <= WeekdayEnum.Fri && end - begin >= 0.5
+    return (
+        WeekdayEnum.Mon <= day &&
+        day <= WeekdayEnum.Fri &&
+        begin >= 0 &&
+        end <= TIME_END - TIME_BEGIN &&
+        end - begin >= 0.5 &&
+        time.begin % 30 === 0 &&
+        time.end % 30 === 0
+    )
 }
 
 const OverflowTileWrapper = styled.div<{ lectureId: number }>`
@@ -407,7 +411,11 @@ const CurrentTimeBar = styled.div<{ ratio: number; dayIndex: number }>`
 `
 
 interface CustomTimeTableGridProps {
-    lectures: Lecture[]
+    timetableItems?: TimetableItem[]
+    selectedItems?: TimetableItem[]
+    flashItemKeys?: string[]
+    onItemSelect?: (item: TimetableItem, e?: React.PointerEvent) => void
+    lectures?: Lecture[]
     customBlocks?: CustomBlock[]
     cellWidth?: string
     needTimeFilter?: boolean
@@ -421,15 +429,19 @@ interface CustomTimeTableGridProps {
     selectedLectures?: Lecture[]
     onLectureSelect?: (lecture: Lecture, e?: React.PointerEvent) => void
     selectedCustomBlock?: CustomBlock | null
-    onCustomBlockSelect?: (block: CustomBlock) => void
+    onCustomBlockSelect?: (block: CustomBlock, e?: React.PointerEvent) => void
     isCustomBlockSectionOpen?: boolean
     needCurrentTimeBar?: boolean
     flashLectureIds?: number[]
 }
 
 function CustomTimeTableGrid({
-    lectures,
-    customBlocks = [],
+    timetableItems,
+    selectedItems,
+    flashItemKeys,
+    onItemSelect,
+    lectures: legacyLectures = [],
+    customBlocks: legacyCustomBlocks = [],
     cellWidth,
     needTimeFilter = true,
     timeFilter,
@@ -448,7 +460,49 @@ function CustomTimeTableGrid({
     flashLectureIds = [],
 }: CustomTimeTableGridProps) {
     const { t } = useTranslation()
-
+    const items = useMemo<TimetableItem[]>(
+        () =>
+            timetableItems ?? [
+                ...legacyLectures.map((data) => ({
+                    kind: TimetableItemKind.LECTURE,
+                    data,
+                })),
+                ...legacyCustomBlocks.map((data) => ({
+                    kind: TimetableItemKind.CUSTOM,
+                    data,
+                })),
+            ],
+        [timetableItems, legacyLectures, legacyCustomBlocks],
+    )
+    const lectures = useMemo(
+        () =>
+            items.flatMap((item) =>
+                item.kind === TimetableItemKind.LECTURE ? [item.data] : [],
+            ),
+        [items],
+    )
+    const customBlocks = useMemo(
+        () =>
+            items.flatMap((item) =>
+                item.kind === TimetableItemKind.CUSTOM ? [item.data] : [],
+            ),
+        [items],
+    )
+    const activeLectures = useMemo(
+        () =>
+            selectedItems?.flatMap((item) =>
+                item.kind === TimetableItemKind.LECTURE ? [item.data] : [],
+            ) ?? selectedLectures,
+        [selectedItems, selectedLectures],
+    )
+    const activeCustomIds =
+        selectedItems?.flatMap((item) =>
+            item.kind === TimetableItemKind.CUSTOM ? [item.data.id] : [],
+        ) ?? (selectedCustomBlock ? [selectedCustomBlock.id] : [])
+    const highlightedLectureIds =
+        flashItemKeys
+            ?.filter((key) => key.startsWith("lecture:"))
+            .map((key) => Number(key.split(":")[1])) ?? flashLectureIds
     const customTimeTableRef = useRef<HTMLDivElement>(null)
 
     const backgroundRef = useRef<HTMLDivElement>(null)
@@ -503,7 +557,7 @@ function CustomTimeTableGrid({
         const mergedLectures = [
             ...lectures,
             ...hoveredLectures,
-            ...selectedLectures,
+            ...activeLectures,
         ].filter((lecture): lecture is Lecture => lecture != null)
 
         const lectureMap = new Map<number, Lecture>()
@@ -512,7 +566,7 @@ function CustomTimeTableGrid({
         })
 
         return Array.from(lectureMap.values())
-    }, [lectures, hoveredLectures, selectedLectures])
+    }, [lectures, hoveredLectures, activeLectures])
 
     const ghostLectures = useMemo(() => {
         if (!needLectureInteraction) return []
@@ -520,7 +574,7 @@ function CustomTimeTableGrid({
         const hoveredGhosts = hoveredLectures.filter(
             (hLec) => !lectures.some((lec) => lec.id === hLec.id),
         )
-        const selectedGhosts = selectedLectures.filter(
+        const selectedGhosts = activeLectures.filter(
             (sLec) => !lectures.some((lec) => lec.id === sLec.id),
         )
 
@@ -529,47 +583,39 @@ function CustomTimeTableGrid({
         hoveredGhosts.forEach((lec) => allGhostsMap.set(lec.id, lec))
 
         return Array.from(allGhostsMap.values())
-    }, [hoveredLectures, selectedLectures, lectures, needLectureInteraction])
+    }, [hoveredLectures, activeLectures, lectures, needLectureInteraction])
 
     const overlaps = useMemo(() => {
         if (!needLectureInteraction || ghostLectures.length === 0) return []
-
         const intervals: { day: WeekdayEnum; begin: number; end: number }[] = []
-
-        ghostLectures.forEach((ghostLecture) => {
-            ghostLecture.classes.forEach((gClass) => {
-                lectures.forEach((lecture) => {
-                    lecture.classes.forEach((lClass) => {
-                        if (gClass.day === lClass.day) {
-                            const gStart = gClass.begin
-                            const gEnd = gClass.end
-                            const lStart = lClass.begin
-                            const lEnd = lClass.end
-
-                            const overlapStart = Math.max(gStart, lStart)
-                            const overlapEnd = Math.min(gEnd, lEnd)
-
-                            if (overlapStart < overlapEnd) {
-                                intervals.push({
-                                    day: gClass.day,
-                                    begin: (overlapStart / 60 - TIME_BEGIN) * 2,
-                                    end: (overlapEnd / 60 - TIME_BEGIN) * 2,
-                                })
-                            }
-                        }
-                    })
-                })
-            })
-        })
-
+        const times = items.flatMap(getTimetableItemTimes)
+        for (const ghostLecture of ghostLectures) {
+            for (const ghost of getTimetableItemTimes({
+                kind: TimetableItemKind.LECTURE,
+                data: ghostLecture,
+            })) {
+                for (const time of times) {
+                    const begin = Math.max(ghost.begin, time.begin)
+                    const end = Math.min(ghost.end, time.end)
+                    if (ghost.day === time.day && begin < end) {
+                        intervals.push({
+                            day: ghost.day,
+                            begin: (begin / 60 - TIME_BEGIN) * 2,
+                            end: (end / 60 - TIME_BEGIN) * 2,
+                        })
+                    }
+                }
+            }
+        }
         return intervals
-    }, [ghostLectures, lectures, needLectureInteraction])
+    }, [ghostLectures, items, needLectureInteraction])
 
-    const hasOverflow = useMemo(() => {
-        return overflowLectures.some((lecture) =>
-            lecture.classes.some((cls) => !validTime({ ...cls })),
-        )
-    }, [overflowLectures])
+    const hasOverflow =
+        overflowLectures.some(
+            (lecture) =>
+                lecture.classes.length === 0 ||
+                lecture.classes.some((time) => !validTime(time)),
+        ) || customBlocks.some((block) => !validTime(block))
 
     const handlePointerDown = useCallback((x: number, y: number) => {
         const target = document.elementFromPoint(x, y)
@@ -681,9 +727,11 @@ function CustomTimeTableGrid({
         (lecture: Lecture, e?: React.PointerEvent) => {
             if (!needLectureInteraction) return
 
-            onLectureSelect?.(lecture, e)
+            if (onItemSelect)
+                onItemSelect({ kind: TimetableItemKind.LECTURE, data: lecture }, e)
+            else onLectureSelect?.(lecture, e)
         },
-        [onLectureSelect, needLectureInteraction],
+        [onLectureSelect, onItemSelect, needLectureInteraction],
     )
 
     const clearHoveredLecturesCallback = useCallback(() => {
@@ -702,10 +750,13 @@ function CustomTimeTableGrid({
     )
 
     const handleCustomBlockSelect = useCallback(
-        (block: CustomBlock) => {
-            if (needLectureInteraction) onCustomBlockSelect?.(block)
+        (block: CustomBlock, event?: React.PointerEvent) => {
+            if (!needLectureInteraction) return
+            if (onItemSelect)
+                onItemSelect({ kind: TimetableItemKind.CUSTOM, data: block }, event)
+            else onCustomBlockSelect?.(block, event)
         },
-        [needLectureInteraction, onCustomBlockSelect],
+        [needLectureInteraction, onCustomBlockSelect, onItemSelect],
     )
 
     return (
@@ -725,11 +776,16 @@ function CustomTimeTableGrid({
             }
             data-selected-lectures={
                 needLectureInteraction
-                    ? selectedLectures.map((lec) => lec.id).join(" ")
+                    ? activeLectures.map((lec) => lec.id).join(" ")
                     : ""
             }
-            data-selected-custom-block={selectedCustomBlock?.id ?? ""}
-            data-flash-lectures={flashLectureIds.join(" ")}
+            data-selected-custom-blocks={activeCustomIds.join(" ")}
+            data-selected-items={(selectedItems ?? []).map(timetableItemKey).join(" ")}
+            data-flash-custom-blocks={(flashItemKeys ?? [])
+                .filter((key) => key.startsWith("custom:"))
+                .map((key) => key.split(":")[1])
+                .join(" ")}
+            data-flash-lectures={highlightedLectureIds.join(" ")}
             data-interaction={needLectureInteraction}
             data-lecture-deletable={needLectureDeletable}
             onPointerLeave={clearHoveredLecturesCallback}
@@ -737,7 +793,7 @@ function CustomTimeTableGrid({
         >
             <GridWrapper
                 columns="1fr"
-                rows={`${HEADER_HEIGHT}px repeat(${SLOT_COUNT + 3}, 1fr)`}
+                rows={hasOverflow ? "minmax(0, 1fr) 96px" : "1fr"}
                 gap="0px"
                 alignItems="stretch"
                 justifyItems="stretch"
@@ -911,11 +967,23 @@ function CustomTimeTableGrid({
                 >
                     <GridWrapper
                         columns={`repeat(${DAYS.length}, ${cellWidth || "1fr"})`}
-                        rows={`1fr`}
-                        gap={`0px ${ROW_GAP}px`}
+                        rows="minmax(56px, auto)"
+                        gap={`4px ${ROW_GAP}px`}
                         flow="row"
-                        style={{ overflow: "hidden" }}
+                        alignItems="stretch"
+                        justifyItems="stretch"
+                        style={{ height: "auto", gridAutoRows: "minmax(56px, auto)" }}
                     >
+                        {customBlocks
+                            .filter((block) => !validTime(block))
+                            .map((block) => (
+                                <CustomBlockTile
+                                    key={`custom-overflow-${block.id}`}
+                                    block={block}
+                                    onSelect={handleCustomBlockSelect}
+                                    overflow
+                                />
+                            ))}
                         {overflowLectures.map((lecture, lectureIdx) => (
                             <MemoizedOverflowTiles
                                 key={`${lecture.id}-overflow-${lectureIdx}`}
@@ -934,27 +1002,4 @@ function CustomTimeTableGrid({
     )
 }
 
-export default memo(CustomTimeTableGrid, (prevProps, nextProps) => {
-    return (
-        prevProps.lectures === nextProps.lectures &&
-        prevProps.customBlocks === nextProps.customBlocks &&
-        prevProps.hoveredLectures === nextProps.hoveredLectures &&
-        prevProps.selectedLectures === nextProps.selectedLectures &&
-        prevProps.timeFilter === nextProps.timeFilter &&
-        prevProps.cellWidth === nextProps.cellWidth &&
-        prevProps.needTimeFilter === nextProps.needTimeFilter &&
-        prevProps.needLectureInteraction === nextProps.needLectureInteraction &&
-        prevProps.needLectureDeletable === nextProps.needLectureDeletable &&
-        prevProps.deleteLecture === nextProps.deleteLecture &&
-        prevProps.onLectureSelect === nextProps.onLectureSelect &&
-        prevProps.selectedCustomBlock === nextProps.selectedCustomBlock &&
-        prevProps.onCustomBlockSelect === nextProps.onCustomBlockSelect &&
-        prevProps.isCustomBlockSectionOpen === nextProps.isCustomBlockSectionOpen &&
-        prevProps.needCurrentTimeBar === nextProps.needCurrentTimeBar &&
-        (prevProps.flashLectureIds ?? []).length ===
-            (nextProps.flashLectureIds ?? []).length &&
-        (prevProps.flashLectureIds ?? []).every(
-            (id, index) => id === (nextProps.flashLectureIds ?? [])[index],
-        )
-    )
-})
+export default memo(CustomTimeTableGrid)

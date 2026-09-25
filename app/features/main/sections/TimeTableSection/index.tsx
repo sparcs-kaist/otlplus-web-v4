@@ -3,7 +3,8 @@ import { useEffect, useState } from "react"
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import LockIcon from "@mui/icons-material/Lock"
-import { Trans } from "react-i18next"
+import { useQueryClient } from "@tanstack/react-query"
+import { Trans, useTranslation } from "react-i18next"
 import { useNavigate } from "react-router"
 
 import LoadingCircle from "@/common/components/LoadingCircle"
@@ -37,7 +38,7 @@ const BlurWrapper = styled(FlexWrapper)<{ blur: boolean }>`
     filter: ${(props) => (props.blur ? "blur(4px)" : "none")};
     width: 100%;
     height: 100%;
-    pointer-events: none;
+    pointer-events: ${({ blur }) => (blur ? "none" : "auto")};
 `
 
 const LoginWrapper = styled(FlexWrapper)`
@@ -72,21 +73,42 @@ const TimeTableGridWrapper = styled.div`
     align-items: stretch;
 `
 
+const TimetableSelect = styled.select`
+    width: 100%;
+    border: 1px solid ${({ theme }) => theme.colors.Line.block};
+    border-radius: 8px;
+    padding: 8px 12px;
+    background: ${({ theme }) => theme.colors.Background.Section.default};
+    color: ${({ theme }) => theme.colors.Text.dark};
+    font: inherit;
+`
+
 const TimeTableSection = () => {
     const navigate = useNavigate()
+    const { t } = useTranslation()
+    const queryClient = useQueryClient()
     const theme = useTheme()
     const { user, status } = useUserStore()
 
     const [selectedLecture, setSelectedLecture] = useState<Lecture | null>(null)
 
-    const { query: myTimetable, setParams: setMyTimetableParams } = useAPI(
+    const { query: homeTimetable, setParams: setHomeTimetableParams } = useAPI(
         "GET",
-        "/timetables/my-timetable",
+        "/timetables/home",
         {
             enabled: status === "success",
         },
     )
     const { query: currentSemester } = useAPI("GET", "/semesters/current")
+    const { query: savedTimetables, setParams: setSavedTimetableParams } = useAPI(
+        "GET",
+        "/timetables",
+        { enabled: status === "success" },
+    )
+    const { mutation: selectTimetable } = useAPI("PATCH", "/timetables/home", {
+        onSettled: () =>
+            queryClient.invalidateQueries({ queryKey: ["/timetables/home"] }),
+    })
 
     useEffect(() => {
         if (selectedLecture) {
@@ -105,14 +127,18 @@ const TimeTableSection = () => {
     }, [selectedLecture])
     useEffect(() => {
         if (currentSemester.data) {
-            setMyTimetableParams({
+            setHomeTimetableParams({
+                year: currentSemester.data.year,
+                semester: currentSemester.data.semester,
+            })
+            setSavedTimetableParams({
                 year: currentSemester.data.year,
                 semester: currentSemester.data.semester,
             })
         }
-    }, [currentSemester.data, setMyTimetableParams])
+    }, [currentSemester.data, setHomeTimetableParams, setSavedTimetableParams])
 
-    const lectures = myTimetable.data?.lectures ?? []
+    const timetableItems = homeTimetable.data?.timetableItems ?? []
 
     return (
         <StyledWidget direction="column" gap={0} padding="30px 23px" flex="1 1 auto">
@@ -163,6 +189,46 @@ const TimeTableSection = () => {
                             />
                         </FlexWrapper>
                     )}
+                    {status === "success" && (
+                        <>
+                            <TimetableSelect
+                                aria-label={t("main.homeTimetable.label")}
+                                value={homeTimetable.data?.timetableId ?? ""}
+                                disabled={
+                                    !currentSemester.data ||
+                                    homeTimetable.isPending ||
+                                    selectTimetable.isPending
+                                }
+                                onChange={(event) => {
+                                    if (!currentSemester.data) return
+                                    selectTimetable.mutate({
+                                        year: currentSemester.data.year,
+                                        semester: currentSemester.data.semester,
+                                        timetableId:
+                                            event.target.value === ""
+                                                ? null
+                                                : Number(event.target.value),
+                                    })
+                                }}
+                            >
+                                <option value="">
+                                    {t("main.homeTimetable.enrolled")}
+                                </option>
+                                {[...(savedTimetables.data?.timetables ?? [])]
+                                    .sort((a, b) => a.timeTableOrder - b.timeTableOrder)
+                                    .map((timetable) => (
+                                        <option key={timetable.id} value={timetable.id}>
+                                            {timetable.name}
+                                        </option>
+                                    ))}
+                            </TimetableSelect>
+                            {(homeTimetable.isError || selectTimetable.isError) && (
+                                <Typography type="Small" role="alert">
+                                    {t("main.homeTimetable.error")}
+                                </Typography>
+                            )}
+                        </>
+                    )}
                     <BlurWrapper
                         blur={status === "idle"}
                         direction="column"
@@ -172,7 +238,7 @@ const TimeTableSection = () => {
                     >
                         <TimeTableGridWrapper style={{ overflow: "hidden" }}>
                             <CustomTimeTableGrid
-                                lectures={lectures}
+                                timetableItems={timetableItems}
                                 needLectureDeletable={false}
                                 needTimeFilter={false}
                                 onLectureSelect={(lecture) => setSelectedLecture(lecture)}

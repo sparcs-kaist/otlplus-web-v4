@@ -1,14 +1,18 @@
 import { create } from "zustand"
+import { useShallow } from "zustand/react/shallow"
 
 import { SemesterEnum } from "@/common/enum/semesterEnum"
+import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import type { CustomBlock } from "@/common/schemas/customBlock"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimeBlock } from "@/common/schemas/timeblock"
+import type { TimetableItem } from "@/common/schemas/timetableItem"
 
 interface TimetableUIState {
     // 1. 시간표 & 리스트 상호작용
     hoveredLectures: Lecture[]
-    selectedLectures: Lecture[]
+    selectedItems: TimetableItem[]
+    clipboard: { items: TimetableItem[]; sourceKey: string } | null
     timeFilter: TimeBlock | null
 
     // 2. 검색 상태 (단축키 훅과 리스트 섹션 공유용)
@@ -28,7 +32,7 @@ interface TimetableUIState {
     pendingMyTimetableSelection: boolean
 
     // 5. Flash State (잘라내기, undo 등 효과)
-    flashLectureIds: number[] | null
+    flashItemKeys: string[] | null
     selectedCustomBlock: CustomBlock | null
     isCustomBlockSectionOpen: boolean
 
@@ -36,9 +40,10 @@ interface TimetableUIState {
     setHoveredLectures: (
         lecturesOrUpdater: Lecture[] | ((prev: Lecture[]) => Lecture[]),
     ) => void
-    setSelectedLectures: (
-        lecturesOrUpdater: Lecture[] | ((prev: Lecture[]) => Lecture[]),
+    setSelectedItems: (
+        items: TimetableItem[] | ((prev: TimetableItem[]) => TimetableItem[]),
     ) => void
+    setClipboard: (clipboard: TimetableUIState["clipboard"]) => void
     setTimeFilter: (
         filterOrUpdater:
             | TimeBlock
@@ -73,13 +78,14 @@ interface TimetableUIState {
     setIsCustomBlockSectionOpen: (open: boolean) => void
 
     // Flash Action
-    triggerFlash: (ids: number[]) => void
+    triggerFlash: (ids: string[]) => void
 }
 
 export const useTimetableUIStore = create<TimetableUIState>((set) => ({
     // Initial States
     hoveredLectures: [],
-    selectedLectures: [],
+    selectedItems: [],
+    clipboard: null,
     timeFilter: null,
     searchLectures: [],
     isShortcutModalOpen: false,
@@ -93,7 +99,7 @@ export const useTimetableUIStore = create<TimetableUIState>((set) => ({
     autoSelectedSemesterKeys: [],
     pendingMyTimetableSelection: false,
 
-    flashLectureIds: null,
+    flashItemKeys: null,
     selectedCustomBlock: null,
     isCustomBlockSectionOpen: false,
 
@@ -102,11 +108,11 @@ export const useTimetableUIStore = create<TimetableUIState>((set) => ({
         set((state) => ({
             hoveredLectures: typeof val === "function" ? val(state.hoveredLectures) : val,
         })),
-    setSelectedLectures: (val) =>
+    setSelectedItems: (val) =>
         set((state) => ({
-            selectedLectures:
-                typeof val === "function" ? val(state.selectedLectures) : val,
+            selectedItems: typeof val === "function" ? val(state.selectedItems) : val,
         })),
+    setClipboard: (clipboard) => set({ clipboard }),
     setTimeFilter: (val) =>
         set((state) => ({
             timeFilter: typeof val === "function" ? val(state.timeFilter) : val,
@@ -188,15 +194,25 @@ export const useTimetableUIStore = create<TimetableUIState>((set) => ({
         set({ isCustomBlockSectionOpen }),
 
     triggerFlash: (ids) => {
-        set({ flashLectureIds: ids })
+        set({ flashItemKeys: ids })
         setTimeout(() => {
             set((state) => {
                 // Only clear if the current flash state matches what we just set
-                if (state.flashLectureIds === ids) {
-                    return { flashLectureIds: null }
+                if (state.flashItemKeys === ids) {
+                    return { flashItemKeys: null }
                 }
                 return {}
             })
         }, 300)
     },
 }))
+
+export function useSelectedLectures() {
+    return useTimetableUIStore(
+        useShallow((state) =>
+            state.selectedItems.flatMap((item) =>
+                item.kind === TimetableItemKind.LECTURE ? [item.data] : [],
+            ),
+        ),
+    )
+}

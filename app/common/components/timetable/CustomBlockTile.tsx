@@ -2,6 +2,7 @@ import { memo } from "react"
 
 import { type Theme, ThemeProvider, css } from "@emotion/react"
 import styled from "@emotion/styled"
+import { useTranslation } from "react-i18next"
 
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
@@ -25,13 +26,14 @@ const CustomBlockTileHoverCss = (theme: Theme) => css`
 `
 
 const CustomBlockTileWrapper = styled(FlexWrapper)<{
-    rowStart: number
-    rowEnd: number
+    rowStart?: number
+    rowEnd?: number
     col: number
     blockId: number
 }>`
     grid-column: ${({ col }) => col};
-    grid-row: ${({ rowStart, rowEnd }) => `${rowStart} / ${rowEnd}`};
+    grid-row: ${({ rowStart, rowEnd }) =>
+        rowStart === undefined ? "auto" : `${rowStart} / ${rowEnd}`};
     overflow: hidden;
     pointer-events: none;
 
@@ -39,7 +41,7 @@ const CustomBlockTileWrapper = styled(FlexWrapper)<{
         ${({ theme }) => CustomBlockTileHoverCss(theme)}
     }
 
-    [data-selected-custom-block="${({ blockId }) => blockId}"] & {
+    [data-selected-custom-blocks~="${({ blockId }) => blockId}"] & {
         transform: translateY(-2px);
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     }
@@ -64,16 +66,20 @@ const CustomBlockTileInner = styled(FlexWrapper)<{ blockId: number }>`
         }
     }
 
-    [data-selected-custom-block=""] &,
-    [data-selected-custom-block="${({ blockId }) => blockId}"] & {
+    [data-selected-custom-blocks=""] &,
+    [data-selected-custom-blocks~="${({ blockId }) => blockId}"] & {
         opacity: 1;
+    }
+
+    [data-flash-custom-blocks~="${({ blockId }) => blockId}"] & {
+        background: ${({ theme }) => theme.colors.Highlight.default};
     }
 
     [data-is-dragging="true"] & {
         pointer-events: none;
     }
 
-    [data-selected-custom-block="${({ blockId }) => blockId}"] & {
+    [data-selected-custom-blocks~="${({ blockId }) => blockId}"] & {
         ${({ theme }) => CustomBlockTileHoverCss(theme)}
     }
 `
@@ -81,10 +87,27 @@ const CustomBlockTileInner = styled(FlexWrapper)<{ blockId: number }>`
 function CustomBlockTile({
     block,
     onSelect,
+    overflow = false,
 }: {
     block: CustomBlock
-    onSelect?: (block: CustomBlock) => void
+    onSelect?: (block: CustomBlock, event?: React.PointerEvent) => void
+    overflow?: boolean
 }) {
+    const { t } = useTranslation()
+    const day = [
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday",
+    ][block.day]
+    const formatTime = (minutes: number) =>
+        `${Math.floor(minutes / 60)
+            .toString()
+            .padStart(2, "0")}:${(minutes % 60).toString().padStart(2, "0")}`
+    const timeLabel = `${t(`common.days.${day}`)} ${formatTime(block.begin)}–${formatTime(block.end)}`
     return (
         <CustomBlockTileWrapper
             direction="column"
@@ -92,11 +115,13 @@ function CustomBlockTile({
             padding="1px 0"
             justify="stretch"
             align="stretch"
-            col={block.day + 1}
-            rowStart={block.begin / 30 - 14}
-            rowEnd={block.end / 30 - 14}
+            col={Math.min(block.day, 4) + 1}
+            rowStart={overflow ? undefined : block.begin / 30 - 14}
+            rowEnd={overflow ? undefined : block.end / 30 - 14}
             blockId={block.id}
-            onPointerDown={() => onSelect?.(block)}
+            onPointerDown={(event) => onSelect?.(block, event)}
+            data-custom-block-id={block.id}
+            title={`${block.block_name} · ${timeLabel}`}
         >
             <CustomBlockTileInner
                 direction="column"
@@ -112,6 +137,15 @@ function CustomBlockTile({
                     <Typography type="Small" color="Text.dark" className="block-title">
                         {block.block_name}
                     </Typography>
+                    {overflow && (
+                        <Typography
+                            type="Small"
+                            color="Text.lighter"
+                            className="block-info"
+                        >
+                            {timeLabel}
+                        </Typography>
+                    )}
                     {block.place && (
                         <Typography
                             type="Small"

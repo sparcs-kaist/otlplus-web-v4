@@ -13,7 +13,10 @@ import { LECTURE_ORDERS, LectureOrderEnum } from "@/common/enum/orderEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
-import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
+import {
+    useSelectedLectures,
+    useTimetableUIStore,
+} from "@/features/timetable/store/useTimetableUIStore"
 import { trackEvent } from "@/libs/mixpanel"
 import { queryKeys } from "@/libs/query/queryKeys"
 import { media } from "@/styles/themes/media"
@@ -172,15 +175,12 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     const semester = useTimetableUIStore((s) => s.semesterEnum)
     const hoveredLecture = useTimetableUIStore((s) => s.hoveredLectures)
     const setHoveredLecture = useTimetableUIStore((s) => s.setHoveredLectures)
-    const selectedLectures = useTimetableUIStore((s) => s.selectedLectures)
-    const setSelectedLectures = useTimetableUIStore((s) => s.setSelectedLectures)
+    const selectedLectures = useSelectedLectures()
+    const setSelectedItems = useTimetableUIStore((s) => s.setSelectedItems)
     const timeFilter = useTimetableUIStore((s) => s.timeFilter)
     const setTimeFilter = useTimetableUIStore((s) => s.setTimeFilter)
     const onSearchLecturesChange = useTimetableUIStore((s) => s.setSearchLectures)
-    const onClearSelection = useCallback(
-        () => setSelectedLectures([]),
-        [setSelectedLectures],
-    )
+    const onClearSelection = useCallback(() => setSelectedItems([]), [setSelectedItems])
 
     const { ref, inView } = useInView({ threshold: 0 })
 

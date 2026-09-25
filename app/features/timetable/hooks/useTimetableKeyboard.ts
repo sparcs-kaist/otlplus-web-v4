@@ -3,494 +3,350 @@ import { useCallback, useEffect, useRef } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 
-import { LectureActionEnum } from "@/common/enum/lectureActionEnum"
 import { OSEnum } from "@/common/enum/osEnum"
+import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import type { Lecture } from "@/common/schemas/lecture"
-import type {
-    TimetableAction,
-    TimetableTransaction,
-} from "@/features/timetable/hooks/useTimetableEditor"
+import type { TimetableItem } from "@/common/schemas/timetableItem"
+import {
+    getTimetableItemTimes,
+    timetableItemKey,
+    timetableItemsOverlap,
+} from "@/common/utils/timetableItems"
+import { timetableHistoryKey } from "@/features/timetable/hooks/useTimetableEditor"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
 import { queryKeys } from "@/libs/query/queryKeys"
 import { useAPI } from "@/utils/api/useAPI"
 import { getPlatform } from "@/utils/getPlatform"
-import checkOverlap from "@/utils/timetable/checkOverlap"
-
-export type ClipboardState = {
-    lectures: Lecture[]
-    sourceTimetableId: number | null
-} | null
 
 interface UseTimetableKeyboardOptions {
-    currentTimetableLectures: Lecture[]
-
-    // Undo/Redo
-    undo: () => number[] | null
-    redo: () => number[] | null
-
-    // Timetable operations
-    addLectures: (lectures: Lecture[], options?: { record?: boolean }) => void
-    removeLectures: (
-        lectureIds: number[],
-        options?: { record?: boolean; delay?: boolean },
-    ) => void
-
-    // Tab switching
-    timetableIds: (number | null)[] // ordered tab IDs (null for 'my timetable')
-
-    // Context
+    currentTimetableItems: TimetableItem[]
+    undo: () => Promise<boolean>
+    redo: () => Promise<boolean>
+    addItems: (items: TimetableItem[], replaceItems?: TimetableItem[]) => Promise<boolean>
+    removeItems: (items: TimetableItem[]) => Promise<boolean>
+    addLectures: (lectures: Lecture[]) => Promise<boolean>
+    removeLectures: (lectureIds: number[]) => Promise<boolean>
+    timetableIds: (number | null)[]
     isLoggedIn: boolean
-
     changeSemester: (direction: "prev" | "next") => void
-    recordAction: (action: TimetableAction | TimetableTransaction) => void
+    duplicateTimetable: () => void
 }
 
 export function useTimetableKeyboard({
-    currentTimetableLectures,
+    currentTimetableItems,
     undo,
     redo,
+    addItems,
+    removeItems,
     addLectures,
     removeLectures,
     timetableIds,
     isLoggedIn,
     changeSemester,
-    recordAction,
+    duplicateTimetable,
 }: UseTimetableKeyboardOptions) {
     const { t } = useTranslation()
     const platform = getPlatform()
     const queryClient = useQueryClient()
-
-    const selectedLectures = useTimetableUIStore((s) => s.selectedLectures)
-    const setSelectedLectures = useTimetableUIStore((s) => s.setSelectedLectures)
+    const selectedItems = useTimetableUIStore((s) => s.selectedItems)
+    const setSelectedItems = useTimetableUIStore((s) => s.setSelectedItems)
     const year = useTimetableUIStore((s) => s.year)
     const semesterEnum = useTimetableUIStore((s) => s.semesterEnum)
+    const currentTimetableId = useTimetableUIStore((s) => s.currentTimetableId)
     const setCurrentTimetableId = useTimetableUIStore((s) => s.setCurrentTimetableId)
     const searchLectures = useTimetableUIStore((s) => s.searchLectures)
     const hover = useTimetableUIStore((s) => s.hoveredLectures)
     const setHover = useTimetableUIStore((s) => s.setHoveredLectures)
-    const currentTimetableId = useTimetableUIStore((s) => s.currentTimetableId)
-
     const isShortcutModalOpen = useTimetableUIStore((s) => s.isShortcutModalOpen)
     const setIsShortcutModalOpen = useTimetableUIStore((s) => s.setIsShortcutModalOpen)
-    const toggleShortcutModal = useCallback(
-        () => setIsShortcutModalOpen((prev) => !prev),
-        [setIsShortcutModalOpen],
-    )
+    const lastSelectedTime = useRef<number | null>(null)
 
-    const lastSelectedTimeRef = useRef<number | null>(null)
-
-    // 다중 선택을 위한 코드
-    const onLectureSelect = useCallback(
-        (lecture: Lecture, e?: React.MouseEvent) => {
-            let clickedTime: number | null = null
-            if (e) {
-                const target = (e.target as HTMLElement).closest("[data-class-time]")
-                if (target) {
-                    clickedTime = Number(target.getAttribute("data-class-time"))
-                }
-            }
-
-            setSelectedLectures((prev) => {
-                const isMod =
-                    platform === OSEnum.IOS || platform === OSEnum.MAC
-                        ? e?.metaKey
-                        : e?.ctrlKey
-                const isShift = e?.shiftKey
-
+    const onItemSelect = useCallback(
+        (item: TimetableItem, event?: React.MouseEvent) => {
+            const target = event?.target as HTMLElement | undefined
+            const classTime = target
+                ?.closest("[data-class-time]")
+                ?.getAttribute("data-class-time")
+            const firstTime = getTimetableItemTimes(item)[0]
+            const clickedTime =
+                classTime != null
+                    ? Number(classTime)
+                    : firstTime
+                      ? firstTime.day * 1440 + firstTime.begin
+                      : null
+            const isMod =
+                platform === OSEnum.IOS || platform === OSEnum.MAC
+                    ? event?.metaKey
+                    : event?.ctrlKey
+            setSelectedItems((previous) => {
+                const key = timetableItemKey(item)
                 if (isMod) {
-                    lastSelectedTimeRef.current = clickedTime
-                    if (prev.some((l) => l.id === lecture.id)) {
-                        return prev.filter((l) => l.id !== lecture.id)
-                    } else {
-                        return [...prev, lecture]
-                    }
-                } else if (isShift) {
-                    const lastSelected = prev[prev.length - 1]
-
-                    if (
-                        !lastSelected ||
-                        clickedTime === null ||
-                        lastSelectedTimeRef.current === null
-                    ) {
-                        lastSelectedTimeRef.current = clickedTime
-                        return [...prev, lecture]
-                    }
-
-                    const minTime = Math.min(lastSelectedTimeRef.current, clickedTime)
-                    const maxTime = Math.max(lastSelectedTimeRef.current, clickedTime)
-
-                    const getAllClassTimes = (l: Lecture) => {
-                        if (!l.classes || l.classes.length === 0) return []
-                        return l.classes.map((c) => c.day * 24 * 60 + c.begin)
-                    }
-
-                    const newRange = currentTimetableLectures.filter((l) => {
-                        if (l.id === lastSelected.id || l.id === lecture.id) return true
-
-                        const times = getAllClassTimes(l)
-                        return times.some((t) => t >= minTime && t <= maxTime)
-                    })
-
-                    const rangeIds = new Set(newRange.map((l) => l.id))
-                    const filteredPrev = prev.filter((l) => !rangeIds.has(l.id))
-                    lastSelectedTimeRef.current = clickedTime
-                    return [...filteredPrev, ...newRange]
-                } else {
-                    lastSelectedTimeRef.current = clickedTime
-                    return prev.length === 1 && prev[0]?.id === lecture.id
-                        ? []
-                        : [lecture]
+                    lastSelectedTime.current = clickedTime
+                    return previous.some((other) => timetableItemKey(other) === key)
+                        ? previous.filter((other) => timetableItemKey(other) !== key)
+                        : [...previous, item]
                 }
+                if (event?.shiftKey) {
+                    const min = Math.min(
+                        lastSelectedTime.current ?? clickedTime ?? 0,
+                        clickedTime ?? lastSelectedTime.current ?? 0,
+                    )
+                    const max = Math.max(
+                        lastSelectedTime.current ?? clickedTime ?? 0,
+                        clickedTime ?? lastSelectedTime.current ?? 0,
+                    )
+                    const range = currentTimetableItems.filter(
+                        (other) =>
+                            timetableItemKey(other) === key ||
+                            (clickedTime !== null &&
+                                lastSelectedTime.current !== null &&
+                                getTimetableItemTimes(other).some((time) => {
+                                    const start = time.day * 1440 + time.begin
+                                    return start >= min && start <= max
+                                })),
+                    )
+                    const combined = [...previous, ...range, item]
+                    lastSelectedTime.current = clickedTime
+                    return [
+                        ...new Map(
+                            combined.map((entry) => [timetableItemKey(entry), entry]),
+                        ).values(),
+                    ]
+                }
+                lastSelectedTime.current = clickedTime
+                return previous.length === 1 && timetableItemKey(previous[0]!) === key
+                    ? []
+                    : [item]
             })
         },
-        [currentTimetableLectures, platform, setSelectedLectures],
+        [currentTimetableItems, platform, setSelectedItems],
     )
 
-    const handleAddToTimetable = (lecture: Lecture) => {
-        const isAdded = currentTimetableLectures.some((l) => l.id === lecture.id)
-        if (isAdded) {
-            removeLectures([lecture.id])
-        } else {
+    const onLectureSelect = (lecture: Lecture, event?: React.MouseEvent) =>
+        onItemSelect({ kind: TimetableItemKind.LECTURE, data: lecture }, event)
+
+    const { requestFunction: addTimetable } = useAPI("POST", "/timetables", {
+        onSuccess: (data, variables) => {
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.timetables] })
+            const state = useTimetableUIStore.getState()
             if (
-                currentTimetableLectures.some((lec) =>
-                    checkOverlap(lec.classes, lecture.classes),
-                )
-            ) {
-                alert(t("timetable.addLectureConflict"))
-                return
-            }
-            addLectures([lecture])
-        }
-    }
-
-    const { requestFunction: addTimetableFunction } = useAPI("POST", "/timetables", {
-        onSuccess: (data) => {
-            queryClient.invalidateQueries({ queryKey: [queryKeys.timetables] })
-            setCurrentTimetableId(data.id)
+                state.year === variables.year &&
+                state.semesterEnum === variables.semester
+            )
+                setCurrentTimetableId(data.id)
         },
     })
-    const addTimetable = useCallback(
-        (lectureIds: number[]) => {
-            if (isLoggedIn) {
-                addTimetableFunction({ year, semester: semesterEnum, lectureIds })
-            }
-        },
-        [isLoggedIn, addTimetableFunction, year, semesterEnum],
-    )
-
-    const { requestFunction: deleteTimetableFunction } = useAPI("DELETE", "/timetables", {
-        onMutate: (variables) => {
-            if (currentTimetableId === variables.id) {
+    const { requestFunction: deleteTimetable } = useAPI("DELETE", "/timetables", {
+        onSuccess: (_, variables) => {
+            if (useTimetableUIStore.getState().currentTimetableId === variables.id)
                 setCurrentTimetableId(null)
-            }
-        },
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: [queryKeys.timetables] })
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.timetables] })
+            void queryClient.invalidateQueries({ queryKey: ["/timetables/home"] })
         },
     })
-    const deleteTimetable = useCallback(
-        (id: number) => {
-            deleteTimetableFunction({ id })
-        },
-        [deleteTimetableFunction],
-    )
-
-    const clipboardRef = useRef<ClipboardState>(null)
-    const triggerFlash = useTimetableUIStore((state) => state.triggerFlash)
 
     useEffect(() => {
-        clipboardRef.current = null
+        useTimetableUIStore.getState().setClipboard(null)
+        lastSelectedTime.current = null
     }, [year, semesterEnum])
 
-    const handleKeyDownRef = useRef<(e: KeyboardEvent) => void>(() => {})
-
-    handleKeyDownRef.current = (e: KeyboardEvent) => {
-        const target = e.target as HTMLElement
+    const handleKeyDownRef = useRef<(event: KeyboardEvent) => Promise<void>>(
+        async () => {},
+    )
+    handleKeyDownRef.current = async (event) => {
+        if (event.isComposing) return
+        const isMod =
+            platform === OSEnum.IOS || platform === OSEnum.MAC
+                ? event.metaKey
+                : event.ctrlKey
+        const key = event.key.toLowerCase()
+        const ui = useTimetableUIStore.getState()
+        if (!isMod && event.key === "Escape") {
+            ui.setSelectedItems([])
+            ui.setHoveredLectures([])
+            ui.setSelectedCustomBlock(null)
+            ui.setIsCustomBlockSectionOpen(false)
+            ui.setTimeFilter(null)
+            if (isShortcutModalOpen) setIsShortcutModalOpen(false)
+            event.preventDefault()
+            return
+        }
+        const target = event.target as HTMLElement
         if (
             target.tagName === "INPUT" ||
             target.tagName === "TEXTAREA" ||
             target.isContentEditable
-        ) {
+        )
+            return
+        if (isMod && key === "/") {
+            event.preventDefault()
+            setIsShortcutModalOpen((previous) => !previous)
             return
         }
-
-        const isMod =
-            platform === OSEnum.IOS || platform === OSEnum.MAC ? e.metaKey : e.ctrlKey
-
-        // 1. Shortcut Help Modal: Ctrl + /
-        if (isMod && e.key === "/") {
-            e.preventDefault()
-            toggleShortcutModal()
-            return
-        }
-
         if (isShortcutModalOpen) return
-
-        // 2. Undo/Redo: Ctrl+Z / Ctrl+Shift+Z, Ctrl+Y
-        if (isMod && e.key.toLowerCase() === "z") {
-            e.preventDefault()
-            if (isLoggedIn && currentTimetableId === null) return
-            const ids = e.shiftKey ? redo() : undo()
-            if (ids && ids.length > 0) triggerFlash(ids)
+        const editable = !isLoggedIn || currentTimetableId !== null
+        if (isMod && (key === "z" || key === "y")) {
+            event.preventDefault()
+            if (editable) await (key === "y" || event.shiftKey ? redo() : undo())
             return
         }
-        if (isMod && e.key.toLowerCase() === "y") {
-            e.preventDefault()
-            if (isLoggedIn && currentTimetableId === null) return
-            const ids = redo()
-            if (ids && ids.length > 0) triggerFlash(ids)
+        if (isMod && key === "a") {
+            event.preventDefault()
+            setSelectedItems(currentTimetableItems)
             return
         }
-
-        // 3. Select All: Ctrl+A
-        if (isMod && e.key.toLowerCase() === "a") {
-            e.preventDefault()
-            setSelectedLectures(currentTimetableLectures)
-            return
-        }
-
-        // 4. Copy: Ctrl+C
-        if (isMod && e.key.toLowerCase() === "c") {
-            if (selectedLectures.length > 0) {
-                e.preventDefault()
-                clipboardRef.current = {
-                    lectures: selectedLectures,
-                    sourceTimetableId: currentTimetableId,
-                }
-                triggerFlash(selectedLectures.map((l) => l.id))
+        if (isMod && (key === "c" || key === "x")) {
+            if (selectedItems.length) {
+                event.preventDefault()
+                ui.setClipboard({
+                    items: selectedItems,
+                    sourceKey: timetableHistoryKey(
+                        currentTimetableId,
+                        year,
+                        semesterEnum,
+                    ),
+                })
+                ui.triggerFlash(selectedItems.map(timetableItemKey))
+                if (key === "x" && editable) await removeItems(selectedItems)
             }
             return
         }
-
-        // 5. Cut: Ctrl+X
-        if (isMod && e.key.toLowerCase() === "x") {
-            if (selectedLectures.length > 0) {
-                e.preventDefault()
-                clipboardRef.current = {
-                    lectures: selectedLectures,
-                    sourceTimetableId: currentTimetableId,
-                }
-                triggerFlash(selectedLectures.map((l) => l.id))
-                if (!isLoggedIn || currentTimetableId !== null) {
-                    removeLectures(
-                        selectedLectures.map((l) => l.id),
-                        { delay: true },
-                    )
-                    setSelectedLectures([])
-                }
-            }
-            return
-        }
-
-        // 6. Paste: Ctrl+V
-        if (isMod && e.key.toLowerCase() === "v") {
-            if (isLoggedIn && currentTimetableId === null) {
-                e.preventDefault()
+        if (isMod && key === "v") {
+            if (!editable) {
+                event.preventDefault()
                 return
             }
-            const cb = clipboardRef.current
-            if (cb && cb.lectures.length > 0) {
-                e.preventDefault()
-
-                const lecturesToAdd = cb.lectures.filter(
-                    (newLec) =>
-                        !currentTimetableLectures.some(
-                            (existingLec) => existingLec.id === newLec.id,
-                        ),
-                )
-
-                if (lecturesToAdd.length === 0) {
-                    triggerFlash(cb.lectures.map((l) => l.id))
-                    return
-                }
-
-                const overlappingLectures = currentTimetableLectures.filter(
-                    (existingLec) =>
-                        lecturesToAdd.some((newLec) =>
-                            checkOverlap(existingLec.classes, newLec.classes),
-                        ),
-                )
-
-                if (overlappingLectures.length > 0) {
-                    const confirmMsg = t("timetable.pasteLectureConflict")
-                    if (window.confirm(confirmMsg)) {
-                        removeLectures(
-                            overlappingLectures.map((l) => l.id),
-                            { record: false, delay: true },
-                        )
-                        addLectures(lecturesToAdd, { record: false })
-
-                        recordAction([
-                            {
-                                type: LectureActionEnum.DELETE,
-                                lectures: overlappingLectures.map((l) => ({
-                                    lecture: l,
-                                    lectureId: l.id,
-                                })),
-                            },
-                            {
-                                type: LectureActionEnum.ADD,
-                                lectures: lecturesToAdd.map((l) => ({
-                                    lecture: l,
-                                    lectureId: l.id,
-                                })),
-                            },
-                        ])
-
-                        triggerFlash(cb.lectures.map((l) => l.id))
-                    }
-                } else {
-                    addLectures(lecturesToAdd)
-                    triggerFlash(cb.lectures.map((l) => l.id))
-                }
-            }
-            return
-        }
-
-        // 7. Timetable Creation: Ctrl+M
-        if (isMod && e.key.toLowerCase() === "m") {
-            e.preventDefault()
-            if (isLoggedIn) {
-                addTimetable([])
-            }
-            return
-        }
-
-        // 8. Timetable Duplication: Ctrl+D
-        if (isMod && e.key.toLowerCase() === "d") {
-            e.preventDefault()
-            if (isLoggedIn) {
-                addTimetable(currentTimetableLectures.map((l) => l.id))
-            }
-            return
-        }
-
-        // 9. Delete Selection / Timetable: Delete or Backspace
-        if (e.key === "Delete" || e.key === "Backspace") {
-            if (isLoggedIn && currentTimetableId === null) {
-                e.preventDefault()
+            if (!ui.clipboard?.items.length) return
+            event.preventDefault()
+            const items = ui.clipboard.items.filter(
+                (item) =>
+                    item.kind === TimetableItemKind.CUSTOM ||
+                    !currentTimetableItems.some(
+                        (existing) =>
+                            timetableItemKey(existing) === timetableItemKey(item),
+                    ),
+            )
+            if (!items.length) {
+                ui.triggerFlash(ui.clipboard.items.map(timetableItemKey))
                 return
             }
-            if (selectedLectures.length > 0) {
-                e.preventDefault()
-                removeLectures(selectedLectures.map((l) => l.id))
-                setSelectedLectures([])
-            } else {
-                if (isLoggedIn && currentTimetableId !== null) {
-                    e.preventDefault()
-                    if (window.confirm(t("timetable.timetableKeyboardDeleteConfirm"))) {
-                        deleteTimetable(currentTimetableId)
-                    }
-                }
+            const retainedLectureKeys = new Set(
+                ui.clipboard.items
+                    .filter((item) => item.kind === TimetableItemKind.LECTURE)
+                    .map(timetableItemKey),
+            )
+            const overlapping = currentTimetableItems.filter(
+                (existing) =>
+                    !retainedLectureKeys.has(timetableItemKey(existing)) &&
+                    items.some((item) => timetableItemsOverlap(existing, item)),
+            )
+            if (
+                !overlapping.length ||
+                window.confirm(t("timetable.pasteLectureConflict"))
+            )
+                await addItems(items, overlapping)
+            return
+        }
+        if (isMod && key === "m") {
+            event.preventDefault()
+            if (isLoggedIn) addTimetable({ year, semester: semesterEnum, lectureIds: [] })
+            return
+        }
+        if (isMod && key === "d") {
+            event.preventDefault()
+            if (isLoggedIn) duplicateTimetable()
+            return
+        }
+        if (event.key === "Delete" || event.key === "Backspace") {
+            event.preventDefault()
+            if (!editable) return
+            if (selectedItems.length) await removeItems(selectedItems)
+            else if (
+                isLoggedIn &&
+                currentTimetableId !== null &&
+                window.confirm(t("timetable.timetableKeyboardDeleteConfirm"))
+            ) {
+                deleteTimetable({ id: currentTimetableId })
             }
             return
         }
-
-        // 10. Change Semester: [ and ]
-        if (!isMod && e.key === "[") {
-            e.preventDefault()
-            changeSemester("prev")
+        if (!isMod && (key === "[" || key === "]")) {
+            event.preventDefault()
+            changeSemester(key === "[" ? "prev" : "next")
             return
         }
-        if (!isMod && e.key === "]") {
-            e.preventDefault()
-            changeSemester("next")
+        if (!isMod && /^[1-9]$/.test(key)) {
+            event.preventDefault()
+            const id = timetableIds[parseInt(key) - 1]
+            if (id !== undefined) setCurrentTimetableId(id)
             return
         }
-
-        // 11. Escape: Clear selection and hover
-        if (!isMod && e.key === "Escape") {
-            let handled = false
-            if (selectedLectures.length > 0) {
-                setSelectedLectures([])
-                handled = true
-            }
-            if (hover.length > 0) {
-                setHover([])
-                handled = true
-            }
-            if (handled) e.preventDefault()
-            return
-        }
-
-        // 12. Tab switching: 1~9
-        if (!isMod && /^[1-9]$/.test(e.key)) {
-            e.preventDefault()
-            const idx = parseInt(e.key) - 1
-            if (idx < timetableIds.length) {
-                const id = timetableIds[idx]
-                if (id !== undefined) setCurrentTimetableId(id)
-            }
-            return
-        }
-
-        // 13. Search navigation: ArrowUp / ArrowDown / Space / Enter
-        if (!isMod && ["ArrowUp", "ArrowDown", " ", "Enter"].includes(e.key)) {
-            if (searchLectures.length > 0) {
-                e.preventDefault()
-                const hoverId = hover[0]?.id
-                const currentIndex = hoverId
-                    ? searchLectures.findIndex((l) => l.id === hoverId)
-                    : -1
-
-                const scrollToLecture = (lectureId: number) => {
+        if (
+            !isMod &&
+            ["ArrowUp", "ArrowDown", " ", "Enter"].includes(event.key) &&
+            searchLectures.length
+        ) {
+            event.preventDefault()
+            const index = searchLectures.findIndex(
+                (lecture) => lecture.id === hover[0]?.id,
+            )
+            if (event.key === "ArrowUp" || event.key === "ArrowDown") {
+                if (event.key === "ArrowDown" && index === searchLectures.length - 1)
+                    window.dispatchEvent(new CustomEvent("request-next-page"))
+                const next =
+                    searchLectures[
+                        event.key === "ArrowUp"
+                            ? Math.max(0, index - 1)
+                            : Math.min(searchLectures.length - 1, index + 1)
+                    ]
+                if (next) {
+                    setHover([next])
                     requestAnimationFrame(() => {
-                        const el = document.querySelector(
-                            `[data-search-lecture-id="${lectureId}"]`,
+                        const element = document.querySelector(
+                            `[data-search-lecture-id="${next.id}"]`,
                         )
-                        if (el) {
+                        if (element) {
                             useTimetableUIStore.setState({ isKeyboardNavigating: true })
-                            el.scrollIntoView({ block: "nearest" })
+                            element.scrollIntoView({ block: "nearest" })
                         }
                     })
                 }
-
-                if (e.key === "ArrowUp") {
-                    const nextIdx = Math.max(0, currentIndex - 1)
-                    const nextLec = searchLectures[nextIdx]
-                    if (nextLec) {
-                        setHover([nextLec])
-                        scrollToLecture(nextLec.id)
-                    }
-                } else if (e.key === "ArrowDown") {
-                    if (currentIndex === searchLectures.length - 1) {
-                        window.dispatchEvent(new CustomEvent("request-next-page"))
-                    }
-                    const nextIdx = Math.min(searchLectures.length - 1, currentIndex + 1)
-                    const nextLec = searchLectures[nextIdx]
-                    if (nextLec) {
-                        setHover([nextLec])
-                        scrollToLecture(nextLec.id)
-                    }
-                } else if (e.key === " " || e.key === "Enter") {
-                    if (isLoggedIn && currentTimetableId === null) {
-                        e.preventDefault()
-                        return
-                    }
-                    if (currentIndex >= 0 && currentIndex < searchLectures.length) {
-                        const currLec = searchLectures[currentIndex]
-                        if (currLec) handleAddToTimetable(currLec)
-                    }
-                }
+            } else if (editable) {
+                const lecture = searchLectures[index]
+                if (!lecture) return
+                const item = { kind: TimetableItemKind.LECTURE, data: lecture } as const
+                if (
+                    currentTimetableItems.some(
+                        (existing) =>
+                            timetableItemKey(existing) === timetableItemKey(item),
+                    )
+                )
+                    await removeLectures([lecture.id])
+                else if (
+                    currentTimetableItems.some((existing) =>
+                        timetableItemsOverlap(existing, item),
+                    )
+                )
+                    alert(t("timetable.addLectureConflict"))
+                else await addLectures([lecture])
             }
-            return
         }
     }
 
     useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => handleKeyDownRef.current(e)
-        const handleMouseMove = (e: MouseEvent) => {
-            if (Math.abs(e.movementX) > 0 || Math.abs(e.movementY) > 0) {
-                useTimetableUIStore.setState({ isKeyboardNavigating: false })
-            }
+        const keyDown = (event: KeyboardEvent) => {
+            void handleKeyDownRef.current(event)
         }
-
-        document.addEventListener("keydown", handleKeyDown)
-        document.addEventListener("mousemove", handleMouseMove)
+        const mouseMove = (event: MouseEvent) => {
+            if (event.movementX || event.movementY)
+                useTimetableUIStore.setState({ isKeyboardNavigating: false })
+        }
+        document.addEventListener("keydown", keyDown)
+        document.addEventListener("mousemove", mouseMove)
         return () => {
-            document.removeEventListener("keydown", handleKeyDown)
-            document.removeEventListener("mousemove", handleMouseMove)
+            document.removeEventListener("keydown", keyDown)
+            document.removeEventListener("mousemove", mouseMove)
         }
     }, [])
-    return { onLectureSelect }
+    return { onItemSelect, onLectureSelect }
 }

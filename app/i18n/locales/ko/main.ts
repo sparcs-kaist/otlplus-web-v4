@@ -1,5 +1,10 @@
 export const main = {
     hisTimeTable: "<name>{{name}}</name><space/><normal>님의 시간표</normal>",
+    homeTimetable: {
+        label: "홈에 표시할 시간표",
+        enrolled: "실제 수강 시간표",
+        error: "시간표를 불러오거나 선택을 저장하지 못했습니다. 다시 시도해 주세요.",
+    },
     schedule: {
         title: "{{content}}까지",
         link: "학사 시스템 바로가기",

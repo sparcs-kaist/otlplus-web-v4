@@ -18,7 +18,10 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
-import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
+import {
+    useSelectedLectures,
+    useTimetableUIStore,
+} from "@/features/timetable/store/useTimetableUIStore"
 import isLectureAddDisabled from "@/features/timetable/utils/isLectureAddDisabled"
 import { trackEvent } from "@/libs/mixpanel"
 import { queryKeys } from "@/libs/query/queryKeys"
@@ -106,7 +109,7 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
     const { user, status } = useUserStore()
     const isTablet = useIsDevice("tablet")
 
-    const selectedLectures = useTimetableUIStore((s) => s.selectedLectures)
+    const selectedLectures = useSelectedLectures()
     const hoveredLectures = useTimetableUIStore((s) => s.hoveredLectures)
     const year = useTimetableUIStore((s) => s.year)
     const semester = useTimetableUIStore((s) => s.semesterEnum)

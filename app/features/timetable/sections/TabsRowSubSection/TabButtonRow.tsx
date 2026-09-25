@@ -22,13 +22,13 @@ import styled from "@emotion/styled"
 import AddIcon from "@mui/icons-material/Add"
 import CloseIcon from "@mui/icons-material/Close"
 import ContentCopyIcon from "@mui/icons-material/ContentCopy"
+import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import { IconButton } from "@/common/primitives/IconButton"
 import Typography from "@/common/primitives/Typography"
-import type { Lecture } from "@/common/schemas/lecture"
 import type { Timetables } from "@/common/schemas/timetables"
 import SemesterButton from "@/features/timetable/sections/TabsRowSubSection/SemesterButton"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
@@ -173,15 +173,18 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
 }
 
 interface TabButtonRowProps {
-    timeTableLectures: Lecture[]
+    duplicateTimetable: () => Promise<void>
+    isCloning: boolean
     timetablesQuery: any
 }
 
 const TabButtonRow: React.FC<TabButtonRowProps> = ({
-    timeTableLectures,
+    duplicateTimetable,
+    isCloning,
     timetablesQuery: timetables,
 }) => {
     const { t } = useTranslation()
+    const queryClient = useQueryClient()
     const { status } = useUserStore()
     const theme = useTheme()
 
@@ -208,24 +211,30 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
         (s) => s.setPendingMyTimetableSelection,
     )
     const { requestFunction: addTimetable } = useAPI("POST", "/timetables", {
-        onSuccess: (data) => {
-            timetables.refetch()
-            setCurrentTimetableId(data.id)
+        onSuccess: (data, variables) => {
+            void queryClient.invalidateQueries({ queryKey: ["/timetables"] })
+            const current = useTimetableUIStore.getState()
+            if (
+                current.year === variables.year &&
+                current.semesterEnum === variables.semester
+            ) {
+                setCurrentTimetableId(data.id)
+            }
         },
     })
     const { requestFunction: deleteTimetable } = useAPI("DELETE", "/timetables", {
-        onMutate: (variables) => {
-            if (currentTimetableId === variables.id) {
+        onSuccess: (_, variables) => {
+            if (useTimetableUIStore.getState().currentTimetableId === variables.id) {
                 setCurrentTimetableId(null)
             }
-        },
-        onSuccess: () => {
-            timetables.refetch()
+            void queryClient.invalidateQueries({ queryKey: ["/timetables"] })
+            void queryClient.invalidateQueries({ queryKey: ["/timetables/home"] })
         },
     })
     const { requestFunction: changeTimetableMetaData } = useAPI("PATCH", "/timetables", {
         onSuccess: () => {
-            timetables.refetch()
+            void queryClient.invalidateQueries({ queryKey: ["/timetables"] })
+            void queryClient.invalidateQueries({ queryKey: ["/timetables/home"] })
         },
     })
 
@@ -380,11 +389,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                         <IconButton
                             onClick={(e) => {
                                 e.stopPropagation()
-                                addTimetable({
-                                    year: year,
-                                    semester: semester,
-                                    lectureIds: timeTableLectures.map((lec) => lec.id),
-                                })
+                                if (!isCloning) void duplicateTimetable()
                             }}
                             styles={{ padding: 5 }}
                         >
@@ -425,13 +430,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                                         }}
                                         onCopy={(e) => {
                                             e.stopPropagation()
-                                            addTimetable({
-                                                year: year,
-                                                semester: semester,
-                                                lectureIds: timeTableLectures.map(
-                                                    (lec) => lec.id,
-                                                ),
-                                            })
+                                            if (!isCloning) void duplicateTimetable()
                                         }}
                                         onDelete={(e) => {
                                             e.stopPropagation()

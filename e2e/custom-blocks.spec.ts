@@ -77,33 +77,44 @@ test("creates, edits, and deletes a custom block", async ({ page }) => {
             })
             return
         }
-        if (path.endsWith("/timetables/1/custom-blocks") && method === "GET") {
-            await route.fulfill({ json: { custom_blocks: blocks } })
-            return
-        }
-        if (path.endsWith("/timetables/1/custom-blocks") && method === "POST") {
-            const body = request.postDataJSON() as Omit<CustomBlock, "id">
-            blocks = [{ id: 10, ...body }]
-            await route.fulfill({ json: { id: 10 } })
-            return
-        }
-        if (path.endsWith("/timetables/1/custom-blocks/10") && method === "PATCH") {
-            patchBody = request.postDataJSON() as Partial<CustomBlock>
-            blocks = blocks.map((block) => ({ ...block, ...patchBody }))
-            await route.fulfill({ json: blocks[0] })
-            return
-        }
-        if (path.endsWith("/timetables/1/custom-blocks/10") && method === "DELETE") {
-            blocks = []
-            await route.fulfill({ json: { id: 10 } })
+        if (path.endsWith("/timetables/1/items") && method === "PATCH") {
+            const { changes } = request.postDataJSON()
+            const results = changes.map((change: any, index: number) => {
+                if (change.op === "add") {
+                    const id =
+                        blocks.reduce((max, block) => Math.max(max, block.id), 9) + 1
+                    blocks.push({ id, ...change.data })
+                    return { index, kind: "custom", id }
+                }
+                if (change.op === "update") {
+                    patchBody = change.data
+                    blocks = blocks.map((block) =>
+                        block.id === change.id ? { ...block, ...change.data } : block,
+                    )
+                } else {
+                    blocks = blocks.filter((block) => block.id !== change.id)
+                }
+                return { index, kind: "custom", id: change.id }
+            })
+            await route.fulfill({
+                json: {
+                    timetableItems: blocks.map((data) => ({ kind: "custom", data })),
+                    results,
+                },
+            })
             return
         }
         if (path.endsWith("/timetables/my-timetable")) {
-            await route.fulfill({ json: { lectures: [] } })
+            await route.fulfill({ json: { lectures: [], timetableItems: [] } })
             return
         }
         if (path.endsWith("/timetables/1")) {
-            await route.fulfill({ json: { lectures: [] } })
+            await route.fulfill({
+                json: {
+                    lectures: [],
+                    timetableItems: blocks.map((data) => ({ kind: "custom", data })),
+                },
+            })
             return
         }
         if (path.endsWith("/timetables")) {
