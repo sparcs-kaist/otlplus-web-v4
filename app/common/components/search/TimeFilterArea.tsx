@@ -67,16 +67,18 @@ function TimeFilterArea({
                             color="Text.default"
                             type="Normal"
                         >{`${formatTimeAreaToString(timeFilter)}`}</Typography>
-                        <RemoveButton
-                            type="button"
-                            aria-label={removeLabel ?? t("common.search.reset")}
-                            disabled={disabled || !setTimeFilter}
-                            onClick={() => setTimeFilter?.(null)}
-                        >
-                            <Icon size={15} style={{ cursor: "inherit" }}>
-                                <Close />
-                            </Icon>
-                        </RemoveButton>
+                        {setTimeFilter && (
+                            <RemoveButton
+                                type="button"
+                                aria-label={removeLabel ?? t("common.search.reset")}
+                                disabled={disabled}
+                                onClick={() => setTimeFilter(null)}
+                            >
+                                <Icon size={15} style={{ cursor: "inherit" }}>
+                                    <Close />
+                                </Icon>
+                            </RemoveButton>
+                        )}
                     </FlexWrapper>
                 )}
             </TimeFilterInner>

@@ -230,14 +230,6 @@ const MemoizedLectureTiles = memo(
             </LectureTileWrapper>
         )
     },
-    (prevProps, nextProps) => {
-        return (
-            prevProps.lecture === nextProps.lecture &&
-            prevProps.handleLectureTileHover === nextProps.handleLectureTileHover &&
-            prevProps.handleLectureTileSelect === nextProps.handleLectureTileSelect &&
-            prevProps.deleteLecture === nextProps.deleteLecture
-        )
-    },
 )
 
 interface OverlapTileProps {
@@ -354,7 +346,9 @@ const MemoizedOverflowTiles = memo(
                     <OverflowTile
                         key={lecture.id}
                         lecture={lecture}
-                        deleteLecture={isGhost ? undefined : deleteLectureCallback}
+                        deleteLecture={
+                            isGhost || !deleteLecture ? undefined : deleteLectureCallback
+                        }
                     />
                 ) : (
                     lecture.classes.map((cls, idx) => {
@@ -373,7 +367,9 @@ const MemoizedOverflowTiles = memo(
                                 lecture={lecture}
                                 classIdx={idx}
                                 deleteLecture={
-                                    isGhost ? undefined : deleteLectureCallback
+                                    isGhost || !deleteLecture
+                                        ? undefined
+                                        : deleteLectureCallback
                                 }
                             />
                         )
@@ -381,12 +377,6 @@ const MemoizedOverflowTiles = memo(
                 )}
             </OverflowTileWrapper>
         ) : null
-    },
-    (prevProps, nextProps) => {
-        return (
-            prevProps.lecture === nextProps.lecture &&
-            prevProps.deleteLecture === nextProps.deleteLecture
-        )
     },
 )
 
@@ -1009,7 +999,12 @@ function CustomTimeTableGrid({
                                         key={`custom-block-${block.id}-${index}`}
                                         block={block}
                                         time={time}
-                                        onSelect={handleCustomBlockSelect}
+                                        onSelect={
+                                            needLectureInteraction &&
+                                            (onItemSelect || onCustomBlockSelect)
+                                                ? handleCustomBlockSelect
+                                                : undefined
+                                        }
                                         onDelete={
                                             needLectureInteraction &&
                                             needLectureDeletable &&
@@ -1067,7 +1062,12 @@ function CustomTimeTableGrid({
                                     key={`custom-overflow-${block.id}-${index}`}
                                     block={block}
                                     time={time}
-                                    onSelect={handleCustomBlockSelect}
+                                    onSelect={
+                                        needLectureInteraction &&
+                                        (onItemSelect || onCustomBlockSelect)
+                                            ? handleCustomBlockSelect
+                                            : undefined
+                                    }
                                     onDelete={
                                         needLectureInteraction &&
                                         needLectureDeletable &&

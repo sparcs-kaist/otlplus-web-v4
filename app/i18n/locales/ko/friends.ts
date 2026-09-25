@@ -3,6 +3,7 @@ export const friends = {
     friendList: "친구 목록 ({{count}})",
     selectFriend: "친구 선택",
     viewOverlaps: "겹강 확인",
+    customBlockDetail: "일정 상세",
     chooseLecture: "겹강을 확인할 과목을 선택해 주세요.",
     chooseAnotherLecture: "다른 과목 선택",
     loadingLectures: "시간표를 불러오는 중이에요.",
@@ -11,6 +12,7 @@ export const friends = {
     myTimetable: "내 시간표",
     searchPlaceholder: "친구 검색",
     noFriends: "아직 시간표 친구가 없어요.",
+    scheduleNow: "지금 등록된 일정이 있어요",
     invite: "친구 추가 링크 공유",
     inviteTitle: "시간표 친구 초대",
     inviteDescription:

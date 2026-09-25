@@ -3,6 +3,7 @@ export const friends = {
     friendList: "Friends ({{count}})",
     selectFriend: "Choose friend",
     viewOverlaps: "Classmates",
+    customBlockDetail: "Schedule details",
     chooseLecture: "Choose a lecture to see classmates.",
     chooseAnotherLecture: "Choose another lecture",
     loadingLectures: "Loading timetable…",
@@ -11,6 +12,7 @@ export const friends = {
     myTimetable: "My Timetable",
     searchPlaceholder: "Search friends",
     noFriends: "You don't have any timetable friends yet.",
+    scheduleNow: "Has a scheduled event right now",
     invite: "Share friend invite",
     inviteTitle: "Invite a timetable friend",
     inviteDescription:

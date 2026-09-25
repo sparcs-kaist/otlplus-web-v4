@@ -61,14 +61,15 @@ const CustomBlockTileInner = styled(TimetableItemTile)<{ blockId: number }>`
     overflow: hidden;
     pointer-events: none;
 
-    [data-interaction="true"] & {
+    [data-custom-block-interaction="true"] & {
         pointer-events: auto;
         cursor: pointer;
     }
 
     @media (hover: hover) {
         .custom-timetable[data-interaction="true"]:has(
-                [data-custom-block-id="${({ blockId }) => blockId}"]
+                [data-custom-block-id="${({ blockId }) =>
+                        blockId}"][data-custom-block-interaction="true"]
                     .${CUSTOM_BLOCK_TILE_CLASSNAME}:hover
             )
             & {
@@ -130,6 +131,7 @@ function CustomBlockTile({
             blockId={block.id}
             onPointerDown={(event) => onSelect?.(block, event)}
             data-custom-block-id={block.id}
+            data-custom-block-interaction={Boolean(onSelect)}
             data-class-time={time.day * 1440 + time.begin}
             title={`${block.block_name} · ${timeLabel}`}
         >
@@ -146,6 +148,20 @@ function CustomBlockTile({
                 padding="2px"
                 blockId={block.id}
                 className={CUSTOM_BLOCK_TILE_CLASSNAME}
+                role={onSelect ? "button" : undefined}
+                tabIndex={onSelect ? 0 : undefined}
+                aria-label={onSelect ? `${block.block_name} · ${timeLabel}` : undefined}
+                onKeyDown={
+                    onSelect
+                        ? (event) => {
+                              if (event.target !== event.currentTarget) return
+                              if (event.key === "Enter" || event.key === " ") {
+                                  event.preventDefault()
+                                  onSelect(block)
+                              }
+                          }
+                        : undefined
+                }
             >
                 <FlexWrapper
                     direction="column"

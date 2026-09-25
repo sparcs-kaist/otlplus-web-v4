@@ -339,13 +339,7 @@ function LectureTile({
     )
 }
 
-const MemoizedLectureTile = memo(LectureTile, (prevProps, nextProps) => {
-    return (
-        prevProps.lecture === nextProps.lecture &&
-        prevProps.classIdx === nextProps.classIdx &&
-        prevProps.deleteLecture === nextProps.deleteLecture
-    )
-})
+const MemoizedLectureTile = memo(LectureTile)
 
 const OverlapTileWrapper = styled(FlexWrapper)<{
     day: number

@@ -6,10 +6,7 @@ const TimetableItemTile = styled(FlexWrapper)<{ itemKey: string }>`
     opacity: 1;
     transition: opacity 0.2s ease;
 
-    .custom-timetable:not([data-selected-items=""]):not(
-            [data-selected-items~="${({ itemKey }) => itemKey}"]
-        )
-        & {
+    .custom-timetable:not([data-selected-items=""]) & {
         opacity: 0.5;
     }
 

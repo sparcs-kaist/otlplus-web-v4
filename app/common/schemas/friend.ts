@@ -16,6 +16,12 @@ export const FriendSchema = z.object({
 
 export type Friend = z.infer<typeof FriendSchema>
 
+export const FriendListItemSchema = FriendSchema.extend({
+    hasScheduleNow: z.boolean().nullable().optional(),
+})
+
+export type FriendListItem = z.infer<typeof FriendListItemSchema>
+
 export const OverlapFriendSchema = FriendSchema.extend({
     timetable: z.object({
         id: z.number().int().positive().nullable(),

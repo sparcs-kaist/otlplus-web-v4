@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import styled from "@emotion/styled"
 import DeleteIcon from "@mui/icons-material/Delete"
+import EventNoteIcon from "@mui/icons-material/EventNote"
 import GroupIcon from "@mui/icons-material/Group"
 import PersonIcon from "@mui/icons-material/Person"
 import SearchIcon from "@mui/icons-material/Search"
@@ -15,11 +16,13 @@ import Button from "@/common/components/Button"
 import Modal from "@/common/components/Modal"
 import CustomTimeTableGrid from "@/common/components/timetable/CustomTimeTableGrid"
 import { SemesterEnum } from "@/common/enum/semesterEnum"
+import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
-import type { Friend } from "@/common/schemas/friend"
-import type { Lecture } from "@/common/schemas/lecture"
+import type { Friend, FriendListItem } from "@/common/schemas/friend"
+import type { TimetableItem } from "@/common/schemas/timetableItem"
+import FriendCustomBlockDetail from "@/features/friends/FriendCustomBlockDetail"
 import FriendInviteModal from "@/features/friends/FriendInviteModal"
 import FriendLectureDetail from "@/features/friends/FriendLectureDetail"
 import FriendLoginButton from "@/features/friends/FriendLoginButton"
@@ -178,6 +181,11 @@ const FriendName = styled.span`
     white-space: nowrap;
 `
 
+const ScheduleIcon = styled(Icon)`
+    flex-shrink: 0;
+    color: ${({ theme }) => theme.colors.Highlight.default};
+`
+
 const RowIconButton = styled.button`
     width: 28px;
     height: 28px;
@@ -283,13 +291,20 @@ const LoginPage = styled(FlexWrapper)`
 `
 
 interface FriendRowProps {
-    friend: Friend
+    friend: FriendListItem
+    showSchedule: boolean
     selected: boolean
     onSelect: () => void
     onDelete: () => void
 }
 
-function FriendRow({ friend, selected, onSelect, onDelete }: FriendRowProps) {
+function FriendRow({
+    friend,
+    showSchedule,
+    selected,
+    onSelect,
+    onDelete,
+}: FriendRowProps) {
     const { t } = useTranslation()
     const queryClient = useQueryClient()
     const { mutation, requestFunction } = useAPI(
@@ -318,6 +333,16 @@ function FriendRow({ friend, selected, onSelect, onDelete }: FriendRowProps) {
                 <PersonIcon />
             </Icon>
             <FriendName>{friend.name}</FriendName>
+            {showSchedule && friend.hasScheduleNow === true && (
+                <ScheduleIcon
+                    size={18}
+                    role="img"
+                    aria-label={t("friends.scheduleNow")}
+                    title={t("friends.scheduleNow")}
+                >
+                    <EventNoteIcon />
+                </ScheduleIcon>
+            )}
             {selected && (
                 <RowIconButton
                     aria-label={t("friends.delete")}
@@ -349,7 +374,8 @@ function FriendRow({ friend, selected, onSelect, onDelete }: FriendRowProps) {
 }
 
 interface FriendListContentProps {
-    friends: Friend[]
+    friends: FriendListItem[]
+    showSchedule: boolean
     selectedFriendId: number | null
     onSelect: (id: number | null) => void
     onDelete: (friend: Friend) => void
@@ -358,6 +384,7 @@ interface FriendListContentProps {
 
 function FriendListContent({
     friends,
+    showSchedule,
     selectedFriendId,
     onSelect,
     onDelete,
@@ -412,6 +439,7 @@ function FriendListContent({
                     <FriendRow
                         key={friend.id}
                         friend={friend}
+                        showSchedule={showSchedule}
                         selected={selectedFriendId === friend.id}
                         onSelect={() => onSelect(friend.id)}
                         onDelete={() => onDelete(friend)}
@@ -457,8 +485,16 @@ export default function FriendsPage() {
     const currentTimetableId = hasRequestedTerm
         ? positiveInteger(searchParams.get("timetableId"))
         : null
-    const [selectedLecture, setSelectedLecture] = useState<Lecture | null>(null)
+    const [selectedItem, setSelectedItem] = useState<TimetableItem | null>(null)
+    const selectedLecture =
+        selectedItem?.kind === TimetableItemKind.LECTURE ? selectedItem.data : null
+    const selectedCustomBlock =
+        selectedItem?.kind === TimetableItemKind.CUSTOM ? selectedItem.data : null
     const [friendListOpen, setFriendListOpen] = useState(false)
+    const [pageVisible, setPageVisible] = useState(
+        () => typeof document === "undefined" || document.visibilityState !== "hidden",
+    )
+    const [scheduleFresh, setScheduleFresh] = useState(false)
     const [detailOpen, setDetailOpen] = useState(false)
     const detailActionRef = useRef<HTMLButtonElement>(null)
     const [inviteOpen, setInviteOpen] = useState(false)
@@ -498,12 +534,61 @@ export default function FriendsPage() {
 
     useEffect(() => {
         if (isTablet && detailOpen) detailActionRef.current?.focus()
-    }, [isTablet, detailOpen, selectedLecture])
+    }, [isTablet, detailOpen, selectedItem])
 
+    const friendListVisible = !isTablet || friendListOpen
     const { query: friendsQuery } = useAPI("GET", "/friends", {
         enabled: status === "success",
         staleTime: 0,
+        refetchInterval:
+            status === "success" && friendListVisible && pageVisible ? 60_000 : false,
+        refetchOnWindowFocus: friendListVisible,
     })
+
+    useEffect(() => {
+        const onVisibilityChange = () =>
+            setPageVisible(document.visibilityState !== "hidden")
+        const onFocus = () => {
+            if (
+                status === "success" &&
+                friendListVisible &&
+                document.visibilityState !== "hidden"
+            ) {
+                void friendsQuery.refetch({ cancelRefetch: false })
+            }
+        }
+        document.addEventListener("visibilitychange", onVisibilityChange)
+        window.addEventListener("focus", onFocus)
+        return () => {
+            document.removeEventListener("visibilitychange", onVisibilityChange)
+            window.removeEventListener("focus", onFocus)
+        }
+    }, [status, friendListVisible, friendsQuery.refetch])
+
+    useEffect(() => {
+        if (
+            status === "success" &&
+            isTablet &&
+            friendListOpen &&
+            document.visibilityState !== "hidden"
+        ) {
+            void friendsQuery.refetch({ cancelRefetch: false })
+        }
+    }, [status, isTablet, friendListOpen, friendsQuery.refetch])
+
+    useEffect(() => {
+        const age = Date.now() - Date.parse(friendsQuery.data?.checkedAt ?? "")
+        const fresh = Number.isFinite(age) && age >= -60_000 && age < 120_000
+        setScheduleFresh(fresh)
+        if (!fresh) return
+        const timeout = window.setTimeout(
+            () => setScheduleFresh(false),
+            120_000 - Math.max(0, age),
+        )
+        return () => window.clearTimeout(timeout)
+    }, [friendsQuery.data?.checkedAt])
+
+    const showSchedule = scheduleFresh && friendsQuery.isSuccess && !friendsQuery.isError
     const selectedFriend = friendsQuery.data?.friends.find(
         ({ id }) => id === selectedFriendId,
     )
@@ -583,7 +668,7 @@ export default function FriendsPage() {
     }, [year, semester, selectedFriendId])
 
     useEffect(() => {
-        setSelectedLecture(null)
+        setSelectedItem(null)
         setDetailOpen(false)
         setFriendListOpen(false)
     }, [selectedFriendId, year, semester, currentTimetableId, location.key])
@@ -612,7 +697,7 @@ export default function FriendsPage() {
             : friendTimetables.isError
               ? []
               : (friendTimetables.data?.timetables ?? [])
-    const lectureQuery =
+    const timetableQuery =
         currentTimetableId === null
             ? selectedFriendId === null
                 ? ownActual
@@ -620,7 +705,16 @@ export default function FriendsPage() {
             : selectedFriendId === null
               ? ownSaved
               : friendSaved
-    const lectures = lectureQuery.isError ? [] : (lectureQuery.data?.lectures ?? [])
+    const timetableItems = timetableQuery.isError
+        ? []
+        : (timetableQuery.data?.timetableItems ?? [])
+    const lectures = timetableItems.flatMap((item) =>
+        item.kind === TimetableItemKind.LECTURE ? [item.data] : [],
+    )
+    const timetableName =
+        currentTimetableId === null
+            ? t("friends.actualTimetable")
+            : timetables.find(({ id }) => id === currentTimetableId)?.name || "No Title"
 
     const closeAddedModal = () => {
         setAddedFriendName(null)
@@ -649,6 +743,7 @@ export default function FriendsPage() {
                     <SidePanel>
                         <FriendListContent
                             friends={friendsQuery.data?.friends ?? []}
+                            showSchedule={showSchedule}
                             selectedFriendId={selectedFriendId}
                             onSelect={handleSelectFriend}
                             onDelete={setDeletingFriend}
@@ -673,7 +768,10 @@ export default function FriendsPage() {
                             type="button"
                             aria-haspopup="dialog"
                             aria-expanded={detailOpen}
-                            onClick={() => setDetailOpen(true)}
+                            onClick={() => {
+                                if (selectedCustomBlock) setSelectedItem(null)
+                                setDetailOpen(true)
+                            }}
                         >
                             {t("friends.viewOverlaps")}
                         </MobileAction>
@@ -710,23 +808,34 @@ export default function FriendsPage() {
                                 }
                                 onClick={() => handleSelectTimetable(timetable.id)}
                             >
-                                {timetable.name}
+                                {timetable.name || "No Title"}
                             </TabButton>
                         ))}
                     </Tabs>
-                    {lectureQuery.isError && (
+                    {timetableQuery.isError && (
                         <Typography type="Small" color="Highlight.default" role="alert">
                             {t("friends.loadError")}
                         </Typography>
                     )}
                     <TimetableGrid>
                         <CustomTimeTableGrid
-                            lectures={lectures}
+                            timetableItems={timetableItems}
                             needTimeFilter={false}
                             needLectureDeletable={false}
                             selectedLectures={selectedLecture ? [selectedLecture] : []}
+                            selectedCustomBlock={selectedCustomBlock}
                             onLectureSelect={(lecture) => {
-                                setSelectedLecture(lecture)
+                                setSelectedItem({
+                                    kind: TimetableItemKind.LECTURE,
+                                    data: lecture,
+                                })
+                                if (isTablet) setDetailOpen(true)
+                            }}
+                            onCustomBlockSelect={(block) => {
+                                setSelectedItem({
+                                    kind: TimetableItemKind.CUSTOM,
+                                    data: block,
+                                })
                                 if (isTablet) setDetailOpen(true)
                             }}
                         />
@@ -734,7 +843,15 @@ export default function FriendsPage() {
                 </TimetablePanel>
                 {!isTablet && (
                     <DetailPanel>
-                        <FriendLectureDetail lecture={selectedLecture} />
+                        {selectedCustomBlock ? (
+                            <FriendCustomBlockDetail
+                                block={selectedCustomBlock}
+                                timetableName={timetableName}
+                                onClose={() => setSelectedItem(null)}
+                            />
+                        ) : (
+                            <FriendLectureDetail lecture={selectedLecture} />
+                        )}
                     </DetailPanel>
                 )}
             </Layout>
@@ -747,6 +864,7 @@ export default function FriendsPage() {
             >
                 <FriendListContent
                     friends={friendsQuery.data?.friends ?? []}
+                    showSchedule={showSchedule}
                     selectedFriendId={selectedFriendId}
                     onSelect={handleSelectFriend}
                     onDelete={(friend) => {
@@ -762,15 +880,24 @@ export default function FriendsPage() {
             <Modal
                 isOpen={isTablet && detailOpen}
                 onClose={() => setDetailOpen(false)}
-                title={t("friends.viewOverlaps")}
+                title={t(
+                    selectedCustomBlock
+                        ? "friends.customBlockDetail"
+                        : "friends.viewOverlaps",
+                )}
                 fullScreen
             >
-                {selectedLecture ? (
+                {selectedCustomBlock ? (
+                    <FriendCustomBlockDetail
+                        block={selectedCustomBlock}
+                        timetableName={timetableName}
+                    />
+                ) : selectedLecture ? (
                     <>
                         <LectureChoice
                             ref={detailActionRef}
                             type="button"
-                            onClick={() => setSelectedLecture(null)}
+                            onClick={() => setSelectedItem(null)}
                         >
                             {t("friends.chooseAnotherLecture")}
                         </LectureChoice>
@@ -781,11 +908,11 @@ export default function FriendsPage() {
                         <Typography type="Normal" color="Text.default">
                             {t("friends.chooseLecture")}
                         </Typography>
-                        {lectureQuery.isPending ? (
+                        {timetableQuery.isPending ? (
                             <Typography role="status">
                                 {t("friends.loadingLectures")}
                             </Typography>
-                        ) : lectureQuery.isError ? (
+                        ) : timetableQuery.isError ? (
                             <Typography role="alert">{t("friends.loadError")}</Typography>
                         ) : lectures.length === 0 ? (
                             <Typography>{t("friends.noLectures")}</Typography>
@@ -795,7 +922,12 @@ export default function FriendsPage() {
                                     key={lecture.id}
                                     ref={index === 0 ? detailActionRef : undefined}
                                     type="button"
-                                    onClick={() => setSelectedLecture(lecture)}
+                                    onClick={() =>
+                                        setSelectedItem({
+                                            kind: TimetableItemKind.LECTURE,
+                                            data: lecture,
+                                        })
+                                    }
                                 >
                                     {lecture.name}
                                     {lecture.subtitle}{" "}
