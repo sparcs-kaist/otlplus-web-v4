@@ -1,8 +1,8 @@
 export const header = {
     dictionary: "과목사전",
     timetable: "모의시간표",
+    friends: "친구",
     planner: "졸업플래너",
-    friends: "친구 시간표",
     writeReviews: "과목후기 작성하기",
     syllabus: "실라버스",
     changeTheme: "테마 변경",
