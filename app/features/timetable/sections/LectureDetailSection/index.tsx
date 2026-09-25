@@ -8,7 +8,7 @@ import CloseIcon from "@mui/icons-material/Close"
 import FavoriteIcon from "@mui/icons-material/Favorite"
 import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
-import { Link } from "react-router"
+import { Link } from "react-router-dom"
 import { match } from "ts-pattern"
 
 import Button from "@/common/components/Button"

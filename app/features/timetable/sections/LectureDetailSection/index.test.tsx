@@ -1,4 +1,4 @@
-import { MemoryRouter, useLocation } from "react-router"
+import { MemoryRouter, useLocation } from "react-router-dom"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { Lecture } from "@/common/schemas/lecture"
