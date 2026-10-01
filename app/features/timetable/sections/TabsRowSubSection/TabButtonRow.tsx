@@ -18,7 +18,7 @@ import {
     horizontalListSortingStrategy,
     useSortable,
 } from "@dnd-kit/sortable"
-import { useTheme } from "@emotion/react"
+import { keyframes, useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import AddIcon from "@mui/icons-material/Add"
 import CloseIcon from "@mui/icons-material/Close"
@@ -81,6 +81,17 @@ const TimetableName = styled(Typography)`
     user-select: none;
 `
 
+const tabEnter = keyframes`
+    from { opacity: 0; clip-path: inset(0 100% 0 0); }
+    to { opacity: 1; clip-path: inset(0); }
+`
+
+const SortableTabWrapper = styled.div`
+    @media (prefers-reduced-motion: no-preference) {
+        animation: ${tabEnter} 350ms ease-out;
+    }
+`
+
 const AcademicTimetableName = styled(Typography)`
     ${media.mobile} {
         max-width: 70px;
@@ -117,12 +128,19 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
     const theme = useTheme()
     const { t } = useTranslation()
 
-    const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
-        id: timetable.id,
-        disabled: isHome,
-        animateLayoutChanges: () => true,
-        transition: { duration: 350, easing: "ease-out" },
-    })
+    const { attributes, listeners, node, setNodeRef, transform, transition } =
+        useSortable({
+            id: timetable.id,
+            disabled: isHome,
+            animateLayoutChanges: () => true,
+            transition: { duration: 350, easing: "ease-out" },
+        })
+
+    useEffect(() => {
+        if (isSelected) {
+            node.current?.scrollIntoView({ block: "nearest", inline: "nearest" })
+        }
+    }, [isSelected, node])
 
     const getTransformString = (
         transform: { x: number; y: number; scaleX?: number; scaleY?: number } | null,
@@ -141,7 +159,7 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
     }
 
     return (
-        <div
+        <SortableTabWrapper
             ref={setNodeRef}
             style={style}
             {...attributes}
@@ -236,7 +254,7 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
                     )}
                 </FlexWrapper>
             </TabButton>
-        </div>
+        </SortableTabWrapper>
     )
 }
 

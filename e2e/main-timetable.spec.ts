@@ -14,6 +14,7 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
     }))
     const homeWrites: unknown[] = []
     const creates: unknown[] = []
+    let nextTimetableId = 4
     const semester = {
         year: 2026,
         semester: 3,
@@ -74,13 +75,13 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
         } else if (path === "/timetables") {
             if (method === "POST") {
                 creates.push(request.postDataJSON())
-                const id = 4
+                const id = nextTimetableId++
                 timetables.push({
                     id,
                     name: `시간표 ${id}`,
                     year: 2026,
                     semester: 3,
-                    timeTableOrder: 3,
+                    timeTableOrder: id - 1,
                 })
                 json = { id }
             } else if (method === "DELETE") {
@@ -237,6 +238,39 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
     await expect(movingTab).toHaveCSS("transition-duration", "0s")
     await page.getByText("시간표 1", { exact: true }).click()
     await page.screenshot({ path: "test-results/main-timetable-desktop.png" })
+
+    await page.emulateMedia({ reducedMotion: "no-preference" })
+    await page.setViewportSize({ width: 375, height: 812 })
+    await page.getByText("시간표 3", { exact: true }).click()
+    await page.evaluate(() => {
+        document.addEventListener("animationend", (event) => {
+            const element = event.target as HTMLElement
+            if (element.matches('[aria-roledescription="sortable"]')) {
+                element.setAttribute("data-entered", "true")
+            }
+        })
+    })
+    for (const [source, id] of [
+        ["시간표 1", 5],
+        ["학사 시간표", 6],
+    ] as const) {
+        await page.getByText(source, { exact: true }).first().click()
+        await page.getByRole("button", { name: "현재 시간표 복제", exact: true }).click()
+        const copyName = page.getByText(`시간표 ${id}`, { exact: true })
+        const copyTab = page
+            .locator('[aria-roledescription="sortable"]')
+            .filter({ has: copyName })
+        await expect(copyTab).toHaveAttribute("data-entered", "true")
+        await expect(copyName).toHaveCSS("color", "rgb(229, 76, 101)")
+        await expect(copyName).toBeInViewport()
+        expect(homeId).toBe(2)
+    }
+    expect(creates).toHaveLength(3)
+    await page.emulateMedia({ reducedMotion: "reduce" })
+    await expect(page.locator('[aria-roledescription="sortable"]').last()).toHaveCSS(
+        "animation-name",
+        "none",
+    )
     await page.goto("/")
     await expect(page.locator(".block-title", { hasText: "메인 일정" })).toBeVisible()
     await expect(page.getByRole("button", { name: /메인 시간표로 지정/ })).toHaveCount(0)
