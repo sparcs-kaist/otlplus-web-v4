@@ -186,6 +186,7 @@ export function useTimetableKeyboard({
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: [queryKeys.timetables] })
+            queryClient.invalidateQueries({ queryKey: [queryKeys.homeTimetable] })
         },
     })
     const deleteTimetable = useCallback(

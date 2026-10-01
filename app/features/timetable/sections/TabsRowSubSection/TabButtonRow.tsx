@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import {
     DndContext,
@@ -22,6 +22,9 @@ import styled from "@emotion/styled"
 import AddIcon from "@mui/icons-material/Add"
 import CloseIcon from "@mui/icons-material/Close"
 import ContentCopyIcon from "@mui/icons-material/ContentCopy"
+import StarIcon from "@mui/icons-material/Star"
+import StarBorderIcon from "@mui/icons-material/StarBorder"
+import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 
 import FlexWrapper from "@/common/primitives/FlexWrapper"
@@ -32,6 +35,7 @@ import type { Lecture } from "@/common/schemas/lecture"
 import type { Timetables } from "@/common/schemas/timetables"
 import SemesterButton from "@/features/timetable/sections/TabsRowSubSection/SemesterButton"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
+import { queryKeys } from "@/libs/query/queryKeys"
 import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
 import useUserStore from "@/utils/zustand/useUserStore"
@@ -54,8 +58,13 @@ const TabButtonRowWrapper = styled(FlexWrapper)`
 `
 
 const TabRow = styled(FlexWrapper)`
+    min-width: 0;
     overflow-x: auto;
     scrollbar-width: none;
+
+    & > * {
+        flex-shrink: 0;
+    }
 
     &::-webkit-scrollbar {
         display: none;
@@ -67,11 +76,22 @@ const TimetableName = styled(Typography)`
     user-select: none;
 `
 
+const AcademicTimetableName = styled(Typography)`
+    ${media.mobile} {
+        max-width: 70px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+`
+
 interface SortableTimetableTabProps {
     timetable: Timetables
     isSelected: boolean
+    isHome: boolean
+    isSettingHome: boolean
     onClick: () => void
     onCopy: (e: React.MouseEvent) => void
+    onSetHome: (e: React.MouseEvent) => void
     onDelete: (e: React.MouseEvent) => void
     onNameChange: (id: number, newName: string) => void
     isDragging?: boolean
@@ -80,16 +100,21 @@ interface SortableTimetableTabProps {
 const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
     timetable,
     isSelected,
+    isHome,
+    isSettingHome,
     onClick,
     onCopy,
+    onSetHome,
     onDelete,
     onNameChange,
     isDragging,
 }) => {
     const theme = useTheme()
+    const { t } = useTranslation()
 
     const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
         id: timetable.id,
+        disabled: isHome,
     })
 
     const getTransformString = (
@@ -108,7 +133,13 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
     }
 
     return (
-        <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+        <div
+            ref={setNodeRef}
+            style={style}
+            {...attributes}
+            aria-disabled={false}
+            {...listeners}
+        >
             <TabButton type={isSelected ? "selected" : "default"} onClick={onClick}>
                 <TimetableName
                     onClick={(e) => {
@@ -139,7 +170,11 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
                 </TimetableName>
                 <FlexWrapper direction="row" gap={0} align="center">
                     {isSelected && (
-                        <IconButton onClick={onCopy} styles={{ padding: 5 }}>
+                        <IconButton
+                            aria-label={t("timetable.shortcuts.timetableDuplicate")}
+                            onClick={onCopy}
+                            styles={{ padding: 5 }}
+                        >
                             <Icon
                                 size={15}
                                 onClick={() => {}}
@@ -153,19 +188,44 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
                             </Icon>
                         </IconButton>
                     )}
-                    <IconButton onClick={onDelete} styles={{ padding: 3.75 }}>
+                    {isSelected ? (
+                        <IconButton
+                            aria-label={t(
+                                isHome
+                                    ? "timetable.homeTimetable"
+                                    : "timetable.setHomeTimetable",
+                            )}
+                            aria-pressed={isHome}
+                            disabled={isSettingHome}
+                            onClick={onSetHome}
+                            styles={{ padding: 3.75 }}
+                        >
+                            <Icon size={17.5} color={theme.colors.Highlight.default}>
+                                {isHome ? <StarIcon /> : <StarBorderIcon />}
+                            </Icon>
+                        </IconButton>
+                    ) : isHome ? (
                         <Icon
                             size={17.5}
-                            onClick={() => {}}
-                            color={
-                                isSelected
-                                    ? theme.colors.Highlight.default
-                                    : theme.colors.Text.lighter
-                            }
+                            color={theme.colors.Highlight.default}
+                            role="img"
+                            aria-label={t("timetable.homeTimetable")}
+                            style={{ margin: 3.75 }}
                         >
-                            <CloseIcon />
+                            <StarIcon />
                         </Icon>
-                    </IconButton>
+                    ) : null}
+                    {isSelected && (
+                        <IconButton
+                            aria-label={t("timetable.shortcuts.timetableDelete")}
+                            onClick={onDelete}
+                            styles={{ padding: 3.75 }}
+                        >
+                            <Icon size={17.5} color={theme.colors.Highlight.default}>
+                                <CloseIcon />
+                            </Icon>
+                        </IconButton>
+                    )}
                 </FlexWrapper>
             </TabButton>
         </div>
@@ -175,15 +235,18 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
 interface TabButtonRowProps {
     timeTableLectures: Lecture[]
     timetablesQuery: any
+    homeTimetableId: number | null
 }
 
 const TabButtonRow: React.FC<TabButtonRowProps> = ({
     timeTableLectures,
     timetablesQuery: timetables,
+    homeTimetableId,
 }) => {
     const { t } = useTranslation()
     const { status } = useUserStore()
     const theme = useTheme()
+    const queryClient = useQueryClient()
 
     const currentTimetableId = useTimetableUIStore((s) => s.currentTimetableId)
     const setCurrentTimetableId = useTimetableUIStore((s) => s.setCurrentTimetableId)
@@ -207,12 +270,22 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
     const setPendingMyTimetableSelection = useTimetableUIStore(
         (s) => s.setPendingMyTimetableSelection,
     )
-    const { requestFunction: addTimetable } = useAPI("POST", "/timetables", {
-        onSuccess: (data) => {
-            timetables.refetch()
-            setCurrentTimetableId(data.id)
+    const { requestFunction: addTimetable, mutation: createTimetable } = useAPI(
+        "POST",
+        "/timetables",
+        {
+            onSuccess: (data, variables) => {
+                timetables.refetch()
+                const current = useTimetableUIStore.getState()
+                if (
+                    current.year === variables.year &&
+                    current.semesterEnum === variables.semester
+                ) {
+                    setCurrentTimetableId(data.id)
+                }
+            },
         },
-    })
+    )
     const { requestFunction: deleteTimetable } = useAPI("DELETE", "/timetables", {
         onMutate: (variables) => {
             if (currentTimetableId === variables.id) {
@@ -221,6 +294,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
         },
         onSuccess: () => {
             timetables.refetch()
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.homeTimetable] })
         },
     })
     const { requestFunction: changeTimetableMetaData } = useAPI("PATCH", "/timetables", {
@@ -228,9 +302,38 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
             timetables.refetch()
         },
     })
+    const { mutation: setHomeTimetable } = useAPI("PATCH", "/timetables/home", {
+        onSuccess: () =>
+            queryClient.invalidateQueries({ queryKey: [queryKeys.homeTimetable] }),
+    })
+    const isSettingHome = createTimetable.isPending || setHomeTimetable.isPending
+
+    const handleSetHome = async (timetableId: number | null) => {
+        if (isSettingHome || (timetableId !== null && timetableId === homeTimetableId))
+            return
+        try {
+            const id =
+                timetableId ??
+                (
+                    await createTimetable.mutateAsync({
+                        year,
+                        semester,
+                        lectureIds: timeTableLectures.map((lecture) => lecture.id),
+                    })
+                ).id
+            await setHomeTimetable.mutateAsync({ year, semester, timetableId: id })
+        } catch {
+            window.alert(t("timetable.homeTimetableError"))
+        }
+    }
 
     const [localTimetables, setLocalTimetables] = useState<Timetables[]>([])
     const [activeId, setActiveId] = useState<number | null>(null)
+    const tabRowRef = useRef<HTMLDivElement>(null)
+
+    useEffect(() => {
+        if (tabRowRef.current) tabRowRef.current.scrollLeft = 0
+    }, [homeTimetableId])
 
     const sensors = useSensors(
         useSensor(MouseSensor, {
@@ -251,6 +354,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
             timetables.data?.timetables ?? [],
             year,
             semester,
+            homeTimetableId,
         )
         setLocalTimetables(semesterTimetables)
 
@@ -287,7 +391,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
 
         markSemesterAutoSelected(autoSelection.semesterKey)
 
-        // "나의 시간표"는 편집 불가라 기본 선택으로 두면 과목 추가가 조용히 실패한다
+        // 학사 시간표는 편집 불가라 기본 선택으로 두면 과목 추가가 조용히 실패한다
         if (autoSelection.timetableId != null) {
             setCurrentTimetableId(autoSelection.timetableId)
         }
@@ -295,6 +399,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
         timetables.data,
         year,
         semester,
+        homeTimetableId,
         status,
         currentTimetableId,
         autoSelectedSemesterKeys,
@@ -321,9 +426,16 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
         const { active, over } = event
         setActiveId(null)
 
-        if (over && active.id !== over.id) {
+        if (
+            over &&
+            active.id !== over.id &&
+            active.id !== homeTimetableId &&
+            over.id !== homeTimetableId
+        ) {
             const oldIndex = localTimetables.findIndex((item) => item.id === active.id)
             const newIndex = localTimetables.findIndex((item) => item.id === over.id)
+            const target = localTimetables[newIndex]
+            if (oldIndex < 0 || !target) return
 
             const newItems = arrayMove(localTimetables, oldIndex, newIndex)
             setLocalTimetables(newItems)
@@ -331,7 +443,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
             const movedTimetableId = active.id as number
             changeTimetableMetaData({
                 id: movedTimetableId,
-                order: newIndex,
+                order: target.timeTableOrder,
             })
         }
     }
@@ -351,12 +463,99 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
             gap={4}
             style={{ overflowX: "hidden" }}
         >
-            <FlexWrapper
-                direction="row"
-                gap={3}
-                flex="0 1 auto"
-                style={{ overflowX: "auto" }}
-            >
+            {status === "success" && (
+                <TabRow
+                    ref={tabRowRef}
+                    direction="row"
+                    gap={3}
+                    flex="1 1 auto"
+                    onWheel={onWheel}
+                >
+                    <DndContext
+                        sensors={sensors}
+                        collisionDetection={closestCenter}
+                        onDragStart={handleDragStart}
+                        onDragEnd={handleDragEnd}
+                        modifiers={[restrictToHorizontalAxis, restrictToParentElement]}
+                    >
+                        <SortableContext
+                            items={localTimetables.map((t) => t.id)}
+                            strategy={horizontalListSortingStrategy}
+                        >
+                            {localTimetables.map((timetable) => (
+                                <SortableTimetableTab
+                                    key={timetable.id}
+                                    timetable={timetable}
+                                    isSelected={currentTimetableId === timetable.id}
+                                    isHome={homeTimetableId === timetable.id}
+                                    isSettingHome={isSettingHome}
+                                    onSetHome={(e) => {
+                                        e.stopPropagation()
+                                        void handleSetHome(timetable.id)
+                                    }}
+                                    isDragging={activeId === timetable.id}
+                                    onClick={() => {
+                                        setCurrentTimetableId(timetable.id)
+                                    }}
+                                    onCopy={(e) => {
+                                        e.stopPropagation()
+                                        addTimetable({
+                                            year: year,
+                                            semester: semester,
+                                            lectureIds: timeTableLectures.map(
+                                                (lec) => lec.id,
+                                            ),
+                                        })
+                                    }}
+                                    onDelete={(e) => {
+                                        e.stopPropagation()
+                                        deleteTimetable({ id: timetable.id })
+                                    }}
+                                    onNameChange={(id, newName) => {
+                                        setLocalTimetables((prev) =>
+                                            prev.map((t) =>
+                                                t.id === id
+                                                    ? {
+                                                          ...t,
+                                                          name: newName,
+                                                      }
+                                                    : t,
+                                            ),
+                                        )
+                                        changeTimetableMetaData({
+                                            id: id,
+                                            name: newName,
+                                        })
+                                    }}
+                                />
+                            ))}
+                        </SortableContext>
+                    </DndContext>
+                    <TabButton
+                        onClick={() => {
+                            addTimetable({
+                                year: year,
+                                semester: semester,
+                                lectureIds: [],
+                            })
+                        }}
+                    >
+                        <IconButton
+                            aria-label={t("timetable.shortcuts.timetableAdd")}
+                            styles={{ padding: 3.75 }}
+                        >
+                            <Icon
+                                size={17.5}
+                                color={theme.colors.Text.default}
+                                onClick={() => {}}
+                            >
+                                <AddIcon />
+                            </Icon>
+                        </IconButton>
+                    </TabButton>
+                </TabRow>
+            )}
+            <FlexWrapper direction="row" gap={4} align="center" flex="0 0 auto">
                 <TabButton
                     key="my-timetable"
                     type={currentTimetableId == null ? "selected" : "default"}
@@ -365,7 +564,8 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                         setCurrentTimetableId(null)
                     }}
                 >
-                    <Typography
+                    <AcademicTimetableName
+                        title={t("timetable.myTimetable")}
                         type="Normal"
                         color={
                             currentTimetableId === null
@@ -375,111 +575,47 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                         style={{ paddingTop: 4, paddingBottom: 3.5 }}
                     >
                         {t("timetable.myTimetable")}
-                    </Typography>
+                    </AcademicTimetableName>
                     {currentTimetableId === null && status === "success" && (
-                        <IconButton
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                addTimetable({
-                                    year: year,
-                                    semester: semester,
-                                    lectureIds: timeTableLectures.map((lec) => lec.id),
-                                })
-                            }}
-                            styles={{ padding: 5 }}
-                        >
-                            <Icon
-                                size={15}
-                                color={theme.colors.Highlight.default}
-                                onClick={() => {}}
+                        <>
+                            <IconButton
+                                aria-label={t("timetable.shortcuts.timetableDuplicate")}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    addTimetable({
+                                        year: year,
+                                        semester: semester,
+                                        lectureIds: timeTableLectures.map(
+                                            (lec) => lec.id,
+                                        ),
+                                    })
+                                }}
+                                styles={{ padding: 5 }}
                             >
-                                <ContentCopyIcon />
-                            </Icon>
-                        </IconButton>
-                    )}
-                </TabButton>
-                {status === "success" && (
-                    <TabRow direction="row" gap={3} flex="1 1 auto" onWheel={onWheel}>
-                        <DndContext
-                            sensors={sensors}
-                            collisionDetection={closestCenter}
-                            onDragStart={handleDragStart}
-                            onDragEnd={handleDragEnd}
-                            modifiers={[
-                                restrictToHorizontalAxis,
-                                restrictToParentElement,
-                            ]}
-                        >
-                            <SortableContext
-                                items={localTimetables.map((t) => t.id)}
-                                strategy={horizontalListSortingStrategy}
-                            >
-                                {localTimetables.map((timetable) => (
-                                    <SortableTimetableTab
-                                        key={timetable.id}
-                                        timetable={timetable}
-                                        isSelected={currentTimetableId === timetable.id}
-                                        isDragging={activeId === timetable.id}
-                                        onClick={() => {
-                                            setCurrentTimetableId(timetable.id)
-                                        }}
-                                        onCopy={(e) => {
-                                            e.stopPropagation()
-                                            addTimetable({
-                                                year: year,
-                                                semester: semester,
-                                                lectureIds: timeTableLectures.map(
-                                                    (lec) => lec.id,
-                                                ),
-                                            })
-                                        }}
-                                        onDelete={(e) => {
-                                            e.stopPropagation()
-                                            deleteTimetable({ id: timetable.id })
-                                        }}
-                                        onNameChange={(id, newName) => {
-                                            setLocalTimetables((prev) =>
-                                                prev.map((t) =>
-                                                    t.id === id
-                                                        ? {
-                                                              ...t,
-                                                              name: newName,
-                                                          }
-                                                        : t,
-                                                ),
-                                            )
-                                            changeTimetableMetaData({
-                                                id: id,
-                                                name: newName,
-                                            })
-                                        }}
-                                    />
-                                ))}
-                            </SortableContext>
-                        </DndContext>
-                        <TabButton
-                            onClick={() => {
-                                addTimetable({
-                                    year: year,
-                                    semester: semester,
-                                    lectureIds: [],
-                                })
-                            }}
-                        >
-                            <IconButton onClick={(e) => {}} styles={{ padding: 3.75 }}>
                                 <Icon
-                                    size={17.5}
-                                    color={theme.colors.Text.default}
+                                    size={15}
+                                    color={theme.colors.Highlight.default}
                                     onClick={() => {}}
                                 >
-                                    <AddIcon />
+                                    <ContentCopyIcon />
                                 </Icon>
                             </IconButton>
-                        </TabButton>
-                    </TabRow>
-                )}
-            </FlexWrapper>
-            <FlexWrapper direction="row" gap={0} align="center">
+                            <IconButton
+                                aria-label={t("timetable.createHomeTimetable")}
+                                disabled={isSettingHome}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    void handleSetHome(null)
+                                }}
+                                styles={{ padding: 3.75 }}
+                            >
+                                <Icon size={17.5} color={theme.colors.Highlight.default}>
+                                    <StarBorderIcon />
+                                </Icon>
+                            </IconButton>
+                        </>
+                    )}
+                </TabButton>
                 <SemesterButton
                     year={year}
                     semester={semester}

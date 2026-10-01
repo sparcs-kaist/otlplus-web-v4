@@ -1,10 +1,14 @@
 export const timetable = {
-    myTimetable: "내 시간표",
+    myTimetable: "학사 시간표",
+    homeTimetable: "메인 시간표",
+    setHomeTimetable: "메인 시간표로 지정",
+    createHomeTimetable: "학사 시간표를 복사해 메인 시간표로 지정",
+    homeTimetableError: "메인 시간표를 설정하지 못했습니다. 다시 시도해주세요.",
     examTimetable: "시험시간표",
     addLectureConflict: "시간표가 겹치는 강의를 추가할 수 없습니다.",
     pasteLectureConflict:
         "시간이 겹치는 과목이 있습니다. 겹치는 기존 과목을 지우고 붙여넣으시겠습니까?",
-    myTimeTableLectureAddWarning: "내 시간표에는 강의를 추가할 수 없습니다.",
+    myTimeTableLectureAddWarning: "학사 시간표에는 강의를 추가할 수 없습니다.",
     timetableKeyboardDeleteConfirm: "현재 시간표를 삭제하시겠습니까?",
     copyImage: "이미지로 복사하기",
     exportImage: "이미지로 내보내기",
