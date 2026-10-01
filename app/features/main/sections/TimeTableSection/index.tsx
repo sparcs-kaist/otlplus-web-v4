@@ -79,14 +79,20 @@ const TimeTableSection = () => {
 
     const [selectedLecture, setSelectedLecture] = useState<Lecture | null>(null)
 
-    const { query: myTimetable, setParams: setMyTimetableParams } = useAPI(
+    const { query: homeTimetable, setParams: setHomeTimetableParams } = useAPI(
         "GET",
-        "/timetables/my-timetable",
+        "/timetables/home",
         {
             enabled: status === "success",
+            staleTime: 0,
         },
     )
     const { query: currentSemester } = useAPI("GET", "/semesters/current")
+    const { query: customBlocks } = useAPI(
+        "GET",
+        `/timetables/${homeTimetable.data?.timetableId}/custom-blocks`,
+        { enabled: status === "success" && homeTimetable.data?.timetableId != null },
+    )
 
     useEffect(() => {
         if (selectedLecture) {
@@ -105,14 +111,14 @@ const TimeTableSection = () => {
     }, [selectedLecture])
     useEffect(() => {
         if (currentSemester.data) {
-            setMyTimetableParams({
+            setHomeTimetableParams({
                 year: currentSemester.data.year,
                 semester: currentSemester.data.semester,
             })
         }
-    }, [currentSemester.data, setMyTimetableParams])
+    }, [currentSemester.data, setHomeTimetableParams])
 
-    const lectures = myTimetable.data?.lectures ?? []
+    const lectures = homeTimetable.data?.lectures ?? []
 
     return (
         <StyledWidget direction="column" gap={0} padding="30px 23px" flex="1 1 auto">
@@ -173,6 +179,7 @@ const TimeTableSection = () => {
                         <TimeTableGridWrapper style={{ overflow: "hidden" }}>
                             <CustomTimeTableGrid
                                 lectures={lectures}
+                                customBlocks={customBlocks.data?.custom_blocks ?? []}
                                 needLectureDeletable={false}
                                 needTimeFilter={false}
                                 onLectureSelect={(lecture) => setSelectedLecture(lecture)}
