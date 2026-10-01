@@ -4,6 +4,7 @@ import {
     DndContext,
     type DragEndEvent,
     type DragStartEvent,
+    MeasuringStrategy,
     MouseSensor,
     TouchSensor,
     closestCenter,
@@ -64,6 +65,10 @@ const TabRow = styled(FlexWrapper)`
 
     & > * {
         flex-shrink: 0;
+
+        @media (prefers-reduced-motion: reduce) {
+            transition: none !important;
+        }
     }
 
     &::-webkit-scrollbar {
@@ -115,6 +120,8 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
     const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
         id: timetable.id,
         disabled: isHome,
+        animateLayoutChanges: () => true,
+        transition: { duration: 350, easing: "ease-out" },
     })
 
     const getTransformString = (
@@ -130,6 +137,7 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
         transition,
         touchAction: "manipulation" as const,
         opacity: isDragging ? 0.5 : 1,
+        zIndex: isHome ? 1 : undefined,
     }
 
     return (
@@ -169,25 +177,6 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
                     {timetable.name ? timetable.name : "No Title"}
                 </TimetableName>
                 <FlexWrapper direction="row" gap={0} align="center">
-                    {isSelected && (
-                        <IconButton
-                            aria-label={t("timetable.shortcuts.timetableDuplicate")}
-                            onClick={onCopy}
-                            styles={{ padding: 5 }}
-                        >
-                            <Icon
-                                size={15}
-                                onClick={() => {}}
-                                color={
-                                    isSelected
-                                        ? theme.colors.Highlight.default
-                                        : theme.colors.Text.lighter
-                                }
-                            >
-                                <ContentCopyIcon />
-                            </Icon>
-                        </IconButton>
-                    )}
                     {isSelected ? (
                         <IconButton
                             aria-label={t(
@@ -215,6 +204,25 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
                             <StarIcon />
                         </Icon>
                     ) : null}
+                    {isSelected && (
+                        <IconButton
+                            aria-label={t("timetable.shortcuts.timetableDuplicate")}
+                            onClick={onCopy}
+                            styles={{ padding: 5 }}
+                        >
+                            <Icon
+                                size={15}
+                                onClick={() => {}}
+                                color={
+                                    isSelected
+                                        ? theme.colors.Highlight.default
+                                        : theme.colors.Text.lighter
+                                }
+                            >
+                                <ContentCopyIcon />
+                            </Icon>
+                        </IconButton>
+                    )}
                     {isSelected && (
                         <IconButton
                             aria-label={t("timetable.shortcuts.timetableDelete")}
@@ -463,6 +471,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                 >
                     <DndContext
                         sensors={sensors}
+                        measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
                         collisionDetection={closestCenter}
                         onDragStart={handleDragStart}
                         onDragEnd={handleDragEnd}
