@@ -240,37 +240,55 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
     await page.screenshot({ path: "test-results/main-timetable-desktop.png" })
 
     await page.emulateMedia({ reducedMotion: "no-preference" })
-    await page.setViewportSize({ width: 375, height: 812 })
     await page.getByText("시간표 3", { exact: true }).click()
-    await page.evaluate(() => {
-        document.addEventListener("animationend", (event) => {
-            const element = event.target as HTMLElement
-            if (element.matches('[aria-roledescription="sortable"]')) {
-                element.setAttribute("data-entered", "true")
-            }
-        })
-    })
-    for (const [source, id] of [
-        ["시간표 1", 5],
-        ["학사 시간표", 6],
+    for (const [source, id, width] of [
+        ["1", 5, 1920],
+        ["academic", 6, 375],
     ] as const) {
-        await page.getByText(source, { exact: true }).first().click()
+        await page.setViewportSize({ width, height: 1080 })
+        const sourceTab = page.locator(`[data-timetable-tab="${source}"]`)
+        await sourceTab.locator("[contenteditable], [title]").first().click()
+        const sourceBox = await sourceTab.boundingBox()
         await page.getByRole("button", { name: "현재 시간표 복제", exact: true }).click()
-        const copyName = page.getByText(`시간표 ${id}`, { exact: true })
-        const copyTab = page
-            .locator('[aria-roledescription="sortable"]')
-            .filter({ has: copyName })
-        await expect(copyTab).toHaveAttribute("data-entered", "true")
+        const copyTab = page.locator(`[data-timetable-tab="${id}"]`)
+        const ghost = page.locator(`[data-timetable-copy="${id}"]`)
+        await expect(ghost).toBeVisible()
+        const travel = await ghost.evaluate((element) => {
+            const animation = element.getAnimations()[0]!
+            animation.pause()
+            animation.currentTime = 0
+            const start = element.getBoundingClientRect().toJSON()
+            animation.currentTime = 275
+            const middle = element.getBoundingClientRect().toJSON()
+            animation.currentTime = 550
+            const end = element.getBoundingClientRect().toJSON()
+            animation.finish()
+            return { start, middle, end }
+        })
+        expect(travel.start.x).toBeCloseTo(sourceBox!.x, 0)
+        expect(travel.start.y).toBeCloseTo(sourceBox!.y, 0)
+        expect(travel.start.width).toBeCloseTo(sourceBox!.width, 0)
+        expect(Math.abs(travel.middle.x - travel.start.x)).toBeGreaterThan(10)
+        await expect(ghost).toHaveCount(0)
+        const destinationBox = await copyTab.boundingBox()
+        expect(travel.end.x).toBeCloseTo(destinationBox!.x, 0)
+        expect(travel.end.y).toBeCloseTo(destinationBox!.y, 0)
+        const copyName = copyTab.getByText(`시간표 ${id}`, { exact: true })
         await expect(copyName).toHaveCSS("color", "rgb(229, 76, 101)")
         await expect(copyName).toBeInViewport()
         expect(homeId).toBe(2)
     }
     expect(creates).toHaveLength(3)
     await page.emulateMedia({ reducedMotion: "reduce" })
-    await expect(page.locator('[aria-roledescription="sortable"]').last()).toHaveCSS(
-        "animation-name",
-        "none",
-    )
+    await page.getByRole("button", { name: "현재 시간표 복제", exact: true }).click()
+    await expect(page.locator('[data-timetable-tab="7"]')).toBeVisible()
+    await expect(page.locator("[data-timetable-copy]")).toHaveCount(0)
+    await page.emulateMedia({ reducedMotion: "no-preference" })
+    await page.getByText("2026", { exact: true }).click()
+    await page.keyboard.press("ControlOrMeta+d")
+    await expect(page.locator('[data-timetable-copy="8"]')).toBeVisible()
+    await expect(page.locator('[data-timetable-copy="8"]')).toHaveCount(0)
+    await expect(page.locator('[data-timetable-tab="8"]')).toBeVisible()
     await page.goto("/")
     await expect(page.locator(".block-title", { hasText: "메인 일정" })).toBeVisible()
     await expect(page.getByRole("button", { name: /메인 시간표로 지정/ })).toHaveCount(0)

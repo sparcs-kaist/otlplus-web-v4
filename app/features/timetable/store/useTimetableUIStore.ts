@@ -26,6 +26,7 @@ interface TimetableUIState {
     semesterEnum: SemesterEnum
     autoSelectedSemesterKeys: string[]
     pendingMyTimetableSelection: boolean
+    timetableCopyMotion: { id: number; source: DOMRect } | null
 
     // 5. Flash State (잘라내기, undo 등 효과)
     flashLectureIds: number[] | null
@@ -64,6 +65,7 @@ interface TimetableUIState {
     markSemesterAutoSelected: (key: string) => void
     resetAutoSelectedSemesters: () => void
     setPendingMyTimetableSelection: (pending: boolean) => void
+    setTimetableCopyMotion: (motion: TimetableUIState["timetableCopyMotion"]) => void
     setSelectedCustomBlock: (
         blockOrUpdater:
             | CustomBlock
@@ -92,6 +94,7 @@ export const useTimetableUIStore = create<TimetableUIState>((set) => ({
     semesterEnum: SemesterEnum.SPRING,
     autoSelectedSemesterKeys: [],
     pendingMyTimetableSelection: false,
+    timetableCopyMotion: null,
 
     flashLectureIds: null,
     selectedCustomBlock: null,
@@ -179,6 +182,7 @@ export const useTimetableUIStore = create<TimetableUIState>((set) => ({
                 ? state
                 : { pendingMyTimetableSelection: pending },
         ),
+    setTimetableCopyMotion: (timetableCopyMotion) => set({ timetableCopyMotion }),
     setSelectedCustomBlock: (val) =>
         set((state) => ({
             selectedCustomBlock:

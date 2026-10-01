@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useLayoutEffect, useRef, useState } from "react"
 
 import {
     DndContext,
@@ -18,7 +18,7 @@ import {
     horizontalListSortingStrategy,
     useSortable,
 } from "@dnd-kit/sortable"
-import { keyframes, useTheme } from "@emotion/react"
+import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import AddIcon from "@mui/icons-material/Add"
 import CloseIcon from "@mui/icons-material/Close"
@@ -34,6 +34,7 @@ import { IconButton } from "@/common/primitives/IconButton"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { Timetables } from "@/common/schemas/timetables"
+import { useDuplicateTimetable } from "@/features/timetable/hooks/useDuplicateTimetable"
 import SemesterButton from "@/features/timetable/sections/TabsRowSubSection/SemesterButton"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
 import { queryKeys } from "@/libs/query/queryKeys"
@@ -81,17 +82,6 @@ const TimetableName = styled(Typography)`
     user-select: none;
 `
 
-const tabEnter = keyframes`
-    from { opacity: 0; clip-path: inset(0 100% 0 0); }
-    to { opacity: 1; clip-path: inset(0); }
-`
-
-const SortableTabWrapper = styled.div`
-    @media (prefers-reduced-motion: no-preference) {
-        animation: ${tabEnter} 350ms ease-out;
-    }
-`
-
 const AcademicTimetableName = styled(Typography)`
     ${media.mobile} {
         max-width: 70px;
@@ -127,6 +117,7 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
 }) => {
     const theme = useTheme()
     const { t } = useTranslation()
+    const copyMotion = useTimetableUIStore((s) => s.timetableCopyMotion)
 
     const { attributes, listeners, node, setNodeRef, transform, transition } =
         useSortable({
@@ -136,11 +127,65 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
             transition: { duration: 350, easing: "ease-out" },
         })
 
-    useEffect(() => {
+    useLayoutEffect(() => {
         if (isSelected) {
             node.current?.scrollIntoView({ block: "nearest", inline: "nearest" })
         }
     }, [isSelected, node])
+
+    useLayoutEffect(() => {
+        const target = node.current
+        if (!target || copyMotion?.id !== timetable.id) return
+        const finish = () => {
+            const current = useTimetableUIStore.getState()
+            if (current.timetableCopyMotion === copyMotion)
+                current.setTimetableCopyMotion(null)
+        }
+        if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+            finish()
+            return
+        }
+
+        const destination = target.getBoundingClientRect()
+        const { source } = copyMotion
+        const ghost = target.cloneNode(true) as HTMLElement
+        ghost.removeAttribute("data-timetable-tab")
+        ghost.removeAttribute("aria-roledescription")
+        ghost.setAttribute("aria-hidden", "true")
+        ghost.dataset.timetableCopy = String(timetable.id)
+        ghost.inert = true
+        Object.assign(ghost.style, {
+            position: "fixed",
+            left: `${destination.left}px`,
+            top: `${destination.top}px`,
+            width: `${destination.width}px`,
+            height: `${destination.height}px`,
+            transform: "none",
+            transformOrigin: "top left",
+            transition: "none",
+            zIndex: "1500",
+            pointerEvents: "none",
+        })
+        document.body.appendChild(ghost)
+        const visibility = target.style.visibility
+        target.style.visibility = "hidden"
+        const animation = ghost.animate(
+            [
+                {
+                    transform: `translate(${source.left - destination.left}px, ${source.top - destination.top}px) scale(${source.width / destination.width}, ${source.height / destination.height})`,
+                    opacity: 0.6,
+                },
+                { transform: "none", opacity: 1 },
+            ],
+            { duration: 550, easing: "cubic-bezier(0.22, 1, 0.36, 1)" },
+        )
+        animation.onfinish = finish
+        return () => {
+            animation.cancel()
+            ghost.remove()
+            target.style.visibility = visibility
+        }
+    }, [copyMotion, node, timetable.id])
 
     const getTransformString = (
         transform: { x: number; y: number; scaleX?: number; scaleY?: number } | null,
@@ -159,8 +204,9 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
     }
 
     return (
-        <SortableTabWrapper
+        <div
             ref={setNodeRef}
+            data-timetable-tab={timetable.id}
             style={style}
             {...attributes}
             aria-disabled={false}
@@ -254,7 +300,7 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
                     )}
                 </FlexWrapper>
             </TabButton>
-        </SortableTabWrapper>
+        </div>
     )
 }
 
@@ -273,6 +319,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
     const { status } = useUserStore()
     const theme = useTheme()
     const queryClient = useQueryClient()
+    const duplicateTimetable = useDuplicateTimetable()
 
     const currentTimetableId = useTimetableUIStore((s) => s.currentTimetableId)
     const setCurrentTimetableId = useTimetableUIStore((s) => s.setCurrentTimetableId)
@@ -516,13 +563,9 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                                     }}
                                     onCopy={(e) => {
                                         e.stopPropagation()
-                                        addTimetable({
-                                            year: year,
-                                            semester: semester,
-                                            lectureIds: timeTableLectures.map(
-                                                (lec) => lec.id,
-                                            ),
-                                        })
+                                        duplicateTimetable(
+                                            timeTableLectures.map((lec) => lec.id),
+                                        )
                                     }}
                                     onDelete={(e) => {
                                         e.stopPropagation()
@@ -576,6 +619,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
             >
                 <TabButton
                     key="my-timetable"
+                    data-timetable-tab="academic"
                     type={currentTimetableId == null ? "selected" : "default"}
                     onClick={() => {
                         setPendingMyTimetableSelection(true)
@@ -599,11 +643,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                             aria-label={t("timetable.shortcuts.timetableDuplicate")}
                             onClick={(e) => {
                                 e.stopPropagation()
-                                addTimetable({
-                                    year: year,
-                                    semester: semester,
-                                    lectureIds: timeTableLectures.map((lec) => lec.id),
-                                })
+                                duplicateTimetable(timeTableLectures.map((lec) => lec.id))
                             }}
                             styles={{ padding: 5 }}
                         >

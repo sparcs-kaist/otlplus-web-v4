@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next"
 import { LectureActionEnum } from "@/common/enum/lectureActionEnum"
 import { OSEnum } from "@/common/enum/osEnum"
 import type { Lecture } from "@/common/schemas/lecture"
+import { useDuplicateTimetable } from "@/features/timetable/hooks/useDuplicateTimetable"
 import type {
     TimetableAction,
     TimetableTransaction,
@@ -59,6 +60,7 @@ export function useTimetableKeyboard({
     const { t } = useTranslation()
     const platform = getPlatform()
     const queryClient = useQueryClient()
+    const duplicateTimetable = useDuplicateTimetable()
 
     const selectedLectures = useTimetableUIStore((s) => s.selectedLectures)
     const setSelectedLectures = useTimetableUIStore((s) => s.setSelectedLectures)
@@ -361,7 +363,7 @@ export function useTimetableKeyboard({
         if (isMod && e.key.toLowerCase() === "d") {
             e.preventDefault()
             if (isLoggedIn) {
-                addTimetable(currentTimetableLectures.map((l) => l.id))
+                duplicateTimetable(currentTimetableLectures.map((l) => l.id))
             }
             return
         }
