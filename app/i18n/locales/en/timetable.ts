@@ -2,7 +2,7 @@ export const timetable = {
     myTimetable: "Academic Timetable",
     homeTimetable: "Main timetable",
     setHomeTimetable: "Set as main timetable",
-    createHomeTimetable: "Copy academic timetable and set as main timetable",
+    loginToAddTimetable: "Log in to add a timetable.",
     homeTimetableError: "Could not set the main timetable. Please try again.",
     examTimetable: "Exam Timetable",
     addLectureConflict: "Cannot add lectures that conflict with existing timetable.",

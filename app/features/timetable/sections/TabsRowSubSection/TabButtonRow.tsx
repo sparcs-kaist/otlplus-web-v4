@@ -308,20 +308,10 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
     })
     const isSettingHome = createTimetable.isPending || setHomeTimetable.isPending
 
-    const handleSetHome = async (timetableId: number | null) => {
-        if (isSettingHome || (timetableId !== null && timetableId === homeTimetableId))
-            return
+    const handleSetHome = async (timetableId: number) => {
+        if (isSettingHome || timetableId === homeTimetableId) return
         try {
-            const id =
-                timetableId ??
-                (
-                    await createTimetable.mutateAsync({
-                        year,
-                        semester,
-                        lectureIds: timeTableLectures.map((lecture) => lecture.id),
-                    })
-                ).id
-            await setHomeTimetable.mutateAsync({ year, semester, timetableId: id })
+            await setHomeTimetable.mutateAsync({ year, semester, timetableId })
         } catch {
             window.alert(t("timetable.homeTimetableError"))
         }
@@ -468,7 +458,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                     ref={tabRowRef}
                     direction="row"
                     gap={3}
-                    flex="1 1 auto"
+                    flex="0 1 auto"
                     onWheel={onWheel}
                 >
                     <DndContext
@@ -531,31 +521,32 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                             ))}
                         </SortableContext>
                     </DndContext>
-                    <TabButton
-                        onClick={() => {
-                            addTimetable({
-                                year: year,
-                                semester: semester,
-                                lectureIds: [],
-                            })
-                        }}
-                    >
-                        <IconButton
-                            aria-label={t("timetable.shortcuts.timetableAdd")}
-                            styles={{ padding: 3.75 }}
-                        >
-                            <Icon
-                                size={17.5}
-                                color={theme.colors.Text.default}
-                                onClick={() => {}}
-                            >
-                                <AddIcon />
-                            </Icon>
-                        </IconButton>
-                    </TabButton>
                 </TabRow>
             )}
-            <FlexWrapper direction="row" gap={4} align="center" flex="0 0 auto">
+            <TabButton
+                style={{ flexShrink: 0 }}
+                title={
+                    status === "success" ? undefined : t("timetable.loginToAddTimetable")
+                }
+            >
+                <IconButton
+                    aria-label={t("timetable.shortcuts.timetableAdd")}
+                    disabled={status !== "success" || createTimetable.isPending}
+                    onClick={() => addTimetable({ year, semester, lectureIds: [] })}
+                    styles={{ padding: 3.75 }}
+                >
+                    <Icon size={17.5} color={theme.colors.Text.default}>
+                        <AddIcon />
+                    </Icon>
+                </IconButton>
+            </TabButton>
+            <FlexWrapper
+                direction="row"
+                gap={4}
+                align="center"
+                flex="0 0 auto"
+                style={{ marginLeft: "auto" }}
+            >
                 <TabButton
                     key="my-timetable"
                     type={currentTimetableId == null ? "selected" : "default"}
@@ -577,43 +568,26 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                         {t("timetable.myTimetable")}
                     </AcademicTimetableName>
                     {currentTimetableId === null && status === "success" && (
-                        <>
-                            <IconButton
-                                aria-label={t("timetable.shortcuts.timetableDuplicate")}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    addTimetable({
-                                        year: year,
-                                        semester: semester,
-                                        lectureIds: timeTableLectures.map(
-                                            (lec) => lec.id,
-                                        ),
-                                    })
-                                }}
-                                styles={{ padding: 5 }}
+                        <IconButton
+                            aria-label={t("timetable.shortcuts.timetableDuplicate")}
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                addTimetable({
+                                    year: year,
+                                    semester: semester,
+                                    lectureIds: timeTableLectures.map((lec) => lec.id),
+                                })
+                            }}
+                            styles={{ padding: 5 }}
+                        >
+                            <Icon
+                                size={15}
+                                color={theme.colors.Highlight.default}
+                                onClick={() => {}}
                             >
-                                <Icon
-                                    size={15}
-                                    color={theme.colors.Highlight.default}
-                                    onClick={() => {}}
-                                >
-                                    <ContentCopyIcon />
-                                </Icon>
-                            </IconButton>
-                            <IconButton
-                                aria-label={t("timetable.createHomeTimetable")}
-                                disabled={isSettingHome}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    void handleSetHome(null)
-                                }}
-                                styles={{ padding: 3.75 }}
-                            >
-                                <Icon size={17.5} color={theme.colors.Highlight.default}>
-                                    <StarBorderIcon />
-                                </Icon>
-                            </IconButton>
-                        </>
+                                <ContentCopyIcon />
+                            </Icon>
+                        </IconButton>
                     )}
                 </TabButton>
                 <SemesterButton

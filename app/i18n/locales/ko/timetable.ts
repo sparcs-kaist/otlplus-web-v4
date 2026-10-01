@@ -2,7 +2,7 @@ export const timetable = {
     myTimetable: "학사 시간표",
     homeTimetable: "메인 시간표",
     setHomeTimetable: "메인 시간표로 지정",
-    createHomeTimetable: "학사 시간표를 복사해 메인 시간표로 지정",
+    loginToAddTimetable: "로그인 후 시간표를 추가할 수 있습니다.",
     homeTimetableError: "메인 시간표를 설정하지 못했습니다. 다시 시도해주세요.",
     examTimetable: "시험시간표",
     addLectureConflict: "시간표가 겹치는 강의를 추가할 수 없습니다.",

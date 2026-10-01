@@ -116,6 +116,7 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
         name: "메인 시간표로 지정",
         exact: true,
     })
+    const addButton = page.getByRole("button", { name: "빈 시간표 추가", exact: true })
     await expect(deleteButton).toHaveCount(1)
     await page.getByText("시간표 2", { exact: true }).click()
     await setHomeButton.click()
@@ -145,6 +146,7 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
     await page.getByText("시간표 1", { exact: true }).click()
     await expect(mainStar).toBeVisible()
     expect(await tabOrder()).toEqual(["시간표 2", "시간표 1", "시간표 3"])
+    await page.getByText("2026", { exact: true }).click()
     await page.keyboard.press("3")
     await expect(page.getByText("시간표 3", { exact: true })).toHaveCSS(
         "color",
@@ -155,6 +157,12 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
     const academic = page.getByText("학사 시간표", { exact: true }).first()
     await academic.click()
     await expect(deleteButton).toHaveCount(0)
+    await expect(setHomeButton).toHaveCount(0)
+    await expect(
+        page.getByRole("button", { name: "메인 시간표", exact: true }),
+    ).toHaveCount(0)
+    await expect(addButton).toBeInViewport({ ratio: 1 })
+    await expect(addButton).toBeEnabled()
     const academicBox = await academic.boundingBox()
     const yearBox = await page.getByText("2026", { exact: true }).boundingBox()
     expect(academicBox!.x + academicBox!.width).toBeLessThan(yearBox!.x)
@@ -168,12 +176,10 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
         ratio: 1,
     })
     await page.getByRole("button", { name: "Language", exact: true }).click()
-    await page
-        .getByRole("button", {
-            name: "학사 시간표를 복사해 메인 시간표로 지정",
-            exact: true,
-        })
-        .click()
+    await addButton.click()
+    await expect(page.getByText("시간표 4", { exact: true })).toBeVisible()
+    expect(homeId).toBe(2)
+    await setHomeButton.click()
     await expect(
         page.getByRole("button", { name: "메인 시간표", exact: true }),
     ).toBeVisible()
@@ -188,7 +194,7 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
     )
     expect(homeId).toBeNull()
 
-    await page.setViewportSize({ width: 1440, height: 1000 })
+    await page.setViewportSize({ width: 1920, height: 1080 })
     await page.getByText("시간표 2", { exact: true }).click()
     await setHomeButton.click()
     await expect(
@@ -199,4 +205,19 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
     await page.goto("/")
     await expect(page.locator(".block-title", { hasText: "메인 일정" })).toBeVisible()
     await expect(page.getByRole("button", { name: /메인 시간표로 지정/ })).toHaveCount(0)
+
+    await page.route("**/api/v2/users/info", (route) =>
+        route.fulfill({ status: 401, json: {} }),
+    )
+    await page.goto("/timetable")
+    await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeVisible()
+    await expect(addButton).toBeDisabled()
+    await expect(addButton).toBeInViewport({ ratio: 1 })
+    const semesterControl = page.getByText("2026", { exact: true }).locator("..")
+    const semesterBox = await semesterControl.boundingBox()
+    const rowBox = await semesterControl.locator("../..").boundingBox()
+    expect(semesterBox!.x + semesterBox!.width).toBeCloseTo(rowBox!.x + rowBox!.width, 0)
+    await expect(academic).toBeVisible()
+    await expect(setHomeButton).toHaveCount(0)
+    await page.screenshot({ path: "test-results/main-timetable-guest.png" })
 })
