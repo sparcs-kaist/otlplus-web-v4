@@ -68,7 +68,7 @@ export default function DevSsoLoginForm({
                         : response.status === 404
                           ? "해당 학번의 사용자가 dev DB에 없습니다."
                           : response.status === 400
-                            ? "학번을 숫자로 입력해 주세요."
+                            ? "입력한 학번과 해당 계정의 로그인 정보를 확인해 주세요."
                             : "로그인에 실패했습니다. 잠시 후 다시 시도해 주세요."
                 setError(message)
                 return
