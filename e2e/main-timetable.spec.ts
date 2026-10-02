@@ -71,7 +71,10 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
                 semester: 3,
                 name: "Main",
                 lectures: [],
+                timetableItems: homeId === 2 ? [{ kind: "custom", data: block }] : [],
             }
+        } else if (path === "/timetables/shared") {
+            json = { year: 2026, semester: 3, timetableId: null }
         } else if (path === "/timetables") {
             if (method === "POST") {
                 creates.push(request.postDataJSON())
@@ -94,7 +97,7 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
         } else if (path.endsWith("/custom-blocks")) {
             json = { custom_blocks: path.includes("/2/") ? [block] : [] }
         } else if (path.startsWith("/timetables/")) {
-            json = { lectures: [] }
+            json = { lectures: [], timetableItems: [] }
         } else if (path.includes("/lectures") || path.includes("/wishlist")) {
             json = { courses: [] }
         } else if (path.includes("/reviews")) {
@@ -110,7 +113,7 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
     })
     await page.goto("/timetable")
     const deleteButton = page.getByRole("button", {
-        name: "현재 시간표 삭제 (선택된 과목이 없을 시)",
+        name: "현재 시간표 삭제 (선택된 항목이 없을 때)",
         exact: true,
     })
     const setHomeButton = page.getByRole("button", {
@@ -131,8 +134,9 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
             ),
     ).toEqual([
         "메인 시간표로 지정",
+        "친구 공유용 시간표로 지정",
         "현재 시간표 복제",
-        "현재 시간표 삭제 (선택된 과목이 없을 시)",
+        "현재 시간표 삭제 (선택된 항목이 없을 때)",
     ])
     await movingTab.evaluate((element) => {
         element.addEventListener("transitionstart", (event) => {
@@ -285,7 +289,10 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
     await expect(page.locator("[data-timetable-copy]")).toHaveCount(0)
     await page.emulateMedia({ reducedMotion: "no-preference" })
     await page.getByText("2026", { exact: true }).click()
-    await page.keyboard.press("ControlOrMeta+d")
+    const modifier = await page.evaluate(() =>
+        /mac/i.test(navigator.userAgent) ? "Meta" : "Control",
+    )
+    await page.keyboard.press(`${modifier}+d`)
     await expect(page.locator('[data-timetable-copy="8"]')).toBeVisible()
     await expect(page.locator('[data-timetable-copy="8"]')).toHaveCount(0)
     await expect(page.locator('[data-timetable-tab="8"]')).toBeVisible()

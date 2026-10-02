@@ -1,4 +1,5 @@
 export const friends = {
+    noSharedTimetable: "이 학기에 친구가 공유한 시간표가 없어요.",
     title: "친구 시간표",
     friendList: "친구 목록 ({{count}})",
     selectFriend: "친구 선택",

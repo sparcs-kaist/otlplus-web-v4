@@ -1,4 +1,9 @@
 export const timetable = {
+    sharedTimetable: "Shared with friends",
+    setSharedTimetable: "Share this timetable with friends",
+    unsetSharedTimetable: "Stop sharing with friends",
+    sharedTimetableError: "Could not update the shared timetable. Please try again.",
+
     homeTimetable: "Main timetable",
     setHomeTimetable: "Set as main timetable",
     loginToAddTimetable: "Log in to add a timetable.",

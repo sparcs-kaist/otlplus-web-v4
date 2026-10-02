@@ -655,7 +655,6 @@ describe("mobile friend timetable navigation", () => {
                 "/users/1/timetables",
                 "/timetables/my-timetable",
                 "/friends/7/timetables",
-                "/friends/7/timetables/my-timetable",
             ]) {
                 expect(parameterSetters.get(path)).toHaveBeenLastCalledWith({
                     year: 2025,
@@ -851,15 +850,33 @@ describe("mobile friend timetable navigation", () => {
         )
     })
 
-    it("opens an official timetable at the linked past semester", () => {
+    it("shows an empty state instead of enrolled or stale private content when nothing is shared", () => {
+        timetablesResponse = { timetables: [] }
+        renderPage("/friends?friendId=7&year=2026&semester=3&timetableId=42")
+        expect(screen.getByText("friends.noSharedTimetable")).toHaveAttribute(
+            "role",
+            "status",
+        )
+        expect(
+            screen.queryByRole("tab", { name: "friends.actualTimetable" }),
+        ).not.toBeInTheDocument()
+        expect(screen.queryByRole("button", { name: /Tile:/ })).not.toBeInTheDocument()
+        expect(
+            vi
+                .mocked(useAPI)
+                .mock.calls.some(
+                    ([, path]) => path === "/friends/7/timetables/my-timetable",
+                ),
+        ).toBe(false)
+    })
+
+    it("automatically opens the shared timetable at the linked past semester", () => {
         renderPage("/friends?friendId=7&year=2025&semester=1")
 
         expect(
-            screen.getByRole("button", { name: "Tile: Fluid mechanics" }),
+            screen.getByRole("button", { name: "Tile: Saved fluid mechanics" }),
         ).toBeInTheDocument()
-        expect(
-            parameterSetters.get("/friends/7/timetables/my-timetable"),
-        ).toHaveBeenLastCalledWith({
+        expect(parameterSetters.get("/friends/7/timetables")).toHaveBeenLastCalledWith({
             year: 2025,
             semester: 1,
         })
@@ -906,12 +923,9 @@ describe("mobile friend timetable navigation", () => {
             "true",
         )
 
-        fireEvent.click(screen.getByRole("tab", { name: "friends.actualTimetable" }))
-        expect(currentParams().has("timetableId")).toBe(false)
-        expect(currentParams().get("friendId")).toBe("7")
         expect(
-            screen.getByRole("tab", { name: "friends.actualTimetable" }),
-        ).toHaveAttribute("aria-selected", "true")
+            screen.queryByRole("tab", { name: "friends.actualTimetable" }),
+        ).not.toBeInTheDocument()
 
         fireEvent.click(screen.getByRole("tab", { name: "Saved timetable" }))
         fireEvent.click(screen.getByRole("button", { name: "friends.previousSemester" }))
@@ -929,7 +943,7 @@ describe("mobile friend timetable navigation", () => {
             },
         )
         expect(
-            screen.getByRole("button", { name: "Tile: Fluid mechanics" }),
+            screen.getByRole("button", { name: "Tile: Saved fluid mechanics" }),
         ).toBeInTheDocument()
     })
 

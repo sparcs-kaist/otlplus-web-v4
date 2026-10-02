@@ -515,9 +515,28 @@ export default function FriendsPage() {
         requestedSemester <= SemesterEnum.WINTER
     const year = hasRequestedTerm ? requestedYear : -1
     const semester = hasRequestedTerm ? requestedSemester : SemesterEnum.SPRING
-    const currentTimetableId = hasRequestedTerm
+    const requestedTimetableId = hasRequestedTerm
         ? positiveInteger(searchParams.get("timetableId"))
         : null
+    const { query: friendTimetables, setParams: setFriendTimetableParams } = useAPI(
+        "GET",
+        `/friends/${selectedFriendId ?? 0}/timetables`,
+        {
+            enabled: status === "success" && selectedFriendId !== null,
+            staleTime: 0,
+            gcTime: 0,
+        },
+    )
+    const currentTimetableId =
+        selectedFriendId === null
+            ? requestedTimetableId
+            : friendTimetables.isError
+              ? null
+              : ((
+                    friendTimetables.data?.timetables.find(
+                        ({ id }) => id === requestedTimetableId,
+                    ) ?? friendTimetables.data?.timetables[0]
+                )?.id ?? null)
     const [selectedItem, setSelectedItem] = useState<TimetableItem | null>(null)
     const selectedLecture =
         selectedItem?.kind === TimetableItemKind.LECTURE ? selectedItem.data : null
@@ -653,24 +672,6 @@ export default function FriendsPage() {
             currentTimetableId !== null,
     })
 
-    const { query: friendTimetables, setParams: setFriendTimetableParams } = useAPI(
-        "GET",
-        `/friends/${selectedFriendId ?? 0}/timetables`,
-        {
-            enabled: status === "success" && selectedFriendId !== null,
-            staleTime: 0,
-            gcTime: 0,
-        },
-    )
-    const { query: friendActual, setParams: setFriendActualParams } = useAPI(
-        "GET",
-        `/friends/${selectedFriendId ?? 0}/timetables/my-timetable`,
-        {
-            enabled: status === "success" && selectedFriendId !== null,
-            staleTime: 0,
-            gcTime: 0,
-        },
-    )
     const { query: friendSaved } = useAPI(
         "GET",
         `/friends/${selectedFriendId ?? 0}/timetables/${currentTimetableId ?? 0}`,
@@ -707,7 +708,6 @@ export default function FriendsPage() {
             setOwnTimetableParams(params)
         } else {
             setFriendTimetableParams(params)
-            setFriendActualParams(params)
         }
     }, [year, semester, selectedFriendId])
 
@@ -742,16 +742,16 @@ export default function FriendsPage() {
               ? []
               : (friendTimetables.data?.timetables ?? [])
     const timetableQuery =
-        currentTimetableId === null
-            ? selectedFriendId === null
-                ? ownActual
-                : friendActual
-            : selectedFriendId === null
-              ? ownSaved
-              : friendSaved
-    const timetableItems = timetableQuery.isError
-        ? []
-        : (timetableQuery.data?.timetableItems ?? [])
+        selectedFriendId !== null
+            ? friendSaved
+            : currentTimetableId === null
+              ? ownActual
+              : ownSaved
+    const timetableItems =
+        timetableQuery.isError ||
+        (selectedFriendId !== null && currentTimetableId === null)
+            ? []
+            : (timetableQuery.data?.timetableItems ?? [])
     const lectures = timetableItems.flatMap((item) =>
         item.kind === TimetableItemKind.LECTURE ? [item.data] : [],
     )
@@ -853,23 +853,27 @@ export default function FriendsPage() {
                             role="tablist"
                             aria-label={selectedFriend?.name ?? t("friends.myTimetable")}
                         >
-                            <TimetableTab
-                                role="tab"
-                                tabIndex={0}
-                                aria-selected={currentTimetableId === null}
-                                type={
-                                    currentTimetableId === null ? "selected" : "default"
-                                }
-                                onClick={() => handleSelectTimetable(null)}
-                                onKeyDown={(event) => {
-                                    if (event.key === "Enter" || event.key === " ") {
-                                        event.preventDefault()
-                                        handleSelectTimetable(null)
+                            {selectedFriendId === null && (
+                                <TimetableTab
+                                    role="tab"
+                                    tabIndex={0}
+                                    aria-selected={currentTimetableId === null}
+                                    type={
+                                        currentTimetableId === null
+                                            ? "selected"
+                                            : "default"
                                     }
-                                }}
-                            >
-                                {t("friends.actualTimetable")}
-                            </TimetableTab>
+                                    onClick={() => handleSelectTimetable(null)}
+                                    onKeyDown={(event) => {
+                                        if (event.key === "Enter" || event.key === " ") {
+                                            event.preventDefault()
+                                            handleSelectTimetable(null)
+                                        }
+                                    }}
+                                >
+                                    {t("friends.actualTimetable")}
+                                </TimetableTab>
+                            )}
                             {timetables.map((timetable) => (
                                 <TimetableTab
                                     key={timetable.id}
@@ -901,7 +905,18 @@ export default function FriendsPage() {
                         />
                     </TimetableHeader>
                     <TimetablePanel>
-                        {timetableQuery.isError && (
+                        {selectedFriendId !== null &&
+                            friendTimetables.isSuccess &&
+                            timetables.length === 0 && (
+                                <Typography
+                                    type="Small"
+                                    color="Text.placeholder"
+                                    role="status"
+                                >
+                                    {t("friends.noSharedTimetable")}
+                                </Typography>
+                            )}
+                        {(timetableQuery.isError || friendTimetables.isError) && (
                             <Typography
                                 type="Small"
                                 color="Highlight.default"

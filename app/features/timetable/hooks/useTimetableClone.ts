@@ -21,7 +21,9 @@ export function useTimetableClone(timetableItems: TimetableItem[]) {
         if (auth.status !== "success" || source.year < 0 || pending.current) return
 
         const sourceRect = document
-            .querySelector(`[data-timetable-tab="${source.currentTimetableId ?? "academic"}"]`)
+            .querySelector(
+                `[data-timetable-tab="${source.currentTimetableId ?? "academic"}"]`,
+            )
             ?.getBoundingClientRect()
         pending.current = true
         try {
@@ -46,7 +48,9 @@ export function useTimetableClone(timetableItems: TimetableItem[]) {
                 current.year === source.year &&
                 current.semesterEnum === source.semesterEnum
             ) {
-                current.setTimetableCopyMotion(sourceRect ? { id: result.id, source: sourceRect } : null)
+                current.setTimetableCopyMotion(
+                    sourceRect ? { id: result.id, source: sourceRect } : null,
+                )
                 current.setCurrentTimetableId(result.id)
             }
         } catch {

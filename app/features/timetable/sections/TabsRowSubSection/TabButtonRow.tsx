@@ -23,6 +23,8 @@ import styled from "@emotion/styled"
 import AddIcon from "@mui/icons-material/Add"
 import CloseIcon from "@mui/icons-material/Close"
 import ContentCopyIcon from "@mui/icons-material/ContentCopy"
+import PeopleIcon from "@mui/icons-material/People"
+import PeopleOutlineIcon from "@mui/icons-material/PeopleOutlined"
 import StarIcon from "@mui/icons-material/Star"
 import StarBorderIcon from "@mui/icons-material/StarBorder"
 import { useQueryClient } from "@tanstack/react-query"
@@ -44,7 +46,7 @@ import TabButton from "./TabButton"
 import getSemesterTimetables from "./getSemesterTimetables"
 import getTimetableAutoSelection from "./getTimetableAutoSelection"
 
-const TabButtonRowWrapper = styled(FlexWrapper)`
+const TabButtonRowWrapper = styled(FlexWrapper)<{ $hasTimetables: boolean }>`
     width: 100%;
     max-width: 992px;
 
@@ -54,6 +56,19 @@ const TabButtonRowWrapper = styled(FlexWrapper)`
 
     ${media.tablet} {
         max-width: 100%;
+    }
+
+    ${media.mobile} {
+        ${({ $hasTimetables }) =>
+            $hasTimetables &&
+            `
+            flex-wrap: wrap;
+            & > :last-child {
+                flex-basis: 100%;
+                justify-content: flex-end;
+                order: -1;
+            }
+        `}
     }
 `
 
@@ -73,6 +88,10 @@ const TabRow = styled(FlexWrapper)`
     &::-webkit-scrollbar {
         display: none;
     }
+
+    ${media.mobile} {
+        flex: 1 1 0%;
+    }
 `
 
 const TimetableName = styled(Typography)`
@@ -91,6 +110,9 @@ const AcademicTimetableName = styled(Typography)`
 interface SortableTimetableTabProps {
     timetable: Timetables
     isSelected: boolean
+    isShared: boolean
+    isSettingShared: boolean
+    onSetShared: (e: React.MouseEvent) => void
     isHome: boolean
     isSettingHome: boolean
     onClick: () => void
@@ -104,6 +126,9 @@ interface SortableTimetableTabProps {
 const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
     timetable,
     isSelected,
+    isShared,
+    isSettingShared,
+    onSetShared,
     isHome,
     isSettingHome,
     onClick,
@@ -266,6 +291,41 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
                             <StarIcon />
                         </Icon>
                     ) : null}
+                    {isSelected ? (
+                        <span
+                            title={t(
+                                isShared
+                                    ? "timetable.unsetSharedTimetable"
+                                    : "timetable.setSharedTimetable",
+                            )}
+                        >
+                            <IconButton
+                                aria-label={t(
+                                    isShared
+                                        ? "timetable.unsetSharedTimetable"
+                                        : "timetable.setSharedTimetable",
+                                )}
+                                aria-pressed={isShared}
+                                disabled={isSettingShared}
+                                onClick={onSetShared}
+                                styles={{ padding: 3.75 }}
+                            >
+                                <Icon size={17.5} color={theme.colors.Highlight.default}>
+                                    {isShared ? <PeopleIcon /> : <PeopleOutlineIcon />}
+                                </Icon>
+                            </IconButton>
+                        </span>
+                    ) : isShared ? (
+                        <Icon
+                            size={17.5}
+                            color={theme.colors.Highlight.default}
+                            role="img"
+                            aria-label={t("timetable.sharedTimetable")}
+                            style={{ margin: 3.75 }}
+                        >
+                            <PeopleIcon />
+                        </Icon>
+                    ) : null}
                     {isSelected && (
                         <IconButton
                             aria-label={t("timetable.shortcuts.timetableDuplicate")}
@@ -365,6 +425,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
             }
             timetables.refetch()
             void queryClient.invalidateQueries({ queryKey: [queryKeys.homeTimetable] })
+            void queryClient.invalidateQueries({ queryKey: ["/timetables/shared"] })
         },
     })
     const { requestFunction: changeTimetableMetaData } = useAPI("PATCH", "/timetables", {
@@ -384,6 +445,39 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
             await setHomeTimetable.mutateAsync({ year, semester, timetableId })
         } catch {
             window.alert(t("timetable.homeTimetableError"))
+        }
+    }
+
+    const { query: sharedTimetable, setParams: setSharedParams } = useAPI(
+        "GET",
+        "/timetables/shared",
+        { enabled: status === "success", staleTime: 0 },
+    )
+    useEffect(() => {
+        if (year >= 0) setSharedParams({ year, semester })
+    }, [year, semester, setSharedParams])
+    const sharedTimetableId =
+        sharedTimetable.data?.year === year && sharedTimetable.data.semester === semester
+            ? sharedTimetable.data.timetableId
+            : null
+    const { mutation: setSharedTimetable } = useAPI("PATCH", "/timetables/shared", {
+        onSuccess: () =>
+            queryClient.invalidateQueries({ queryKey: ["/timetables/shared"] }),
+    })
+    const isSettingShared =
+        setSharedTimetable.isPending ||
+        !sharedTimetable.isSuccess ||
+        sharedTimetable.isFetching
+    const handleSetShared = async (timetableId: number) => {
+        if (isSettingShared) return
+        try {
+            await setSharedTimetable.mutateAsync({
+                year,
+                semester,
+                timetableId: sharedTimetableId === timetableId ? null : timetableId,
+            })
+        } catch {
+            window.alert(t("timetable.sharedTimetableError"))
         }
     }
 
@@ -516,6 +610,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
 
     return (
         <TabButtonRowWrapper
+            $hasTimetables={status === "success" && localTimetables.length > 0}
             direction="row"
             justify="space-between"
             align="stretch"
@@ -548,6 +643,12 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                                     key={timetable.id}
                                     timetable={timetable}
                                     isSelected={currentTimetableId === timetable.id}
+                                    isShared={sharedTimetableId === timetable.id}
+                                    isSettingShared={isSettingShared}
+                                    onSetShared={(e) => {
+                                        e.stopPropagation()
+                                        void handleSetShared(timetable.id)
+                                    }}
                                     isHome={homeTimetableId === timetable.id}
                                     isSettingHome={isSettingHome}
                                     onSetHome={(e) => {
@@ -560,15 +661,14 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                                     }}
                                     onCopy={(e) => {
                                         e.stopPropagation()
-                                        duplicateTimetable(
-                                            timeTableLectures.map((lec) => lec.id),
-                                        )
+                                        if (!isCloning) void duplicateTimetable()
                                     }}
                                     onDelete={(e) => {
                                         e.stopPropagation()
                                         deleteTimetable({ id: timetable.id })
                                     }}
                                     onNameChange={(id, newName) => {
+                                        if (newName === timetable.name) return
                                         setLocalTimetables((prev) =>
                                             prev.map((t) =>
                                                 t.id === id
@@ -640,7 +740,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                             aria-label={t("timetable.shortcuts.timetableDuplicate")}
                             onClick={(e) => {
                                 e.stopPropagation()
-                                !isCloning && void duplicateTimetable()
+                                if (!isCloning) void duplicateTimetable()
                             }}
                             styles={{ padding: 5 }}
                         >
@@ -657,9 +757,11 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                 <SemesterButton
                     year={year}
                     semester={semester}
-                    setYear={setYear}
-                    setSemester={setSemester}
-                    setCurrentTimetableId={setCurrentTimetableId}
+                    onChange={(nextYear, nextSemester) => {
+                        if (year >= 0) setCurrentTimetableId(null)
+                        setYear(nextYear)
+                        setSemester(nextSemester)
+                    }}
                 />
             </FlexWrapper>
         </TabButtonRowWrapper>

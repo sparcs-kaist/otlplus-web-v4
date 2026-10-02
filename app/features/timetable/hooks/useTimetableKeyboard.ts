@@ -142,6 +142,7 @@ export function useTimetableKeyboard({
                 setCurrentTimetableId(null)
             void queryClient.invalidateQueries({ queryKey: [queryKeys.timetables] })
             void queryClient.invalidateQueries({ queryKey: ["/timetables/home"] })
+            void queryClient.invalidateQueries({ queryKey: ["/timetables/shared"] })
         },
     })
 
