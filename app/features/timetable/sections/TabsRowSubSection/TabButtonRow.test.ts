@@ -121,6 +121,23 @@ describe("getTimetableAutoSelection", () => {
 })
 
 describe("getSemesterTimetables", () => {
+    it("pins the main timetable while preserving the order of the other tabs", () => {
+        const main = { ...timetable, id: 3, timeTableOrder: 2 }
+        const second = { ...timetable, id: 2, timeTableOrder: 1 }
+        const input = [second, main, timetable]
+        expect(
+            getSemesterTimetables(input, 2026, SemesterEnum.SPRING, main.id).map(
+                ({ id }) => id,
+            ),
+        ).toEqual([3, 42, 2])
+        expect(input).toEqual([second, main, timetable])
+        expect(
+            getSemesterTimetables(input, 2026, SemesterEnum.SPRING, 999).map(
+                ({ id }) => id,
+            ),
+        ).toEqual([42, 2, 3])
+    })
+
     it("does not treat stale previous-semester data as selectable", () => {
         const staleTimetable = { ...timetable, semester: SemesterEnum.SPRING }
 

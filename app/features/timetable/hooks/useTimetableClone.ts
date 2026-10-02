@@ -20,6 +20,9 @@ export function useTimetableClone(timetableItems: TimetableItem[]) {
         const source = useTimetableUIStore.getState()
         if (auth.status !== "success" || source.year < 0 || pending.current) return
 
+        const sourceRect = document
+            .querySelector(`[data-timetable-tab="${source.currentTimetableId ?? "academic"}"]`)
+            ?.getBoundingClientRect()
         pending.current = true
         try {
             const result = await mutation.mutateAsync({
@@ -43,6 +46,7 @@ export function useTimetableClone(timetableItems: TimetableItem[]) {
                 current.year === source.year &&
                 current.semesterEnum === source.semesterEnum
             ) {
+                current.setTimetableCopyMotion(sourceRect ? { id: result.id, source: sourceRect } : null)
                 current.setCurrentTimetableId(result.id)
             }
         } catch {

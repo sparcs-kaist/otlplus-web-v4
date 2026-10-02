@@ -1,7 +1,11 @@
 export const timetable = {
+    homeTimetable: "Main timetable",
+    setHomeTimetable: "Set as main timetable",
+    loginToAddTimetable: "Log in to add a timetable.",
+    homeTimetableError: "Could not set the main timetable. Please try again.",
     editFailed: "Could not update the timetable. Please check the refreshed timetable.",
     cloneFailed: "Could not duplicate the timetable. Check the list before trying again.",
-    myTimetable: "My Timetable",
+    myTimetable: "Academic Timetable",
     examTimetable: "Exam Timetable",
     addLectureConflict: "This overlaps an existing lecture or custom block.",
     pasteLectureConflict:
