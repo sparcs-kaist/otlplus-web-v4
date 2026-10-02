@@ -14,11 +14,15 @@ import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
 interface LectureReviewSubsectionProps {
     selectedCourseId: number | null
     selectedProfessorId: number | null
+    showSummary?: boolean
+    reviewVariant?: "default" | "simple"
 }
 
 const LectureReviewSubsection: React.FC<LectureReviewSubsectionProps> = ({
     selectedCourseId,
     selectedProfessorId,
+    showSummary = true,
+    reviewVariant = "default",
 }) => {
     const { t } = useTranslation()
 
@@ -57,30 +61,39 @@ const LectureReviewSubsection: React.FC<LectureReviewSubsectionProps> = ({
 
     return (
         <>
-            <FlexWrapper
-                direction={"row"}
-                gap={0}
-                justify="center"
-                align="center"
-                style={{ width: "100%" }}
-            >
-                <ReviewScoreSummary
-                    averageGrade={data?.averageGrade}
-                    averageLoad={data?.averageLoad}
-                    averageSpeech={data?.averageSpeech}
-                    reviewCount={data?.reviews.length}
-                    labels={{
-                        grade: t("common.grade"),
-                        load: t("common.load"),
-                        speech: t("common.speech"),
-                    }}
-                    fluid
-                />
-            </FlexWrapper>
-            <StyledDivider />
+            {showSummary && (
+                <>
+                    <FlexWrapper
+                        direction={"row"}
+                        gap={0}
+                        justify="center"
+                        align="center"
+                        style={{ width: "100%" }}
+                    >
+                        <ReviewScoreSummary
+                            averageGrade={data?.averageGrade}
+                            averageLoad={data?.averageLoad}
+                            averageSpeech={data?.averageSpeech}
+                            reviewCount={data?.reviews.length}
+                            labels={{
+                                grade: t("common.grade"),
+                                load: t("common.load"),
+                                speech: t("common.speech"),
+                            }}
+                            fluid
+                        />
+                    </FlexWrapper>
+                    <StyledDivider />
+                </>
+            )}
 
             {data?.reviews.map((review) => (
-                <ReviewBlock review={review} key={review.id} linkToDictionary={true} />
+                <ReviewBlock
+                    review={review}
+                    key={review.id}
+                    linkToDictionary={true}
+                    variant={reviewVariant}
+                />
             ))}
             {query.hasNextPage && <LoadingCircle ref={ref} />}
         </>

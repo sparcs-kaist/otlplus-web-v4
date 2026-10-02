@@ -122,6 +122,7 @@ const Menu: React.FC<MenuProps> = ({ setMobileSidebarOpen }) => {
                 {renderNavLink("/write-reviews", t("header.writeReviews"))}
                 {renderNavLink("/timetable", t("header.timetable"))}
                 {plannerEnabled && renderNavLink("/planner", t("header.planner"))}
+                {renderNavLink("/friends", t("header.friends"))}
                 {isOfflineMode && (
                     <OfflineIndicator direction="row" align="center" gap={6}>
                         <Icon size={14} color="inherit">

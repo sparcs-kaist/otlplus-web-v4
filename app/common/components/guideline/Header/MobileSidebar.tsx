@@ -184,6 +184,7 @@ const MobileSidebar: React.FC<MobileSidebarProps> = ({
                                 {renderNavLink("/timetable", t("header.timetable"))}
                                 {plannerEnabled &&
                                     renderNavLink("/planner", t("header.planner"))}
+                                {renderNavLink("/friends", t("header.friends"))}
                             </FlexWrapper>
                             {isOfflineMode && (
                                 <OfflineBanner
