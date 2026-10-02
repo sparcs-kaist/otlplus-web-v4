@@ -1,0 +1,8 @@
+(function(){try{var e=typeof window<`u`?window:typeof global<`u`?global:typeof globalThis<`u`?globalThis:typeof self<`u`?self:{};e.SENTRY_RELEASE={id:`b6f5295eb01b6f9b62c55f3becfc83a2448edba3`};var t=new e.Error().stack;t&&(e._sentryDebugIds=e._sentryDebugIds||{},e._sentryDebugIds[t]=`e7b1caf6-91e5-4d93-9f6c-3cf40cc91205`,e._sentryDebugIdIdentifier=`sentry-dbid-e7b1caf6-91e5-4d93-9f6c-3cf40cc91205`)}catch{}})();import{D as e,S as t,n}from"./emotion-react-jsx-runtime.browser.esm-Cnk_Aq3J.js";import{t as r}from"./emotion-styled.browser.esm-BrBV03_t.js";var i=e(t()),a=(e,t)=>{if(typeof t==`string`&&t.includes(`.`)){let[n,r]=t.split(`.`),i=e.colors[n];if(typeof i==`object`&&r&&r in i)return i[r]}return e.colors[t]},o=r.div`
+    color: ${({color:e,theme:t})=>e?a(t,e):`inherit`};
+    font-family: ${({theme:e})=>e.fonts.family.primary};
+    font-size: ${({type:e,theme:t})=>e&&t.fonts[e]&&typeof t.fonts[e]==`object`&&`fontSize`in t.fonts[e]?`${t.fonts[e].fontSize}px`:`inherit`};
+    font-weight: ${({type:e,theme:t})=>e&&t.fonts[e]&&typeof t.fonts[e]==`object`&&`fontWeight`in t.fonts[e]?t.fonts[e].fontWeight:`inherit`};
+    line-height: ${({type:e,theme:t})=>e&&t.fonts[e]&&typeof t.fonts[e]==`object`&&`lineHeight`in t.fonts[e]?`${t.fonts[e].lineHeight}px`:`inherit`};
+`,s=(0,i.memo)(({children:e,...t})=>n(o,{...t,children:e}));export{s as t};
+//# sourceMappingURL=Typography-BmW4OtQd.js.map
