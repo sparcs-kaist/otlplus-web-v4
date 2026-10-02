@@ -24,7 +24,6 @@ import AddIcon from "@mui/icons-material/Add"
 import CloseIcon from "@mui/icons-material/Close"
 import ContentCopyIcon from "@mui/icons-material/ContentCopy"
 import PeopleIcon from "@mui/icons-material/People"
-import PeopleOutlineIcon from "@mui/icons-material/PeopleOutlined"
 import StarIcon from "@mui/icons-material/Star"
 import StarBorderIcon from "@mui/icons-material/StarBorder"
 import { useQueryClient } from "@tanstack/react-query"
@@ -311,7 +310,14 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
                                 styles={{ padding: 3.75 }}
                             >
                                 <Icon size={17.5} color={theme.colors.Highlight.default}>
-                                    {isShared ? <PeopleIcon /> : <PeopleOutlineIcon />}
+                                    <PeopleIcon
+                                        style={{
+                                            fill: isShared ? "currentColor" : "none",
+                                            stroke: isShared ? "none" : "currentColor",
+                                            strokeWidth: 1.5,
+                                            strokeLinejoin: "round",
+                                        }}
+                                    />
                                 </Icon>
                             </IconButton>
                         </span>

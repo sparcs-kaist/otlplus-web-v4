@@ -134,8 +134,10 @@ test("selects one shared timetable per semester independently of the main timeta
     await expect(
         page.getByRole("button", { name: "메인 시간표", exact: true }),
     ).toHaveAttribute("aria-pressed", "true")
+    await expect(share.locator("svg")).toHaveCSS("fill", "none")
     await share.click()
     await expect(unshare).toHaveAttribute("aria-pressed", "true")
+    await expect(unshare.locator("svg")).not.toHaveCSS("fill", "none")
     await expect(page.locator('[data-timetable-tab="1"] button')).toHaveCount(4)
     expect(
         await page
@@ -153,6 +155,13 @@ test("selects one shared timetable per semester independently of the main timeta
     await expect(
         page.getByRole("img", { name: "친구 공유용 시간표", exact: true }),
     ).toBeVisible()
+    await expect(
+        page.getByRole("img", { name: "친구 공유용 시간표", exact: true }).locator("svg"),
+    ).not.toHaveCSS("fill", "none")
+    await page
+        .locator('[data-timetable-tab="2"]')
+        .locator("..")
+        .screenshot({ path: "test-results/shared-timetable-icon-states.png" })
     rejectShare = true
     page.once("dialog", (dialog) => dialog.accept())
     await share.click()
