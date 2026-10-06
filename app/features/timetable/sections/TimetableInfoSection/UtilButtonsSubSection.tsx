@@ -15,6 +15,7 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import type { CustomBlock } from "@/common/schemas/customBlock"
 import type { Lecture } from "@/common/schemas/lecture"
+import { getCustomBlockTimes } from "@/common/utils/timetableItems"
 import {
     copyTimetableImageToClipboard,
     downloadTimetableCalendar,
@@ -116,7 +117,9 @@ export default function UtilButtonsSubSection({
     const timetableType = useMemo(() => {
         if (
             timetableLectures.some((lec) => lec.classes.some((cls) => cls.day >= 5)) ||
-            customBlocks.some((block) => block.day >= 5)
+            customBlocks.some((block) =>
+                getCustomBlockTimes(block).some((time) => time.day >= 5),
+            )
         ) {
             return "7days"
         }

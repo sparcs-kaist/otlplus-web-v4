@@ -1,16 +1,15 @@
 import { type Page, expect, test } from "@playwright/test"
 import { readFile } from "node:fs/promises"
 
-type CustomBlock = {
-    id: number
-    block_name: string
-    place: string
-    day: number
-    begin: number
-    end: number
-}
+import type { CustomBlock } from "../app/common/schemas/customBlock"
 
-async function dragTime(page: Page, day: number, beginSlot: number, endSlot: number) {
+async function dragTime(
+    page: Page,
+    day: number,
+    beginSlot: number,
+    endSlot: number,
+    existingDraftCount?: number,
+) {
     const begin = page.locator(
         `.background-grid-block[data-day-idx="${day}"][data-time-idx="${beginSlot}"]`,
     )
@@ -26,13 +25,21 @@ async function dragTime(page: Page, day: number, beginSlot: number, endSlot: num
         beginBox.y + beginBox.height / 2,
     )
     await page.mouse.down()
+    if (existingDraftCount !== undefined) {
+        await expect(page.locator(".custom-block-draft-time")).toHaveCount(
+            existingDraftCount,
+        )
+        await expect(page.locator(".custom-block-draft-time").first()).toBeVisible()
+    }
     await page.mouse.move(endBox.x + endBox.width / 2, endBox.y + endBox.height / 2, {
         steps: 5,
     })
     await page.mouse.up()
 }
 
-test("creates, edits, and deletes a custom block", async ({ page }) => {
+test("creates, edits, exports, and deletes one custom block with multiple time slots", async ({
+    page,
+}) => {
     let blocks: CustomBlock[] = []
     let patchBody: Partial<CustomBlock> | null = null
 
@@ -77,33 +84,44 @@ test("creates, edits, and deletes a custom block", async ({ page }) => {
             })
             return
         }
-        if (path.endsWith("/timetables/1/custom-blocks") && method === "GET") {
-            await route.fulfill({ json: { custom_blocks: blocks } })
-            return
-        }
-        if (path.endsWith("/timetables/1/custom-blocks") && method === "POST") {
-            const body = request.postDataJSON() as Omit<CustomBlock, "id">
-            blocks = [{ id: 10, ...body }]
-            await route.fulfill({ json: { id: 10 } })
-            return
-        }
-        if (path.endsWith("/timetables/1/custom-blocks/10") && method === "PATCH") {
-            patchBody = request.postDataJSON() as Partial<CustomBlock>
-            blocks = blocks.map((block) => ({ ...block, ...patchBody }))
-            await route.fulfill({ json: blocks[0] })
-            return
-        }
-        if (path.endsWith("/timetables/1/custom-blocks/10") && method === "DELETE") {
-            blocks = []
-            await route.fulfill({ json: { id: 10 } })
+        if (path.endsWith("/timetables/1/items") && method === "PATCH") {
+            const { changes } = request.postDataJSON()
+            const results = changes.map((change: any, index: number) => {
+                if (change.op === "add") {
+                    const id =
+                        blocks.reduce((max, block) => Math.max(max, block.id), 9) + 1
+                    blocks.push({ id, ...change.data })
+                    return { index, kind: "custom", id }
+                }
+                if (change.op === "update") {
+                    patchBody = change.data
+                    blocks = blocks.map((block) =>
+                        block.id === change.id ? { ...block, ...change.data } : block,
+                    )
+                } else {
+                    blocks = blocks.filter((block) => block.id !== change.id)
+                }
+                return { index, kind: "custom", id: change.id }
+            })
+            await route.fulfill({
+                json: {
+                    timetableItems: blocks.map((data) => ({ kind: "custom", data })),
+                    results,
+                },
+            })
             return
         }
         if (path.endsWith("/timetables/my-timetable")) {
-            await route.fulfill({ json: { lectures: [] } })
+            await route.fulfill({ json: { lectures: [], timetableItems: [] } })
             return
         }
         if (path.endsWith("/timetables/1")) {
-            await route.fulfill({ json: { lectures: [] } })
+            await route.fulfill({
+                json: {
+                    lectures: [],
+                    timetableItems: blocks.map((data) => ({ kind: "custom", data })),
+                },
+            })
             return
         }
         if (path.endsWith("/timetables")) {
@@ -146,21 +164,81 @@ test("creates, edits, and deletes a custom block", async ({ page }) => {
         }
     })
 
-    await page.goto("/timetable")
+    await Promise.all([
+        page.waitForResponse(/\/api\/v2\/timetables\/1(?:\?|$)/),
+        page.goto("/timetable"),
+    ])
 
     const addButton = page.getByRole("button", {
         name: /Add Custom Block|커스텀 블록 추가/,
     })
+    const draftTimes = page.locator(".custom-block-draft-time")
     await expect(addButton).toBeEnabled()
+    await addButton.click()
+    await dragTime(page, 3, 4, 6)
+    await expect(draftTimes).toHaveCount(1)
+    await expect(draftTimes.first()).toHaveCSS("pointer-events", "none")
+    await page.getByRole("button", { name: "Close custom block editor" }).click()
+    await expect(draftTimes).toHaveCount(0)
+
+    await addButton.click()
+    await dragTime(page, 3, 4, 6)
+    await expect(draftTimes).toHaveCount(1)
+    await page.keyboard.press("Escape")
+    await expect(draftTimes).toHaveCount(0)
+
+    await addButton.click()
+    await dragTime(page, 3, 4, 6)
+    await expect(draftTimes).toHaveCount(1)
+    await page.getByText(/My Timetable|내 시간표/, { exact: true }).click()
+    await expect(draftTimes).toHaveCount(0)
+    await expect(page.getByPlaceholder(/Name|일정 이름/)).toHaveCount(0)
+    await page.getByText("Test timetable", { exact: true }).click()
     await addButton.click()
 
     await page.getByPlaceholder(/Name|일정 이름/).fill("Focus time")
     await page.getByPlaceholder(/Place|장소/).fill("Library")
     await dragTime(page, 0, 4, 6)
+    await expect(draftTimes).toHaveCount(1)
+    await dragTime(page, 0, 12, 13, 1)
+    await expect(draftTimes).toHaveCount(2)
+    await dragTime(page, 2, 4, 6)
+    await expect(draftTimes).toHaveCount(3)
+    await dragTime(page, 4, 30, 31)
+    await expect(draftTimes).toHaveCount(4)
+    const removeTimeButtons = page.getByRole("button", {
+        name: /^Remove time slot \d+$|^시간대 \d+ 삭제$/,
+    })
+    await expect(removeTimeButtons).toHaveCount(4)
+    await page.getByRole("button", { name: /Remove time slot 4|시간대 4 삭제/ }).click()
+    await expect(draftTimes).toHaveCount(3)
+    await dragTime(page, 4, 30, 31)
+    await expect(draftTimes).toHaveCount(4)
     await page.getByText(/Add to Timetable|시간표에 추가하기/, { exact: true }).click()
 
-    await expect(page.locator(".block-title", { hasText: "Focus time" })).toBeVisible()
-    expect(blocks[0]).toMatchObject({ day: 0, begin: 600, end: 690 })
+    await expect(draftTimes).toHaveCount(0)
+    await expect(page.locator(".block-title", { hasText: "Focus time" })).toHaveCount(4)
+    expect(blocks).toHaveLength(1)
+    expect(blocks[0]).toMatchObject({
+        day: 0,
+        begin: 600,
+        end: 690,
+        times: [
+            { day: 0, begin: 600, end: 690 },
+            { day: 0, begin: 840, end: 900 },
+            { day: 2, begin: 600, end: 690 },
+            { day: 4, begin: 1380, end: 1440 },
+        ],
+    })
+    await page.reload()
+    await expect(page.locator(".block-title", { hasText: "Focus time" })).toHaveCount(4)
+    await page.locator(".block-title", { hasText: "Focus time" }).first().click()
+    await expect(draftTimes).toHaveCount(4)
+    await addButton.click()
+    await expect(draftTimes).toHaveCount(0)
+    await expect(page.getByPlaceholder(/Name|일정 이름/)).toHaveValue("")
+    await page.getByRole("button", { name: "Close custom block editor" }).click()
+    await expect(page.locator(".block-title", { hasText: "Focus time" })).toHaveCount(4)
 
     await page.getByRole("button", { name: /Copy as Image|이미지로 복사하기/ }).click()
     await expect
@@ -193,10 +271,18 @@ test("creates, edits, and deletes a custom block", async ({ page }) => {
     const calendarContents = await readFile(calendarPath, "utf8")
     expect(calendarContents).toContain("SUMMARY:Focus time")
     expect(calendarContents).toContain("LOCATION:Library")
+    expect(calendarContents.match(/BEGIN:VEVENT/g)).toHaveLength(4)
 
-    await page.locator(".block-title", { hasText: "Focus time" }).click()
+    await page.locator(".block-title", { hasText: "Focus time" }).nth(1).click()
+    await expect(removeTimeButtons).toHaveCount(4)
+    await expect(draftTimes).toHaveCount(4)
+    for (const tile of await page.locator(".custom-block-tile").all())
+        await expect(tile).toHaveCSS("opacity", "1")
     await expect(
-        page.getByRole("button", { name: "Delete custom block" }).locator("div").first(),
+        page
+            .getByRole("button", { name: "Delete custom block", exact: true })
+            .locator("div")
+            .first(),
     ).toHaveCSS("color", "rgb(189, 189, 189)")
     await expect(
         page
@@ -205,15 +291,40 @@ test("creates, edits, and deletes a custom block", async ({ page }) => {
             .first(),
     ).toHaveCSS("color", "rgb(189, 189, 189)")
     await page.getByPlaceholder(/Name|일정 이름/).fill("Focus time updated")
+    await page.getByRole("button", { name: /Remove time slot 2|시간대 2 삭제/ }).click()
+    await expect(draftTimes).toHaveCount(3)
+    await page.getByRole("button", { name: /Remove time slot 1|시간대 1 삭제/ }).click()
+    await expect(removeTimeButtons).toHaveCount(2)
+    await expect(draftTimes).toHaveCount(2)
+    await expect(page.locator(".custom-block-tile")).toHaveCount(4)
     await dragTime(page, 1, 8, 10)
+    await expect(removeTimeButtons).toHaveCount(3)
+    await expect(draftTimes).toHaveCount(3)
     await page.getByText(/Save|저장하기/, { exact: true }).click()
 
+    await expect(draftTimes).toHaveCount(0)
     await expect(
         page.locator(".block-title", { hasText: "Focus time updated" }),
-    ).toBeVisible()
-    expect(patchBody).toMatchObject({ day: 1, begin: 720, end: 810 })
+    ).toHaveCount(3)
+    expect(patchBody).toMatchObject({
+        day: 2,
+        begin: 600,
+        end: 690,
+        times: [
+            { day: 2, begin: 600, end: 690 },
+            { day: 4, begin: 1380, end: 1440 },
+            { day: 1, begin: 720, end: 810 },
+        ],
+    })
 
-    await page.locator(".block-title", { hasText: "Focus time updated" }).click()
-    await page.getByRole("button", { name: "Delete custom block" }).click()
+    await page.locator(".block-title", { hasText: "Focus time updated" }).last().click()
+    await page.getByRole("button", { name: "Delete custom block", exact: true }).click()
+    await expect(draftTimes).toHaveCount(0)
     await expect(page.locator(".block-title")).toHaveCount(0)
+    expect(blocks).toHaveLength(0)
+    await page.keyboard.press("Control+z")
+    await expect(
+        page.locator(".block-title", { hasText: "Focus time updated" }),
+    ).toHaveCount(3)
+    expect(blocks).toHaveLength(1)
 })

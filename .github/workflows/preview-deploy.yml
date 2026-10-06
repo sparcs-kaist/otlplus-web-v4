@@ -5,6 +5,11 @@ on:
         branches: [main, rc]
         types: [opened, synchronize, reopened]
 
+concurrency:
+    group: gh-pages-preview
+    cancel-in-progress: false
+    queue: max
+
 env:
     NODE_VERSION: 22
 
