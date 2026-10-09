@@ -850,24 +850,23 @@ describe("mobile friend timetable navigation", () => {
         )
     })
 
-    it("shows an empty state instead of enrolled or stale private content when nothing is shared", () => {
+    it("shows the enrolled timetable when no saved timetable is selected for sharing", () => {
         timetablesResponse = { timetables: [] }
         renderPage("/friends?friendId=7&year=2026&semester=3&timetableId=42")
-        expect(screen.getByText("friends.noSharedTimetable")).toHaveAttribute(
-            "role",
-            "status",
-        )
         expect(
-            screen.queryByRole("tab", { name: "friends.actualTimetable" }),
+            screen.getByRole("tab", { name: "friends.actualTimetable" }),
+        ).toHaveAttribute("aria-selected", "true")
+        expect(
+            screen.getByRole("button", { name: "Tile: Fluid mechanics" }),
+        ).toBeInTheDocument()
+        expect(
+            screen.queryByRole("button", { name: "Tile: Saved fluid mechanics" }),
         ).not.toBeInTheDocument()
-        expect(screen.queryByRole("button", { name: /Tile:/ })).not.toBeInTheDocument()
-        expect(
-            vi
-                .mocked(useAPI)
-                .mock.calls.some(
-                    ([, path]) => path === "/friends/7/timetables/my-timetable",
-                ),
-        ).toBe(false)
+        expect(vi.mocked(useAPI)).toHaveBeenCalledWith(
+            "GET",
+            "/friends/7/timetables/my-timetable",
+            expect.objectContaining({ enabled: true }),
+        )
     })
 
     it("automatically opens the shared timetable at the linked past semester", () => {

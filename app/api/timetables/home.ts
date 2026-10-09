@@ -16,7 +16,7 @@ export const GETResponse = EnrolledTimetableResponse.extend({
 })
 
 export const PATCHRequest = GETRequest.extend({
-    timetableId: z.number().int().positive().nullable(),
+    timetableId: z.number().int().positive(),
 })
 
 export const PATCHResponse = GETResponse

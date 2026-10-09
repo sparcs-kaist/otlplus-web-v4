@@ -294,14 +294,14 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
                         <span
                             title={t(
                                 isShared
-                                    ? "timetable.unsetSharedTimetable"
+                                    ? "timetable.sharedTimetable"
                                     : "timetable.setSharedTimetable",
                             )}
                         >
                             <IconButton
                                 aria-label={t(
                                     isShared
-                                        ? "timetable.unsetSharedTimetable"
+                                        ? "timetable.sharedTimetable"
                                         : "timetable.setSharedTimetable",
                                 )}
                                 aria-pressed={isShared}
@@ -414,6 +414,9 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
         {
             onSuccess: (data, variables) => {
                 timetables.refetch()
+                void queryClient.invalidateQueries({
+                    queryKey: [queryKeys.homeTimetable],
+                })
                 const current = useTimetableUIStore.getState()
                 if (
                     current.year === variables.year &&
@@ -462,25 +465,29 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
     useEffect(() => {
         if (year >= 0) setSharedParams({ year, semester })
     }, [year, semester, setSharedParams])
-    const sharedTimetableId =
-        sharedTimetable.data?.year === year && sharedTimetable.data.semester === semester
-            ? sharedTimetable.data.timetableId
-            : null
+    const isSharedSelectionLoaded =
+        sharedTimetable.isSuccess &&
+        sharedTimetable.data?.year === year &&
+        sharedTimetable.data.semester === semester
+    const sharedTimetableId = isSharedSelectionLoaded
+        ? sharedTimetable.data.timetableId
+        : null
+    const isAcademicShared = isSharedSelectionLoaded && sharedTimetableId === null
     const { mutation: setSharedTimetable } = useAPI("PATCH", "/timetables/shared", {
         onSuccess: () =>
             queryClient.invalidateQueries({ queryKey: ["/timetables/shared"] }),
     })
     const isSettingShared =
         setSharedTimetable.isPending ||
-        !sharedTimetable.isSuccess ||
+        !isSharedSelectionLoaded ||
         sharedTimetable.isFetching
-    const handleSetShared = async (timetableId: number) => {
-        if (isSettingShared) return
+    const handleSetShared = async (timetableId: number | null) => {
+        if (isSettingShared || timetableId === sharedTimetableId) return
         try {
             await setSharedTimetable.mutateAsync({
                 year,
                 semester,
-                timetableId: sharedTimetableId === timetableId ? null : timetableId,
+                timetableId,
             })
         } catch {
             window.alert(t("timetable.sharedTimetableError"))
@@ -741,6 +748,72 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                     >
                         {t("timetable.myTimetable")}
                     </AcademicTimetableName>
+                    {status === "success" &&
+                        timetables.isSuccess &&
+                        localTimetables.length === 0 && (
+                            <Icon
+                                size={17.5}
+                                color={theme.colors.Highlight.default}
+                                role="img"
+                                aria-label={t("timetable.homeTimetable")}
+                                style={{ margin: 3.75 }}
+                            >
+                                <StarIcon />
+                            </Icon>
+                        )}
+                    {status === "success" &&
+                        (currentTimetableId === null ? (
+                            <span
+                                title={t(
+                                    isAcademicShared
+                                        ? "timetable.sharedTimetable"
+                                        : "timetable.setSharedTimetable",
+                                )}
+                            >
+                                <IconButton
+                                    aria-label={t(
+                                        isAcademicShared
+                                            ? "timetable.sharedTimetable"
+                                            : "timetable.setSharedTimetable",
+                                    )}
+                                    aria-pressed={isAcademicShared}
+                                    disabled={isSettingShared}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        void handleSetShared(null)
+                                    }}
+                                    styles={{ padding: 3.75 }}
+                                >
+                                    <Icon
+                                        size={17.5}
+                                        color={theme.colors.Highlight.default}
+                                    >
+                                        <PeopleIcon
+                                            style={{
+                                                fill: isAcademicShared
+                                                    ? "currentColor"
+                                                    : "none",
+                                                stroke: isAcademicShared
+                                                    ? "none"
+                                                    : "currentColor",
+                                                strokeWidth: 1.5,
+                                                strokeLinejoin: "round",
+                                            }}
+                                        />
+                                    </Icon>
+                                </IconButton>
+                            </span>
+                        ) : isAcademicShared ? (
+                            <Icon
+                                size={17.5}
+                                color={theme.colors.Highlight.default}
+                                role="img"
+                                aria-label={t("timetable.sharedTimetable")}
+                                style={{ margin: 3.75 }}
+                            >
+                                <PeopleIcon />
+                            </Icon>
+                        ) : null)}
                     {currentTimetableId === null && status === "success" && (
                         <IconButton
                             aria-label={t("timetable.shortcuts.timetableDuplicate")}

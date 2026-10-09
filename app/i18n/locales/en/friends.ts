@@ -1,5 +1,4 @@
 export const friends = {
-    noSharedTimetable: "Your friend has not shared a timetable for this semester.",
     overlapLabel: "Shared",
     currentLectureFriends: "Friends taking this course",
     pastLectureFriends: "Friends who took this course",

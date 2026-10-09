@@ -1,10 +1,9 @@
 import { z } from "zod"
 
-export { GETRequest, PATCHRequest } from "./home"
+import { GETRequest, GETResponse } from "./home"
 
-export const GETResponse = z.object({
-    year: z.number().int(),
-    semester: z.number().int(),
+export { GETRequest, GETResponse }
+export const PATCHRequest = GETRequest.extend({
     timetableId: z.number().int().positive().nullable(),
 })
 export const PATCHResponse = GETResponse

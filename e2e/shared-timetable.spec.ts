@@ -4,7 +4,7 @@ test("selects one shared timetable per semester independently of the main timeta
     page,
 }) => {
     const shared = new Map<number, number | null>()
-    let homeId: number | null = null
+    let homeId: number | null = 1
     let rejectShare = false
     let timetables = [1, 2, 3].map((id) => ({
         id,
@@ -67,6 +67,10 @@ test("selects one shared timetable per semester independently of the main timeta
                     year: 2026,
                     semester: term,
                     timetableId: shared.get(term) ?? null,
+                    source: shared.get(term) == null ? "enrolled" : "saved",
+                    name: "Shared",
+                    lectures: [],
+                    timetableItems: [],
                 }
             } else if (path === "/timetables/home") {
                 if (method === "PATCH") homeId = request.postDataJSON().timetableId
@@ -102,6 +106,8 @@ test("selects one shared timetable per semester independently of the main timeta
                         (table) => table.id === shared.get(term),
                     ),
                 }
+            } else if (path === "/friends/7/timetables/my-timetable") {
+                json = { lectures: [], timetableItems: [] }
             } else if (/^\/friends\/7\/timetables\/\d+$/.test(path)) {
                 json = { lectures: [], timetableItems: [{ kind: "custom", data: block }] }
             } else if (path.startsWith("/timetables/")) {
@@ -128,16 +134,23 @@ test("selects one shared timetable per semester independently of the main timeta
         name: "친구 공유용 시간표로 지정",
         exact: true,
     })
-    const unshare = page.getByRole("button", { name: "친구 공유 해제", exact: true })
+    const selectedShare = page.getByRole("button", {
+        name: "친구 공유용 시간표",
+        exact: true,
+    })
     await page.getByText("시간표 1", { exact: true }).click()
-    await page.getByRole("button", { name: "메인 시간표로 지정", exact: true }).click()
     await expect(
         page.getByRole("button", { name: "메인 시간표", exact: true }),
     ).toHaveAttribute("aria-pressed", "true")
     await expect(share.locator("svg")).toHaveCSS("fill", "none")
+    await expect(
+        page
+            .locator('[data-timetable-tab="academic"]')
+            .getByRole("img", { name: "친구 공유용 시간표", exact: true }),
+    ).toBeVisible()
     await share.click()
-    await expect(unshare).toHaveAttribute("aria-pressed", "true")
-    await expect(unshare.locator("svg")).not.toHaveCSS("fill", "none")
+    await expect(selectedShare).toHaveAttribute("aria-pressed", "true")
+    await expect(selectedShare.locator("svg")).not.toHaveCSS("fill", "none")
     await expect(page.locator('[data-timetable-tab="1"] button')).toHaveCount(4)
     expect(
         await page
@@ -147,7 +160,7 @@ test("selects one shared timetable per semester independently of the main timeta
             ),
     ).toEqual([
         "메인 시간표",
-        "친구 공유 해제",
+        "친구 공유용 시간표",
         "현재 시간표 복제",
         "현재 시간표 삭제 (선택된 항목이 없을 때)",
     ])
@@ -169,7 +182,7 @@ test("selects one shared timetable per semester independently of the main timeta
     expect(shared.get(3)).toBe(1)
     rejectShare = false
     await share.click()
-    await expect(unshare).toHaveAttribute("aria-pressed", "true")
+    await expect(selectedShare).toHaveAttribute("aria-pressed", "true")
     expect(shared.get(3)).toBe(2)
     expect(homeId).toBe(1)
     await expect(
@@ -177,27 +190,33 @@ test("selects one shared timetable per semester independently of the main timeta
     ).toHaveCount(0)
     await page.reload()
     await page.getByText("시간표 2", { exact: true }).click()
-    await expect(unshare).toHaveAttribute("aria-pressed", "true")
+    await expect(selectedShare).toHaveAttribute("aria-pressed", "true")
     await page.screenshot({ path: "test-results/shared-timetable-desktop.png" })
     await page
         .locator('[data-timetable-tab="2"]')
         .locator("..")
         .screenshot({ path: "test-results/shared-timetable-tabs.png" })
     await page.setViewportSize({ width: 390, height: 844 })
-    await expect(unshare).toBeInViewport()
+    await expect(selectedShare).toBeInViewport()
     await page.screenshot({ path: "test-results/shared-timetable-mobile.png" })
     await page.getByRole("button", { name: "이전 학기", exact: true }).click()
     await page.getByText("시간표 3", { exact: true }).click()
     await share.click()
-    await expect(unshare).toHaveAttribute("aria-pressed", "true")
+    await expect(selectedShare).toHaveAttribute("aria-pressed", "true")
     expect(shared.get(1)).toBe(3)
     expect(shared.get(3)).toBe(2)
-    await unshare.click()
-    await expect(share).toBeEnabled()
+    await selectedShare.click()
+    expect(shared.get(1)).toBe(3)
+    const academic = page.locator('[data-timetable-tab="academic"]')
+    await academic.getByText("학사 시간표", { exact: true }).click()
+    await share.click()
+    await expect(
+        academic.getByRole("button", { name: "친구 공유용 시간표", exact: true }),
+    ).toHaveAttribute("aria-pressed", "true")
     expect(shared.get(1)).toBeNull()
     await page.getByRole("button", { name: "다음 학기", exact: true }).click()
     await page.getByText("시간표 2", { exact: true }).click()
-    await expect(unshare).toHaveAttribute("aria-pressed", "true")
+    await expect(selectedShare).toHaveAttribute("aria-pressed", "true")
     await page.goto("/friends?friendId=7&year=2026&semester=3")
     await expect(
         page.getByRole("tab", { name: "시간표 2", exact: true }),
@@ -219,8 +238,9 @@ test("selects one shared timetable per semester independently of the main timeta
     expect(shared.get(3)).toBeNull()
     expect(homeId).toBe(1)
     await page.goto("/friends?friendId=7&year=2026&semester=3")
-    await expect(page.getByRole("status")).toHaveText(
-        "이 학기에 친구가 공유한 시간표가 없어요.",
-    )
+    await expect(
+        page.getByRole("tab", { name: "수강 시간표", exact: true }),
+    ).toHaveAttribute("aria-selected", "true")
+    expect(requests).toContain("/friends/7/timetables/my-timetable")
     await expect(page.locator(".block-title", { hasText: "공유 일정" })).toHaveCount(0)
 })

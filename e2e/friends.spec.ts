@@ -140,6 +140,8 @@ async function setup(page: Page, language = "ko") {
             json = {
                 timetables: savedTimetables.filter((table) => table.semester === term),
             }
+        } else if (/^\/api\/v2\/friends\/\d+\/timetables\/my-timetable$/.test(path)) {
+            json = { lectures: [], timetableItems: [] }
         } else if (/^\/api\/v2\/friends\/\d+\/timetables\/42$/.test(path)) {
             json = { lectures, timetableItems: items }
         } else if (path === "/api/v2/timetables") {
@@ -270,8 +272,10 @@ test("desktop matches the friends layout and exact-lecture overlap treatment", a
     )
     await page.getByRole("button", { name: "이전 학기", exact: true }).click()
     await expect(page).toHaveURL(/semester=1/)
-    await expect(page.getByRole("tab", { name: "수강 시간표" })).toHaveCount(0)
-    await expect(page.getByText("이 학기에 친구가 공유한 시간표가 없어요.")).toBeVisible()
+    await expect(page.getByRole("tab", { name: "수강 시간표" })).toHaveAttribute(
+        "aria-selected",
+        "true",
+    )
 })
 
 for (const viewport of [

@@ -1,7 +1,6 @@
 export const timetable = {
     sharedTimetable: "친구 공유용 시간표",
     setSharedTimetable: "친구 공유용 시간표로 지정",
-    unsetSharedTimetable: "친구 공유 해제",
     sharedTimetableError: "친구 공유용 시간표를 설정하지 못했습니다. 다시 시도해 주세요.",
 
     homeTimetable: "메인 시간표",

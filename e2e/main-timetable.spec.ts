@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test"
 test("sets, creates, and deletes the main timetable from the timetable tabs", async ({
     page,
 }) => {
-    let homeId: number | null = null
+    let homeId: number | null = 1
     let rejectHomeChange = false
     let timetables = [1, 2, 3].map((id) => ({
         id,
@@ -74,7 +74,15 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
                 timetableItems: homeId === 2 ? [{ kind: "custom", data: block }] : [],
             }
         } else if (path === "/timetables/shared") {
-            json = { year: 2026, semester: 3, timetableId: null }
+            json = {
+                year: 2026,
+                semester: 3,
+                timetableId: null,
+                source: "enrolled",
+                name: "Enrolled",
+                lectures: [],
+                timetableItems: [],
+            }
         } else if (path === "/timetables") {
             if (method === "POST") {
                 creates.push(request.postDataJSON())
@@ -86,11 +94,12 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
                     semester: 3,
                     timeTableOrder: id - 1,
                 })
+                if (homeId === null) homeId = id
                 json = { id }
             } else if (method === "DELETE") {
                 const { id } = request.postDataJSON()
                 timetables = timetables.filter((timetable) => timetable.id !== id)
-                if (homeId === id) homeId = null
+                if (homeId === id) homeId = timetables[0]?.id ?? null
             } else {
                 json = { timetables }
             }
@@ -227,10 +236,12 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
 
     await deleteButton.click()
     await expect(page.getByText("시간표 4", { exact: true })).toHaveCount(0)
-    await expect(page.getByRole("img", { name: "메인 시간표", exact: true })).toHaveCount(
-        0,
-    )
-    expect(homeId).toBeNull()
+    expect(homeId).toBe(1)
+    await expect(
+        page
+            .locator('[data-timetable-tab="1"]')
+            .getByLabel("메인 시간표", { exact: true }),
+    ).toBeVisible()
 
     await page.setViewportSize({ width: 1920, height: 1080 })
     await page.emulateMedia({ reducedMotion: "reduce" })
@@ -299,6 +310,32 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
     await page.goto("/")
     await expect(page.locator(".block-title", { hasText: "메인 일정" })).toBeVisible()
     await expect(page.getByRole("button", { name: /메인 시간표로 지정/ })).toHaveCount(0)
+
+    await page.emulateMedia({ reducedMotion: "reduce" })
+    await page.goto("/timetable")
+    for (const table of [...timetables]) {
+        await page.getByText(table.name, { exact: true }).click()
+        await deleteButton.click()
+        await expect(page.locator(`[data-timetable-tab="${table.id}"]`)).toHaveCount(0)
+    }
+
+    const academicTab = page.locator('[data-timetable-tab="academic"]')
+    await expect(
+        academicTab.getByRole("img", { name: "메인 시간표", exact: true }),
+    ).toBeVisible()
+    await expect(
+        academicTab.getByRole("button", { name: "친구 공유용 시간표", exact: true }),
+    ).toHaveAttribute("aria-pressed", "true")
+    expect(homeId).toBeNull()
+    await page.screenshot({ path: "test-results/academic-selection-defaults.png" })
+    await page.getByRole("button", { name: "빈 시간표 추가", exact: true }).click()
+    const first = timetables[0]!
+    await expect(
+        page
+            .locator(`[data-timetable-tab="${first.id}"]`)
+            .getByRole("button", { name: "메인 시간표", exact: true }),
+    ).toHaveAttribute("aria-pressed", "true")
+    expect(homeId).toBe(first.id)
 
     await page.route("**/api/v2/users/info", (route) =>
         route.fulfill({ status: 401, json: {} }),

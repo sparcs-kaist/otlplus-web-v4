@@ -685,6 +685,20 @@ export default function FriendsPage() {
         },
     )
 
+    const { query: friendActual, setParams: setFriendActualParams } = useAPI(
+        "GET",
+        `/friends/${selectedFriendId ?? 0}/timetables/my-timetable`,
+        {
+            enabled:
+                status === "success" &&
+                selectedFriendId !== null &&
+                friendTimetables.isSuccess &&
+                friendTimetables.data?.timetables.length === 0,
+            staleTime: 0,
+            gcTime: 0,
+        },
+    )
+
     const { mutation: deleteMutation, requestFunction: deleteFriend } = useAPI(
         "DELETE",
         `/friends/${deletingFriend?.id ?? 0}`,
@@ -708,6 +722,7 @@ export default function FriendsPage() {
             setOwnTimetableParams(params)
         } else {
             setFriendTimetableParams(params)
+            setFriendActualParams(params)
         }
     }, [year, semester, selectedFriendId])
 
@@ -743,13 +758,15 @@ export default function FriendsPage() {
               : (friendTimetables.data?.timetables ?? [])
     const timetableQuery =
         selectedFriendId !== null
-            ? friendSaved
+            ? currentTimetableId === null
+                ? friendActual
+                : friendSaved
             : currentTimetableId === null
               ? ownActual
               : ownSaved
     const timetableItems =
         timetableQuery.isError ||
-        (selectedFriendId !== null && currentTimetableId === null)
+        (selectedFriendId !== null && !friendTimetables.isSuccess)
             ? []
             : (timetableQuery.data?.timetableItems ?? [])
     const lectures = timetableItems.flatMap((item) =>
@@ -853,7 +870,9 @@ export default function FriendsPage() {
                             role="tablist"
                             aria-label={selectedFriend?.name ?? t("friends.myTimetable")}
                         >
-                            {selectedFriendId === null && (
+                            {(selectedFriendId === null ||
+                                (friendTimetables.isSuccess &&
+                                    timetables.length === 0)) && (
                                 <TimetableTab
                                     role="tab"
                                     tabIndex={0}
@@ -905,17 +924,6 @@ export default function FriendsPage() {
                         />
                     </TimetableHeader>
                     <TimetablePanel>
-                        {selectedFriendId !== null &&
-                            friendTimetables.isSuccess &&
-                            timetables.length === 0 && (
-                                <Typography
-                                    type="Small"
-                                    color="Text.placeholder"
-                                    role="status"
-                                >
-                                    {t("friends.noSharedTimetable")}
-                                </Typography>
-                            )}
                         {(timetableQuery.isError || friendTimetables.isError) && (
                             <Typography
                                 type="Small"
