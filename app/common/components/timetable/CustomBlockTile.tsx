@@ -1,14 +1,18 @@
 import { memo } from "react"
 
-import { type Theme, ThemeProvider, css } from "@emotion/react"
+import { type Theme, css } from "@emotion/react"
 import styled from "@emotion/styled"
+import { useTranslation } from "react-i18next"
 
+import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import type { CustomBlock } from "@/common/schemas/customBlock"
-import lightTheme from "@/styles/themes/light"
+import type { TimeBlock } from "@/common/schemas/timeblock"
+import { timetableItemKey } from "@/common/utils/timetableItems"
 
-import { flattenTimeTableColors } from "./Tile"
+import { TimetableItemDeleteButton, flattenTimeTableColors } from "./Tile"
+import TimetableItemTile from "./TimetableItemTile"
 
 const CUSTOM_BLOCK_TILE_CLASSNAME = "custom-block-tile"
 
@@ -16,36 +20,39 @@ const CustomBlockTileHoverCss = (theme: Theme) => css`
     background: ${theme.colors.Highlight.default};
 
     .block-title {
-        color: #ffffff;
+        color: ${theme.colors.Text.onHighlight.default};
     }
 
     .block-info {
-        color: rgba(255, 255, 255, 0.5);
+        color: ${theme.colors.Text.onHighlight.muted};
+    }
+
+    .custom-block-delete-wrapper {
+        pointer-events: auto;
+        visibility: visible;
     }
 `
 
 const CustomBlockTileWrapper = styled(FlexWrapper)<{
-    rowStart: number
-    rowEnd: number
+    rowStart?: number
+    rowEnd?: number
     col: number
     blockId: number
 }>`
     grid-column: ${({ col }) => col};
-    grid-row: ${({ rowStart, rowEnd }) => `${rowStart} / ${rowEnd}`};
+    grid-row: ${({ rowStart, rowEnd }) =>
+        rowStart === undefined ? "auto" : `${rowStart} / ${rowEnd}`};
     overflow: hidden;
     pointer-events: none;
+    position: relative;
 
-    &:has(.${CUSTOM_BLOCK_TILE_CLASSNAME}:hover) .${CUSTOM_BLOCK_TILE_CLASSNAME} {
-        ${({ theme }) => CustomBlockTileHoverCss(theme)}
-    }
-
-    [data-selected-custom-block="${({ blockId }) => blockId}"] & {
+    [data-selected-custom-blocks~="${({ blockId }) => blockId}"] & {
         transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        box-shadow: ${({ theme }) => theme.elevation.raised};
     }
 `
 
-const CustomBlockTileInner = styled(FlexWrapper)<{ blockId: number }>`
+const CustomBlockTileInner = styled(TimetableItemTile)<{ blockId: number }>`
     background: ${({ theme, blockId }) => {
         const colors = flattenTimeTableColors(theme.colors.Tile.TimeTable.default)
         return colors[(blockId * 3 + 7) % colors.length]
@@ -53,38 +60,66 @@ const CustomBlockTileInner = styled(FlexWrapper)<{ blockId: number }>`
     border-radius: 2px;
     overflow: hidden;
     pointer-events: none;
-    opacity: 0.5;
 
-    [data-interaction="true"] & {
+    [data-custom-block-interaction="true"] & {
         pointer-events: auto;
         cursor: pointer;
+    }
 
-        &:hover {
+    @media (hover: hover) {
+        .custom-timetable[data-interaction="true"]:has(
+                [data-custom-block-id="${({ blockId }) =>
+                        blockId}"][data-custom-block-interaction="true"]
+                    .${CUSTOM_BLOCK_TILE_CLASSNAME}:hover
+            )
+            & {
             ${({ theme }) => CustomBlockTileHoverCss(theme)}
         }
     }
 
-    [data-selected-custom-block=""] &,
-    [data-selected-custom-block="${({ blockId }) => blockId}"] & {
-        opacity: 1;
+    [data-flash-custom-blocks~="${({ blockId }) => blockId}"] & {
+        background: ${({ theme }) => theme.colors.Highlight.default};
     }
 
     [data-is-dragging="true"] & {
         pointer-events: none;
     }
 
-    [data-selected-custom-block="${({ blockId }) => blockId}"] & {
+    [data-selected-custom-blocks~="${({ blockId }) => blockId}"] & {
         ${({ theme }) => CustomBlockTileHoverCss(theme)}
     }
 `
 
 function CustomBlockTile({
     block,
+    time,
     onSelect,
+    onDelete,
+    overflow = false,
+    displayedDayCount = 5,
 }: {
     block: CustomBlock
-    onSelect?: (block: CustomBlock) => void
+    time: TimeBlock
+    onSelect?: (block: CustomBlock, event?: React.PointerEvent) => void
+    onDelete?: (block: CustomBlock) => void
+    overflow?: boolean
+    displayedDayCount?: 5 | 7
 }) {
+    const { t } = useTranslation()
+    const day = [
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday",
+    ][time.day]
+    const formatTime = (minutes: number) =>
+        `${Math.floor(minutes / 60)
+            .toString()
+            .padStart(2, "0")}:${(minutes % 60).toString().padStart(2, "0")}`
+    const timeLabel = `${t(`common.days.${day}`)} ${formatTime(time.begin)}–${formatTime(time.end)}`
     return (
         <CustomBlockTileWrapper
             direction="column"
@@ -92,36 +127,91 @@ function CustomBlockTile({
             padding="1px 0"
             justify="stretch"
             align="stretch"
-            col={block.day + 1}
-            rowStart={block.begin / 30 - 14}
-            rowEnd={block.end / 30 - 14}
+            col={Math.min(time.day, displayedDayCount - 1) + 1}
+            rowStart={overflow ? undefined : time.begin / 30 - 14}
+            rowEnd={overflow ? undefined : time.end / 30 - 14}
             blockId={block.id}
-            onPointerDown={() => onSelect?.(block)}
+            onPointerDown={(event) => onSelect?.(block, event)}
+            data-custom-block-id={block.id}
+            data-custom-block-interaction={Boolean(onSelect)}
+            data-class-time={time.day * 1440 + time.begin}
+            title={`${block.block_name} · ${timeLabel}`}
         >
             <CustomBlockTileInner
-                direction="column"
+                itemKey={timetableItemKey({
+                    kind: TimetableItemKind.CUSTOM,
+                    data: block,
+                })}
+                direction="row"
                 gap={0}
                 flex="1 1 auto"
-                align="flex-start"
-                justify="flex-start"
-                padding="6px"
+                align="stretch"
+                justify="stretch"
+                padding="2px"
                 blockId={block.id}
                 className={CUSTOM_BLOCK_TILE_CLASSNAME}
+                role={onSelect ? "button" : undefined}
+                tabIndex={onSelect ? 0 : undefined}
+                aria-label={onSelect ? `${block.block_name} · ${timeLabel}` : undefined}
+                onKeyDown={
+                    onSelect
+                        ? (event) => {
+                              if (event.target !== event.currentTarget) return
+                              if (event.key === "Enter" || event.key === " ") {
+                                  event.preventDefault()
+                                  onSelect(block)
+                              }
+                          }
+                        : undefined
+                }
             >
-                <ThemeProvider theme={lightTheme}>
-                    <Typography type="Small" color="Text.dark" className="block-title">
-                        {block.block_name}
-                    </Typography>
-                    {block.place && (
+                <FlexWrapper
+                    direction="column"
+                    justify="center"
+                    flex="1 1 auto"
+                    gap={0}
+                    padding="4px"
+                >
+                    <FlexWrapper
+                        direction="column"
+                        gap={0}
+                        align="flex-start"
+                        style={{ overflow: "hidden" }}
+                    >
                         <Typography
-                            type="Small"
-                            color="Text.lighter"
-                            className="block-info"
+                            type="SmallMedium"
+                            color="TimeTable.title"
+                            className="block-title"
                         >
-                            {block.place}
+                            {block.block_name}
                         </Typography>
-                    )}
-                </ThemeProvider>
+                        {block.place && (
+                            <Typography
+                                type="Small"
+                                color="TimeTable.detail"
+                                className="block-info"
+                            >
+                                {block.place}
+                            </Typography>
+                        )}
+                        {overflow && (
+                            <Typography
+                                type="Small"
+                                color="TimeTable.detail"
+                                className="block-info"
+                            >
+                                {timeLabel}
+                            </Typography>
+                        )}
+                    </FlexWrapper>
+                </FlexWrapper>
+                {onDelete && (
+                    <TimetableItemDeleteButton
+                        onDelete={() => onDelete(block)}
+                        ariaLabel={`Delete custom block: ${block.block_name}`}
+                        className="custom-block-delete-wrapper"
+                    />
+                )}
             </CustomBlockTileInner>
         </CustomBlockTileWrapper>
     )

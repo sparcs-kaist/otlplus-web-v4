@@ -17,11 +17,17 @@ export type GETTimetablesQuery = z.infer<typeof GETRequest>
 export type GETTimetablesResponse = z.infer<typeof GETResponse>
 
 // POST /api/timetables
-export const POSTRequest = z.object({
+const CreateTimetableTermSchema = z.object({
     year: z.number().int(),
     semester: z.enum(SemesterEnum),
-    lectureIds: z.array(z.number().int()),
 })
+
+export const POSTRequest = z.union([
+    CreateTimetableTermSchema.extend({ lectureIds: z.array(z.number().int()) }).strict(),
+    CreateTimetableTermSchema.extend({
+        sourceTimetableId: z.number().int().positive(),
+    }).strict(),
+])
 
 export const POSTResponse = z.object({
     id: z.number().int(),

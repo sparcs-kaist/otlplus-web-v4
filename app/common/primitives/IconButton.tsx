@@ -9,6 +9,8 @@ interface IconButtonProps {
     styles?: React.CSSProperties | null
     onClick?: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void | null
     "aria-label"?: string
+    "aria-pressed"?: boolean
+    disabled?: boolean
 }
 
 export const IconButton = (props: IconButtonProps) => {
@@ -16,6 +18,8 @@ export const IconButton = (props: IconButtonProps) => {
         <ThemeProvider theme={theme}>
             <MUIIconButton
                 aria-label={props["aria-label"]}
+                aria-pressed={props["aria-pressed"]}
+                disabled={props.disabled}
                 onClick={props.onClick}
                 style={props.styles ?? undefined}
             >
