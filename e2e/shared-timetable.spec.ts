@@ -219,7 +219,7 @@ test("selects one shared timetable per semester independently of the main timeta
     await expect(selectedShare).toHaveAttribute("aria-pressed", "true")
     await page.goto("/friends?friendId=7&year=2026&semester=3")
     await expect(
-        page.getByRole("tab", { name: "시간표 2", exact: true }),
+        page.getByRole("tab", { name: "2026 가을학기", exact: true }),
     ).toHaveAttribute("aria-selected", "true")
     await expect(page.getByRole("tab", { name: "수강 시간표", exact: true })).toHaveCount(
         0,
@@ -239,7 +239,7 @@ test("selects one shared timetable per semester independently of the main timeta
     expect(homeId).toBe(1)
     await page.goto("/friends?friendId=7&year=2026&semester=3")
     await expect(
-        page.getByRole("tab", { name: "수강 시간표", exact: true }),
+        page.getByRole("tab", { name: "2026 가을학기", exact: true }),
     ).toHaveAttribute("aria-selected", "true")
     expect(requests).toContain("/friends/7/timetables/my-timetable")
     await expect(page.locator(".block-title", { hasText: "공유 일정" })).toHaveCount(0)

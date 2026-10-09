@@ -97,7 +97,11 @@ const friends = ["김희진", "김교수", "박지수", "이서연", "정민수"
         hasScheduleNow: index === 0 || index === 2,
     }),
 )
-const savedTimetables = [{ id: 42, name: "시간표 1", year: 2026, semester: 3 }]
+const savedTimetables = [
+    { id: 42, name: "시간표 1", year: 2026, semester: 3 },
+    { id: 43, name: "지난 시간표", year: 2025, semester: 3 },
+]
+const academicLecture = lecture(80, "봄 학사 수업", [0], 600, 690)
 
 async function setup(page: Page, language = "ko") {
     await page.addInitScript(
@@ -105,7 +109,10 @@ async function setup(page: Page, language = "ko") {
         language,
     )
     await page.route(/^https?:\/\/[^/]+\/api\//, async (route) => {
-        const path = new URL(route.request().url()).pathname
+        const url = new URL(route.request().url())
+        const path = url.pathname
+        const year = Number(url.searchParams.get("year"))
+        const term = Number(url.searchParams.get("semester"))
         let json: unknown = {}
         if (path === "/api/v2/users/info") {
             json = {
@@ -118,7 +125,13 @@ async function setup(page: Page, language = "ko") {
                 interestedDepartments: [],
             }
         } else if (path === "/api/v2/semesters") {
-            json = { semesters: [{ ...semester, semester: 1 }, semester] }
+            json = {
+                semesters: [
+                    { ...semester, year: 2025 },
+                    { ...semester, semester: 1 },
+                    semester,
+                ],
+            }
         } else if (path === "/api/v2/semesters/current") json = semester
         else if (path === "/api/v2/friends") {
             json = { friends, checkedAt: new Date().toISOString() }
@@ -134,18 +147,33 @@ async function setup(page: Page, language = "ko") {
                 timetableItems: [{ kind: "lecture", data: lectures[4] }],
             }
         } else if (/^\/api\/v2\/friends\/\d+\/timetables$/.test(path)) {
-            const term = Number(
-                new URL(route.request().url()).searchParams.get("semester"),
-            )
             json = {
-                timetables: savedTimetables.filter((table) => table.semester === term),
+                timetables: savedTimetables.filter(
+                    (table) => table.year === year && table.semester === term,
+                ),
             }
         } else if (/^\/api\/v2\/friends\/\d+\/timetables\/my-timetable$/.test(path)) {
-            json = { lectures: [], timetableItems: [] }
+            json = {
+                lectures: [academicLecture],
+                timetableItems: [{ kind: "lecture", data: academicLecture }],
+            }
+        } else if (/^\/api\/v2\/friends\/\d+\/timetables\/43$/.test(path)) {
+            json = {
+                timetableItems: [
+                    {
+                        kind: "lecture",
+                        data: lecture(81, "지난 학기 공유 수업", [0], 600, 690),
+                    },
+                ],
+            }
         } else if (/^\/api\/v2\/friends\/\d+\/timetables\/42$/.test(path)) {
             json = { lectures, timetableItems: items }
         } else if (path === "/api/v2/timetables") {
-            json = { timetables: savedTimetables }
+            json = {
+                timetables: savedTimetables.filter(
+                    (table) => table.year === year && table.semester === term,
+                ),
+            }
         } else if (path.endsWith("/overlaps")) {
             json = {
                 sameLecture: [{ ...friends[1], timetable: { ...semester, id: 42 } }],
@@ -185,10 +213,11 @@ async function setup(page: Page, language = "ko") {
         await route.fulfill({ json })
     })
     await page.goto("/friends?friendId=7&year=2026&semester=3&timetableId=42")
-    await expect(page.getByRole("tab", { name: "시간표 1" })).toHaveAttribute(
-        "aria-selected",
-        "true",
-    )
+    await expect(
+        page.getByRole("tab", {
+            name: language === "en" ? "2026 Fall" : "2026 가을학기",
+        }),
+    ).toHaveAttribute("aria-selected", "true")
     await expect(page.locator("[data-friend-overlap=true]")).toHaveCount(3)
 }
 
@@ -217,6 +246,42 @@ async function expectSeparateLabelAndTitle(tile: Locator) {
     )
 }
 
+test("semester tabs open one shared timetable per term and fall back to academic enrollment", async ({
+    page,
+}) => {
+    await page.setViewportSize({ width: 390, height: 844 })
+    await setup(page)
+    await page.goto("/friends?friendId=7")
+    await expect(page.getByRole("tab")).toHaveText([
+        "2026 가을학기",
+        "2026 봄학기",
+        "2025 가을학기",
+    ])
+    await expect(page.getByRole("tab", { selected: true })).toHaveText("2026 가을학기")
+    await expect(
+        page.getByRole("button", { name: "이전 학기", exact: true }),
+    ).toHaveCount(0)
+    await expect(page.locator(".custom-block-tile").first()).toBeVisible()
+
+    await page.getByRole("tab", { name: "2025 가을학기" }).click()
+    await expect(page).toHaveURL(/year=2025&semester=3/)
+    await expect(page.locator("[data-lecture-id='81'] .lecture-tile")).toBeVisible()
+    await expect(page.locator(".custom-block-tile")).toHaveCount(0)
+    await expect(page.getByRole("tab", { selected: true })).toHaveText("2025 가을학기")
+    await page.reload()
+    await expect(page.getByRole("tab", { name: "2025 가을학기" })).toBeInViewport()
+    await expect(page.locator("[data-lecture-id='81'] .lecture-tile")).toBeVisible()
+
+    await page.getByRole("tab", { name: "2026 봄학기" }).click()
+    await expect(page.locator("[data-lecture-id='80'] .lecture-tile")).toBeVisible()
+    await expect(page.locator("[data-lecture-id='81'] .lecture-tile")).toHaveCount(0)
+    await expect(page.getByRole("tab", { selected: true })).toHaveText("2026 봄학기")
+    await expectNoHorizontalOverflow(page)
+    await page.goBack()
+    await expect(page.getByRole("tab", { selected: true })).toHaveText("2025 가을학기")
+    await expect(page.locator("[data-lecture-id='81'] .lecture-tile")).toBeVisible()
+})
+
 test("desktop matches the friends layout and exact-lecture overlap treatment", async ({
     page,
 }) => {
@@ -237,7 +302,7 @@ test("desktop matches the friends layout and exact-lecture overlap treatment", a
     const friendRow = page.getByRole("button", { name: /^김희진 / })
     await expect(friendRow).toHaveCSS("height", "46px")
     await expect(friendRow).toHaveCSS("border-radius", "6px")
-    const tab = await page.getByRole("tab", { name: "시간표 1" }).boundingBox()
+    const tab = await page.getByRole("tab", { name: "2026 가을학기" }).boundingBox()
     expect(tab?.height).toBe(34)
     await page.locator("[data-lecture-id='7'] .lecture-tile").first().click()
     await expect(page.getByText("기본 개념부터", { exact: false })).toBeVisible()
@@ -270,9 +335,9 @@ test("desktop matches the friends layout and exact-lecture overlap treatment", a
         "opacity",
         "0.5",
     )
-    await page.getByRole("button", { name: "이전 학기", exact: true }).click()
+    await page.getByRole("tab", { name: "2026 봄학기", exact: true }).click()
     await expect(page).toHaveURL(/semester=1/)
-    await expect(page.getByRole("tab", { name: "수강 시간표" })).toHaveAttribute(
+    await expect(page.getByRole("tab", { name: "2026 봄학기" })).toHaveAttribute(
         "aria-selected",
         "true",
     )
@@ -305,7 +370,7 @@ for (const viewport of [
         await friendDialog.getByRole("button", { name: /^김교수 / }).click()
         await expect(friendDialog).toHaveCount(0)
         await expect(page).toHaveURL(/friendId=8/)
-        await page.getByRole("tab", { name: "시간표 1" }).click()
+        await page.getByRole("tab", { name: "2026 가을학기" }).click()
         await page.locator("[data-lecture-id='7'] .lecture-tile").first().click()
         const lectureDialog = page.getByRole("dialog", { name: "겹강 확인" })
         await expect(lectureDialog).toBeVisible()
@@ -324,7 +389,7 @@ for (const viewport of [
         await expect(customDialog).toContainText("학술문화관 2층")
         await expect(customDialog.getByRole("textbox")).toHaveCount(0)
         await customDialog.getByRole("button", { name: "닫기", exact: true }).click()
-        await page.getByRole("button", { name: "이전 학기", exact: true }).click()
+        await page.getByRole("tab", { name: "2026 봄학기", exact: true }).click()
         await expect(page).toHaveURL(/semester=1/)
         await expectNoHorizontalOverflow(page)
     })

@@ -12,7 +12,7 @@ import Modal from "@/common/components/Modal"
 import StyledDivider from "@/common/components/StyledDivider"
 import TextInput from "@/common/components/search/TextInput"
 import CustomTimeTableGrid from "@/common/components/timetable/CustomTimeTableGrid"
-import { SemesterEnum } from "@/common/enum/semesterEnum"
+import { SemesterEnum, semesterToString } from "@/common/enum/semesterEnum"
 import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
@@ -537,6 +537,21 @@ export default function FriendsPage() {
                         ({ id }) => id === requestedTimetableId,
                     ) ?? friendTimetables.data?.timetables[0]
                 )?.id ?? null)
+    const { query: semestersQuery } = useAPI("GET", "/semesters", {
+        enabled: status === "success" && selectedFriendId !== null,
+    })
+    const friendSemesters = useMemo(() => {
+        const terms = [...(semestersQuery.data?.semesters ?? [])]
+        // Keep older overlap links usable even if their term is absent from the list.
+        const requestedTerm = { year, semester }
+        const allTerms =
+            year > 0 &&
+            !terms.some((term) => term.year === year && term.semester === semester)
+                ? [...terms, requestedTerm]
+                : terms
+        return allTerms.sort((a, b) => b.year - a.year || b.semester - a.semester)
+    }, [semestersQuery.data, year, semester])
+    const selectedTabRef = useRef<HTMLDivElement>(null)
     const [selectedItem, setSelectedItem] = useState<TimetableItem | null>(null)
     const selectedLecture =
         selectedItem?.kind === TimetableItemKind.LECTURE ? selectedItem.data : null
@@ -576,13 +591,26 @@ export default function FriendsPage() {
         setSearchParams(params)
     }
 
-    const handleSelectSemester = (nextYear: number, nextSemester: SemesterEnum) => {
-        const params = new URLSearchParams(searchParams)
-        params.set("year", String(nextYear))
-        params.set("semester", String(nextSemester))
-        params.delete("timetableId")
-        setSearchParams(params, { replace: year < 0 })
-    }
+    const handleSelectSemester = useCallback(
+        (nextYear: number, nextSemester: SemesterEnum) => {
+            const params = new URLSearchParams(searchParams)
+            params.set("year", String(nextYear))
+            params.set("semester", String(nextSemester))
+            params.delete("timetableId")
+            setSearchParams(params, { replace: year < 0 })
+        },
+        [searchParams, setSearchParams, year],
+    )
+
+    useEffect(() => {
+        if (selectedFriendId === null || year >= 0) return
+        const latest = friendSemesters[0]
+        if (latest) handleSelectSemester(latest.year, latest.semester)
+    }, [selectedFriendId, year, friendSemesters, handleSelectSemester])
+
+    useEffect(() => {
+        selectedTabRef.current?.scrollIntoView?.({ block: "nearest", inline: "nearest" })
+    }, [selectedFriendId, year, semester, currentTimetableId, semestersQuery.data])
 
     useEffect(() => {
         if (isTablet && detailOpen) detailActionRef.current?.focus()
@@ -795,10 +823,39 @@ export default function FriendsPage() {
         ownActual.isError,
         timetableItems,
     ])
+    const semesterName = (termYear: number, termSemester: SemesterEnum) =>
+        t("friends.semesterLabel", {
+            year: termYear,
+            semester: semesterToString(termSemester),
+        })
     const timetableName =
-        currentTimetableId === null
-            ? t("friends.actualTimetable")
-            : timetables.find(({ id }) => id === currentTimetableId)?.name || "No Title"
+        selectedFriendId !== null
+            ? semesterName(year, semester)
+            : currentTimetableId === null
+              ? t("friends.actualTimetable")
+              : timetables.find(({ id }) => id === currentTimetableId)?.name || "No Title"
+    const timetableTabs =
+        selectedFriendId !== null
+            ? friendSemesters.map((term) => ({
+                  key: `${term.year}-${term.semester}`,
+                  name: semesterName(term.year, term.semester),
+                  selected: term.year === year && term.semester === semester,
+                  onSelect: () => handleSelectSemester(term.year, term.semester),
+              }))
+            : [
+                  {
+                      key: "academic",
+                      name: t("friends.actualTimetable"),
+                      selected: currentTimetableId === null,
+                      onSelect: () => handleSelectTimetable(null),
+                  },
+                  ...timetables.map((timetable) => ({
+                      key: String(timetable.id),
+                      name: timetable.name || "No Title",
+                      selected: currentTimetableId === timetable.id,
+                      onSelect: () => handleSelectTimetable(timetable.id),
+                  })),
+              ]
 
     const closeAddedModal = () => {
         setAddedFriendName(null)
@@ -870,61 +927,39 @@ export default function FriendsPage() {
                             role="tablist"
                             aria-label={selectedFriend?.name ?? t("friends.myTimetable")}
                         >
-                            {(selectedFriendId === null ||
-                                (friendTimetables.isSuccess &&
-                                    timetables.length === 0)) && (
+                            {timetableTabs.map((tab) => (
                                 <TimetableTab
+                                    key={tab.key}
+                                    buttonRef={tab.selected ? selectedTabRef : undefined}
                                     role="tab"
                                     tabIndex={0}
-                                    aria-selected={currentTimetableId === null}
-                                    type={
-                                        currentTimetableId === null
-                                            ? "selected"
-                                            : "default"
-                                    }
-                                    onClick={() => handleSelectTimetable(null)}
+                                    aria-selected={tab.selected}
+                                    type={tab.selected ? "selected" : "default"}
+                                    onClick={tab.onSelect}
                                     onKeyDown={(event) => {
                                         if (event.key === "Enter" || event.key === " ") {
                                             event.preventDefault()
-                                            handleSelectTimetable(null)
+                                            tab.onSelect()
                                         }
                                     }}
                                 >
-                                    {t("friends.actualTimetable")}
-                                </TimetableTab>
-                            )}
-                            {timetables.map((timetable) => (
-                                <TimetableTab
-                                    key={timetable.id}
-                                    role="tab"
-                                    tabIndex={0}
-                                    aria-selected={currentTimetableId === timetable.id}
-                                    type={
-                                        currentTimetableId === timetable.id
-                                            ? "selected"
-                                            : "default"
-                                    }
-                                    onClick={() => handleSelectTimetable(timetable.id)}
-                                    onKeyDown={(event) => {
-                                        if (event.key === "Enter" || event.key === " ") {
-                                            event.preventDefault()
-                                            handleSelectTimetable(timetable.id)
-                                        }
-                                    }}
-                                >
-                                    {timetable.name || "No Title"}
+                                    {tab.name}
                                 </TimetableTab>
                             ))}
                         </Tabs>
-                        <SemesterButton
-                            variant="outlined"
-                            year={year}
-                            semester={semester}
-                            onChange={handleSelectSemester}
-                        />
+                        {selectedFriendId === null && (
+                            <SemesterButton
+                                variant="outlined"
+                                year={year}
+                                semester={semester}
+                                onChange={handleSelectSemester}
+                            />
+                        )}
                     </TimetableHeader>
                     <TimetablePanel>
-                        {(timetableQuery.isError || friendTimetables.isError) && (
+                        {(timetableQuery.isError ||
+                            friendTimetables.isError ||
+                            (selectedFriendId !== null && semestersQuery.isError)) && (
                             <Typography
                                 type="Small"
                                 color="Highlight.default"
