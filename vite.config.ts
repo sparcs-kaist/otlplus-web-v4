@@ -25,6 +25,10 @@ if (isProduction && sentryAuthToken && sentryProject) {
 
 export default defineConfig({
     base: process.env.VITE_BASE_PATH || "/",
+    cacheDir: process.env.VITE_CACHE_DIR || "node_modules/.vite",
+    optimizeDeps: {
+        entries: ["app/root.tsx", "app/routes/**/*.tsx"],
+    },
     plugins: [
         reactRouter(),
         tsconfigPaths(),
