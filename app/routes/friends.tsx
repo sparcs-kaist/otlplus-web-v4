@@ -518,25 +518,7 @@ export default function FriendsPage() {
     const requestedTimetableId = hasRequestedTerm
         ? positiveInteger(searchParams.get("timetableId"))
         : null
-    const { query: friendTimetables, setParams: setFriendTimetableParams } = useAPI(
-        "GET",
-        `/friends/${selectedFriendId ?? 0}/timetables`,
-        {
-            enabled: status === "success" && selectedFriendId !== null,
-            staleTime: 0,
-            gcTime: 0,
-        },
-    )
-    const currentTimetableId =
-        selectedFriendId === null
-            ? requestedTimetableId
-            : friendTimetables.isError
-              ? null
-              : ((
-                    friendTimetables.data?.timetables.find(
-                        ({ id }) => id === requestedTimetableId,
-                    ) ?? friendTimetables.data?.timetables[0]
-                )?.id ?? null)
+    const currentTimetableId = selectedFriendId === null ? requestedTimetableId : null
     const { query: semestersQuery } = useAPI("GET", "/semesters", {
         enabled: status === "success" && selectedFriendId !== null,
     })
@@ -700,28 +682,11 @@ export default function FriendsPage() {
             currentTimetableId !== null,
     })
 
-    const { query: friendSaved } = useAPI(
+    const { query: friendTimetable, setParams: setFriendTimetableParams } = useAPI(
         "GET",
-        `/friends/${selectedFriendId ?? 0}/timetables/${currentTimetableId ?? 0}`,
+        `/friends/${selectedFriendId ?? 0}/timetables/shared`,
         {
-            enabled:
-                status === "success" &&
-                selectedFriendId !== null &&
-                currentTimetableId !== null,
-            staleTime: 0,
-            gcTime: 0,
-        },
-    )
-
-    const { query: friendActual, setParams: setFriendActualParams } = useAPI(
-        "GET",
-        `/friends/${selectedFriendId ?? 0}/timetables/my-timetable`,
-        {
-            enabled:
-                status === "success" &&
-                selectedFriendId !== null &&
-                friendTimetables.isSuccess &&
-                friendTimetables.data?.timetables.length === 0,
+            enabled: status === "success" && selectedFriendId !== null && year > 0,
             staleTime: 0,
             gcTime: 0,
         },
@@ -750,7 +715,6 @@ export default function FriendsPage() {
             setOwnTimetableParams(params)
         } else {
             setFriendTimetableParams(params)
-            setFriendActualParams(params)
         }
     }, [year, semester, selectedFriendId])
 
@@ -778,25 +742,16 @@ export default function FriendsPage() {
         handleSelectFriend,
     ])
 
-    const timetables =
-        selectedFriendId === null
-            ? (ownTimetables.data?.timetables ?? [])
-            : friendTimetables.isError
-              ? []
-              : (friendTimetables.data?.timetables ?? [])
+    const timetables = ownTimetables.data?.timetables ?? []
     const timetableQuery =
         selectedFriendId !== null
-            ? currentTimetableId === null
-                ? friendActual
-                : friendSaved
+            ? friendTimetable
             : currentTimetableId === null
               ? ownActual
               : ownSaved
-    const timetableItems =
-        timetableQuery.isError ||
-        (selectedFriendId !== null && !friendTimetables.isSuccess)
-            ? []
-            : (timetableQuery.data?.timetableItems ?? [])
+    const timetableItems = timetableQuery.isError
+        ? []
+        : (timetableQuery.data?.timetableItems ?? [])
     const lectures = timetableItems.flatMap((item) =>
         item.kind === TimetableItemKind.LECTURE ? [item.data] : [],
     )
@@ -958,7 +913,6 @@ export default function FriendsPage() {
                     </TimetableHeader>
                     <TimetablePanel>
                         {(timetableQuery.isError ||
-                            friendTimetables.isError ||
                             (selectedFriendId !== null && semestersQuery.isError)) && (
                             <Typography
                                 type="Small"

@@ -101,7 +101,13 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
                 timetables = timetables.filter((timetable) => timetable.id !== id)
                 if (homeId === id) homeId = timetables[0]?.id ?? null
             } else {
-                json = { timetables }
+                json = {
+                    timetables: timetables.map((table) => ({
+                        ...table,
+                        isMain: table.id === homeId,
+                        isShared: false,
+                    })),
+                }
             }
         } else if (path.endsWith("/custom-blocks")) {
             json = { custom_blocks: path.includes("/2/") ? [block] : [] }

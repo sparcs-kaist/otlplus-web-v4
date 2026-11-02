@@ -146,28 +146,23 @@ async function setup(page: Page, language = "ko") {
                 lectures: [lectures[4]],
                 timetableItems: [{ kind: "lecture", data: lectures[4] }],
             }
-        } else if (/^\/api\/v2\/friends\/\d+\/timetables$/.test(path)) {
-            json = {
-                timetables: savedTimetables.filter(
-                    (table) => table.year === year && table.semester === term,
-                ),
-            }
-        } else if (/^\/api\/v2\/friends\/\d+\/timetables\/my-timetable$/.test(path)) {
-            json = {
-                lectures: [academicLecture],
-                timetableItems: [{ kind: "lecture", data: academicLecture }],
-            }
-        } else if (/^\/api\/v2\/friends\/\d+\/timetables\/43$/.test(path)) {
-            json = {
-                timetableItems: [
-                    {
-                        kind: "lecture",
-                        data: lecture(81, "지난 학기 공유 수업", [0], 600, 690),
-                    },
-                ],
-            }
-        } else if (/^\/api\/v2\/friends\/\d+\/timetables\/42$/.test(path)) {
-            json = { lectures, timetableItems: items }
+        } else if (/^\/api\/v2\/friends\/\d+\/timetables\/shared$/.test(path)) {
+            json =
+                year === 2025
+                    ? {
+                          timetableItems: [
+                              {
+                                  kind: "lecture",
+                                  data: lecture(81, "지난 학기 공유 수업", [0], 600, 690),
+                              },
+                          ],
+                      }
+                    : term === 1
+                      ? {
+                            lectures: [academicLecture],
+                            timetableItems: [{ kind: "lecture", data: academicLecture }],
+                        }
+                      : { lectures, timetableItems: items }
         } else if (path === "/api/v2/timetables") {
             json = {
                 timetables: savedTimetables.filter(

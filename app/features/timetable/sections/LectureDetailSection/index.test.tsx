@@ -226,14 +226,8 @@ describe("timetable lecture friend overlaps", () => {
                 expect.any(Object),
             ])
             for (const [name, target] of [
-                [
-                    "Same section 101",
-                    "/friends?friendId=11&year=2026&semester=3&timetableId=42",
-                ],
-                [
-                    "Different section",
-                    "/friends?friendId=12&year=2026&semester=3&timetableId=43",
-                ],
+                ["Same section 101", "/friends?friendId=11&year=2026&semester=3"],
+                ["Different section", "/friends?friendId=12&year=2026&semester=3"],
                 ["Previous semester", "/friends?friendId=13&year=2025&semester=1"],
             ] as const) {
                 const friendButton = screen.getByRole("button", { name })

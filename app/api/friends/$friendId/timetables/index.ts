@@ -7,4 +7,6 @@ export const GETRequest = z.object({
     year: z.number().int(),
     semester: z.enum(SemesterEnum),
 })
-export const GETResponse = z.object({ timetables: z.array(TimetablesSchema) })
+export const GETResponse = z.object({
+    timetables: z.array(TimetablesSchema.omit({ isMain: true, isShared: true })),
+})

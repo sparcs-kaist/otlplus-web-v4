@@ -198,7 +198,7 @@ describe("friend lecture details", () => {
         }
         fireEvent.click(friendButton)
         expect(screen.getByTestId("location")).toHaveTextContent(
-            "/friends?friendId=2&year=2025&semester=3&timetableId=42",
+            "/friends?friendId=2&year=2025&semester=3",
         )
     })
 
@@ -218,7 +218,7 @@ describe("friend lecture details", () => {
         expect(button).toHaveAttribute("title", "friends.sameLecture")
         fireEvent.click(button!)
         expect(screen.getByTestId("location")).toHaveTextContent(
-            "/friends?friendId=2&year=2025&semester=3&timetableId=42",
+            "/friends?friendId=2&year=2025&semester=3",
         )
     })
 

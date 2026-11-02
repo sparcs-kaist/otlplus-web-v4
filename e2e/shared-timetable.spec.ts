@@ -28,7 +28,7 @@ test("selects one shared timetable per semester independently of the main timeta
             const request = route.request()
             const url = new URL(request.url())
             const path = url.pathname.replace("/api/v2", "")
-            requests.push(path)
+            requests.push(`${request.method()} ${path}`)
             const method = request.method()
             const term =
                 method === "PATCH"
@@ -91,7 +91,13 @@ test("selects one shared timetable per semester independently of the main timeta
                         if (selected === id) shared.set(semester, null)
                 }
                 json = {
-                    timetables: timetables.filter((table) => table.semester === term),
+                    timetables: timetables
+                        .filter((table) => table.semester === term)
+                        .map((table) => ({
+                            ...table,
+                            isMain: table.id === homeId,
+                            isShared: table.id === shared.get(term),
+                        })),
                 }
             } else if (path === "/friends") {
                 json = {
@@ -100,16 +106,12 @@ test("selects one shared timetable per semester independently of the main timeta
                         { id: 7, name: "친구", isFavorite: false, hasScheduleNow: false },
                     ],
                 }
-            } else if (path === "/friends/7/timetables") {
+            } else if (path === "/friends/7/timetables/shared") {
                 json = {
-                    timetables: timetables.filter(
-                        (table) => table.id === shared.get(term),
-                    ),
+                    lectures: [],
+                    timetableItems:
+                        shared.get(term) == null ? [] : [{ kind: "custom", data: block }],
                 }
-            } else if (path === "/friends/7/timetables/my-timetable") {
-                json = { lectures: [], timetableItems: [] }
-            } else if (/^\/friends\/7\/timetables\/\d+$/.test(path)) {
-                json = { lectures: [], timetableItems: [{ kind: "custom", data: block }] }
             } else if (path.startsWith("/timetables/")) {
                 json = { lectures: [], timetableItems: [] }
             } else if (path.includes("/lectures") || path.includes("/wishlist")) {
@@ -179,6 +181,8 @@ test("selects one shared timetable per semester independently of the main timeta
     page.once("dialog", (dialog) => dialog.accept())
     await share.click()
     await expect(share).toBeEnabled()
+    expect(requests).not.toContain("GET /timetables/home")
+    expect(requests).not.toContain("GET /timetables/shared")
     expect(shared.get(3)).toBe(1)
     rejectShare = false
     await share.click()
@@ -225,7 +229,7 @@ test("selects one shared timetable per semester independently of the main timeta
         0,
     )
     await expect(page.locator(".block-title", { hasText: "공유 일정" })).toBeVisible()
-    expect(requests).not.toContain("/friends/7/timetables/my-timetable")
+    expect(requests).not.toContain("GET /friends/7/timetables/my-timetable")
     await page.goto("/timetable")
     await page.getByText("시간표 2", { exact: true }).click()
     await page
@@ -241,6 +245,8 @@ test("selects one shared timetable per semester independently of the main timeta
     await expect(
         page.getByRole("tab", { name: "2026 가을학기", exact: true }),
     ).toHaveAttribute("aria-selected", "true")
-    expect(requests).toContain("/friends/7/timetables/my-timetable")
+    expect(requests).toContain("GET /friends/7/timetables/shared")
+    expect(requests).not.toContain("GET /friends/7/timetables")
+    expect(requests).not.toContain("GET /friends/7/timetables/my-timetable")
     await expect(page.locator(".block-title", { hasText: "공유 일정" })).toHaveCount(0)
 })

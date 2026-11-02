@@ -241,7 +241,7 @@ export default function Timetable() {
     const { query: timetables, setParams: setTimetablesParams } = useAPI(
         "GET",
         "/timetables",
-        { enabled: status === "success" },
+        { enabled: status === "success", staleTime: 0 },
     )
 
     const [nonLoginTimetable, setNonLoginTimetable] = useState<TimetableItem[]>([])
@@ -255,15 +255,13 @@ export default function Timetable() {
         "/timetables/my-timetable",
         { enabled: status === "success" },
     )
-    const { query: homeTimetable, setParams: setHomeTimetableParams } = useAPI(
-        "GET",
-        "/timetables/home",
-        { enabled: status === "success", staleTime: 0 },
-    )
     const homeTimetableId =
-        homeTimetable.data?.year === year && homeTimetable.data.semester === semesterEnum
-            ? homeTimetable.data.timetableId
-            : null
+        timetables.data?.timetables.find(
+            (timetable) =>
+                timetable.year === year &&
+                timetable.semester === semesterEnum &&
+                timetable.isMain,
+        )?.id ?? null
 
     const currentTimetableItems = useMemo(
         () =>
@@ -330,7 +328,6 @@ export default function Timetable() {
         if (year !== -1) {
             setMyTimetableParams({ year: year, semester: semesterEnum })
             setTimetablesParams({ year: year, semester: semesterEnum })
-            setHomeTimetableParams({ year, semester: semesterEnum })
         }
         setNonLoginTimetable([])
     }, [year, semesterEnum])

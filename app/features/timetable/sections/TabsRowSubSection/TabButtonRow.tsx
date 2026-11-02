@@ -434,7 +434,6 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
             }
             timetables.refetch()
             void queryClient.invalidateQueries({ queryKey: [queryKeys.homeTimetable] })
-            void queryClient.invalidateQueries({ queryKey: ["/timetables/shared"] })
         },
     })
     const { requestFunction: changeTimetableMetaData } = useAPI("PATCH", "/timetables", {
@@ -444,7 +443,10 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
     })
     const { mutation: setHomeTimetable } = useAPI("PATCH", "/timetables/home", {
         onSuccess: () =>
-            queryClient.invalidateQueries({ queryKey: [queryKeys.homeTimetable] }),
+            Promise.all([
+                queryClient.invalidateQueries({ queryKey: ["/timetables"] }),
+                queryClient.invalidateQueries({ queryKey: [queryKeys.homeTimetable] }),
+            ]),
     })
     const isSettingHome = createTimetable.isPending || setHomeTimetable.isPending
 
@@ -457,30 +459,20 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
         }
     }
 
-    const { query: sharedTimetable, setParams: setSharedParams } = useAPI(
-        "GET",
-        "/timetables/shared",
-        { enabled: status === "success", staleTime: 0 },
-    )
-    useEffect(() => {
-        if (year >= 0) setSharedParams({ year, semester })
-    }, [year, semester, setSharedParams])
-    const isSharedSelectionLoaded =
-        sharedTimetable.isSuccess &&
-        sharedTimetable.data?.year === year &&
-        sharedTimetable.data.semester === semester
-    const sharedTimetableId = isSharedSelectionLoaded
-        ? sharedTimetable.data.timetableId
-        : null
+    const isSharedSelectionLoaded = timetables.isSuccess
+    const sharedTimetableId =
+        timetables.data?.timetables.find(
+            (timetable: Timetables) =>
+                timetable.year === year &&
+                timetable.semester === semester &&
+                timetable.isShared,
+        )?.id ?? null
     const isAcademicShared = isSharedSelectionLoaded && sharedTimetableId === null
     const { mutation: setSharedTimetable } = useAPI("PATCH", "/timetables/shared", {
-        onSuccess: () =>
-            queryClient.invalidateQueries({ queryKey: ["/timetables/shared"] }),
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/timetables"] }),
     })
     const isSettingShared =
-        setSharedTimetable.isPending ||
-        !isSharedSelectionLoaded ||
-        sharedTimetable.isFetching
+        setSharedTimetable.isPending || !isSharedSelectionLoaded || timetables.isFetching
     const handleSetShared = async (timetableId: number | null) => {
         if (isSettingShared || timetableId === sharedTimetableId) return
         try {
