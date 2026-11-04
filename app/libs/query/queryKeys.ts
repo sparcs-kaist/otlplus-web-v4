@@ -5,6 +5,7 @@ export const queryKeys = {
     timetableDetail: (timetableId: number): `/timetables/${number}` =>
         `/timetables/${timetableId}`,
     myTimetable: "/timetables/my-timetable",
+    homeTimetable: "/timetables/home",
     userInfo: "/users/info",
     userLectures: (userId: number) => `/users/${userId}/lectures`,
     userWishlist: (userId: number) => `/users/${userId}/wishlist`,

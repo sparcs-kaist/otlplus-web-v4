@@ -19,6 +19,7 @@ import CustomBlockSection from "@/features/timetable/sections/CustomBlockSection
 import LectureDetailSection from "@/features/timetable/sections/LectureDetailSection"
 import LectureListSection from "@/features/timetable/sections/LectureListSection"
 import TabButtonRow from "@/features/timetable/sections/TabsRowSubSection/TabButtonRow"
+import getSemesterTimetables from "@/features/timetable/sections/TabsRowSubSection/getSemesterTimetables"
 import TimetableInfoSection from "@/features/timetable/sections/TimetableInfoSection"
 import UtilButtonsSubSection from "@/features/timetable/sections/TimetableInfoSection/UtilButtonsSubSection"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
@@ -250,6 +251,15 @@ export default function Timetable() {
         "/timetables/my-timetable",
         { enabled: status === "success" },
     )
+    const { query: homeTimetable, setParams: setHomeTimetableParams } = useAPI(
+        "GET",
+        "/timetables/home",
+        { enabled: status === "success", staleTime: 0 },
+    )
+    const homeTimetableId =
+        homeTimetable.data?.year === year && homeTimetable.data.semester === semesterEnum
+            ? homeTimetable.data.timetableId
+            : null
 
     const currentTimetableLectures =
         status !== "success"
@@ -320,6 +330,7 @@ export default function Timetable() {
         if (year !== -1) {
             setMyTimetableParams({ year: year, semester: semesterEnum })
             setTimetablesParams({ year: year, semester: semesterEnum })
+            setHomeTimetableParams({ year, semester: semesterEnum })
         }
         setNonLoginTimetable([])
     }, [year, semesterEnum])
@@ -364,10 +375,13 @@ export default function Timetable() {
         addLectures,
         removeLectures,
         timetableIds: [
+            ...getSemesterTimetables(
+                timetables.data?.timetables ?? [],
+                year,
+                semesterEnum,
+                homeTimetableId,
+            ).map((timetable) => timetable.id),
             null,
-            ...(timetables.data?.timetables
-                .sort((a, b) => a.timeTableOrder - b.timeTableOrder)
-                .map((t) => t.id) || []),
         ],
         isLoggedIn: status === "success",
         changeSemester,
@@ -409,6 +423,7 @@ export default function Timetable() {
                         <TabButtonRow
                             timeTableLectures={currentTimetableLectures}
                             timetablesQuery={timetables}
+                            homeTimetableId={homeTimetableId}
                         />
                         <Block
                             direction="column"
@@ -574,6 +589,7 @@ export default function Timetable() {
                             <TabButtonRow
                                 timeTableLectures={currentTimetableLectures}
                                 timetablesQuery={timetables}
+                                homeTimetableId={homeTimetableId}
                             />
                             <Block
                                 direction={isLaptop ? "column" : "row"}
