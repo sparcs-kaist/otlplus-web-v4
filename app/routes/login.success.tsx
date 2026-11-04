@@ -2,9 +2,10 @@ import { useEffect, useRef } from "react"
 
 import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
-import { useNavigate } from "react-router-dom"
+import { useLocation, useNavigate } from "react-router-dom"
 
 import type { GETUserInfoResponse } from "@/api/users/info"
+import DevSsoLoginForm from "@/features/account/DevSsoLoginForm"
 import { axiosClient } from "@/libs/axios"
 import { DEFAULT_DOCUMENT_LANGUAGE } from "@/libs/i18n/resolveDocumentLanguage"
 import { identifyUser, trackEvent } from "@/libs/mixpanel"
@@ -14,6 +15,8 @@ import logger from "@/utils/logger"
 
 export default function LoginSuccessPage() {
     const navigate = useNavigate()
+    const { hash } = useLocation()
+    const devLogin = new URLSearchParams(hash.substring(1)).get("devLogin") === "1"
     const qc = useQueryClient()
     const { i18n } = useTranslation()
     const isMounted = useRef(true)
@@ -22,8 +25,8 @@ export default function LoginSuccessPage() {
         isMounted.current = true
 
         const handleLoginSuccess = async () => {
-            const hash = window.location.hash.substring(1)
-            const params = new URLSearchParams(hash)
+            if (devLogin) return
+            const params = new URLSearchParams(hash.substring(1))
             const accessToken = params.get("accessToken")
             const refreshToken = params.get("refreshToken")
             const lang = i18n.resolvedLanguage || DEFAULT_DOCUMENT_LANGUAGE
@@ -36,8 +39,7 @@ export default function LoginSuccessPage() {
 
                 await clearQueryCache()
 
-                qc.removeQueries({ queryKey: [queryKeys.userInfo] })
-                qc.removeQueries({ queryKey: [queryKeys.timetables] })
+                qc.clear()
 
                 await qc.prefetchQuery({
                     queryKey: [queryKeys.userInfo, null, lang, "/api/v2"],
@@ -124,7 +126,18 @@ export default function LoginSuccessPage() {
         return () => {
             isMounted.current = false
         }
-    }, [navigate, qc, i18n.resolvedLanguage])
+    }, [navigate, qc, i18n.resolvedLanguage, hash, devLogin])
+
+    if (devLogin) {
+        return (
+            <DevSsoLoginForm
+                onSuccess={(tokens) => {
+                    const params = new URLSearchParams(tokens)
+                    navigate(`/login/success#${params}`, { replace: true })
+                }}
+            />
+        )
+    }
 
     return null
 }
