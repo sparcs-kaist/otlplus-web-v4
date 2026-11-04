@@ -39,17 +39,15 @@ export default function SemesterButton({
     const theme = useTheme()
 
     const { query: semestersRequest } = useAPI("GET", "/semesters")
+    const { query: currentSemesterRequest } = useAPI("GET", "/semesters/current")
 
     useEffect(() => {
-        const semesters = semestersRequest.data?.semesters
-        if (semesters && semesters.length > 0) {
-            const lastSemester = semesters[semesters.length - 1]
-            if (lastSemester) {
-                setYear(lastSemester.year)
-                setSemester(lastSemester.semester)
-            }
+        const currentSemester = currentSemesterRequest.data
+        if (currentSemester) {
+            setYear(currentSemester.year)
+            setSemester(currentSemester.semester)
         }
-    }, [semestersRequest.data])
+    }, [currentSemesterRequest.data])
 
     const { previousSemester, nextSemester } = useMemo(() => {
         const semesters = semestersRequest.data?.semesters
