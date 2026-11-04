@@ -176,12 +176,24 @@ interface TabButtonRowProps {
     duplicateTimetable: () => Promise<void>
     isCloning: boolean
     timetablesQuery: any
+    needTimetableAddition?: boolean
+    needTimetableCopy?: boolean
+    needTimetableDeletion?: boolean
+    needTimetableNameChange?: boolean
+    needTimetableMovable?: boolean
+    defaultTimetableName?: string
 }
 
 const TabButtonRow: React.FC<TabButtonRowProps> = ({
     duplicateTimetable,
     isCloning,
     timetablesQuery: timetables,
+    needTimetableAddition = true,
+    needTimetableCopy = true,
+    needTimetableDeletion = true,
+    needTimetableNameChange = true,
+    needTimetableMovable = true,
+    defaultTimetableName = null,
 }) => {
     const { t } = useTranslation()
     const queryClient = useQueryClient()
@@ -383,9 +395,9 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                         }
                         style={{ paddingTop: 4, paddingBottom: 3.5 }}
                     >
-                        {t("timetable.myTimetable")}
+                        {defaultTimetableName || t("timetable.myTimetable")}
                     </Typography>
-                    {currentTimetableId === null && status === "success" && (
+                    {needTimetableCopy && currentTimetableId === null && status === "success" && (
                         <IconButton
                             onClick={(e) => {
                                 e.stopPropagation()
@@ -403,7 +415,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                         </IconButton>
                     )}
                 </TabButton>
-                {status === "success" && (
+                {needTimetableMovable && status === "success" && (
                     <TabRow direction="row" gap={3} flex="1 1 auto" onWheel={onWheel}>
                         <DndContext
                             sensors={sensors}
@@ -456,25 +468,28 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                                 ))}
                             </SortableContext>
                         </DndContext>
-                        <TabButton
-                            onClick={() => {
-                                addTimetable({
-                                    year: year,
-                                    semester: semester,
-                                    lectureIds: [],
-                                })
-                            }}
-                        >
-                            <IconButton onClick={(e) => {}} styles={{ padding: 3.75 }}>
-                                <Icon
-                                    size={17.5}
-                                    color={theme.colors.Text.default}
-                                    onClick={() => {}}
+                        {
+                            needTimetableAddition && (<TabButton
+                                    onClick={() => {
+                                        addTimetable({
+                                            year: year,
+                                            semester: semester,
+                                            lectureIds: [],
+                                        })
+                                    }}
                                 >
-                                    <AddIcon />
-                                </Icon>
-                            </IconButton>
-                        </TabButton>
+                                    <IconButton onClick={(e) => {}} styles={{ padding: 3.75 }}>
+                                        <Icon
+                                            size={17.5}
+                                            color={theme.colors.Text.default}
+                                            onClick={() => {}}
+                                        >
+                                            <AddIcon />
+                                        </Icon>
+                                    </IconButton>
+                                </TabButton>)
+                                
+                        }
                     </TabRow>
                 )}
             </FlexWrapper>

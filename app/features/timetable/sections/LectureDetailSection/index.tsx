@@ -102,7 +102,7 @@ interface LectureDetailSectionProps {
 const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
     addLectures,
     removeLectures,
-    onMobileModalClose,
+    onMobileModalClose = null,
     currentTimetableId,
     timetableLectures,
 }) => {
@@ -245,7 +245,7 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                             {selectedItems.length}
                             {t("timetable.numSelected")}
                         </Typography>
-                        {isTablet && (
+                        {(isTablet && onMobileModalClose) && (
                             <IconButton
                                 aria-label="Close selected items"
                                 onClick={onMobileModalClose}
@@ -316,14 +316,14 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                             direction="row"
                             align="center"
                             gap={8}
-                            justify={isTablet ? "space-between" : "center"}
+                            justify={isTablet && onMobileModalClose ? "space-between" : "center"}
                             style={{ width: "100%" }}
                         >
-                            {isTablet && <div style={{ width: 20 }}></div>}
+                            {(isTablet && onMobileModalClose) && <div style={{ width: 20 }}></div>}
                             <Typography type={"Bigger"} color={"Text.default"}>
                                 {selectedLecture.name + selectedLecture.subtitle}
                             </Typography>
-                            {isTablet && (
+                            {(isTablet && onMobileModalClose) && (
                                 <Icon
                                     size={20}
                                     onClick={onMobileModalClose}
