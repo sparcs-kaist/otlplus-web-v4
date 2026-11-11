@@ -3,7 +3,9 @@ import { useEffect, useRef, useState } from "react"
 import styled from "@emotion/styled"
 import ContentCopyIcon from "@mui/icons-material/ContentCopy"
 import DownloadIcon from "@mui/icons-material/Download"
+import RefreshIcon from "@mui/icons-material/Refresh"
 import ShareIcon from "@mui/icons-material/Share"
+import { useQueryClient } from "@tanstack/react-query"
 import { QRCodeCanvas } from "qrcode.react"
 import { useTranslation } from "react-i18next"
 
@@ -84,6 +86,7 @@ export default function FriendInviteModal({
     userName,
 }: FriendInviteModalProps) {
     const { t } = useTranslation()
+    const queryClient = useQueryClient()
     const isMobile = useIsDevice("mobile")
     const [copied, setCopied] = useState(false)
     const [actionError, setActionError] = useState(false)
@@ -92,13 +95,37 @@ export default function FriendInviteModal({
     const [qrBusy, setQrBusy] = useState(false)
     const [qrFeedback, setQrFeedback] = useState<"qrDownloaded" | "qrCopied" | null>(null)
     const [qrError, setQrError] = useState<QrError | null>(null)
+    const [confirmRegenerate, setConfirmRegenerate] = useState(false)
     const { query } = useAPI("GET", "/friends/code", {
         enabled: isOpen,
         staleTime: 0,
         gcTime: 0,
     })
+    const { mutation: regenerate, requestFunction: regenerateCode } = useAPI(
+        "POST",
+        "/friends/code",
+        {
+            retry: false,
+            onMutate: () => queryClient.cancelQueries({ queryKey: ["/friends/code"] }),
+            onSuccess: async (data) => {
+                await queryClient.cancelQueries({ queryKey: ["/friends/code"] })
+                queryClient.setQueriesData({ queryKey: ["/friends/code"] }, data)
+            },
+            // A lost response may still have changed the code; read it instead of rotating again.
+            onError: async () => {
+                await query.refetch()
+            },
+            onSettled: () => setConfirmRegenerate(false),
+        },
+    )
+    const { reset: resetRegenerate } = regenerate
 
-    const code = query.isSuccess ? query.data.code : null
+    useEffect(() => {
+        setConfirmRegenerate(false)
+        resetRegenerate()
+    }, [isOpen, resetRegenerate])
+
+    const code = query.isSuccess && !regenerate.isPending ? query.data.code : null
     const inviteUrl = code
         ? `${new URL("/friends/invite", window.location.origin)}#${code}`
         : ""
@@ -156,10 +183,36 @@ export default function FriendInviteModal({
         }
     }
 
+    const regenerationControls = (
+        <FlexWrapper direction="column" gap={8} align="stretch">
+            <Typography type="Normal" color="Text.default">
+                {t("friends.regenerateConfirm")}
+            </Typography>
+            <FlexWrapper direction="row" gap={8} justify="flex-end">
+                <QrButton
+                    type="button"
+                    disabled={regenerate.isPending}
+                    onClick={() => setConfirmRegenerate(false)}
+                >
+                    {t("friends.cancel")}
+                </QrButton>
+                <QrButton
+                    type="button"
+                    disabled={regenerate.isPending || qrBusy}
+                    onClick={() => regenerateCode({})}
+                >
+                    {t("friends.regenerateCode")}
+                </QrButton>
+            </FlexWrapper>
+        </FlexWrapper>
+    )
+
     return (
         <Modal
             isOpen={isOpen}
-            onClose={onClose}
+            onClose={() => {
+                if (!regenerate.isPending) onClose()
+            }}
             title={t("friends.inviteTitle")}
             fullScreen={isMobile}
         >
@@ -182,15 +235,48 @@ export default function FriendInviteModal({
                         {t("friends.inviteError")}
                     </Typography>
                 )}
+                {regenerate.isPending && (
+                    <Typography type="Normal" color="Text.placeholder" role="status">
+                        {t("friends.regeneratingCode")}
+                    </Typography>
+                )}
+                {regenerate.isError && (
+                    <Typography type="Normal" color="Highlight.default" role="alert">
+                        {t("friends.regenerateError")}
+                    </Typography>
+                )}
+                {regenerate.isSuccess && (
+                    <Typography type="Small" color="Highlight.default" role="status">
+                        {t("friends.regeneratedCode")}
+                    </Typography>
+                )}
+                {confirmRegenerate && regenerationControls}
                 {code && (
                     <>
-                        <Typography
-                            type="BigBold"
-                            color="Text.default"
-                            className="mp-block mp-sensitive"
-                        >
-                            {t("friends.code")}: {code}
-                        </Typography>
+                        <FlexWrapper direction="row" gap={8} justify="space-between">
+                            <Typography
+                                type="BigBold"
+                                color="Text.default"
+                                className="mp-block mp-sensitive"
+                            >
+                                {t("friends.code")}: {code}
+                            </Typography>
+                            {!confirmRegenerate && (
+                                <QrButton
+                                    type="button"
+                                    disabled={qrBusy}
+                                    onClick={() => {
+                                        resetRegenerate()
+                                        setConfirmRegenerate(true)
+                                    }}
+                                >
+                                    <Icon size={16}>
+                                        <RefreshIcon />
+                                    </Icon>
+                                    {t("friends.regenerateCode")}
+                                </QrButton>
+                            )}
+                        </FlexWrapper>
                         <Preview className="mp-block mp-sensitive">
                             {friendInviteMessage(userName, inviteUrl)}
                         </Preview>

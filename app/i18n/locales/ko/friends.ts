@@ -22,8 +22,15 @@ export const friends = {
     invite: "친구 추가 링크 복사",
     inviteTitle: "시간표 친구 초대",
     inviteDescription:
-        "내 친구 코드와 링크는 만료되지 않아요. 시간표를 공유할 친구에게만 보내 주세요.",
+        "내 친구 코드와 링크는 재발급하기 전까지 사용할 수 있어요. 시간표를 공유할 친구에게만 보내 주세요.",
     code: "내 친구 코드",
+    regenerateCode: "코드 재발급",
+    regenerateConfirm:
+        "새 코드를 발급할까요? 기존 코드·링크·QR은 사용할 수 없게 됩니다. 이미 추가한 친구는 유지됩니다.",
+    regeneratingCode: "친구 코드를 재발급하는 중이에요.",
+    regeneratedCode: "새 친구 코드를 발급했어요.",
+    regenerateError:
+        "재발급 결과를 확인하지 못했어요. 아래 코드를 확인하거나 창을 다시 열어 주세요.",
     inviteQr: "친구 추가 링크 QR 코드",
     downloadQr: "QR코드 다운로드",
     copyQr: "QR코드 복사",

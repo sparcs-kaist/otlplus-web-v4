@@ -75,7 +75,7 @@ vi.mock("react-i18next", () => ({
     useTranslation: () => ({ t: (key: string) => key, i18n: { resolvedLanguage: "ko" } }),
 }))
 
-describe("permanent friend code sharing", () => {
+describe("friend code sharing", () => {
     beforeEach(() => {
         vi.clearAllMocks()
         qrMock.loadInLayoutEffect = false
@@ -162,6 +162,98 @@ describe("permanent friend code sharing", () => {
         await screen.findByText("friends.code: K7L4MX")
         return screen.getByRole("img", { name: "friends.inviteQr" })
     }
+
+    it("requires confirmation and updates the code, QR, copy and share together", async () => {
+        await openModal()
+        fireEvent.click(screen.getByRole("button", { name: "friends.regenerateCode" }))
+        expect(screen.getByText("friends.regenerateConfirm")).toBeInTheDocument()
+        fireEvent.click(screen.getByRole("button", { name: "friends.cancel" }))
+        expect(axiosClient.request).toHaveBeenCalledTimes(1)
+
+        let complete!: () => void
+        vi.mocked(axiosClient.request).mockImplementationOnce(
+            () =>
+                new Promise((resolve) => {
+                    complete = () => resolve({ data: { code: "ACDEFH" } })
+                }),
+        )
+        fireEvent.click(screen.getByRole("button", { name: "friends.regenerateCode" }))
+        fireEvent.click(screen.getByRole("button", { name: "friends.regenerateCode" }))
+        await waitFor(() =>
+            expect(
+                screen.getByRole("button", { name: "friends.regenerateCode" }),
+            ).toBeDisabled(),
+        )
+        expect(
+            screen.queryByRole("img", { name: "friends.inviteQr" }),
+        ).not.toBeInTheDocument()
+        fireEvent.click(screen.getByText("friends.copy"))
+        fireEvent.click(screen.getByText("friends.share"))
+        fireEvent.click(screen.getByRole("button", { name: "friends.regenerateCode" }))
+        expect(copyFriendInvite).not.toHaveBeenCalled()
+        expect(shareFriendInvite).not.toHaveBeenCalled()
+        expect(axiosClient.request).toHaveBeenCalledTimes(2)
+        expect(axiosClient.request).toHaveBeenLastCalledWith(
+            expect.objectContaining({
+                method: "POST",
+                url: "/api/v2/friends/code",
+                data: {},
+            }),
+        )
+        await act(async () => complete())
+        await screen.findByText("friends.code: ACDEFH")
+        const url = `${window.location.origin}/friends/invite#ACDEFH`
+        expect(screen.getByRole("img", { name: "friends.inviteQr" })).toHaveAttribute(
+            "data-value",
+            url,
+        )
+        expect(screen.queryByText(/K7L4MX/)).not.toBeInTheDocument()
+        fireEvent.click(screen.getByText("friends.copy"))
+        fireEvent.click(screen.getByText("friends.share"))
+        expect(copyFriendInvite).toHaveBeenCalledWith("구백", url)
+        expect(shareFriendInvite).toHaveBeenCalledWith("구백", url)
+        expect(screen.getByRole("button", { name: "friends.downloadQr" })).toBeDisabled()
+        fireEvent.load(screen.getByTestId("qr-logo"))
+        expect(screen.getByRole("button", { name: "friends.downloadQr" })).toBeEnabled()
+    })
+
+    it.each(["K7L4MX", "ACDEFH"])(
+        "reads the current code (%s) after a failed response without retrying the write",
+        async (code) => {
+            await openModal()
+            vi.mocked(axiosClient.request)
+                .mockRejectedValueOnce(new Error("Response lost"))
+                .mockResolvedValueOnce({ data: { code } })
+            fireEvent.click(
+                screen.getByRole("button", { name: "friends.regenerateCode" }),
+            )
+            fireEvent.click(
+                screen.getByRole("button", { name: "friends.regenerateCode" }),
+            )
+            await screen.findByText("friends.regenerateError")
+            expect(screen.getByText(`friends.code: ${code}`)).toBeInTheDocument()
+            expect(
+                vi
+                    .mocked(axiosClient.request)
+                    .mock.calls.map(([request]) => request.method),
+            ).toEqual(["GET", "POST", "GET"])
+            expect(screen.queryByText("friends.regeneratedCode")).not.toBeInTheDocument()
+        },
+    )
+
+    it("hides the old code if neither regeneration nor recovery can be confirmed", async () => {
+        await openModal()
+        vi.mocked(axiosClient.request).mockRejectedValue(new Error("Offline"))
+        fireEvent.click(screen.getByRole("button", { name: "friends.regenerateCode" }))
+        fireEvent.click(screen.getByRole("button", { name: "friends.regenerateCode" }))
+        await screen.findByText("friends.regenerateError", {}, { timeout: 3000 })
+        expect(screen.queryByText(/K7L4MX/)).not.toBeInTheDocument()
+        expect(
+            screen.queryByRole("img", { name: "friends.inviteQr" }),
+        ).not.toBeInTheDocument()
+        fireEvent.click(screen.getByText("friends.share"))
+        expect(shareFriendInvite).not.toHaveBeenCalled()
+    })
 
     const exportActions = [
         {
