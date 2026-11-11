@@ -17,7 +17,9 @@ import { useAPI } from "@/utils/api/useAPI"
 import professorName from "@/utils/professorName"
 import useUserStore from "@/utils/zustand/useUserStore"
 
-const Content = styled(Typography)<{ overflow: boolean }>`
+const Content = styled(Typography, {
+    shouldForwardProp: (prop) => prop !== "overflow",
+})<{ overflow: boolean }>`
     line-height: 1.5;
     width: 100%;
     white-space: pre-wrap;
@@ -64,23 +66,44 @@ const LikeButtonWrapper = styled(FlexWrapper)<{ nonLogin: boolean }>`
         nonLogin ? theme.colors.Text.disable : theme.colors.Highlight.default};
 `
 
+const SimpleReviewWrapper = styled.button`
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 6px;
+    background: ${({ theme }) => theme.colors.Background.Block.default};
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+
+    &:focus-visible {
+        outline: 2px solid ${({ theme }) => theme.colors.Highlight.default};
+        outline-offset: 2px;
+    }
+`
+
 interface ReviewBlockProps {
     review: Review
     withWrapper?: boolean
     linkToDictionary?: boolean
+    variant?: "default" | "simple"
 }
 
 function ReviewBlock({
     review,
     withWrapper = true,
     linkToDictionary = true,
+    variant = "default",
 }: ReviewBlockProps) {
     const { t } = useTranslation()
     const { status } = useUserStore()
     const navigator = useNavigate()
 
     const { query: userReviewsQuery } = useAPI("GET", `/users/written-reviews`, {
-        enabled: status === "success",
+        enabled: status === "success" && variant === "default",
     })
 
     const { requestFunction } = useAPI("PATCH", `/reviews/${review.id}/liked`, {
@@ -105,6 +128,45 @@ function ReviewBlock({
     }, [userReviewsQuery.data])
 
     if (!review) return null
+
+    if (variant === "simple") {
+        return (
+            <SimpleReviewWrapper
+                type="button"
+                onClick={() => {
+                    if (linkToDictionary) {
+                        navigator(
+                            `/dictionary?courseId=${review.courseId}&professorId=${review.professors[0]?.id ?? ""}`,
+                        )
+                    }
+                }}
+            >
+                <Typography type="Small" color="Text.lighter">
+                    {review.year} {semesterToString(review.semester)}
+                </Typography>
+                <Content
+                    type="Normal"
+                    color="Text.light"
+                    overflow={false}
+                    style={{ lineHeight: 1.25, textAlign: "justify" }}
+                >
+                    {review.content}
+                </Content>
+                <FlexWrapper direction="row" gap={8}>
+                    {[
+                        [t("writeReviews.mySummary.likes"), review.like],
+                        [t("common.grade"), ScoreEnum[review.grade]],
+                        [t("common.load"), ScoreEnum[review.load]],
+                        [t("common.speech"), ScoreEnum[review.speech]],
+                    ].map(([label, value]) => (
+                        <Typography key={label} type="Normal" color="Text.default">
+                            {label} <strong>{value}</strong>
+                        </Typography>
+                    ))}
+                </FlexWrapper>
+            </SimpleReviewWrapper>
+        )
+    }
 
     const likeReview = (e: React.MouseEvent) => {
         e.stopPropagation()

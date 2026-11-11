@@ -112,7 +112,12 @@ export default function LoginSuccessPage() {
                 }
 
                 if (isMounted.current) {
-                    navigate("/", { replace: true })
+                    const next = sessionStorage.getItem("loginNext")
+                    sessionStorage.removeItem("loginNext")
+                    navigate(
+                        next?.startsWith("/") && !next.startsWith("//") ? next : "/",
+                        { replace: true },
+                    )
                 }
             } else if (isMounted.current) {
                 navigate("/", { replace: true })

@@ -46,7 +46,11 @@ export default defineConfig({
     forbidOnly: !!process.env.CI,
     retries: process.env.CI ? 2 : 0,
     workers: process.env.CI ? 1 : undefined,
-    reporter: hasSsoCredentials ? "line" : process.env.CI ? "github" : "html",
+    reporter: hasSsoCredentials
+        ? "line"
+        : process.env.CI
+          ? [["github"], ["html", { open: "never" }]]
+          : "html",
     use: {
         baseURL: localBaseURL,
         trace: "on-first-retry",
@@ -58,12 +62,14 @@ export default defineConfig({
         : [
               {
                   command: "pnpm run dev",
+                  env: { VITE_CACHE_DIR: "node_modules/.vite-e2e" },
                   url: localBaseURL,
                   reuseExistingServer: !process.env.CI,
                   timeout: 120000,
               },
               {
                   command: "pnpm run dev:flags-on",
+                  env: { VITE_CACHE_DIR: "node_modules/.vite-e2e-planner" },
                   url: "http://localhost:5218",
                   reuseExistingServer: !process.env.CI,
                   timeout: 120000,
