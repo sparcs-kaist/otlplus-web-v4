@@ -217,6 +217,37 @@ describe("friend code sharing", () => {
         expect(screen.getByRole("button", { name: "friends.downloadQr" })).toBeEnabled()
     })
 
+    it("allows closing during regeneration and keeps the in-flight result when reopened", async () => {
+        const onClose = vi.fn()
+        const { rerender } = render(
+            <FriendInviteModal isOpen onClose={onClose} userName="구백" />,
+        )
+        await screen.findByText("friends.code: K7L4MX")
+        let complete!: () => void
+        vi.mocked(axiosClient.request).mockImplementationOnce(
+            () =>
+                new Promise((resolve) => {
+                    complete = () => resolve({ data: { code: "ACDEFH" } })
+                }),
+        )
+        fireEvent.click(screen.getByRole("button", { name: "friends.regenerateCode" }))
+        fireEvent.click(screen.getByRole("button", { name: "friends.regenerateCode" }))
+        await screen.findByText("friends.regeneratingCode")
+        fireEvent.click(screen.getByRole("button", { name: "common.search.close" }))
+        expect(onClose).toHaveBeenCalledTimes(1)
+        rerender(<FriendInviteModal isOpen={false} onClose={onClose} userName="구백" />)
+        rerender(<FriendInviteModal isOpen onClose={onClose} userName="구백" />)
+        expect(screen.getByText("friends.regeneratingCode")).toBeInTheDocument()
+        expect(screen.queryByText(/K7L4MX/)).not.toBeInTheDocument()
+        await act(async () => complete())
+        await screen.findByText("friends.code: ACDEFH")
+        expect(
+            vi
+                .mocked(axiosClient.request)
+                .mock.calls.filter(([request]) => request.method === "POST"),
+        ).toHaveLength(1)
+    })
+
     it.each(["K7L4MX", "ACDEFH"])(
         "reads the current code (%s) after a failed response without retrying the write",
         async (code) => {

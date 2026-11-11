@@ -120,11 +120,6 @@ export default function FriendInviteModal({
     )
     const { reset: resetRegenerate } = regenerate
 
-    useEffect(() => {
-        setConfirmRegenerate(false)
-        resetRegenerate()
-    }, [isOpen, resetRegenerate])
-
     const code = query.isSuccess && !regenerate.isPending ? query.data.code : null
     const inviteUrl = code
         ? `${new URL("/friends/invite", window.location.origin)}#${code}`
@@ -211,7 +206,9 @@ export default function FriendInviteModal({
         <Modal
             isOpen={isOpen}
             onClose={() => {
-                if (!regenerate.isPending) onClose()
+                setConfirmRegenerate(false)
+                if (!regenerate.isPending) resetRegenerate()
+                onClose()
             }}
             title={t("friends.inviteTitle")}
             fullScreen={isMobile}
