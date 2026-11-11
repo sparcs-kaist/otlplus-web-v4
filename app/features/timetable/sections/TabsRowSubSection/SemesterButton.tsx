@@ -6,7 +6,7 @@ import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore"
 import NavigateNextIcon from "@mui/icons-material/NavigateNext"
 import { useTranslation } from "react-i18next"
 
-import { SemesterEnum, semesterToString } from "@/common/enum/semesterEnum"
+import { type SemesterEnum, semesterToString } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import { IconButton } from "@/common/primitives/IconButton"
@@ -48,52 +48,37 @@ export default function SemesterButton({
 
     const { query: semestersRequest } = useAPI("GET", "/semesters")
 
+    const { query: currentSemesterRequest } = useAPI("GET", "/semesters/current")
+
     useEffect(() => {
         if (year >= 0) return
+        const currentSemester = currentSemesterRequest.data
+        if (currentSemester) {
+            onChange(currentSemester.year, currentSemester.semester)
+        }
+    }, [currentSemesterRequest.data, year, onChange])
+
+    const { previousSemester, nextSemester } = useMemo(() => {
         const semesters = semestersRequest.data?.semesters
-        if (semesters && semesters.length > 0) {
-            const lastSemester = semesters[semesters.length - 1]
-            if (lastSemester) {
-                onChange(lastSemester.year, lastSemester.semester)
-            }
+        const currentIndex = semesters?.findIndex(
+            (item) => item.year === year && item.semester === semester,
+        )
+        if (currentIndex === undefined || currentIndex === -1) {
+            return { previousSemester: undefined, nextSemester: undefined }
         }
-    }, [semestersRequest.data, year, onChange])
-
-    const { isFirstSemester, isLastSemester } = useMemo(() => {
-        if (!semestersRequest.data) {
-            return { isFirstSemester: false, isLastSemester: false }
-        }
-        const semestersList = semestersRequest.data.semesters
-        const firstSemester = semestersList[0]
-        const lastSemester = semestersList[semestersList.length - 1]
-
-        if (!firstSemester || !lastSemester) {
-            return { isFirstSemester: true, isLastSemester: true }
-        }
-
         return {
-            isFirstSemester:
-                year === firstSemester.year && semester === firstSemester.semester,
-            isLastSemester:
-                year === lastSemester.year && semester === lastSemester.semester,
+            previousSemester: semesters?.[currentIndex - 1],
+            nextSemester: semesters?.[currentIndex + 1],
         }
     }, [semestersRequest.data, year, semester])
+    const isFirstSemester = !previousSemester
+    const isLastSemester = !nextSemester
 
     const onClickPreviousSemester = () => {
-        if (isFirstSemester) return
-        if (semester === SemesterEnum.SPRING) {
-            onChange(year - 1, SemesterEnum.FALL)
-        } else {
-            onChange(year, SemesterEnum.SPRING)
-        }
+        if (previousSemester) onChange(previousSemester.year, previousSemester.semester)
     }
     const onClickNextSemester = () => {
-        if (isLastSemester) return
-        if (semester === SemesterEnum.FALL) {
-            onChange(year + 1, SemesterEnum.SPRING)
-        } else {
-            onChange(year, SemesterEnum.FALL)
-        }
+        if (nextSemester) onChange(nextSemester.year, nextSemester.semester)
     }
 
     return (
