@@ -209,21 +209,23 @@ describe("mobile friend timetable navigation", () => {
                             ? friendsResponse
                             : path === "/semesters"
                               ? semesters
-                              : path === "/users/1/timetables"
-                                ? ownAllSavedResponse
-                                : path === "/timetables/my-timetable"
-                                  ? ownActualResponse
-                                  : path.endsWith("my-timetable")
-                                    ? lectures
-                                    : path === "/friends/7/timetables/shared"
-                                      ? year === "2024"
-                                          ? earlierLectures
-                                          : friendSharedResponse
-                                      : path.endsWith("/42")
-                                        ? savedLectures
-                                        : path.endsWith("/43")
-                                          ? earlierLectures
-                                          : timetablesResponse,
+                              : path === "/semesters/current"
+                                ? { year: 2026, semester: 3 }
+                                : path === "/users/1/timetables"
+                                  ? ownAllSavedResponse
+                                  : path === "/timetables/my-timetable"
+                                    ? ownActualResponse
+                                    : path.endsWith("my-timetable")
+                                      ? lectures
+                                      : path === "/friends/7/timetables/shared"
+                                        ? year === "2024"
+                                            ? earlierLectures
+                                            : friendSharedResponse
+                                        : path.endsWith("/42")
+                                          ? savedLectures
+                                          : path.endsWith("/43")
+                                            ? earlierLectures
+                                            : timetablesResponse,
                     isSuccess: true,
                     isFetching: false,
                     isPending: false,
@@ -1054,7 +1056,7 @@ describe("mobile friend timetable navigation", () => {
         ).toBeInTheDocument()
     })
 
-    it("falls back to the latest official timetable for invalid link parameters", () => {
+    it("falls back to the current official timetable for invalid link parameters", () => {
         renderPage("/friends?friendId=-7&year=invalid&semester=9&timetableId=-42")
 
         expect(parameterSetters.get("/timetables/my-timetable")).toHaveBeenLastCalledWith(

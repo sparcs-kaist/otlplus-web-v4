@@ -454,3 +454,30 @@ it("discards a completed request after the signed-in account changes", async () 
     )
     expect(result.current.editor.canUndo).toBe(false)
 })
+
+it("navigates seasonal semesters in API order and stops at the boundaries", async () => {
+    const { result, queryClient, rerender } = await setup()
+    await act(async () => {
+        queryClient.setQueriesData(
+            { queryKey: ["/semesters"] },
+            {
+                semesters: [1, 2, 3, 4].map((semester) => ({ year: 2026, semester })),
+            },
+        )
+    })
+    rerender()
+    act(() => result.current.editor.changeSemester("prev"))
+    expect(useTimetableUIStore.getState().semesterEnum).toBe(1)
+    act(() => result.current.editor.changeSemester("next"))
+    expect(useTimetableUIStore.getState()).toMatchObject({
+        year: 2026,
+        semesterEnum: 2,
+        currentTimetableId: null,
+    })
+    act(() => result.current.editor.changeSemester("next"))
+    expect(useTimetableUIStore.getState().semesterEnum).toBe(3)
+    act(() => result.current.editor.changeSemester("next"))
+    expect(useTimetableUIStore.getState().semesterEnum).toBe(4)
+    act(() => result.current.editor.changeSemester("next"))
+    expect(useTimetableUIStore.getState().semesterEnum).toBe(4)
+})
