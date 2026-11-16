@@ -3,7 +3,6 @@ import { useCallback, useRef, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 
 import { LectureActionEnum } from "@/common/enum/lectureActionEnum"
-import { SemesterEnum } from "@/common/enum/semesterEnum"
 import type { Lecture } from "@/common/schemas/lecture"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
 import { trackEvent } from "@/libs/mixpanel"
@@ -89,43 +88,19 @@ export function useTimetableEditor({
 
     const changeSemester = useCallback(
         (direction: "prev" | "next") => {
-            let isFirstSemester = false
-            let isLastSemester = false
+            const semesters = semestersRequest.data?.semesters
+            const currentIndex = semesters?.findIndex(
+                (item) => item.year === year && item.semester === semesterEnum,
+            )
+            const adjacentSemester =
+                currentIndex === undefined || currentIndex === -1
+                    ? undefined
+                    : semesters?.[currentIndex + (direction === "prev" ? -1 : 1)]
+            if (!adjacentSemester) return
 
-            if (semestersRequest.data && semestersRequest.data.semesters.length > 0) {
-                const semestersList = semestersRequest.data.semesters
-                const firstSemester = semestersList[0]
-                const lastSemester = semestersList[semestersList.length - 1]
-
-                if (firstSemester && lastSemester) {
-                    isFirstSemester =
-                        year === firstSemester.year &&
-                        semesterEnum === firstSemester.semester
-                    isLastSemester =
-                        year === lastSemester.year &&
-                        semesterEnum === lastSemester.semester
-                }
-            }
-
-            if (direction === "prev") {
-                if (isFirstSemester) return
-                if (semesterEnum === SemesterEnum.SPRING) {
-                    setSemesterEnum(SemesterEnum.FALL)
-                    setYear(year - 1)
-                } else {
-                    setSemesterEnum(SemesterEnum.SPRING)
-                }
-                setCurrentTimetableId(null)
-            } else {
-                if (isLastSemester) return
-                if (semesterEnum === SemesterEnum.FALL) {
-                    setSemesterEnum(SemesterEnum.SPRING)
-                    setYear(year + 1)
-                } else {
-                    setSemesterEnum(SemesterEnum.FALL)
-                }
-                setCurrentTimetableId(null)
-            }
+            setYear(adjacentSemester.year)
+            setSemesterEnum(adjacentSemester.semester)
+            setCurrentTimetableId(null)
         },
         [
             semestersRequest.data,

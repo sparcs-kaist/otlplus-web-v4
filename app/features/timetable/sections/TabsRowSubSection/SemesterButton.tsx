@@ -5,7 +5,7 @@ import styled from "@emotion/styled"
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore"
 import NavigateNextIcon from "@mui/icons-material/NavigateNext"
 
-import { SemesterEnum, semesterToString } from "@/common/enum/semesterEnum"
+import { type SemesterEnum, semesterToString } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import { IconButton } from "@/common/primitives/IconButton"
@@ -39,56 +39,41 @@ export default function SemesterButton({
     const theme = useTheme()
 
     const { query: semestersRequest } = useAPI("GET", "/semesters")
+    const { query: currentSemesterRequest } = useAPI("GET", "/semesters/current")
 
     useEffect(() => {
+        const currentSemester = currentSemesterRequest.data
+        if (currentSemester) {
+            setYear(currentSemester.year)
+            setSemester(currentSemester.semester)
+        }
+    }, [currentSemesterRequest.data])
+
+    const { previousSemester, nextSemester } = useMemo(() => {
         const semesters = semestersRequest.data?.semesters
-        if (semesters && semesters.length > 0) {
-            const lastSemester = semesters[semesters.length - 1]
-            if (lastSemester) {
-                setYear(lastSemester.year)
-                setSemester(lastSemester.semester)
-            }
-        }
-    }, [semestersRequest.data])
-
-    const { isFirstSemester, isLastSemester } = useMemo(() => {
-        if (!semestersRequest.data) {
-            return { isFirstSemester: false, isLastSemester: false }
-        }
-        const semestersList = semestersRequest.data.semesters
-        const firstSemester = semestersList[0]
-        const lastSemester = semestersList[semestersList.length - 1]
-
-        if (!firstSemester || !lastSemester) {
-            return { isFirstSemester: true, isLastSemester: true }
+        const currentIndex = semesters?.findIndex(
+            (item) => item.year === year && item.semester === semester,
+        )
+        if (currentIndex === undefined || currentIndex === -1) {
+            return { previousSemester: undefined, nextSemester: undefined }
         }
 
         return {
-            isFirstSemester:
-                year === firstSemester.year && semester === firstSemester.semester,
-            isLastSemester:
-                year === lastSemester.year && semester === lastSemester.semester,
+            previousSemester: semesters?.[currentIndex - 1],
+            nextSemester: semesters?.[currentIndex + 1],
         }
     }, [semestersRequest.data, year, semester])
 
     const onClickPreviousSemester = () => {
-        if (isFirstSemester) return
-        if (semester === SemesterEnum.SPRING) {
-            setSemester(SemesterEnum.FALL)
-            setYear(year - 1)
-        } else {
-            setSemester(SemesterEnum.SPRING)
-        }
+        if (!previousSemester) return
+        setYear(previousSemester.year)
+        setSemester(previousSemester.semester)
         setCurrentTimetableId(null)
     }
     const onClickNextSemester = () => {
-        if (isLastSemester) return
-        if (semester === SemesterEnum.FALL) {
-            setSemester(SemesterEnum.SPRING)
-            setYear(year + 1)
-        } else {
-            setSemester(SemesterEnum.FALL)
-        }
+        if (!nextSemester) return
+        setYear(nextSemester.year)
+        setSemester(nextSemester.semester)
         setCurrentTimetableId(null)
     }
 
@@ -100,17 +85,17 @@ export default function SemesterButton({
             align="center"
         >
             <IconButton
-                onClick={isFirstSemester ? undefined : onClickPreviousSemester}
+                onClick={previousSemester ? onClickPreviousSemester : undefined}
                 styles={{ padding: 2.5 }}
             >
                 <Icon
                     size={20}
                     color={
-                        isFirstSemester
+                        !previousSemester
                             ? theme.colors.Text.disable
                             : theme.colors.Highlight.default
                     }
-                    onClick={isFirstSemester ? undefined : () => {}}
+                    onClick={previousSemester ? () => {} : undefined}
                 >
                     <NavigateBeforeIcon />
                 </Icon>
@@ -121,17 +106,17 @@ export default function SemesterButton({
             </Typography>
 
             <IconButton
-                onClick={isLastSemester ? undefined : onClickNextSemester}
+                onClick={nextSemester ? onClickNextSemester : undefined}
                 styles={{ padding: 2.5 }}
             >
                 <Icon
                     size={20}
                     color={
-                        isLastSemester
+                        !nextSemester
                             ? theme.colors.Text.disable
                             : theme.colors.Highlight.default
                     }
-                    onClick={isLastSemester ? undefined : () => {}}
+                    onClick={nextSemester ? () => {} : undefined}
                 >
                     <NavigateNextIcon />
                 </Icon>
