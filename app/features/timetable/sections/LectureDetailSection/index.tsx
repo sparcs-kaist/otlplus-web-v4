@@ -14,6 +14,7 @@ import { match } from "ts-pattern"
 import Button from "@/common/components/Button"
 import Credits from "@/common/components/Credits"
 import StyledDivider from "@/common/components/StyledDivider"
+import ReviewScoreSummary from "@/common/components/reviews/ReviewScoreSummary"
 import { flattenTimeTableColors } from "@/common/components/timetable/Tile"
 import { LectureActionEnum } from "@/common/enum/lectureActionEnum"
 import { TimetableItemKind } from "@/common/enum/timetableItemKind"
@@ -30,6 +31,7 @@ import { trackEvent } from "@/libs/mixpanel"
 import { queryKeys } from "@/libs/query/queryKeys"
 import { useAPI } from "@/utils/api/useAPI"
 import checkOverlap from "@/utils/timetable/checkOverlap"
+import getSyllabusUrl from "@/utils/timetable/getSyllabusUrl"
 import useIsDevice from "@/utils/useIsDevice"
 import useUserStore from "@/utils/zustand/useUserStore"
 
@@ -92,19 +94,21 @@ const MultipleSelectLectureBlock = styled(FlexWrapper)`
 `
 
 interface LectureDetailSectionProps {
-    addLectures: (lectures: Lecture[]) => void
+    readOnlySelection?: { lecture: Lecture | null; year: number; semester: number }
+    addLectures?: (lectures: Lecture[]) => void
     removeLectures?: (lectureId: number) => void
     onMobileModalClose?: () => void
     currentTimetableId?: number | null
-    timetableLectures: Lecture[]
+    timetableLectures?: Lecture[]
 }
 
 const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
     addLectures,
     removeLectures,
-    onMobileModalClose = null,
+    onMobileModalClose,
     currentTimetableId,
-    timetableLectures,
+    timetableLectures = [],
+    readOnlySelection,
 }) => {
     const queryClient = useQueryClient()
     const theme = useTheme()
@@ -112,18 +116,22 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
     const { user, status } = useUserStore()
     const isTablet = useIsDevice("tablet")
 
-    const selectedItems = useTimetableUIStore((s) => s.selectedItems)
+    const editorSelection = useTimetableUIStore((s) => s.selectedItems)
+    const selectedItems = readOnlySelection ? [] : editorSelection
     const hoveredLectures = useTimetableUIStore((s) => s.hoveredLectures)
-    const year = useTimetableUIStore((s) => s.year)
-    const semester = useTimetableUIStore((s) => s.semesterEnum)
+    const editorYear = useTimetableUIStore((s) => s.year)
+    const year = readOnlySelection?.year ?? editorYear
+    const editorSemester = useTimetableUIStore((s) => s.semesterEnum)
+    const semester = readOnlySelection?.semester ?? editorSemester
 
     const selectedItem = selectedItems.length === 1 ? selectedItems[0] : undefined
-    const selectedLecture =
-        selectedItem?.kind === TimetableItemKind.LECTURE
-            ? selectedItem.data
-            : selectedItems.length === 0 && hoveredLectures.length === 1
-              ? hoveredLectures[0]
-              : null
+    const selectedLecture = readOnlySelection
+        ? readOnlySelection.lecture
+        : selectedItem?.kind === TimetableItemKind.LECTURE
+          ? selectedItem.data
+          : selectedItems.length === 0 && hoveredLectures.length === 1
+            ? hoveredLectures[0]
+            : null
     const showSelectedItems =
         selectedItems.length > 1 ||
         (selectedItem !== undefined && selectedItem.kind !== TimetableItemKind.LECTURE)
@@ -135,12 +143,12 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
         "GET",
         `/users/${user?.id}/wishlist`,
         {
-            enabled: status === "success" && year !== -1,
+            enabled: !readOnlySelection && status === "success" && year !== -1,
         },
     )
 
     useEffect(() => {
-        if (year === -1) return
+        if (readOnlySelection || year === -1) return
         setWishListQuery({ year: year, semester: semester })
     }, [year, semester, currentTimetableId])
     useEffect(() => {
@@ -168,17 +176,6 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
 
     const reviewSectionRef = useRef<HTMLDivElement>(null)
 
-    const getSyllabusUrl = (lecture: Lecture) => {
-        const payload = {
-            syy: String(year),
-            smtDivCd: String(semester),
-            subjtCd: lecture.code,
-            syllabusOpenYn: "0",
-        }
-        const encodedLecture = btoa(JSON.stringify(payload))
-        return `https://erp.kaist.ac.kr/com/lgin/SsoCtr/initExtPageWork.do?link=estblSubjt&params=${encodedLecture}`
-    }
-
     const handleAddToTimetable = (lecture: Lecture) => {
         if (!timetableLectures) return
         const hasOverlap = timetableLectures.some((lec) =>
@@ -194,7 +191,7 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
             if (hasOverlap) alert(t("timetable.addLectureConflict"))
             return
         }
-        addLectures([lecture])
+        addLectures?.([lecture])
         trackEvent("Add Lecture to Timetable", {
             lectureId: lecture.id,
             lectureCode: lecture.code,
@@ -245,7 +242,7 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                             {selectedItems.length}
                             {t("timetable.numSelected")}
                         </Typography>
-                        {(isTablet && onMobileModalClose) && (
+                        {isTablet && onMobileModalClose && (
                             <IconButton
                                 aria-label="Close selected items"
                                 onClick={onMobileModalClose}
@@ -316,14 +313,20 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                             direction="row"
                             align="center"
                             gap={8}
-                            justify={isTablet && onMobileModalClose ? "space-between" : "center"}
+                            justify={
+                                isTablet && onMobileModalClose
+                                    ? "space-between"
+                                    : "center"
+                            }
                             style={{ width: "100%" }}
                         >
-                            {(isTablet && onMobileModalClose) && <div style={{ width: 20 }}></div>}
+                            {isTablet && onMobileModalClose && (
+                                <div style={{ width: 20 }}></div>
+                            )}
                             <Typography type={"Bigger"} color={"Text.default"}>
                                 {selectedLecture.name + selectedLecture.subtitle}
                             </Typography>
-                            {(isTablet && onMobileModalClose) && (
+                            {isTablet && onMobileModalClose && (
                                 <Icon
                                     size={20}
                                     onClick={onMobileModalClose}
@@ -359,7 +362,8 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                             </Typography>
                         </StyledLink>
                         <StyledAnchor
-                            href={getSyllabusUrl(selectedLecture)}
+                            href={getSyllabusUrl(selectedLecture.code, year, semester)}
+                            rel="noopener noreferrer"
                             target="_blank"
                         >
                             <Typography
@@ -372,9 +376,27 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                         </StyledAnchor>
                     </FlexWrapper>
                     <LectureDetailWrapper direction="column" gap={10} align="center">
-                        <LectureInfoSubsection selectedLecture={selectedLecture} />
+                        <LectureInfoSubsection
+                            selectedLecture={selectedLecture}
+                            metrics={readOnlySelection ? "course" : "enrollment"}
+                        />
+                        {readOnlySelection && (
+                            <ReviewScoreSummary
+                                averageGrade={selectedLecture.averageGrade}
+                                averageLoad={selectedLecture.averageLoad}
+                                averageSpeech={selectedLecture.averageSpeech}
+                                reviewCount={undefined}
+                                labels={{
+                                    grade: t("common.grade"),
+                                    load: t("common.load"),
+                                    speech: t("common.speech"),
+                                }}
+                                fluid
+                                compact
+                            />
+                        )}
                     </LectureDetailWrapper>
-                    {status === "success" && (
+                    {(status === "success" || readOnlySelection) && (
                         <>
                             <StyledDivider />
                             <LectureFriendOverlaps lectureId={selectedLecture.id} />
@@ -387,11 +409,14 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                         gap={10}
                     >
                         <LectureReviewSubsection
+                            key={selectedLecture.id}
+                            showSummary={!readOnlySelection}
+                            reviewVariant={readOnlySelection ? "simple" : "default"}
                             selectedCourseId={selectedLecture.courseId}
                             selectedProfessorId={selectedLecture.professors[0]?.id ?? -1}
                         />
                     </LectureDetailWrapper>
-                    {isTablet && (
+                    {isTablet && !readOnlySelection && (
                         <LectureActionsWrapper
                             direction="row"
                             gap={12}
@@ -457,6 +482,10 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                         </LectureActionsWrapper>
                     )}
                 </>
+            ) : readOnlySelection ? (
+                <Typography type="Normal" color="Text.placeholder">
+                    {t("friends.selectLecture")}
+                </Typography>
             ) : (
                 <Credits />
             )}

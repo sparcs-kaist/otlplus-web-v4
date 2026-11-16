@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { OverlapFriend } from "@/common/schemas/friend"
 import type { Lecture } from "@/common/schemas/lecture"
 import LectureInfoSubsection from "@/features/timetable/sections/LectureDetailSection/LectureInfoSubsection"
+import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
 import { act, fireEvent, render, screen } from "@/test/test-utils"
 import { useAPI } from "@/utils/api/useAPI"
 import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
@@ -198,7 +199,7 @@ describe("friend lecture details", () => {
         }
         fireEvent.click(friendButton)
         expect(screen.getByTestId("location")).toHaveTextContent(
-            "/friends?friendId=2&year=2025&semester=3&timetableId=42",
+            "/friends?friendId=2&year=2025&semester=3",
         )
     })
 
@@ -218,12 +219,28 @@ describe("friend lecture details", () => {
         expect(button).toHaveAttribute("title", "friends.sameLecture")
         fireEvent.click(button!)
         expect(screen.getByTestId("location")).toHaveTextContent(
-            "/friends?friendId=2&year=2025&semester=3&timetableId=42",
+            "/friends?friendId=2&year=2025&semester=3",
         )
     })
 
     it("opens syllabus for the displayed friend's term, independent of my timetable", () => {
+        const previous = useTimetableUIStore.getState()
+        useTimetableUIStore.setState({
+            year: 2023,
+            semesterEnum: 1,
+            selectedItems: [
+                { kind: "lecture", data: { ...lecture, name: "My editor lecture" } },
+            ],
+        })
         renderDetail()
+        expect(screen.queryByText("My editor lecture")).not.toBeInTheDocument()
+        expect(useTimetableUIStore.getState().year).toBe(2023)
+        expect(
+            vi
+                .mocked(useAPI)
+                .mock.calls.find(([, path]) => path.endsWith("/wishlist"))?.[2]?.enabled,
+        ).toBe(false)
+        useTimetableUIStore.setState(previous)
 
         expect(screen.getByRole("link", { name: "header.dictionary" })).toHaveAttribute(
             "href",

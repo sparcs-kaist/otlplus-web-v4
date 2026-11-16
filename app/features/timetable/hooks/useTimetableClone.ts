@@ -20,6 +20,11 @@ export function useTimetableClone(timetableItems: TimetableItem[]) {
         const source = useTimetableUIStore.getState()
         if (auth.status !== "success" || source.year < 0 || pending.current) return
 
+        const sourceRect = document
+            .querySelector(
+                `[data-timetable-tab="${source.currentTimetableId ?? "academic"}"]`,
+            )
+            ?.getBoundingClientRect()
         pending.current = true
         try {
             const result = await mutation.mutateAsync({
@@ -36,6 +41,7 @@ export function useTimetableClone(timetableItems: TimetableItem[]) {
                     : { sourceTimetableId: source.currentTimetableId }),
             })
             void queryClient.invalidateQueries({ queryKey: ["/timetables"] })
+            void queryClient.invalidateQueries({ queryKey: ["/timetables/home"] })
             const current = useTimetableUIStore.getState()
             if (
                 useUserStore.getState().user?.id === auth.user?.id &&
@@ -43,11 +49,15 @@ export function useTimetableClone(timetableItems: TimetableItem[]) {
                 current.year === source.year &&
                 current.semesterEnum === source.semesterEnum
             ) {
+                current.setTimetableCopyMotion(
+                    sourceRect ? { id: result.id, source: sourceRect } : null,
+                )
                 current.setCurrentTimetableId(result.id)
             }
         } catch {
             // Refetch in case creation succeeded but the response was lost; never retry the POST.
             void queryClient.invalidateQueries({ queryKey: ["/timetables"] })
+            void queryClient.invalidateQueries({ queryKey: ["/timetables/home"] })
             alert(t("timetable.cloneFailed"))
         } finally {
             pending.current = false

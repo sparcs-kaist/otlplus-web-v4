@@ -5,7 +5,6 @@ import { isAxiosError } from "axios"
 import { useTranslation } from "react-i18next"
 import { match } from "ts-pattern"
 
-import { SemesterEnum } from "@/common/enum/semesterEnum"
 import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import type { CustomBlock } from "@/common/schemas/customBlock"
 import type { Lecture } from "@/common/schemas/lecture"
@@ -412,20 +411,18 @@ export function useTimetableEditor({
 
     const changeSemester = useCallback(
         (direction: "prev" | "next") => {
-            const semesters = semestersRequest.data?.semesters ?? []
-            const edge =
-                direction === "prev" ? semesters[0] : semesters[semesters.length - 1]
-            if (edge?.year === year && edge.semester === semesterEnum) return
+            const semesters = semestersRequest.data?.semesters
+            const currentIndex = semesters?.findIndex(
+                (item) => item.year === year && item.semester === semesterEnum,
+            )
+            const adjacentSemester =
+                currentIndex === undefined || currentIndex === -1
+                    ? undefined
+                    : semesters?.[currentIndex + (direction === "prev" ? -1 : 1)]
+            if (!adjacentSemester) return
             const state = useTimetableUIStore.getState()
-            if (direction === "prev") {
-                if (semesterEnum === SemesterEnum.SPRING) {
-                    state.setSemesterEnum(SemesterEnum.FALL)
-                    state.setYear(year - 1)
-                } else state.setSemesterEnum(SemesterEnum.SPRING)
-            } else if (semesterEnum === SemesterEnum.FALL) {
-                state.setSemesterEnum(SemesterEnum.SPRING)
-                state.setYear(year + 1)
-            } else state.setSemesterEnum(SemesterEnum.FALL)
+            state.setYear(adjacentSemester.year)
+            state.setSemesterEnum(adjacentSemester.semester)
             state.setCurrentTimetableId(null)
         },
         [semestersRequest.data, year, semesterEnum],

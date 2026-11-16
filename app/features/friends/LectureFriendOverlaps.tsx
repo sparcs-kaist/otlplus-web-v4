@@ -53,8 +53,6 @@ function FriendGroup({ title, friends }: { title: string; friends: ClassifiedFri
                             year: String(friend.timetable.year),
                             semester: String(friend.timetable.semester),
                         })
-                        if (friend.timetable.id !== null)
-                            params.set("timetableId", String(friend.timetable.id))
                         return (
                             <Chip
                                 key={friend.id}

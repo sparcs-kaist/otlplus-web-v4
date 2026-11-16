@@ -1,17 +1,26 @@
-import { memo, useCallback, useEffect } from "react"
+import { memo } from "react"
 
+import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
-import { EventNote, Star, StarBorder, DeleteOutlineOutlined } from "@mui/icons-material"
+import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined"
+import EventNote from "@mui/icons-material/EventNote"
+import Star from "@mui/icons-material/Star"
+import StarBorder from "@mui/icons-material/StarBorder"
+import { useQueryClient } from "@tanstack/react-query"
+import { useTranslation } from "react-i18next"
 
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import { IconButton } from "@/common/primitives/IconButton"
 import Typography from "@/common/primitives/Typography"
 import type { FriendListItem } from "@/common/schemas/friend"
-import { useTheme } from "@emotion/react"
+import { invalidateFriendQueries } from "@/features/friends/friendQueries"
+import { useAPI } from "@/utils/api/useAPI"
 
 const FriendRowWrapper = styled(FlexWrapper)<{ $selected: boolean }>`
     cursor: pointer;
+    min-height: 44px;
+    flex-shrink: 0;
     &:hover {
         background-color: ${({ theme }) => theme.colors.Background.Tab.dark};
     }
@@ -22,13 +31,20 @@ const FriendRowWrapper = styled(FlexWrapper)<{ $selected: boolean }>`
     border-radius: 4px;
 `
 
+const FriendName = styled(Typography)`
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+`
+
 interface FriendRowProps {
     friend: FriendListItem
     showSchedule: boolean
     selected: boolean
-    onSelect: (selectedFriend: FriendListItem) => void
-    onDelete: (deletingFriend: FriendListItem) => void
-    onFavoriteToggle: (toggledFriend: FriendListItem) => void
+    onSelect: () => void
+    onDelete: () => void
 }
 
 function FriendRow({
@@ -37,79 +53,92 @@ function FriendRow({
     selected,
     onSelect,
     onDelete,
-    onFavoriteToggle,
 }: FriendRowProps) {
+    const { t } = useTranslation()
     const theme = useTheme()
-    
-    const handleSelect = useCallback(() => {
-        onSelect(friend)
-    }, [onSelect, friend])
-
-    const handleDelete = useCallback(
-        (event: React.MouseEvent<HTMLButtonElement>) => {
-            event.stopPropagation()
-            onDelete(friend)
+    const queryClient = useQueryClient()
+    const { mutation, requestFunction } = useAPI(
+        "PATCH",
+        `/friends/${friend.id}/favorite`,
+        {
+            onSuccess: () => invalidateFriendQueries(queryClient),
         },
-        [onDelete, friend],
     )
-
-    const handleFavoriteToggle = useCallback(
-        (event: React.MouseEvent<HTMLButtonElement>) => {
-            event.stopPropagation()
-            onFavoriteToggle(friend)
-        },
-        [onFavoriteToggle, friend],
-    )
-
-    useEffect(() => {
-        console.log('a')
-    }, [])
 
     return (
         <FriendRowWrapper
             $selected={selected}
-            direction={"row"}
+            direction="row"
             gap={8}
-            align={"center"}
+            align="center"
             padding="8px 8px 8px 12px"
-            onClick={handleSelect}
+            role="button"
+            tabIndex={0}
+            onClick={onSelect}
+            onKeyDown={(event) => {
+                if (event.target !== event.currentTarget) return
+                if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault()
+                    onSelect()
+                }
+            }}
         >
-            <Typography type={"NormalBold"} color={"Text.default"}>
+            <FriendName type="NormalBold" color="Text.default">
                 {friend.name}
-            </Typography>
-            <FlexWrapper direction={"row"} gap={0} align={"center"} flex={"1"} justify={"flex-end"}>
-                {showSchedule && friend.hasScheduleNow === true && (
-                    <Icon size={18} color={"Text.default"} onClick={() => {}}>
-                        <EventNote />
-                    </Icon>
-                )}
-                {selected && (
-                    <IconButton onClick={handleDelete} styles={{ padding: 6 }}>
-                        <Icon size={18} color={theme.colors.Text.lighter} onClick={() => {}}>
-                            <DeleteOutlineOutlined />
-                        </Icon>
-                    </IconButton>
-                )}
-                <IconButton onClick={handleFavoriteToggle} styles={{ padding: 6 }}>
-                    <Icon size={18} color={friend.isFavorite ? theme.colors.Icon.yellow : theme.colors.Text.lighter} onClick={() => {}}>
-                        {friend.isFavorite ? <Star /> : <StarBorder />}
+            </FriendName>
+            {showSchedule && friend.hasScheduleNow === true && (
+                <Icon
+                    size={18}
+                    color={theme.colors.Text.default}
+                    role="img"
+                    aria-label={t("friends.scheduleNow")}
+                    title={t("friends.scheduleNow")}
+                >
+                    <EventNote />
+                </Icon>
+            )}
+            {selected && (
+                <IconButton
+                    aria-label={t("friends.delete")}
+                    onClick={(event) => {
+                        event.stopPropagation()
+                        onDelete()
+                    }}
+                    styles={{ padding: 6 }}
+                >
+                    <Icon size={18} color={theme.colors.Text.lighter}>
+                        <DeleteOutlineOutlined />
                     </Icon>
                 </IconButton>
-            </FlexWrapper>
-            
+            )}
+            <IconButton
+                aria-label={t("friends.favorite")}
+                aria-pressed={friend.isFavorite}
+                disabled={mutation.isPending}
+                onClick={(event) => {
+                    event.stopPropagation()
+                    requestFunction({ isFavorite: !friend.isFavorite })
+                }}
+                styles={{ padding: 6 }}
+            >
+                <Icon
+                    size={18}
+                    color={
+                        friend.isFavorite
+                            ? theme.colors.Icon.yellow
+                            : theme.colors.Text.lighter
+                    }
+                >
+                    {friend.isFavorite ? <Star /> : <StarBorder />}
+                </Icon>
+            </IconButton>
+            {mutation.isError && (
+                <Typography type="Small" color="Highlight.default" role="alert">
+                    {t("friends.updateError")}
+                </Typography>
+            )}
         </FriendRowWrapper>
     )
 }
 
-const FriendRowMemo = memo(FriendRow, (prevProps, nextProps) => {
-    return (
-        prevProps.friend.id === nextProps.friend.id &&
-        prevProps.showSchedule === nextProps.showSchedule &&
-        prevProps.selected === nextProps.selected &&
-        prevProps.onDelete === nextProps.onDelete &&
-        prevProps.onFavoriteToggle === nextProps.onFavoriteToggle &&
-        prevProps.onSelect === nextProps.onSelect
-    )
-})
-
-export default FriendRowMemo
+export default memo(FriendRow)

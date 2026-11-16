@@ -23,6 +23,7 @@ import CustomBlockSection from "@/features/timetable/sections/CustomBlockSection
 import LectureDetailSection from "@/features/timetable/sections/LectureDetailSection"
 import LectureListSection from "@/features/timetable/sections/LectureListSection"
 import TabButtonRow from "@/features/timetable/sections/TabsRowSubSection/TabButtonRow"
+import getSemesterTimetables from "@/features/timetable/sections/TabsRowSubSection/getSemesterTimetables"
 import TimetableInfoSection from "@/features/timetable/sections/TimetableInfoSection"
 import UtilButtonsSubSection from "@/features/timetable/sections/TimetableInfoSection/UtilButtonsSubSection"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
@@ -240,7 +241,7 @@ export default function Timetable() {
     const { query: timetables, setParams: setTimetablesParams } = useAPI(
         "GET",
         "/timetables",
-        { enabled: status === "success" },
+        { enabled: status === "success", staleTime: 0 },
     )
 
     const [nonLoginTimetable, setNonLoginTimetable] = useState<TimetableItem[]>([])
@@ -254,6 +255,13 @@ export default function Timetable() {
         "/timetables/my-timetable",
         { enabled: status === "success" },
     )
+    const homeTimetableId =
+        timetables.data?.timetables.find(
+            (timetable) =>
+                timetable.year === year &&
+                timetable.semester === semesterEnum &&
+                timetable.isMain,
+        )?.id ?? null
 
     const currentTimetableItems = useMemo(
         () =>
@@ -392,10 +400,13 @@ export default function Timetable() {
         addItems,
         removeItems,
         timetableIds: [
+            ...getSemesterTimetables(
+                timetables.data?.timetables ?? [],
+                year,
+                semesterEnum,
+                homeTimetableId,
+            ).map((timetable) => timetable.id),
             null,
-            ...([...(timetables.data?.timetables ?? [])]
-                .sort((a, b) => a.timeTableOrder - b.timeTableOrder)
-                .map((t) => t.id) || []),
         ],
         isLoggedIn: status === "success",
         changeSemester,
@@ -463,6 +474,7 @@ export default function Timetable() {
                             duplicateTimetable={cloneTimetable}
                             isCloning={isCloning}
                             timetablesQuery={timetables}
+                            homeTimetableId={homeTimetableId}
                         />
                         <Block
                             direction="column"
@@ -639,6 +651,7 @@ export default function Timetable() {
                                 duplicateTimetable={cloneTimetable}
                                 isCloning={isCloning}
                                 timetablesQuery={timetables}
+                                homeTimetableId={homeTimetableId}
                             />
                             <Block
                                 direction={isLaptop ? "column" : "row"}

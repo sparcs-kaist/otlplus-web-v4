@@ -128,6 +128,7 @@ export function useTimetableKeyboard({
     const { requestFunction: addTimetable } = useAPI("POST", "/timetables", {
         onSuccess: (data, variables) => {
             void queryClient.invalidateQueries({ queryKey: [queryKeys.timetables] })
+            void queryClient.invalidateQueries({ queryKey: ["/timetables/home"] })
             const state = useTimetableUIStore.getState()
             if (
                 state.year === variables.year &&

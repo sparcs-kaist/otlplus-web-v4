@@ -10,9 +10,20 @@ import Typography from "@/common/primitives/Typography"
 import type { CustomBlock } from "@/common/schemas/customBlock"
 import type { TimeBlock } from "@/common/schemas/timeblock"
 import { timetableItemKey } from "@/common/utils/timetableItems"
+import { formatMinuteToString } from "@/utils/timetable/formatTimeblockToString"
 
 import { TimetableItemDeleteButton, flattenTimeTableColors } from "./Tile"
 import TimetableItemTile from "./TimetableItemTile"
+
+const WEEKDAYS = [
+    "monday",
+    "tuesday",
+    "wednesday",
+    "thursday",
+    "friday",
+    "saturday",
+    "sunday",
+] as const
 
 const CUSTOM_BLOCK_TILE_CLASSNAME = "custom-block-tile"
 
@@ -106,20 +117,8 @@ function CustomBlockTile({
     displayedDayCount?: 5 | 7
 }) {
     const { t } = useTranslation()
-    const day = [
-        "monday",
-        "tuesday",
-        "wednesday",
-        "thursday",
-        "friday",
-        "saturday",
-        "sunday",
-    ][time.day]
-    const formatTime = (minutes: number) =>
-        `${Math.floor(minutes / 60)
-            .toString()
-            .padStart(2, "0")}:${(minutes % 60).toString().padStart(2, "0")}`
-    const timeLabel = `${t(`common.days.${day}`)} ${formatTime(time.begin)}–${formatTime(time.end)}`
+    const day = WEEKDAYS[time.day]
+    const timeLabel = `${t(`common.days.${day}`)} ${formatMinuteToString(time.begin)}–${formatMinuteToString(time.end)}`
     return (
         <CustomBlockTileWrapper
             direction="column"

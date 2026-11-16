@@ -18,9 +18,21 @@ vi.mock("@/utils/zustand/useUserStore", () => ({
 }))
 vi.mock("react-i18next", () => ({
     useTranslation: () => ({
-        t: (key: string, options?: { count?: number }) =>
-            key === "friends.friendList" ? `${key} (${options?.count})` : key,
+        t: (
+            key: string,
+            options?: { count?: number; year?: number; semester?: string },
+        ) =>
+            key === "friends.friendList"
+                ? `${key} (${options?.count})`
+                : key === "friends.semesterLabel"
+                  ? `${options?.year} ${options?.semester}`
+                  : key,
     }),
+}))
+vi.mock("@/common/enum/semesterEnum", async (importOriginal) => ({
+    ...(await importOriginal<typeof import("@/common/enum/semesterEnum")>()),
+    semesterToString: (semester: number) =>
+        ["Spring", "Summer", "Fall", "Winter"][semester - 1],
 }))
 vi.mock("@/features/friends/FriendInviteModal", () => ({ default: () => null }))
 vi.mock("@/features/friends/FriendLectureDetail", () => ({
@@ -100,7 +112,7 @@ const lectures = {
 }
 let ownActualResponse: { timetableItems: TimetableItem[] }
 let ownAllSavedResponse: { id: number; lectures: { id: number }[] }[]
-let friendSavedResponse: { timetableItems: TimetableItem[] }
+let friendSharedResponse: { timetableItems: TimetableItem[] }
 const timetables = {
     timetables: [
         { id: 42, name: "Saved timetable" },
@@ -182,11 +194,13 @@ describe("mobile friend timetable navigation", () => {
         timetablesResponse = timetables
         ownActualResponse = lectures as typeof ownActualResponse
         ownAllSavedResponse = [{ id: 42, lectures: [{ id: lecture.id }] }]
-        friendSavedResponse = savedLectures as typeof friendSavedResponse
+        friendSharedResponse = savedLectures as typeof friendSharedResponse
         friendsQueryState = { isSuccess: true, isFetching: false, isError: false }
         parameterSetters.clear()
         testWindow.happyDOM.setViewport({ width: 390, height: 844 })
-        vi.mocked(useAPI).mockImplementation((_method, path) => {
+        vi.mocked(useAPI).mockImplementation(function useMockAPI(_method, path) {
+            const { search } = useLocation()
+            const year = new URLSearchParams(search).get("year")
             if (!parameterSetters.has(path)) parameterSetters.set(path, vi.fn())
             return {
                 query: {
@@ -195,19 +209,23 @@ describe("mobile friend timetable navigation", () => {
                             ? friendsResponse
                             : path === "/semesters"
                               ? semesters
-                              : path === "/users/1/timetables"
-                                ? ownAllSavedResponse
-                                : path === "/timetables/my-timetable"
-                                  ? ownActualResponse
-                                  : path.endsWith("my-timetable")
-                                    ? lectures
-                                    : path === "/friends/7/timetables/42"
-                                      ? friendSavedResponse
-                                      : path.endsWith("/42")
-                                        ? savedLectures
-                                        : path.endsWith("/43")
-                                          ? earlierLectures
-                                          : timetablesResponse,
+                              : path === "/semesters/current"
+                                ? { year: 2026, semester: 3 }
+                                : path === "/users/1/timetables"
+                                  ? ownAllSavedResponse
+                                  : path === "/timetables/my-timetable"
+                                    ? ownActualResponse
+                                    : path.endsWith("my-timetable")
+                                      ? lectures
+                                      : path === "/friends/7/timetables/shared"
+                                        ? year === "2024"
+                                            ? earlierLectures
+                                            : friendSharedResponse
+                                        : path.endsWith("/42")
+                                          ? savedLectures
+                                          : path.endsWith("/43")
+                                            ? earlierLectures
+                                            : timetablesResponse,
                     isSuccess: true,
                     isFetching: false,
                     isPending: false,
@@ -563,13 +581,15 @@ describe("mobile friend timetable navigation", () => {
         expect(
             screen.getByRole("button", { name: "Tile: Saved fluid mechanics" }),
         ).toBeInTheDocument()
-        expect(parameterSetters.get("/friends/7/timetables")).toHaveBeenLastCalledWith({
+        expect(
+            parameterSetters.get("/friends/7/timetables/shared"),
+        ).toHaveBeenLastCalledWith({
             year: 2025,
             semester: 3,
         })
         expect(vi.mocked(useAPI).mock.calls).toContainEqual([
             "GET",
-            "/friends/7/timetables/42",
+            "/friends/7/timetables/shared",
             expect.objectContaining({ enabled: true }),
         ])
         expect(currentParams().get("timetableId")).toBe("42")
@@ -595,7 +615,7 @@ describe("mobile friend timetable navigation", () => {
                     },
                 ],
             }
-            friendSavedResponse = {
+            friendSharedResponse = {
                 timetableItems: [
                     {
                         kind: "lecture",
@@ -654,8 +674,7 @@ describe("mobile friend timetable navigation", () => {
             for (const path of [
                 "/users/1/timetables",
                 "/timetables/my-timetable",
-                "/friends/7/timetables",
-                "/friends/7/timetables/my-timetable",
+                "/friends/7/timetables/shared",
             ]) {
                 expect(parameterSetters.get(path)).toHaveBeenLastCalledWith({
                     year: 2025,
@@ -718,21 +737,26 @@ describe("mobile friend timetable navigation", () => {
     )
 
     it.each([390, 1440])(
-        "shows No Title for unnamed timetable tabs and custom block details at width %i",
+        "uses semester names for friend tabs and custom block details even with an unnamed timetable at width %i",
         (width) => {
             testWindow.happyDOM.setViewport({ width, height: 844 })
             timetablesResponse = { timetables: [{ id: 42, name: "" }] }
             renderPage("/friends?friendId=7&year=2026&semester=3")
 
-            fireEvent.click(screen.getByRole("tab", { name: "No Title" }))
-            expect(currentParams().get("timetableId")).toBe("42")
+            expect(screen.getByRole("tab", { name: "2026 Fall" })).toHaveAttribute(
+                "aria-selected",
+                "true",
+            )
+            expect(
+                screen.queryByRole("tab", { name: "No Title" }),
+            ).not.toBeInTheDocument()
             fireEvent.pointerDown(
                 screen.getByRole("button", { name: "Custom tile: Club meeting" }),
             )
             expect(
                 within(
                     screen.getByRole("region", { name: "friends.customBlockDetail" }),
-                ).getByText("No Title"),
+                ).getByText("2026 Fall"),
             ).toBeInTheDocument()
         },
     )
@@ -749,7 +773,7 @@ describe("mobile friend timetable navigation", () => {
                 name: "friends.customBlockDetail",
             })
             expect(within(detail).getByText("Club meeting")).toBeInTheDocument()
-            expect(within(detail).getByText("Saved timetable")).toBeInTheDocument()
+            expect(within(detail).getByText("2026 Fall")).toBeInTheDocument()
             expect(within(detail).getByText("Student center")).toBeInTheDocument()
             expect(within(detail).getByText(/10:00/)).toBeInTheDocument()
             expect(within(detail).getByText(/02:00/)).toBeInTheDocument()
@@ -823,7 +847,7 @@ describe("mobile friend timetable navigation", () => {
         )
 
         fireEvent.pointerDown(tile)
-        fireEvent.click(screen.getByRole("tab", { name: "Earlier timetable" }))
+        fireEvent.click(screen.getByRole("tab", { name: "2024 Fall" }))
         expect(
             screen.queryByRole("region", { name: "friends.customBlockDetail" }),
         ).not.toBeInTheDocument()
@@ -851,14 +875,50 @@ describe("mobile friend timetable navigation", () => {
         )
     })
 
-    it("opens an official timetable at the linked past semester", () => {
-        renderPage("/friends?friendId=7&year=2025&semester=1")
-
+    it("shows the enrolled timetable when no saved timetable is selected for sharing", () => {
+        friendSharedResponse = lectures as typeof friendSharedResponse
+        renderPage("/friends?friendId=7&year=2026&semester=3&timetableId=42")
+        expect(screen.getByRole("tab", { name: "2026 Fall" })).toHaveAttribute(
+            "aria-selected",
+            "true",
+        )
         expect(
             screen.getByRole("button", { name: "Tile: Fluid mechanics" }),
         ).toBeInTheDocument()
         expect(
-            parameterSetters.get("/friends/7/timetables/my-timetable"),
+            screen.queryByRole("button", { name: "Tile: Saved fluid mechanics" }),
+        ).not.toBeInTheDocument()
+        expect(vi.mocked(useAPI)).toHaveBeenCalledWith(
+            "GET",
+            "/friends/7/timetables/shared",
+            expect.objectContaining({ enabled: true }),
+        )
+    })
+
+    it("uses one semester request even when an old link contains an obsolete timetable ID", () => {
+        renderPage("/friends?friendId=7&year=2026&semester=3&timetableId=999")
+        expect(
+            screen.getByRole("button", { name: "Tile: Saved fluid mechanics" }),
+        ).toBeInTheDocument()
+        const friendReads = vi
+            .mocked(useAPI)
+            .mock.calls.filter(
+                ([method, path]) =>
+                    method === "GET" && path.startsWith("/friends/7/timetables"),
+            )
+        expect(new Set(friendReads.map(([, path]) => path))).toEqual(
+            new Set(["/friends/7/timetables/shared"]),
+        )
+    })
+
+    it("automatically opens the shared timetable at the linked past semester", () => {
+        renderPage("/friends?friendId=7&year=2025&semester=1")
+
+        expect(
+            screen.getByRole("button", { name: "Tile: Saved fluid mechanics" }),
+        ).toBeInTheDocument()
+        expect(
+            parameterSetters.get("/friends/7/timetables/shared"),
         ).toHaveBeenLastCalledWith({
             year: 2025,
             semester: 1,
@@ -882,7 +942,9 @@ describe("mobile friend timetable navigation", () => {
         expect(
             screen.getByRole("button", { name: "Tile: Earlier fluid mechanics" }),
         ).toBeInTheDocument()
-        expect(parameterSetters.get("/friends/7/timetables")).toHaveBeenLastCalledWith({
+        expect(
+            parameterSetters.get("/friends/7/timetables/shared"),
+        ).toHaveBeenLastCalledWith({
             year: 2024,
             semester: 3,
         })
@@ -897,40 +959,82 @@ describe("mobile friend timetable navigation", () => {
         expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
     })
 
-    it("keeps manual timetable and semester selection in the URL", () => {
-        renderPage("/friends?friendId=7&year=2025&semester=3")
-        fireEvent.click(screen.getByRole("tab", { name: "Saved timetable" }))
-        expect(currentParams().get("timetableId")).toBe("42")
-        expect(screen.getByRole("tab", { name: "Saved timetable" })).toHaveAttribute(
+    it("shows one tab per semester, newest first, and opens the latest semester without link parameters", () => {
+        renderPage("/friends?friendId=7")
+
+        expect(screen.getAllByRole("tab").map((tab) => tab.textContent)).toEqual([
+            "2026 Fall",
+            "2026 Spring",
+            "2025 Fall",
+            "2025 Spring",
+            "2024 Fall",
+            "2024 Spring",
+        ])
+        expect(screen.getByRole("tab", { name: "2026 Fall" })).toHaveAttribute(
             "aria-selected",
             "true",
         )
-
-        fireEvent.click(screen.getByRole("tab", { name: "friends.actualTimetable" }))
-        expect(currentParams().has("timetableId")).toBe(false)
-        expect(currentParams().get("friendId")).toBe("7")
+        expect(currentParams().get("year")).toBe("2026")
+        expect(currentParams().get("semester")).toBe("3")
         expect(
-            screen.getByRole("tab", { name: "friends.actualTimetable" }),
-        ).toHaveAttribute("aria-selected", "true")
+            screen.queryByRole("tab", { name: "Saved timetable" }),
+        ).not.toBeInTheDocument()
+        expect(
+            screen.queryByRole("button", { name: "friends.previousSemester" }),
+        ).not.toBeInTheDocument()
+    })
 
-        fireEvent.click(screen.getByRole("tab", { name: "Saved timetable" }))
-        fireEvent.click(screen.getByRole("button", { name: "friends.previousSemester" }))
+    it("keeps a linked semester available when it is absent from the semester list", () => {
+        renderPage("/friends?friendId=7&year=2023&semester=2")
+        expect(screen.getByRole("tab", { name: "2023 Summer" })).toHaveAttribute(
+            "aria-selected",
+            "true",
+        )
+        expect(
+            parameterSetters.get("/friends/7/timetables/shared"),
+        ).toHaveBeenLastCalledWith({
+            year: 2023,
+            semester: 2,
+        })
+    })
+
+    it("keeps semester tab selection in the URL and clears the old timetable ID", () => {
+        renderPage("/friends?friendId=7&year=2025&semester=3&timetableId=42")
+        expect(screen.getByRole("tab", { name: "2025 Fall" })).toHaveAttribute(
+            "aria-selected",
+            "true",
+        )
+        fireEvent.keyDown(screen.getByRole("tab", { name: "2025 Spring" }), {
+            key: "Enter",
+        })
+        expect(screen.getByRole("tab", { name: "2025 Spring" })).toHaveAttribute(
+            "aria-selected",
+            "true",
+        )
+        expect(screen.getAllByRole("tab", { selected: true })).toHaveLength(1)
         expect(currentParams().get("year")).toBe("2025")
         expect(currentParams().get("semester")).toBe("1")
         expect(currentParams().has("timetableId")).toBe(false)
-        expect(parameterSetters.get("/users/1/timetables")).toHaveBeenLastCalledWith({
-            year: 2025,
-            semester: 1,
-        })
-        expect(parameterSetters.get("/timetables/my-timetable")).toHaveBeenLastCalledWith(
-            {
+        for (const path of [
+            "/friends/7/timetables/shared",
+            "/users/1/timetables",
+            "/timetables/my-timetable",
+        ]) {
+            expect(parameterSetters.get(path)).toHaveBeenLastCalledWith({
                 year: 2025,
                 semester: 1,
-            },
-        )
+            })
+        }
         expect(
-            screen.getByRole("button", { name: "Tile: Fluid mechanics" }),
+            screen.getByRole("button", { name: "Tile: Saved fluid mechanics" }),
         ).toBeInTheDocument()
+
+        fireEvent.click(screen.getByRole("button", { name: "Browser back" }))
+        expect(screen.getByRole("tab", { name: "2025 Fall" })).toHaveAttribute(
+            "aria-selected",
+            "true",
+        )
+        expect(currentParams().get("timetableId")).toBe("42")
     })
 
     it("closes mobile detail even when an overlap points to the currently open timetable", () => {
@@ -952,7 +1056,7 @@ describe("mobile friend timetable navigation", () => {
         ).toBeInTheDocument()
     })
 
-    it("falls back to the latest official timetable for invalid link parameters", () => {
+    it("falls back to the current official timetable for invalid link parameters", () => {
         renderPage("/friends?friendId=-7&year=invalid&semester=9&timetableId=-42")
 
         expect(parameterSetters.get("/timetables/my-timetable")).toHaveBeenLastCalledWith(

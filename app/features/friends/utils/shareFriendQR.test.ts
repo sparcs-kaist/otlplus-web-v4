@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import { copyFriendQr, downloadFriendQr } from "./shareFriendQr"
+import { copyFriendQr, downloadFriendQr } from "./shareFriendQR"
 
 class MockClipboardItem {
     constructor(readonly data: Record<string, Promise<Blob>>) {}

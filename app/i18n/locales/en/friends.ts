@@ -22,8 +22,15 @@ export const friends = {
     invite: "Copy friend invite link",
     inviteTitle: "Invite a timetable friend",
     inviteDescription:
-        "Your friend code and link do not expire. Only share them with people you want to share your timetable with.",
+        "Your friend code and link work until you regenerate the code. Only share them with people you want to share your timetable with.",
     code: "My friend code",
+    regenerateCode: "Regenerate code",
+    regenerateConfirm:
+        "Generate a new code? Your previous code, link, and QR code will stop working. Your existing friends will stay connected.",
+    regeneratingCode: "Generating a new friend code…",
+    regeneratedCode: "Your new friend code is ready.",
+    regenerateError:
+        "Couldn't confirm the result. Check the code below or reopen this window.",
     inviteQr: "Friend invite link QR code",
     downloadQr: "Download QR code",
     copyQr: "Copy QR code",

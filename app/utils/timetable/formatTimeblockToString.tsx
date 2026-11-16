@@ -3,7 +3,7 @@ import i18n from "i18next"
 import { weekdayToString } from "@/common/enum/weekdayEnum"
 import type { TimeBlock } from "@/common/schemas/timeblock"
 
-function formatMinuteToString(minute: number, by12: boolean = false): string {
+export function formatMinuteToString(minute: number, by12: boolean = false): string {
     const hour = Math.floor(minute / 60)
     const min = (minute % 60).toString().padStart(2, "0")
     if (by12) {
