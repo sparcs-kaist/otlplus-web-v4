@@ -538,9 +538,10 @@ for (const viewport of [
             const params = new URL(page.url()).searchParams
             expect(params.has("friendId")).toBe(false)
             expect(params.has("timetableId")).toBe(false)
-            await expect(
-                page.getByRole("tab", { name: "Enrolled timetable" }),
-            ).toHaveAttribute("aria-selected", "true")
+            await expect(page.getByRole("tab", { name: "2026 Fall" })).toHaveAttribute(
+                "aria-selected",
+                "true",
+            )
             await expect(page.locator("[data-friend-overlap=true]")).toHaveCount(0)
             expect(pageErrors).toEqual([])
         })

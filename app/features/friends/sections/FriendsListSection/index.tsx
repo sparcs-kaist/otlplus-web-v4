@@ -52,6 +52,29 @@ const FriendList = styled.div`
     display: flex;
     flex-direction: column;
     gap: 10px;
+    scrollbar-width: thin;
+    scrollbar-color: ${({ theme }) => theme.colors.Line.default} transparent;
+
+    &:hover {
+        scrollbar-color: ${({ theme }) => theme.colors.Line.dark} transparent;
+    }
+
+    &::-webkit-scrollbar {
+        width: 7px;
+    }
+
+    &::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+        background: ${({ theme }) => theme.colors.Line.default};
+        border-radius: 8px;
+    }
+
+    &:hover::-webkit-scrollbar-thumb {
+        background: ${({ theme }) => theme.colors.Line.dark};
+    }
 `
 
 const FriendListLayout = styled(FlexWrapper)`
