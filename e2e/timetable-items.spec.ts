@@ -237,7 +237,7 @@ test("mixed selection deletes whole items and undo remaps recreated blocks", asy
     await expect(page.locator(".block-title", { hasText: "Study time" })).toBeVisible()
 })
 
-test("home shows enrolled lectures without a saved timetable selector", async ({
+test("home shows the main timetable and its custom blocks without a timetable selector", async ({
     page,
 }) => {
     const state = await setup(page, 1)
@@ -252,7 +252,7 @@ test("home shows enrolled lectures without a saved timetable selector", async ({
     ]) {
         await page.setViewportSize(viewport)
         await Promise.all([
-            page.waitForResponse(/\/api\/v2\/timetables\/my-timetable(?:\?|$)/),
+            page.waitForResponse(/\/api\/v2\/timetables\/home(?:\?|$)/),
             page.goto("/"),
         ])
         await expect(
@@ -263,15 +263,17 @@ test("home shows enrolled lectures without a saved timetable selector", async ({
                 name: /Timetable shown on home|홈에 표시할 시간표/,
             }),
         ).toHaveCount(0)
-        await expect(page.locator(".block-title")).toHaveCount(0)
+        await expect(
+            page.locator(".block-title", { hasText: "Study time" }),
+        ).toBeVisible()
         await expect(page.locator(".lecture-delete-wrapper")).toHaveCount(0)
         await page.reload()
         await expect(
             page.locator(".lecture-title", { hasText: "Algorithms" }),
         ).toHaveCount(2)
     }
-    expect(requestedPaths).toContain("/api/v2/timetables/my-timetable")
-    expect(requestedPaths).not.toContain("/api/v2/timetables/home")
+    expect(requestedPaths).toContain("/api/v2/timetables/home")
+    expect(requestedPaths).not.toContain("/api/v2/timetables/my-timetable")
     expect(requestedPaths).not.toContain("/api/v2/timetables")
     expect(state.getHomeId()).toBe(1)
 })
@@ -532,11 +534,21 @@ for (const viewport of [
                   }
                 : path === "/api/v2/friends"
                   ? { friends: [friend], checkedAt: new Date().toISOString() }
-                  : path.endsWith("/timetables")
+                  : path.endsWith("/timetables/shared/semesters")
                     ? {
-                          timetables: [{ ...linkedTimetable, name: "Alex's timetable" }],
+                          semesters: [
+                              {
+                                  year: linkedTimetable.year,
+                                  semester: linkedTimetable.semester,
+                              },
+                          ],
                       }
                     : {
+                          year: linkedTimetable.year,
+                          semester: linkedTimetable.semester,
+                          timetableId: linkedTimetable.id,
+                          source: "saved",
+                          name: "Alex's timetable",
                           lectures: [lecture],
                           timetableItems: [{ kind: "lecture", data: lecture }],
                       }
@@ -599,13 +611,12 @@ for (const viewport of [
         expect(reviewBox!.y).toBeGreaterThan(classmateBox!.y + classmateBox!.height)
 
         await classmate.click()
-        await expect(page).toHaveURL(
-            /\/friends\?friendId=7&year=2025&semester=3&timetableId=42$/,
-        )
-        await expect(page.getByRole("tab", { name: "Alex's timetable" })).toHaveAttribute(
+        await expect(page).toHaveURL(/\/friends\?friendId=7&year=2025&semester=3$/)
+        await expect(page.getByRole("tab", { name: "2025 Fall" })).toHaveAttribute(
             "aria-selected",
             "true",
         )
+        await expect(page.getByText("Alex's timetable", { exact: true })).toBeVisible()
         expect(pageErrors).toEqual([])
     })
 }

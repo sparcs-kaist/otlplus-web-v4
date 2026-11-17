@@ -84,6 +84,10 @@ test("creates, edits, exports, and deletes one custom block with multiple time s
             })
             return
         }
+        if (path.endsWith("/semesters/current")) {
+            await route.fulfill({ json: { year: 2026, semester: 1 } })
+            return
+        }
         if (path.endsWith("/timetables/1/items") && method === "PATCH") {
             const { changes } = request.postDataJSON()
             const results = changes.map((change: any, index: number) => {
@@ -134,6 +138,8 @@ test("creates, edits, exports, and deletes one custom block with multiple time s
                             year: 2026,
                             semester: 1,
                             timeTableOrder: 0,
+                            isMain: true,
+                            isShared: false,
                         },
                     ],
                 },
@@ -190,7 +196,7 @@ test("creates, edits, exports, and deletes one custom block with multiple time s
     await addButton.click()
     await dragTime(page, 3, 4, 6)
     await expect(draftTimes).toHaveCount(1)
-    await page.getByText(/My Timetable|내 시간표/, { exact: true }).click()
+    await page.getByText(/Academic Timetable|학사 시간표/, { exact: true }).click()
     await expect(draftTimes).toHaveCount(0)
     await expect(page.getByPlaceholder(/Name|일정 이름/)).toHaveCount(0)
     await page.getByText("Test timetable", { exact: true }).click()

@@ -106,8 +106,20 @@ test("selects one shared timetable per semester independently of the main timeta
                         { id: 7, name: "친구", isFavorite: false, hasScheduleNow: false },
                     ],
                 }
+            } else if (path === "/friends/7/timetables/shared/semesters") {
+                json = {
+                    semesters: [
+                        { year: 2026, semester: 3 },
+                        { year: 2026, semester: 1 },
+                    ],
+                }
             } else if (path === "/friends/7/timetables/shared") {
                 json = {
+                    year: 2026,
+                    semester: term,
+                    timetableId: shared.get(term) ?? null,
+                    source: shared.get(term) == null ? "enrolled" : "saved",
+                    name: "Shared",
                     lectures: [],
                     timetableItems:
                         shared.get(term) == null ? [] : [{ kind: "custom", data: block }],
@@ -225,7 +237,7 @@ test("selects one shared timetable per semester independently of the main timeta
     await expect(
         page.getByRole("tab", { name: "2026 가을학기", exact: true }),
     ).toHaveAttribute("aria-selected", "true")
-    await expect(page.getByRole("tab", { name: "수강 시간표", exact: true })).toHaveCount(
+    await expect(page.getByRole("tab", { name: "학사 시간표", exact: true })).toHaveCount(
         0,
     )
     await expect(page.locator(".block-title", { hasText: "공유 일정" })).toBeVisible()
