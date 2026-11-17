@@ -124,6 +124,14 @@ async function setup(page: Page, language = "ko") {
                 majorDepartments: [],
                 interestedDepartments: [],
             }
+        } else if (path.endsWith("/timetables/shared/semesters")) {
+            json = {
+                semesters: [
+                    { year: 2026, semester: 3 },
+                    { year: 2026, semester: 1 },
+                    { year: 2025, semester: 3 },
+                ],
+            }
         } else if (path === "/api/v2/semesters") {
             json = {
                 semesters: [
@@ -146,10 +154,18 @@ async function setup(page: Page, language = "ko") {
                 lectures: [lectures[4]],
                 timetableItems: [{ kind: "lecture", data: lectures[4] }],
             }
-        } else if (/^\/api\/v2\/friends\/\d+\/timetables\/shared$/.test(path)) {
+        } else if (
+            path === "/api/v2/timetables/shared" ||
+            /^\/api\/v2\/friends\/\d+\/timetables\/shared$/.test(path)
+        ) {
             json =
                 year === 2025
                     ? {
+                          source: "saved",
+                          timetableId: 43,
+                          name: "지난 시간표",
+                          year,
+                          semester: term,
                           timetableItems: [
                               {
                                   kind: "lecture",
@@ -159,10 +175,23 @@ async function setup(page: Page, language = "ko") {
                       }
                     : term === 1
                       ? {
+                            source: "enrolled",
+                            timetableId: null,
+                            name: "학사 시간표",
+                            year,
+                            semester: term,
                             lectures: [academicLecture],
                             timetableItems: [{ kind: "lecture", data: academicLecture }],
                         }
-                      : { lectures, timetableItems: items }
+                      : {
+                            source: "saved",
+                            timetableId: 42,
+                            name: "공유 시간표",
+                            year,
+                            semester: term,
+                            lectures,
+                            timetableItems: items,
+                        }
         } else if (path === "/api/v2/timetables") {
             json = {
                 timetables: savedTimetables.filter(
@@ -269,6 +298,7 @@ test("semester tabs open one shared timetable per term and fall back to academic
 
     await page.getByRole("tab", { name: "2026 봄학기" }).click()
     await expect(page.locator("[data-lecture-id='80'] .lecture-tile")).toBeVisible()
+    await expect(page.getByText("학사 시간표", { exact: true })).toBeVisible()
     await expect(page.locator("[data-lecture-id='81'] .lecture-tile")).toHaveCount(0)
     await expect(page.getByRole("tab", { selected: true })).toHaveText("2026 봄학기")
     await expectNoHorizontalOverflow(page)
@@ -276,6 +306,34 @@ test("semester tabs open one shared timetable per term and fall back to academic
     await expect(page.getByRole("tab", { selected: true })).toHaveText("2025 가을학기")
     await expect(page.locator("[data-lecture-id='81'] .lecture-tile")).toBeVisible()
 })
+
+for (const width of [390, 1440]) {
+    test(`my shared preview uses available semester tabs at width ${width}`, async ({
+        page,
+    }) => {
+        await page.setViewportSize({ width, height: 900 })
+        await setup(page)
+        await page.goto("/friends?year=2026&semester=3&timetableId=999")
+        await expect(page.getByRole("tab")).toHaveText([
+            "2026 가을학기",
+            "2026 봄학기",
+            "2025 가을학기",
+        ])
+        await expect(page.getByText("공유 시간표", { exact: true })).toBeVisible()
+        await expect(
+            page.getByRole("button", { name: "이전 학기", exact: true }),
+        ).toHaveCount(0)
+        await expect(page.locator(".custom-block-tile").first()).toBeVisible()
+        await page.getByRole("tab", { name: "2026 봄학기" }).click()
+        await expect(page.getByText("학사 시간표", { exact: true })).toBeVisible()
+        await expect(page.locator("[data-lecture-id='80'] .lecture-tile")).toBeVisible()
+        await expectNoHorizontalOverflow(page)
+        await page.screenshot({
+            path: `/tmp/otl-shared-semesters-${width}.png`,
+            fullPage: true,
+        })
+    })
+}
 
 test("desktop matches the friends layout and exact-lecture overlap treatment", async ({
     page,

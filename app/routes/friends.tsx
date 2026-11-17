@@ -26,7 +26,6 @@ import {
     removeFriendTimetableQueries,
 } from "@/features/friends/friendQueries"
 import FriendsListSection from "@/features/friends/sections/FriendsListSection"
-import SemesterButton from "@/features/timetable/sections/TabsRowSubSection/SemesterButton"
 import TabButton from "@/features/timetable/sections/TabsRowSubSection/TabButton"
 import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
@@ -203,24 +202,24 @@ export default function FriendsPage() {
         requestedSemester <= SemesterEnum.WINTER
     const year = hasRequestedTerm ? requestedYear : -1
     const semester = hasRequestedTerm ? requestedSemester : SemesterEnum.SPRING
-    const requestedTimetableId = hasRequestedTerm
-        ? positiveInteger(searchParams.get("timetableId"))
-        : null
-    const currentTimetableId = selectedFriendId === null ? requestedTimetableId : null
-    const { query: semestersQuery } = useAPI("GET", "/semesters", {
-        enabled: status === "success" && selectedFriendId !== null,
+    const sharedPath =
+        selectedFriendId === null
+            ? "/timetables/shared"
+            : (`/friends/${selectedFriendId}/timetables/shared` as const)
+    const { query: semestersQuery } = useAPI("GET", `${sharedPath}/semesters`, {
+        enabled: status === "success",
+        staleTime: 0,
     })
-    const friendSemesters = useMemo(() => {
-        const terms = [...(semestersQuery.data?.semesters ?? [])]
-        // Keep older overlap links usable even if their term is absent from the list.
-        const requestedTerm = { year, semester }
-        const allTerms =
-            year > 0 &&
-            !terms.some((term) => term.year === year && term.semester === semester)
-                ? [...terms, requestedTerm]
-                : terms
-        return allTerms.sort((a, b) => b.year - a.year || b.semester - a.semester)
-    }, [semestersQuery.data, year, semester])
+    const sharedSemesters = useMemo(
+        () =>
+            [...(semestersQuery.data?.semesters ?? [])].sort(
+                (a, b) => b.year - a.year || b.semester - a.semester,
+            ),
+        [semestersQuery.data],
+    )
+    const hasSharedSemester = sharedSemesters.some(
+        (term) => term.year === year && term.semester === semester,
+    )
     const selectedTabRef = useRef<HTMLDivElement>(null)
     const [selectedItem, setSelectedItem] = useState<TimetableItem | null>(null)
     const selectedLecture =
@@ -254,13 +253,6 @@ export default function FriendsPage() {
         [setSearchParams],
     )
 
-    const handleSelectTimetable = (timetableId: number | null) => {
-        const params = new URLSearchParams(searchParams)
-        if (timetableId === null) params.delete("timetableId")
-        else params.set("timetableId", String(timetableId))
-        setSearchParams(params)
-    }
-
     const handleSelectSemester = useCallback(
         (nextYear: number, nextSemester: SemesterEnum) => {
             const params = new URLSearchParams(searchParams)
@@ -273,14 +265,19 @@ export default function FriendsPage() {
     )
 
     useEffect(() => {
-        if (selectedFriendId === null || year >= 0) return
-        const latest = friendSemesters[0]
+        if (!semestersQuery.isSuccess || hasSharedSemester) return
+        const latest = sharedSemesters[0]
         if (latest) handleSelectSemester(latest.year, latest.semester)
-    }, [selectedFriendId, year, friendSemesters, handleSelectSemester])
+    }, [
+        semestersQuery.isSuccess,
+        hasSharedSemester,
+        sharedSemesters,
+        handleSelectSemester,
+    ])
 
     useEffect(() => {
         selectedTabRef.current?.scrollIntoView?.({ block: "nearest", inline: "nearest" })
-    }, [selectedFriendId, year, semester, currentTimetableId, semestersQuery.data])
+    }, [selectedFriendId, year, semester, semestersQuery.data])
 
     useEffect(() => {
         if (isTablet && detailOpen) detailActionRef.current?.focus()
@@ -343,15 +340,13 @@ export default function FriendsPage() {
         ({ id }) => id === selectedFriendId,
     )
 
-    const { query: ownTimetables, setParams: setOwnTimetableParams } = useAPI(
-        "GET",
-        "/timetables",
-        { enabled: status === "success" && selectedFriendId === null },
-    )
     const { query: ownActual, setParams: setOwnActualParams } = useAPI(
         "GET",
         "/timetables/my-timetable",
-        { enabled: status === "success" },
+        {
+            enabled:
+                status === "success" && selectedFriendId !== null && hasSharedSemester,
+        },
     )
     // The existing v1 list includes every saved timetable's lecture IDs in one read.
     const { query: ownAllSaved, setParams: setOwnAllSavedParams } = useAPI(
@@ -359,22 +354,16 @@ export default function FriendsPage() {
         `/users/${user?.id ?? 0}/timetables`,
         {
             apiPrefix: "/api",
-            enabled: status === "success" && selectedFriendId !== null,
+            enabled:
+                status === "success" && selectedFriendId !== null && hasSharedSemester,
             staleTime: 0,
         },
     )
-    const { query: ownSaved } = useAPI("GET", `/timetables/${currentTimetableId ?? 0}`, {
-        enabled:
-            status === "success" &&
-            selectedFriendId === null &&
-            currentTimetableId !== null,
-    })
-
-    const { query: friendTimetable, setParams: setFriendTimetableParams } = useAPI(
+    const { query: timetableQuery, setParams: setTimetableParams } = useAPI(
         "GET",
-        `/friends/${selectedFriendId ?? 0}/timetables/shared`,
+        sharedPath,
         {
-            enabled: status === "success" && selectedFriendId !== null && year > 0,
+            enabled: status === "success" && hasSharedSemester,
             staleTime: 0,
             gcTime: 0,
         },
@@ -399,18 +388,14 @@ export default function FriendsPage() {
         const params = { year, semester }
         setOwnActualParams(params)
         setOwnAllSavedParams(params)
-        if (selectedFriendId === null) {
-            setOwnTimetableParams(params)
-        } else {
-            setFriendTimetableParams(params)
-        }
+        setTimetableParams(params)
     }, [year, semester, selectedFriendId])
 
     useEffect(() => {
         setSelectedItem(null)
         setDetailOpen(false)
         setFriendListOpen(false)
-    }, [selectedFriendId, year, semester, currentTimetableId, location.key])
+    }, [selectedFriendId, year, semester, location.key])
 
     useEffect(() => {
         if (
@@ -430,16 +415,10 @@ export default function FriendsPage() {
         handleSelectFriend,
     ])
 
-    const timetables = ownTimetables.data?.timetables ?? []
-    const timetableQuery =
-        selectedFriendId !== null
-            ? friendTimetable
-            : currentTimetableId === null
-              ? ownActual
-              : ownSaved
-    const timetableItems = timetableQuery.isError
-        ? []
-        : (timetableQuery.data?.timetableItems ?? [])
+    const timetableItems =
+        !hasSharedSemester || timetableQuery.isError
+            ? []
+            : (timetableQuery.data?.timetableItems ?? [])
     const lectures = timetableItems.flatMap((item) =>
         item.kind === TimetableItemKind.LECTURE ? [item.data] : [],
     )
@@ -472,33 +451,15 @@ export default function FriendsPage() {
             semester: semesterToString(termSemester),
         })
     const timetableName =
-        selectedFriendId !== null
-            ? semesterName(year, semester)
-            : currentTimetableId === null
-              ? t("friends.actualTimetable")
-              : timetables.find(({ id }) => id === currentTimetableId)?.name || "No Title"
-    const timetableTabs =
-        selectedFriendId !== null
-            ? friendSemesters.map((term) => ({
-                  key: `${term.year}-${term.semester}`,
-                  name: semesterName(term.year, term.semester),
-                  selected: term.year === year && term.semester === semester,
-                  onSelect: () => handleSelectSemester(term.year, term.semester),
-              }))
-            : [
-                  {
-                      key: "academic",
-                      name: t("friends.actualTimetable"),
-                      selected: currentTimetableId === null,
-                      onSelect: () => handleSelectTimetable(null),
-                  },
-                  ...timetables.map((timetable) => ({
-                      key: String(timetable.id),
-                      name: timetable.name || "No Title",
-                      selected: currentTimetableId === timetable.id,
-                      onSelect: () => handleSelectTimetable(timetable.id),
-                  })),
-              ]
+        timetableQuery.data?.source === "enrolled"
+            ? t("friends.actualTimetable")
+            : timetableQuery.data?.name || semesterName(year, semester)
+    const timetableTabs = sharedSemesters.map((term) => ({
+        key: `${term.year}-${term.semester}`,
+        name: semesterName(term.year, term.semester),
+        selected: term.year === year && term.semester === semester,
+        onSelect: () => handleSelectSemester(term.year, term.semester),
+    }))
 
     const closeAddedModal = () => {
         setAddedFriendName(null)
@@ -619,18 +580,25 @@ export default function FriendsPage() {
                                 </TimetableTab>
                             ))}
                         </Tabs>
-                        {selectedFriendId === null && (
-                            <SemesterButton
-                                variant="outlined"
-                                year={year}
-                                semester={semester}
-                                onChange={handleSelectSemester}
-                            />
-                        )}
                     </TimetableHeader>
                     <TimetablePanel direction="column" gap={8} align="stretch">
-                        {(timetableQuery.isError ||
-                            (selectedFriendId !== null && semestersQuery.isError)) && (
+                        {semestersQuery.isSuccess && sharedSemesters.length === 0 && (
+                            <Typography
+                                type="Small"
+                                color="Text.placeholder"
+                                role="status"
+                            >
+                                {t("friends.noSharedTimetables")}
+                            </Typography>
+                        )}
+                        {hasSharedSemester &&
+                            timetableQuery.isSuccess &&
+                            !timetableQuery.isError && (
+                                <Typography type="Small" color="Text.default">
+                                    {timetableName}
+                                </Typography>
+                            )}
+                        {(timetableQuery.isError || semestersQuery.isError) && (
                             <Typography
                                 type="Small"
                                 color="Highlight.default"
@@ -737,7 +705,8 @@ export default function FriendsPage() {
                         <Typography type="Normal" color="Text.default">
                             {t("friends.chooseLecture")}
                         </Typography>
-                        {timetableQuery.isPending ? (
+                        {semestersQuery.isPending ||
+                        (hasSharedSemester && timetableQuery.isPending) ? (
                             <Typography role="status">
                                 {t("friends.loadingLectures")}
                             </Typography>

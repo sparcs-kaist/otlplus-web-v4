@@ -56,6 +56,7 @@ export const friends = {
     loginRequired: "Sign in to view friends' timetables.",
     login: "Sign in",
     actualTimetable: "Enrolled timetable",
+    noSharedTimetables: "No timetables are available to share.",
     selectLecture: "Select a lecture to see friends with matching classes.",
     sameLecture: "Same lecture and section",
     sameCourseDifferentSection: "Same course, different section",

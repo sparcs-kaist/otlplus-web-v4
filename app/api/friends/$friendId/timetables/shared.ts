@@ -1,1 +1,1 @@
-export { GETRequest, GETResponse } from "@/api/timetables/my-timetable"
+export { GETRequest, GETResponse } from "@/api/timetables/shared"
