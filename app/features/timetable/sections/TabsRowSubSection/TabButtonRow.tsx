@@ -21,8 +21,8 @@ import {
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import AddIcon from "@mui/icons-material/Add"
+import CloseIcon from "@mui/icons-material/Close"
 import ContentCopyIcon from "@mui/icons-material/ContentCopy"
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineOutlined"
 import StarIcon from "@mui/icons-material/Star"
 import StarBorderIcon from "@mui/icons-material/StarBorder"
 import { useQueryClient } from "@tanstack/react-query"
@@ -336,7 +336,7 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
                                 styles={{ padding: 3.75 }}
                             >
                                 <Icon size={17.5} color={theme.colors.Highlight.default}>
-                                    <DeleteOutlineIcon />
+                                    <CloseIcon />
                                 </Icon>
                             </IconButton>
                         </Tooltip>
