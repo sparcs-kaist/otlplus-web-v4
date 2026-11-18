@@ -198,12 +198,16 @@ export default function FriendInviteModal({
                     </Typography>
                 )}
                 <FlexWrapper direction="row" gap={8} justify="flex-end">
-                    <Button type={code ? "default" : "disabled"} onClick={handleCopy}>
+                    <FriendInviteButton
+                        type="button"
+                        disabled={!code}
+                        onClick={handleCopy}
+                    >
                         <Icon size={16}>
                             <ContentCopyIcon />
                         </Icon>
                         {t("friends.copy")}
-                    </Button>
+                    </FriendInviteButton>
                     <Button
                         type={code ? "highlighted" : "disabled"}
                         onClick={handleShare}
