@@ -109,8 +109,8 @@ const MyTimetableButton = styled.button<{ $selected: boolean }>`
     color: ${({ theme }) => theme.colors.Text.default};
     background: ${({ $selected, theme }) =>
         $selected
-            ? theme.colors.Background.Block.dark
-            : theme.colors.Background.Tab.default};
+            ? theme.colors.Background.Button.dark
+            : theme.colors.Background.Section.default};
 `
 const Empty = styled(FlexWrapper)`
     padding: 24px 16px;

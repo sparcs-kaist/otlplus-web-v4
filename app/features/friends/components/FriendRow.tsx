@@ -26,8 +26,8 @@ const FriendRowWrapper = styled(FlexWrapper)<{ $selected: boolean }>`
     }
     background: ${({ $selected, theme }) =>
         $selected
-            ? theme.colors.Background.Block.dark
-            : theme.colors.Background.Tab.default};
+            ? theme.colors.Background.Button.dark
+            : theme.colors.Background.Section.default};
     border-radius: 4px;
 `
 
