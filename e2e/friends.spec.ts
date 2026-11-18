@@ -341,9 +341,12 @@ test("desktop matches the friends layout and exact-lecture overlap treatment", a
     await page.setViewportSize({ width: 1920, height: 1080 })
     await setup(page)
     await expect(page.getByText("친구 목록 (6)", { exact: true })).toBeVisible()
-    await expect(
-        page.getByRole("img", { name: "지금 등록된 일정이 있어요" }),
-    ).toHaveCount(2)
+    const scheduleIcons = page.getByRole("img", { name: "수업중", exact: true })
+    await expect(scheduleIcons).toHaveCount(2)
+    await scheduleIcons.first().hover()
+    await expect(page.getByRole("tooltip")).toHaveText("수업중")
+    await page.mouse.move(0, 0)
+    await expect(page.getByRole("tooltip")).toHaveCount(0)
     await expect(page.getByRole("button", { name: "삭제", exact: true })).toHaveCount(1)
     await expect(
         page.locator("[data-lecture-id='9'] [data-friend-overlap] "),
@@ -413,9 +416,15 @@ for (const viewport of [
         await page.getByRole("button", { name: "친구 선택", exact: true }).click()
         const friendDialog = page.getByRole("dialog", { name: "친구 시간표" })
         await expect(friendDialog).toBeVisible()
-        await expect(
-            friendDialog.getByRole("img", { name: "지금 등록된 일정이 있어요" }),
-        ).toHaveCount(2)
+        const scheduleIcons = friendDialog.getByRole("img", {
+            name: "수업중",
+            exact: true,
+        })
+        await expect(scheduleIcons).toHaveCount(2)
+        await scheduleIcons.first().hover()
+        await expect(page.getByRole("tooltip")).toHaveText("수업중")
+        await page.mouse.move(0, 0)
+        await expect(page.getByRole("tooltip")).toHaveCount(0)
         await page.screenshot({
             path: `${screenshotDirectory}/${viewport.name}-friends.png`,
         })
