@@ -23,7 +23,6 @@ import styled from "@emotion/styled"
 import AddIcon from "@mui/icons-material/Add"
 import CloseIcon from "@mui/icons-material/Close"
 import ContentCopyIcon from "@mui/icons-material/ContentCopy"
-import PeopleIcon from "@mui/icons-material/People"
 import StarIcon from "@mui/icons-material/Star"
 import StarBorderIcon from "@mui/icons-material/StarBorder"
 import { useQueryClient } from "@tanstack/react-query"
@@ -41,6 +40,7 @@ import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
 import useUserStore from "@/utils/zustand/useUserStore"
 
+import SharedTimetableButton from "./SharedTimetableButton"
 import TabButton from "./TabButton"
 import getSemesterTimetables from "./getSemesterTimetables"
 import getTimetableAutoSelection from "./getTimetableAutoSelection"
@@ -111,7 +111,7 @@ interface SortableTimetableTabProps {
     isSelected: boolean
     isShared: boolean
     isSettingShared: boolean
-    onSetShared: (e: React.MouseEvent) => void
+    onSetShared: () => void
     isHome: boolean
     isSettingHome: boolean
     onClick: () => void
@@ -290,48 +290,12 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
                             <StarIcon />
                         </Icon>
                     ) : null}
-                    {isSelected ? (
-                        <span
-                            title={t(
-                                isShared
-                                    ? "timetable.sharedTimetable"
-                                    : "timetable.setSharedTimetable",
-                            )}
-                        >
-                            <IconButton
-                                aria-label={t(
-                                    isShared
-                                        ? "timetable.sharedTimetable"
-                                        : "timetable.setSharedTimetable",
-                                )}
-                                aria-pressed={isShared}
-                                disabled={isSettingShared}
-                                onClick={onSetShared}
-                                styles={{ padding: 3.75 }}
-                            >
-                                <Icon size={17.5} color={theme.colors.Highlight.default}>
-                                    <PeopleIcon
-                                        style={{
-                                            fill: isShared ? "currentColor" : "none",
-                                            stroke: isShared ? "none" : "currentColor",
-                                            strokeWidth: 1.5,
-                                            strokeLinejoin: "round",
-                                        }}
-                                    />
-                                </Icon>
-                            </IconButton>
-                        </span>
-                    ) : isShared ? (
-                        <Icon
-                            size={17.5}
-                            color={theme.colors.Highlight.default}
-                            role="img"
-                            aria-label={t("timetable.sharedTimetable")}
-                            style={{ margin: 3.75 }}
-                        >
-                            <PeopleIcon />
-                        </Icon>
-                    ) : null}
+                    <SharedTimetableButton
+                        selected={isSelected}
+                        shared={isShared}
+                        disabled={isSettingShared}
+                        onClick={onSetShared}
+                    />
                     {isSelected && (
                         <IconButton
                             aria-label={t("timetable.shortcuts.timetableDuplicate")}
@@ -650,10 +614,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                                     isSelected={currentTimetableId === timetable.id}
                                     isShared={sharedTimetableId === timetable.id}
                                     isSettingShared={isSettingShared}
-                                    onSetShared={(e) => {
-                                        e.stopPropagation()
-                                        void handleSetShared(timetable.id)
-                                    }}
+                                    onSetShared={() => void handleSetShared(timetable.id)}
                                     isHome={homeTimetableId === timetable.id}
                                     isSettingHome={isSettingHome}
                                     onSetHome={(e) => {
@@ -753,59 +714,14 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                                 <StarIcon />
                             </Icon>
                         )}
-                    {status === "success" &&
-                        (currentTimetableId === null ? (
-                            <span
-                                title={t(
-                                    isAcademicShared
-                                        ? "timetable.sharedTimetable"
-                                        : "timetable.setSharedTimetable",
-                                )}
-                            >
-                                <IconButton
-                                    aria-label={t(
-                                        isAcademicShared
-                                            ? "timetable.sharedTimetable"
-                                            : "timetable.setSharedTimetable",
-                                    )}
-                                    aria-pressed={isAcademicShared}
-                                    disabled={isSettingShared}
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        void handleSetShared(null)
-                                    }}
-                                    styles={{ padding: 3.75 }}
-                                >
-                                    <Icon
-                                        size={17.5}
-                                        color={theme.colors.Highlight.default}
-                                    >
-                                        <PeopleIcon
-                                            style={{
-                                                fill: isAcademicShared
-                                                    ? "currentColor"
-                                                    : "none",
-                                                stroke: isAcademicShared
-                                                    ? "none"
-                                                    : "currentColor",
-                                                strokeWidth: 1.5,
-                                                strokeLinejoin: "round",
-                                            }}
-                                        />
-                                    </Icon>
-                                </IconButton>
-                            </span>
-                        ) : isAcademicShared ? (
-                            <Icon
-                                size={17.5}
-                                color={theme.colors.Highlight.default}
-                                role="img"
-                                aria-label={t("timetable.sharedTimetable")}
-                                style={{ margin: 3.75 }}
-                            >
-                                <PeopleIcon />
-                            </Icon>
-                        ) : null)}
+                    {status === "success" && (
+                        <SharedTimetableButton
+                            selected={currentTimetableId === null}
+                            shared={isAcademicShared}
+                            disabled={isSettingShared}
+                            onClick={() => void handleSetShared(null)}
+                        />
+                    )}
                     {currentTimetableId === null && status === "success" && (
                         <IconButton
                             aria-label={t("timetable.shortcuts.timetableDuplicate")}

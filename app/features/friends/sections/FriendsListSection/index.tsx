@@ -11,6 +11,7 @@ import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import type { Friend, FriendListItem } from "@/common/schemas/friend"
 import FriendRow from "@/features/friends/components/FriendRow"
+import { friendRowStyles } from "@/features/friends/components/friendRowStyles"
 
 const SidebarHeading = styled(Typography)`
     align-self: center;
@@ -99,22 +100,12 @@ const InviteButton = styled.button`
 `
 
 const MyTimetableButton = styled.button<{ $selected: boolean }>`
+    ${friendRowStyles}
     border: 0;
-    border-radius: 4px;
-    min-height: 44px;
     padding: 8px 12px;
     font: inherit;
     text-align: left;
-    cursor: pointer;
     color: ${({ theme }) => theme.colors.Text.default};
-    background: ${({ $selected, theme }) =>
-        $selected
-            ? theme.colors.Background.Button.dark
-            : theme.colors.Background.Section.default};
-
-    &:hover {
-        background-color: ${({ theme }) => theme.colors.Background.Tab.dark};
-    }
 `
 const Empty = styled(FlexWrapper)`
     padding: 24px 16px;

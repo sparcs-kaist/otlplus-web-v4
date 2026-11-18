@@ -18,18 +18,11 @@ import type { FriendListItem } from "@/common/schemas/friend"
 import { invalidateFriendQueries } from "@/features/friends/friendQueries"
 import { useAPI } from "@/utils/api/useAPI"
 
+import { friendRowStyles } from "./friendRowStyles"
+
 const FriendRowWrapper = styled(FlexWrapper)<{ $selected: boolean }>`
-    cursor: pointer;
-    min-height: 44px;
+    ${friendRowStyles}
     flex-shrink: 0;
-    &:hover {
-        background-color: ${({ theme }) => theme.colors.Background.Tab.dark};
-    }
-    background: ${({ $selected, theme }) =>
-        $selected
-            ? theme.colors.Background.Button.dark
-            : theme.colors.Background.Section.default};
-    border-radius: 4px;
 `
 
 const tooltipTheme = createTheme()
