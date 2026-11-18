@@ -18,7 +18,7 @@ export const friends = {
     myTimetable: "My Timetable",
     searchPlaceholder: "Search",
     noFriends: "You don't have any timetable friends yet.",
-    scheduleNow: "Has a scheduled event right now",
+    scheduleNow: "In class",
     invite: "Copy friend invite link",
     inviteTitle: "Invite a timetable friend",
     inviteDescription:

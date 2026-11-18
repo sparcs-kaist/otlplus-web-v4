@@ -18,7 +18,7 @@ export const friends = {
     previousSemester: "이전 학기",
     nextSemester: "다음 학기",
     noFriends: "아직 시간표 친구가 없어요.",
-    scheduleNow: "지금 등록된 일정이 있어요",
+    scheduleNow: "수업중",
     invite: "친구 추가 링크 복사",
     inviteTitle: "시간표 친구 초대",
     inviteDescription:

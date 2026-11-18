@@ -220,7 +220,7 @@ describe("friend code sharing", () => {
 
     it.each([
         ["shared", "friends.shareSuccess"],
-        ["copied", "friends.copySuccess"],
+        ["copied", "friends.shareSuccess"],
         ["cancelled", "friends.share"],
     ] as const)("reflects the actual share result: %s", async (result, label) => {
         await openModal()
@@ -264,9 +264,12 @@ describe("friend code sharing", () => {
 
     it("requires confirmation and updates the code, QR, copy and share together", async () => {
         await openModal()
+        const description = screen.getByText("friends.inviteDescription")
         fireEvent.click(screen.getByRole("button", { name: "friends.regenerateCode" }))
-        expect(screen.getByText("friends.regenerateConfirm")).toBeInTheDocument()
+        expect(screen.getByText("friends.regenerateConfirm")).toBe(description)
+        expect(screen.queryByText("friends.inviteDescription")).not.toBeInTheDocument()
         fireEvent.click(screen.getByRole("button", { name: "friends.cancel" }))
+        expect(screen.getByText("friends.inviteDescription")).toBe(description)
         expect(axiosClient.request).toHaveBeenCalledTimes(1)
 
         let complete!: () => void
@@ -304,6 +307,7 @@ describe("friend code sharing", () => {
         )
         await act(async () => complete())
         await screen.findByText("friends.code: ACDEFH")
+        expect(screen.getByText("friends.inviteDescription")).toBe(description)
         expect(
             await screen.findByRole("button", { name: "friends.regenerateSuccess" }),
         ).toContainElement(screen.getByTestId("CheckIcon"))

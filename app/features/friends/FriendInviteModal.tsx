@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 
 import styled from "@emotion/styled"
-import CheckIcon from "@mui/icons-material/Check"
 import ContentCopyIcon from "@mui/icons-material/ContentCopy"
 import LinkIcon from "@mui/icons-material/Link"
 import RefreshIcon from "@mui/icons-material/Refresh"
@@ -10,11 +9,12 @@ import { useTranslation } from "react-i18next"
 
 import Modal from "@/common/components/Modal"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
-import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import useIsDevice from "@/utils/useIsDevice"
 
-import FriendInviteButton from "./components/FriendInviteButton"
+import FriendInviteButton, {
+    FriendInviteButtonContent,
+} from "./components/FriendInviteButton"
 import FriendInviteQR from "./components/FriendInviteQR"
 import useFriendInviteCode from "./hooks/useFriendInviteCode"
 import {
@@ -43,6 +43,16 @@ const ShareButton = styled(FriendInviteButton)`
     }
 `
 
+const InviteActions = styled.div<{ $isMobile: boolean }>`
+    display: grid;
+    grid-template-columns: ${({ $isMobile }) =>
+        $isMobile ? "minmax(0, 1fr) auto" : "auto minmax(0, 1fr) auto"};
+    grid-template-areas: ${({ $isMobile }) =>
+        $isMobile ? '"copy copy" "regenerate share"' : '"regenerate copy share"'};
+    align-items: end;
+    gap: 8px 16px;
+`
+
 interface FriendInviteModalProps {
     isOpen: boolean
     onClose: () => void
@@ -57,7 +67,7 @@ export default function FriendInviteModal({
     const { t } = useTranslation()
     const isMobile = useIsDevice("mobile")
     const [feedback, setFeedback] = useState<{
-        action: "regenerate" | "link" | "message" | "share" | "shareCopy"
+        action: "regenerate" | "link" | "message" | "share"
     } | null>(null)
     const reportedError = useRef<unknown>(null)
     const [qrBusy, setQrBusy] = useState(false)
@@ -114,36 +124,11 @@ export default function FriendInviteModal({
         setFeedback(null)
         try {
             const result = await shareFriendInvite(userName, inviteUrl)
-            if (result !== "cancelled")
-                setFeedback({ action: result === "copied" ? "shareCopy" : "share" })
+            if (result !== "cancelled") setFeedback({ action: "share" })
         } catch {
             window.alert(t("friends.shareError"))
         }
     }
-
-    const regenerationControls = (
-        <FlexWrapper direction="column" gap={8} align="stretch">
-            <Typography type="Normal" color="Text.default">
-                {t("friends.regenerateConfirm")}
-            </Typography>
-            <FlexWrapper direction="row" gap={8} justify="flex-end">
-                <FriendInviteButton
-                    type="button"
-                    disabled={regenerate.isPending}
-                    onClick={() => setConfirmRegenerate(false)}
-                >
-                    {t("friends.cancel")}
-                </FriendInviteButton>
-                <FriendInviteButton
-                    type="button"
-                    disabled={regenerate.isPending || qrBusy}
-                    onClick={() => regenerateCode({})}
-                >
-                    {t("friends.regenerateCode")}
-                </FriendInviteButton>
-            </FlexWrapper>
-        </FlexWrapper>
-    )
 
     return (
         <Modal
@@ -157,8 +142,16 @@ export default function FriendInviteModal({
             fullScreen={isMobile}
         >
             <FlexWrapper direction="column" gap={16} align="stretch">
-                <Typography type="Normal" color="Text.placeholder">
-                    {t("friends.inviteDescription")}
+                <Typography
+                    type="Normal"
+                    color={confirmRegenerate ? "Text.default" : "Text.placeholder"}
+                    aria-live="polite"
+                >
+                    {t(
+                        confirmRegenerate
+                            ? "friends.regenerateConfirm"
+                            : "friends.inviteDescription",
+                    )}
                 </Typography>
                 {query.isPending && (
                     <Typography type="Normal" color="Text.placeholder" role="status">
@@ -170,42 +163,15 @@ export default function FriendInviteModal({
                         {t("friends.regeneratingCode")}
                     </Typography>
                 )}
-                {confirmRegenerate && regenerationControls}
                 {code && (
                     <>
-                        <FlexWrapper direction="row" gap={8} justify="space-between">
-                            <Typography
-                                type="BigBold"
-                                color="Text.default"
-                                className="mp-block mp-sensitive"
-                            >
-                                {t("friends.code")}: {code}
-                            </Typography>
-                            {!confirmRegenerate && (
-                                <FriendInviteButton
-                                    type="button"
-                                    disabled={qrBusy}
-                                    onClick={() => {
-                                        setFeedback(null)
-                                        resetRegenerate()
-                                        setConfirmRegenerate(true)
-                                    }}
-                                >
-                                    <Icon size={16}>
-                                        {feedback?.action === "regenerate" ? (
-                                            <CheckIcon />
-                                        ) : (
-                                            <RefreshIcon />
-                                        )}
-                                    </Icon>
-                                    {t(
-                                        feedback?.action === "regenerate"
-                                            ? "friends.regenerateSuccess"
-                                            : "friends.regenerateCode",
-                                    )}
-                                </FriendInviteButton>
-                            )}
-                        </FlexWrapper>
+                        <Typography
+                            type="BigBold"
+                            color="Text.default"
+                            className="mp-block mp-sensitive"
+                        >
+                            {t("friends.code")}: {code}
+                        </Typography>
                         <Preview className="mp-block mp-sensitive">
                             {friendInviteMessage(userName, inviteUrl)}
                         </Preview>
@@ -217,62 +183,86 @@ export default function FriendInviteModal({
                         />
                     </>
                 )}
-                <FlexWrapper
-                    direction="row"
-                    gap={8}
-                    justify="flex-end"
-                    style={{ flexWrap: "wrap" }}
-                >
-                    <FriendInviteButton
+                <InviteActions $isMobile={isMobile}>
+                    <FlexWrapper
+                        direction="row"
+                        gap={8}
+                        style={{ gridArea: "regenerate", flexWrap: "wrap-reverse" }}
+                    >
+                        <FriendInviteButton
+                            type="button"
+                            disabled={!code || regenerate.isPending || qrBusy}
+                            onClick={() => {
+                                if (confirmRegenerate) regenerateCode({})
+                                else {
+                                    setFeedback(null)
+                                    resetRegenerate()
+                                    setConfirmRegenerate(true)
+                                }
+                            }}
+                        >
+                            <FriendInviteButtonContent
+                                icon={<RefreshIcon />}
+                                label={t("friends.regenerateCode")}
+                                successLabel={t("friends.regenerateSuccess")}
+                                succeeded={feedback?.action === "regenerate"}
+                            />
+                        </FriendInviteButton>
+                        {confirmRegenerate && (
+                            <FriendInviteButton
+                                type="button"
+                                disabled={regenerate.isPending}
+                                onClick={() => setConfirmRegenerate(false)}
+                            >
+                                {t("friends.cancel")}
+                            </FriendInviteButton>
+                        )}
+                    </FlexWrapper>
+                    <FlexWrapper
+                        direction="row"
+                        gap={8}
+                        justify="flex-end"
+                        style={{ gridArea: "copy", flexWrap: "wrap" }}
+                    >
+                        <FriendInviteButton
+                            type="button"
+                            disabled={!code}
+                            onClick={() => handleCopy("link")}
+                        >
+                            <FriendInviteButtonContent
+                                icon={<LinkIcon />}
+                                label={t("friends.copyLink")}
+                                successLabel={t("friends.copySuccess")}
+                                succeeded={feedback?.action === "link"}
+                            />
+                        </FriendInviteButton>
+                        <FriendInviteButton
+                            type="button"
+                            disabled={!code}
+                            onClick={() => handleCopy("message")}
+                        >
+                            <FriendInviteButtonContent
+                                icon={<ContentCopyIcon />}
+                                label={t("friends.copy")}
+                                successLabel={t("friends.copySuccess")}
+                                succeeded={feedback?.action === "message"}
+                            />
+                        </FriendInviteButton>
+                    </FlexWrapper>
+                    <ShareButton
                         type="button"
                         disabled={!code}
-                        onClick={() => handleCopy("link")}
+                        onClick={handleShare}
+                        style={{ gridArea: "share" }}
                     >
-                        <Icon size={16}>
-                            {feedback?.action === "link" ? <CheckIcon /> : <LinkIcon />}
-                        </Icon>
-                        {t(
-                            feedback?.action === "link"
-                                ? "friends.copySuccess"
-                                : "friends.copyLink",
-                        )}
-                    </FriendInviteButton>
-                    <FriendInviteButton
-                        type="button"
-                        disabled={!code}
-                        onClick={() => handleCopy("message")}
-                    >
-                        <Icon size={16}>
-                            {feedback?.action === "message" ? (
-                                <CheckIcon />
-                            ) : (
-                                <ContentCopyIcon />
-                            )}
-                        </Icon>
-                        {t(
-                            feedback?.action === "message"
-                                ? "friends.copySuccess"
-                                : "friends.copy",
-                        )}
-                    </FriendInviteButton>
-                    <ShareButton type="button" disabled={!code} onClick={handleShare}>
-                        <Icon size={16}>
-                            {feedback?.action === "share" ||
-                            feedback?.action === "shareCopy" ? (
-                                <CheckIcon />
-                            ) : (
-                                <ShareIcon />
-                            )}
-                        </Icon>
-                        {t(
-                            feedback?.action === "share"
-                                ? "friends.shareSuccess"
-                                : feedback?.action === "shareCopy"
-                                  ? "friends.copySuccess"
-                                  : "friends.share",
-                        )}
+                        <FriendInviteButtonContent
+                            icon={<ShareIcon />}
+                            label={t("friends.share")}
+                            successLabel={t("friends.shareSuccess")}
+                            succeeded={feedback?.action === "share"}
+                        />
                     </ShareButton>
-                </FlexWrapper>
+                </InviteActions>
             </FlexWrapper>
         </Modal>
     )

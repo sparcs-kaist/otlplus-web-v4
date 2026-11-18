@@ -1,17 +1,15 @@
 import { useEffect, useRef, useState } from "react"
 
 import styled from "@emotion/styled"
-import CheckIcon from "@mui/icons-material/Check"
 import ContentCopyIcon from "@mui/icons-material/ContentCopy"
 import DownloadIcon from "@mui/icons-material/Download"
 import { QRCodeCanvas } from "qrcode.react"
 import { useTranslation } from "react-i18next"
 
 import FlexWrapper from "@/common/primitives/FlexWrapper"
-import Icon from "@/common/primitives/Icon"
 
 import { copyFriendQr, downloadFriendQr } from "../utils/shareFriendQR"
-import FriendInviteButton from "./FriendInviteButton"
+import FriendInviteButton, { FriendInviteButtonContent } from "./FriendInviteButton"
 
 const QrActions = styled.div`
     display: flex;
@@ -112,36 +110,24 @@ export default function FriendInviteQR({
                     disabled={!qrReady || qrBusy}
                     onClick={() => handleQrAction("download")}
                 >
-                    <Icon size={16}>
-                        {qrFeedback?.action === "download" ? (
-                            <CheckIcon />
-                        ) : (
-                            <DownloadIcon />
-                        )}
-                    </Icon>
-                    {t(
-                        qrFeedback?.action === "download"
-                            ? "friends.downloadSuccess"
-                            : "friends.downloadQr",
-                    )}
+                    <FriendInviteButtonContent
+                        icon={<DownloadIcon />}
+                        label={t("friends.downloadQr")}
+                        successLabel={t("friends.downloadSuccess")}
+                        succeeded={qrFeedback?.action === "download"}
+                    />
                 </FriendInviteButton>
                 <FriendInviteButton
                     type="button"
                     disabled={!qrReady || qrBusy}
                     onClick={() => handleQrAction("copy")}
                 >
-                    <Icon size={16}>
-                        {qrFeedback?.action === "copy" ? (
-                            <CheckIcon />
-                        ) : (
-                            <ContentCopyIcon />
-                        )}
-                    </Icon>
-                    {t(
-                        qrFeedback?.action === "copy"
-                            ? "friends.copySuccess"
-                            : "friends.copyQr",
-                    )}
+                    <FriendInviteButtonContent
+                        icon={<ContentCopyIcon />}
+                        label={t("friends.copyQr")}
+                        successLabel={t("friends.copySuccess")}
+                        succeeded={qrFeedback?.action === "copy"}
+                    />
                 </FriendInviteButton>
             </QrActions>
         </>

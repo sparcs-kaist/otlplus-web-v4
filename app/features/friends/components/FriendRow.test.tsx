@@ -1,6 +1,6 @@
 import { beforeEach, expect, it, vi } from "vitest"
 
-import { fireEvent, render, screen } from "@/test/test-utils"
+import { fireEvent, render, screen, waitFor } from "@/test/test-utils"
 import { useAPI } from "@/utils/api/useAPI"
 
 import FriendRow from "./FriendRow"
@@ -20,7 +20,7 @@ beforeEach(() => {
     })
 })
 
-it("updates a newly selected friend's favorite and reflects changed data for the same ID", () => {
+it("updates a newly selected friend's favorite and reflects changed data for the same ID", async () => {
     const props = {
         selected: true,
         showSchedule: true,
@@ -54,7 +54,11 @@ it("updates a newly selected friend's favorite and reflects changed data for the
         "aria-pressed",
         "true",
     )
-    expect(screen.getByRole("img", { name: "friends.scheduleNow" })).toBeInTheDocument()
+    const scheduleIcon = screen.getByRole("img", { name: "friends.scheduleNow" })
+    fireEvent.mouseOver(scheduleIcon)
+    expect(await screen.findByRole("tooltip")).toHaveTextContent("friends.scheduleNow")
+    fireEvent.mouseLeave(scheduleIcon)
+    await waitFor(() => expect(screen.queryByRole("tooltip")).not.toBeInTheDocument())
 
     rerender(<FriendRow {...props} friend={{ ...friend, id: 8 }} />)
     fireEvent.click(screen.getByRole("button", { name: "friends.favorite" }))

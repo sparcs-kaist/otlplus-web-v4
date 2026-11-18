@@ -393,7 +393,7 @@ describe("mobile friend timetable navigation", () => {
                 )
 
             const icon = screen.getByRole("img", { name: "friends.scheduleNow" })
-            expect(icon).toHaveAttribute("title", "friends.scheduleNow")
+            expect(icon).toHaveAttribute("aria-label", "friends.scheduleNow")
             expect(
                 within(screen.getByRole("button", { name: /Test friend/ })).getByRole(
                     "img",
