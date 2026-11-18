@@ -8,7 +8,6 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom"
 
 import Button from "@/common/components/Button"
 import Modal from "@/common/components/Modal"
-import CustomTimeTableGrid from "@/common/components/timetable/CustomTimeTableGrid"
 import { SemesterEnum, semesterToString } from "@/common/enum/semesterEnum"
 import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
@@ -26,7 +25,7 @@ import {
     removeFriendTimetableQueries,
 } from "@/features/friends/friendQueries"
 import FriendsListSection from "@/features/friends/sections/FriendsListSection"
-import TabButton from "@/features/timetable/sections/TabsRowSubSection/TabButton"
+import SharedTimetableSection from "@/features/friends/sections/SharedTimetableSection"
 import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
 import useIsDevice from "@/utils/useIsDevice"
@@ -86,53 +85,11 @@ const TimetableColumn = styled.div`
     }
 `
 
-const TimetablePanel = styled(Widget)`
-    display: flex;
-    flex: 1;
-    flex-direction: column;
-    overflow: hidden;
-    padding: 16px;
-    border-top-left-radius: 0;
-    box-shadow: none;
-
-    ${media.tablet} {
-        padding: 8px;
-    }
-`
-
 const DetailPanel = styled(Widget)`
     min-height: 0;
     min-width: 0;
     overflow: hidden;
 `
-const TimetableHeader = styled(FlexWrapper)`
-    width: 100%;
-    flex-shrink: 0;
-    height: 34px;
-    min-width: 0;
-`
-
-const Tabs = styled.div`
-    min-width: 0;
-    flex: 1;
-    display: flex;
-    gap: 6px;
-    overflow-x: auto;
-    scrollbar-width: none;
-`
-
-const TimetableTab = styled(TabButton)`
-    height: 34px;
-    flex-shrink: 0;
-    padding: 8px 12px;
-`
-
-const TimetableGrid = styled.div`
-    min-height: 0;
-    flex: 1;
-    display: flex;
-`
-
 const MobileOnly = styled.div`
     display: none;
     flex-shrink: 0;
@@ -221,7 +178,6 @@ export default function FriendsPage() {
     const hasSharedSemester = sharedSemesters.some(
         (term) => term.year === year && term.semester === semester,
     )
-    const selectedTabRef = useRef<HTMLDivElement>(null)
     const [selectedItem, setSelectedItem] = useState<TimetableItem | null>(null)
     const selectedLecture =
         selectedItem?.kind === TimetableItemKind.LECTURE ? selectedItem.data : null
@@ -275,10 +231,6 @@ export default function FriendsPage() {
         sharedSemesters,
         handleSelectSemester,
     ])
-
-    useEffect(() => {
-        selectedTabRef.current?.scrollIntoView?.({ block: "nearest", inline: "nearest" })
-    }, [selectedFriendId, year, semester, semestersQuery.data])
 
     useEffect(() => {
         if (isTablet && detailOpen) detailActionRef.current?.focus()
@@ -455,12 +407,19 @@ export default function FriendsPage() {
         timetableQuery.data?.source === "enrolled"
             ? t("friends.actualTimetable")
             : timetableQuery.data?.name || semesterName(year, semester)
-    const timetableTabs = sharedSemesters.map((term) => ({
-        key: `${term.year}-${term.semester}`,
-        name: semesterName(term.year, term.semester),
-        selected: term.year === year && term.semester === semester,
-        onSelect: () => handleSelectSemester(term.year, term.semester),
-    }))
+    const timetableTabs = useMemo(
+        () =>
+            sharedSemesters.map((term) => ({
+                key: `${term.year}-${term.semester}`,
+                name: t("friends.semesterLabel", {
+                    year: term.year,
+                    semester: semesterToString(term.semester),
+                }),
+                selected: term.year === year && term.semester === semester,
+                onSelect: () => handleSelectSemester(term.year, term.semester),
+            })),
+        [sharedSemesters, year, semester, handleSelectSemester, t],
+    )
 
     const closeAddedModal = () => {
         setAddedFriendName(null)
@@ -551,91 +510,28 @@ export default function FriendsPage() {
                             {t("friends.viewOverlaps")}
                         </MobileAction>
                     </MobileOnly>
-                    <TimetableHeader
-                        direction="row"
-                        gap={8}
-                        align="center"
-                        justify="space-between"
-                    >
-                        <Tabs
-                            role="tablist"
-                            aria-label={selectedFriend?.name ?? t("friends.myTimetable")}
-                        >
-                            {timetableTabs.map((tab) => (
-                                <TimetableTab
-                                    key={tab.key}
-                                    buttonRef={tab.selected ? selectedTabRef : undefined}
-                                    role="tab"
-                                    tabIndex={0}
-                                    aria-selected={tab.selected}
-                                    type={tab.selected ? "selected" : "default"}
-                                    onClick={tab.onSelect}
-                                    onKeyDown={(event) => {
-                                        if (event.key === "Enter" || event.key === " ") {
-                                            event.preventDefault()
-                                            tab.onSelect()
-                                        }
-                                    }}
-                                >
-                                    {tab.name}
-                                </TimetableTab>
-                            ))}
-                        </Tabs>
-                    </TimetableHeader>
-                    <TimetablePanel direction="column" gap={8} align="stretch">
-                        {semestersQuery.isSuccess && sharedSemesters.length === 0 && (
-                            <Typography
-                                type="Small"
-                                color="Text.placeholder"
-                                role="status"
-                            >
-                                {t("friends.noSharedTimetables")}
-                            </Typography>
-                        )}
-                        {hasSharedSemester &&
+                    <SharedTimetableSection
+                        tabs={timetableTabs}
+                        tabListLabel={selectedFriend?.name ?? t("friends.myTimetable")}
+                        noSharedTimetables={
+                            semestersQuery.isSuccess && sharedSemesters.length === 0
+                        }
+                        timetableName={
+                            hasSharedSemester &&
                             timetableQuery.isSuccess &&
-                            !timetableQuery.isError && (
-                                <Typography type="Small" color="Text.default">
-                                    {timetableName}
-                                </Typography>
-                            )}
-                        {(timetableQuery.isError || semestersQuery.isError) && (
-                            <Typography
-                                type="Small"
-                                color="Highlight.default"
-                                role="alert"
-                            >
-                                {t("friends.loadError")}
-                            </Typography>
-                        )}
-                        <TimetableGrid>
-                            <CustomTimeTableGrid
-                                timetableItems={timetableItems}
-                                overlappedLectureIds={overlappedLectureIds}
-                                displayedDayCount={7}
-                                needTimeFilter={false}
-                                needLectureDeletable={false}
-                                selectedLectures={
-                                    selectedLecture ? [selectedLecture] : []
-                                }
-                                selectedCustomBlock={selectedCustomBlock}
-                                onLectureSelect={(lecture) => {
-                                    setSelectedItem({
-                                        kind: TimetableItemKind.LECTURE,
-                                        data: lecture,
-                                    })
-                                    if (isTablet) setDetailOpen(true)
-                                }}
-                                onCustomBlockSelect={(block) => {
-                                    setSelectedItem({
-                                        kind: TimetableItemKind.CUSTOM,
-                                        data: block,
-                                    })
-                                    if (isTablet) setDetailOpen(true)
-                                }}
-                            />
-                        </TimetableGrid>
-                    </TimetablePanel>
+                            !timetableQuery.isError
+                                ? timetableName
+                                : null
+                        }
+                        hasLoadError={timetableQuery.isError || semestersQuery.isError}
+                        timetableItems={timetableItems}
+                        overlappedLectureIds={overlappedLectureIds}
+                        selectedItem={selectedItem}
+                        onSelectItem={(item) => {
+                            setSelectedItem(item)
+                            if (isTablet) setDetailOpen(true)
+                        }}
+                    />
                 </TimetableColumn>
                 {!isTablet && !isDesktop && (
                     <DetailPanel
