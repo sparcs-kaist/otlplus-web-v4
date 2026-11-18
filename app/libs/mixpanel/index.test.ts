@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 vi.stubEnv("VITE_APP_LOG_LEVEL", "info")
 
@@ -26,6 +26,7 @@ vi.doMock("@/env", async (importOriginal) => {
 })
 
 describe("initMixpanel", () => {
+    afterEach(() => vi.restoreAllMocks())
     beforeEach(() => {
         vi.resetModules()
         initMock.mockClear()
@@ -56,6 +57,18 @@ describe("initMixpanel", () => {
         await initMixpanel()
 
         expect(initMock).toHaveBeenCalledTimes(1)
+    })
+
+    it("does not initialize analytics or recordings on a friend invitation URL", async () => {
+        vi.spyOn(window, "location", "get").mockReturnValue({
+            pathname: "/friends/invite",
+            hash: "#private-invitation",
+        } as Location)
+        const { initMixpanel } = await import("./index")
+
+        await initMixpanel()
+
+        expect(initMock).not.toHaveBeenCalled()
     })
 
     it("never initializes without a token", async () => {

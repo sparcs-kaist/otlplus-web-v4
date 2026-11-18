@@ -8,7 +8,10 @@ import CreditScoreSubSection from "@/features/timetable/sections/TimetableInfoSe
 import ExamTimeSubSection from "@/features/timetable/sections/TimetableInfoSection/ExamTimeSubSection"
 import MapSubSection from "@/features/timetable/sections/TimetableInfoSection/MapSubSection"
 import UtilButtonsSubSection from "@/features/timetable/sections/TimetableInfoSection/UtilButtonsSubSection"
-import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
+import {
+    useSelectedLectures,
+    useTimetableUIStore,
+} from "@/features/timetable/store/useTimetableUIStore"
 import { media } from "@/styles/themes/media"
 import useIsDevice from "@/utils/useIsDevice"
 
@@ -48,7 +51,7 @@ export default function TimetableInfoSection({
     const year = useTimetableUIStore((s) => s.year)
     const semester = useTimetableUIStore((s) => s.semesterEnum)
 
-    const selectedLectures = useTimetableUIStore((s) => s.selectedLectures)
+    const selectedLectures = useSelectedLectures()
     const hoveredLectures = useTimetableUIStore((s) => s.hoveredLectures)
     const setHover = useTimetableUIStore((s) => s.setHoveredLectures)
 

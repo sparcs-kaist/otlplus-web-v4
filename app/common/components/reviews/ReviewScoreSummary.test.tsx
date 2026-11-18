@@ -22,5 +22,25 @@ describe("ReviewScoreSummary", () => {
         expect(
             screen.getAllByText(/grade|load|speech/).map((node) => node.textContent),
         ).toEqual(["grade", "load", "speech"])
+        expect(screen.getByText("grade").parentElement).not.toHaveStyle({
+            height: "29px",
+        })
+    })
+
+    it("uses the Figma compact metric layout only when requested", () => {
+        render(
+            <ReviewScoreSummary
+                averageGrade={4.5}
+                averageLoad={2}
+                averageSpeech={3}
+                reviewCount={2}
+                labels={{ grade: "grade", load: "load", speech: "speech" }}
+                compact
+            />,
+        )
+
+        expect(screen.getByText("grade").parentElement).toHaveStyle({ height: "29px" })
+        expect(screen.getByText("A")).toHaveStyle({ marginTop: "-5px" })
+        expect(screen.getByText("grade")).toHaveStyle({ marginTop: "-3px" })
     })
 })

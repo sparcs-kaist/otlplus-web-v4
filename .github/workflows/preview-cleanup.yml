@@ -5,6 +5,11 @@ on:
         branches: [main, rc]
         types: [closed]
 
+concurrency:
+    group: gh-pages-preview
+    cancel-in-progress: false
+    queue: max
+
 jobs:
     cleanup-preview:
         name: Cleanup PR Preview

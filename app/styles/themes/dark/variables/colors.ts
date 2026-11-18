@@ -14,6 +14,9 @@ export const darkThemeColors: ThemeType["colors"] = {
         sunset: "linear-gradient(135deg, #B71C1C 0%, #C62828 50%, #D32F2F 100%)",
     },
 
+    Icon: {
+        yellow: "#ffa200",
+    },
     Background: {
         Block: {
             default: "#282828",

@@ -2,14 +2,19 @@ import { type CSSProperties, memo, useCallback } from "react"
 
 import { type Theme, css, keyframes } from "@emotion/react"
 import styled from "@emotion/styled"
-import { Close } from "@mui/icons-material"
+import Close from "@mui/icons-material/Close"
 import { useTranslation } from "react-i18next"
 
+import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import { IconButton } from "@/common/primitives/IconButton"
 import Typography from "@/common/primitives/Typography"
 import { type Lecture } from "@/common/schemas/lecture"
+import { timetableItemKey } from "@/common/utils/timetableItems"
+import { media } from "@/styles/themes/media"
+
+import TimetableItemTile from "./TimetableItemTile"
 
 const DAYS = [
     "monday",
@@ -66,9 +71,16 @@ const HoverTileInner = styled(FlexWrapper)`
     border-radius: 4px;
 `
 
-function HoverTile() {
+function HoverTile({ style, className }: { style?: CSSProperties; className?: string }) {
     return (
-        <HoverTileWrapper direction="column" gap={0} padding="1px 0px" align="stretch">
+        <HoverTileWrapper
+            direction="column"
+            gap={0}
+            padding="1px 0px"
+            align="stretch"
+            style={style}
+            className={className}
+        >
             <HoverTileInner direction="column" gap={0} flex="1 1 auto" />
         </HoverTileWrapper>
     )
@@ -81,7 +93,8 @@ export const LECTURE_TILE_CLASSNAME = "lecture-tile"
 export const LectureTileHoverCss = (theme: Theme) => css`
     background: ${theme.colors.Highlight.default};
 
-    .lecture-title {
+    .lecture-title,
+    .friend-overlap-label {
         color: ${theme.colors.Text.onHighlight.default};
     }
 
@@ -125,7 +138,7 @@ const LectureTileWrapper = styled(FlexWrapper)<{
     }
 `
 
-const LectureTileInner = styled(FlexWrapper)<{
+const LectureTileInner = styled(TimetableItemTile)<{
     courseId: number
     lectureId: number
 }>`
@@ -152,14 +165,6 @@ const LectureTileInner = styled(FlexWrapper)<{
         }
     }
 
-    transition: opacity 0.2s ease;
-
-    opacity: 0.5;
-
-    .custom-timetable[data-selected-lectures=""] & {
-        opacity: 1;
-    }
-
     [data-is-dragging="true"] & {
         pointer-events: none;
     }
@@ -173,12 +178,76 @@ const LectureTileInner = styled(FlexWrapper)<{
         }
     }
 
-    [data-selected-lectures~="${({ lectureId }) => lectureId}"] & {
-        opacity: 1;
+    &[data-friend-overlap] .lecture-content {
+        min-width: 0;
+        min-height: 0;
+
+        ${media.tablet} {
+            padding: 2px;
+        }
     }
 `
 
-const LectureDeleteWrapper = styled(FlexWrapper)`
+const LectureTitleRow = styled.div`
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 4px;
+    align-items: start;
+    width: 100%;
+    min-width: 0;
+    flex-shrink: 0;
+
+    .lecture-title {
+        min-width: 0;
+        overflow-wrap: anywhere;
+    }
+
+    .friend-overlap-label {
+        white-space: nowrap;
+    }
+
+    ${media.tablet} {
+        display: flex;
+        flex-direction: column;
+
+        .friend-overlap-label {
+            order: -1;
+            align-self: flex-end;
+            font-size: ${({ theme }) => theme.fonts.Smaller.fontSize}px;
+            line-height: ${({ theme }) => theme.fonts.Smaller.lineHeight}px;
+        }
+    }
+`
+
+function LectureTileTitle({
+    lecture,
+    overlapLabel,
+}: {
+    lecture: Lecture
+    overlapLabel?: string
+}) {
+    const title = (
+        <Typography type="SmallMedium" className="lecture-title" color="TimeTable.title">
+            {lecture.name + " " + lecture.subtitle}
+        </Typography>
+    )
+    return overlapLabel ? (
+        <LectureTitleRow>
+            {title}
+            <Typography
+                type="SmallBold"
+                className="friend-overlap-label"
+                color="TimeTable.title"
+            >
+                {overlapLabel}
+            </Typography>
+        </LectureTitleRow>
+    ) : (
+        title
+    )
+}
+
+const TimetableItemDeleteWrapper = styled(FlexWrapper)`
     pointer-events: none;
     visibility: hidden;
     position: absolute;
@@ -192,9 +261,44 @@ const LectureDeleteWrapper = styled(FlexWrapper)`
     }
 `
 
+export function TimetableItemDeleteButton({
+    onDelete,
+    ariaLabel,
+    className = "lecture-delete-wrapper",
+}: {
+    onDelete: () => void
+    ariaLabel?: string
+    className?: string
+}) {
+    return (
+        <TimetableItemDeleteWrapper
+            direction="column"
+            flex="1 1 auto"
+            gap={0}
+            className={className}
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => event.stopPropagation()}
+        >
+            <IconButton aria-label={ariaLabel} styles={{ padding: 3 }} onClick={onDelete}>
+                <Icon
+                    size={12}
+                    style={{
+                        color: "rgba(255, 255, 255, 0.6)",
+                        opacity: 1,
+                        pointerEvents: "auto",
+                    }}
+                >
+                    <Close />
+                </Icon>
+            </IconButton>
+        </TimetableItemDeleteWrapper>
+    )
+}
+
 interface LectureTileProps {
     lecture: Lecture
     classIdx: number
+    overlapLabel?: string
     handleLectureTileHover?: (lecture: Lecture) => void
     handleLectureTileLeave?: () => void
     handleLectureTileSelect?: (lecture: Lecture, e?: React.PointerEvent) => void
@@ -204,6 +308,7 @@ interface LectureTileProps {
 function LectureTile({
     lecture,
     classIdx,
+    overlapLabel,
     deleteLecture,
     handleLectureTileSelect,
     handleLectureTileHover,
@@ -245,6 +350,10 @@ function LectureTile({
             onPointerLeave={handlePointerLeave}
         >
             <LectureTileInner
+                itemKey={timetableItemKey({
+                    kind: TimetableItemKind.LECTURE,
+                    data: lecture,
+                })}
                 direction="row"
                 gap={0}
                 flex="1 1 auto"
@@ -254,8 +363,10 @@ function LectureTile({
                 courseId={lecture.courseId}
                 lectureId={lecture.id}
                 className={LECTURE_TILE_CLASSNAME}
+                data-friend-overlap={overlapLabel ? true : undefined}
             >
                 <FlexWrapper
+                    className="lecture-content"
                     direction="column"
                     justify="center"
                     flex="1 1 auto"
@@ -268,13 +379,7 @@ function LectureTile({
                         align="flex-start"
                         style={{ overflow: "hidden" }}
                     >
-                        <Typography
-                            type="SmallMedium"
-                            className="lecture-title"
-                            color="TimeTable.title"
-                        >
-                            {lecture.name + " " + lecture.subtitle}
-                        </Typography>
+                        <LectureTileTitle lecture={lecture} overlapLabel={overlapLabel} />
                         <Typography
                             type="Small"
                             className="lecture-info"
@@ -295,42 +400,14 @@ function LectureTile({
                 </FlexWrapper>
 
                 {deleteLecture && (
-                    <LectureDeleteWrapper
-                        direction="column"
-                        flex="1 1 auto"
-                        gap={0}
-                        className="lecture-delete-wrapper"
-                        onPointerDown={(e) => e.stopPropagation()}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <IconButton
-                            styles={{ padding: 3 }}
-                            onClick={() => deleteLecture(lecture)}
-                        >
-                            <Icon
-                                size={12}
-                                style={{
-                                    color: "rgba(255, 255, 255, 0.6)",
-                                    opacity: 1,
-                                    pointerEvents: "auto",
-                                }}
-                            >
-                                <Close />
-                            </Icon>
-                        </IconButton>
-                    </LectureDeleteWrapper>
+                    <TimetableItemDeleteButton onDelete={() => deleteLecture(lecture)} />
                 )}
             </LectureTileInner>
         </LectureTileWrapper>
     )
 }
 
-const MemoizedLectureTile = memo(LectureTile, (prevProps, nextProps) => {
-    return (
-        prevProps.lecture === nextProps.lecture &&
-        prevProps.classIdx === nextProps.classIdx
-    )
-})
+const MemoizedLectureTile = memo(LectureTile)
 
 const OverlapTileWrapper = styled(FlexWrapper)<{
     day: number
@@ -377,10 +454,13 @@ const OverflowTileWrapper = styled(FlexWrapper)<{ lectureId: number }>`
     height: 100%;
 `
 
-const OverflowTileInner = styled(FlexWrapper)<{ courseId: number; lectureId: number }>`
+const OverflowTileInner = styled(TimetableItemTile)<{
+    courseId: number
+    lectureId: number
+}>`
+    position: relative;
     border-radius: 2px;
     overflow: hidden;
-    opacity: 0.5;
     min-width: 0;
     min-height: 0;
     width: 100%;
@@ -415,27 +495,37 @@ const OverflowTileInner = styled(FlexWrapper)<{ courseId: number; lectureId: num
     [data-selected-lectures~="${({ lectureId }) => lectureId}"] & {
         transform: translateY(-2px);
         box-shadow: ${({ theme }) => theme.elevation.raised};
-        opacity: 1;
     }
 
     .custom-timetable[data-selected-lectures=""] & {
         transform: none;
         box-shadow: none;
-        opacity: 1;
     }
 
     [data-flash-lectures~="${({ lectureId }) => lectureId}"] & {
         animation: ${tileFlash} 0.3s ease-out forwards;
+    }
+
+    &[data-friend-overlap] {
+        ${media.tablet} {
+            padding: 2px;
+        }
     }
 `
 
 interface OverflowTileProps {
     lecture: Lecture
     classIdx?: number
+    overlapLabel?: string
     deleteLecture?: () => void
 }
 
-function OverflowTile({ lecture, classIdx, deleteLecture }: OverflowTileProps) {
+function OverflowTile({
+    lecture,
+    classIdx,
+    overlapLabel,
+    deleteLecture,
+}: OverflowTileProps) {
     const cls = classIdx == null ? null : lecture.classes[classIdx]
     const { t } = useTranslation()
 
@@ -463,6 +553,10 @@ function OverflowTile({ lecture, classIdx, deleteLecture }: OverflowTileProps) {
                 )}
             </FlexWrapper>
             <OverflowTileInner
+                itemKey={timetableItemKey({
+                    kind: TimetableItemKind.LECTURE,
+                    data: lecture,
+                })}
                 direction="column"
                 gap={0}
                 align="flex-start"
@@ -471,14 +565,9 @@ function OverflowTile({ lecture, classIdx, deleteLecture }: OverflowTileProps) {
                 lectureId={lecture.id}
                 flex="1 1 auto"
                 className={LECTURE_TILE_CLASSNAME}
+                data-friend-overlap={overlapLabel ? true : undefined}
             >
-                <Typography
-                    type="SmallMedium"
-                    className="lecture-title"
-                    color="TimeTable.title"
-                >
-                    {lecture.name + " " + lecture.subtitle}
-                </Typography>
+                <LectureTileTitle lecture={lecture} overlapLabel={overlapLabel} />
                 <Typography
                     type="Small"
                     className="lecture-info"
@@ -494,32 +583,7 @@ function OverflowTile({ lecture, classIdx, deleteLecture }: OverflowTileProps) {
                     {cls != null ? `(${cls.buildingCode}) ${cls.roomName}` : ""}
                 </Typography>
 
-                {deleteLecture && (
-                    <LectureDeleteWrapper
-                        direction="column"
-                        flex="1 1 auto"
-                        gap={0}
-                        className="lecture-delete-wrapper"
-                        onPointerDown={(e) => e.stopPropagation()}
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <IconButton
-                            styles={{ padding: 3 }}
-                            onClick={() => deleteLecture()}
-                        >
-                            <Icon
-                                size={12}
-                                style={{
-                                    color: "rgba(255, 255, 255, 0.6)",
-                                    opacity: 1,
-                                    pointerEvents: "auto",
-                                }}
-                            >
-                                <Close />
-                            </Icon>
-                        </IconButton>
-                    </LectureDeleteWrapper>
-                )}
+                {deleteLecture && <TimetableItemDeleteButton onDelete={deleteLecture} />}
             </OverflowTileInner>
         </OverflowTileWrapper>
     )
