@@ -32,7 +32,7 @@ const TabButtonDefaultInner = styled(TabButtonInner)`
 
 const TabButtonSelectedInner = styled(TabButtonInner)`
     color: ${({ theme }) => theme.colors.Highlight.default};
-    background-color: ${({ theme }) => theme.colors.Background.Tab.default};
+    background-color: ${({ theme }) => theme.colors.Background.Section.default};
     cursor: pointer;
 `
 

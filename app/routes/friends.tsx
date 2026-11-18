@@ -93,6 +93,7 @@ const TimetablePanel = styled(Widget)`
     overflow: hidden;
     padding: 16px;
     border-top-left-radius: 0;
+    box-shadow: none;
 
     ${media.tablet} {
         padding: 8px;
