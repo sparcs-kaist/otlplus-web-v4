@@ -16,6 +16,15 @@ const Chips = styled(FlexWrapper)`
     flex-wrap: wrap;
 `
 
+const EmptyNotice = styled(Typography)`
+    min-height: 28px;
+    padding: 5px 16px;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    text-align: left;
+`
+
 const Chip = styled.button`
     min-height: 28px;
     padding: 5px 16px;
@@ -69,9 +78,9 @@ function FriendGroup({ title, friends }: { title: string; friends: ClassifiedFri
                     })}
                 </Chips>
             ) : (
-                <Typography type="Small" color="Text.disable">
+                <EmptyNotice type="Normal" color="Text.disable">
                     {t("friends.nobody")}
-                </Typography>
+                </EmptyNotice>
             )}
         </FlexWrapper>
     )
