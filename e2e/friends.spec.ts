@@ -34,9 +34,9 @@ const sharedLecture: Lecture = {
     expDuration: 1,
     credit: 3,
     creditAU: 0,
-    averageGrade: 4.8,
-    averageLoad: 4.8,
-    averageSpeech: 4.8,
+    averageGrade: 14.4,
+    averageLoad: 14.4,
+    averageSpeech: 14.4,
     isEnglish: false,
     professors: [{ id: 1, name: "김교수" }],
     classes: [1, 3].map((day) => ({

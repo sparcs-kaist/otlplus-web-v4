@@ -39,9 +39,9 @@ const lecture: Lecture = {
     expDuration: 1,
     credit: 3,
     creditAU: 0,
-    averageGrade: 4.5,
-    averageLoad: 3,
-    averageSpeech: 2,
+    averageGrade: 13.5,
+    averageLoad: 9,
+    averageSpeech: 6,
     isEnglish: true,
     classes: [],
     examTimes: [],
@@ -117,10 +117,10 @@ describe("friend lecture details", () => {
 
     afterEach(() => vi.useRealTimers())
 
-    const renderDetail = () =>
+    const renderDetail = (selectedLecture = lecture) =>
         render(
             <MemoryRouter>
-                <FriendLectureDetail lecture={lecture} year={2025} semester={3} />
+                <FriendLectureDetail lecture={selectedLecture} year={2025} semester={3} />
                 <LocationProbe />
             </MemoryRouter>,
         )
@@ -157,6 +157,30 @@ describe("friend lecture details", () => {
         expect(screen.queryByText("timetable.add")).not.toBeInTheDocument()
         expect(screen.queryByText("common.wishlist")).not.toBeInTheDocument()
     })
+
+    it.each([
+        { raw: [13.5, 9, 6], expected: ["A", "B-", "C-"] },
+        { raw: [15, 15, 15], expected: ["A+", "A+", "A+"] },
+        { raw: [0, 0, 0], expected: ["?", "?", "?"] },
+    ] as const)(
+        "renders 15-point lecture scores $raw as $expected",
+        ({ raw, expected }) => {
+            renderDetail({
+                ...lecture,
+                averageGrade: raw[0],
+                averageLoad: raw[1],
+                averageSpeech: raw[2],
+            })
+            const labels = ["common.grade", "common.load", "common.speech"]
+            expect(
+                labels.map(
+                    (label) =>
+                        screen.getByText(label).parentElement!.firstElementChild!
+                            .textContent,
+                ),
+            ).toEqual(expected)
+        },
+    )
 
     it("shows only the two Figma groups and preserves classifications on the buttons", () => {
         query.data.sameCourseDifferentSection = [

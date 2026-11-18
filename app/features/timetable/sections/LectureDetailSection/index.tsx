@@ -382,9 +382,9 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                         />
                         {readOnlySelection && (
                             <ReviewScoreSummary
-                                averageGrade={selectedLecture.averageGrade}
-                                averageLoad={selectedLecture.averageLoad}
-                                averageSpeech={selectedLecture.averageSpeech}
+                                averageGrade={selectedLecture.averageGrade / 3}
+                                averageLoad={selectedLecture.averageLoad / 3}
+                                averageSpeech={selectedLecture.averageSpeech / 3}
                                 reviewCount={undefined}
                                 labels={{
                                     grade: t("common.grade"),
