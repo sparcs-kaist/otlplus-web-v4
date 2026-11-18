@@ -57,6 +57,7 @@ const TimetableGrid = styled.div`
 type Props = {
     tabs: { key: string; name: string; selected: boolean; onSelect: () => void }[]
     tabListLabel: string
+    isLoading: boolean
     noSharedTimetables: boolean
     timetableName: string | null
     hasLoadError: boolean
@@ -69,6 +70,7 @@ type Props = {
 export default function SharedTimetableSection({
     tabs,
     tabListLabel,
+    isLoading,
     noSharedTimetables,
     timetableName,
     hasLoadError,
@@ -115,6 +117,11 @@ export default function SharedTimetableSection({
                 </Tabs>
             </TimetableHeader>
             <TimetablePanel direction="column" gap={8} align="stretch">
+                {isLoading && (
+                    <Typography type="Small" color="Text.placeholder" role="status">
+                        {t("friends.loadingLectures")}
+                    </Typography>
+                )}
                 {noSharedTimetables && (
                     <Typography type="Small" color="Text.placeholder" role="status">
                         {t("friends.noSharedTimetables")}

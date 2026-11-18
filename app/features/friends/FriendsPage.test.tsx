@@ -117,6 +117,7 @@ let friendSharedResponse: {
     source?: "saved" | "enrolled"
     name?: string
 }
+let sharedSemestersQueryState = { isSuccess: true, isPending: false, isError: false }
 let sharedSemestersResponse: typeof semesters
 let ownSharedResponse: typeof friendSharedResponse
 const timetables = {
@@ -211,6 +212,7 @@ describe("mobile friend timetable navigation", () => {
             name: "학사 시간표",
         } as typeof friendSharedResponse
         sharedSemestersResponse = semesters
+        sharedSemestersQueryState = { isSuccess: true, isPending: false, isError: false }
         friendsQueryState = { isSuccess: true, isFetching: false, isError: false }
         parameterSetters.clear()
         testWindow.happyDOM.setViewport({ width: 390, height: 844 })
@@ -252,6 +254,9 @@ describe("mobile friend timetable navigation", () => {
                     isError: false,
                     refetch: refetchFriends,
                     ...(path === "/friends" ? friendsQueryState : {}),
+                    ...(path.endsWith("/shared/semesters")
+                        ? sharedSemestersQueryState
+                        : {}),
                 },
                 mutation: { isPending: false, isError: false },
                 setParams: parameterSetters.get(path),
@@ -1045,7 +1050,37 @@ describe("mobile friend timetable navigation", () => {
             "/friends/7/timetables/shared",
             expect.objectContaining({ enabled: false }),
         )
+        fireEvent.click(screen.getByRole("button", { name: "friends.viewOverlaps" }))
+        const dialog = within(screen.getByRole("dialog"))
+        expect(dialog.getByText("friends.noSharedTimetables")).toBeInTheDocument()
+        expect(dialog.queryByText("friends.noLectures")).not.toBeInTheDocument()
     })
+
+    it.each(["empty", "custom-only"])(
+        "keeps the shared semester tab when its timetable is %s",
+        (contents) => {
+            friendSharedResponse.timetableItems =
+                contents === "empty"
+                    ? []
+                    : friendSharedResponse.timetableItems.filter(
+                          (item) => item.kind === "custom",
+                      )
+            sharedSemestersResponse = { semesters: [{ year: 2026, semester: 3 }] }
+            renderPage("/friends?friendId=7&year=2026&semester=3")
+            expect(screen.getByRole("tab", { name: "2026 Fall" })).toHaveAttribute(
+                "aria-selected",
+                "true",
+            )
+            expect(screen.getByText("Saved timetable")).toBeInTheDocument()
+
+            fireEvent.click(screen.getByRole("button", { name: "friends.viewOverlaps" }))
+            const dialog = within(screen.getByRole("dialog"))
+            expect(dialog.getByText("friends.noLectures")).toBeInTheDocument()
+            expect(
+                dialog.queryByText("friends.noSharedTimetables"),
+            ).not.toBeInTheDocument()
+        },
+    )
 
     it("shows one tab per semester, newest first, and opens the latest semester without link parameters", () => {
         renderPage("/friends?friendId=7")
@@ -1084,6 +1119,44 @@ describe("mobile friend timetable navigation", () => {
             year: 2026,
             semester: 3,
         })
+    })
+
+    it.each(["/friends?friendId=7", "/friends?friendId=7&year=2023&semester=2"])(
+        "replaces the automatic semester fallback so back leaves %s",
+        (entry) => {
+            render(
+                <MemoryRouter initialEntries={["/friends?year=2024&semester=1", entry]}>
+                    <FriendsPage />
+                    <NavigationProbe />
+                </MemoryRouter>,
+            )
+            expect(screen.getByRole("tab", { name: "2026 Fall" })).toHaveAttribute(
+                "aria-selected",
+                "true",
+            )
+
+            fireEvent.click(screen.getByRole("button", { name: "Browser back" }))
+            expect(screen.getByTestId("location")).toHaveTextContent(
+                "/friends?year=2024&semester=1",
+            )
+            expect(screen.getByRole("tab", { name: "2024 Spring" })).toHaveAttribute(
+                "aria-selected",
+                "true",
+            )
+        },
+    )
+
+    it("shows semester load errors in both the grid and mobile lecture picker", () => {
+        sharedSemestersResponse = { semesters: [] }
+        sharedSemestersQueryState = { isSuccess: false, isPending: false, isError: true }
+        renderPage("/friends?friendId=7&year=2026&semester=3")
+        expect(screen.getByRole("alert")).toHaveTextContent("friends.loadError")
+
+        fireEvent.click(screen.getByRole("button", { name: "friends.viewOverlaps" }))
+        const dialog = within(screen.getByRole("dialog"))
+        expect(dialog.getByRole("alert")).toHaveTextContent("friends.loadError")
+        expect(dialog.queryByText("friends.noLectures")).not.toBeInTheDocument()
+        expect(dialog.queryByText("friends.noSharedTimetables")).not.toBeInTheDocument()
     })
 
     it("keeps semester tab selection in the URL and clears the old timetable ID", () => {
