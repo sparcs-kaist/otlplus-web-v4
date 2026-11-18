@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import styled from "@emotion/styled"
+import CheckIcon from "@mui/icons-material/Check"
 import ContentCopyIcon from "@mui/icons-material/ContentCopy"
 import LinkIcon from "@mui/icons-material/Link"
 import RefreshIcon from "@mui/icons-material/Refresh"
@@ -55,8 +56,10 @@ export default function FriendInviteModal({
 }: FriendInviteModalProps) {
     const { t } = useTranslation()
     const isMobile = useIsDevice("mobile")
-    const [copied, setCopied] = useState<"link" | "message" | null>(null)
-    const [actionError, setActionError] = useState(false)
+    const [feedback, setFeedback] = useState<{
+        action: "regenerate" | "link" | "message" | "share" | "shareCopy"
+    } | null>(null)
+    const reportedError = useRef<unknown>(null)
     const [qrBusy, setQrBusy] = useState(false)
     const [confirmRegenerate, setConfirmRegenerate] = useState(false)
     const { query, regenerate, regenerateCode, code } = useFriendInviteCode(isOpen, () =>
@@ -69,33 +72,52 @@ export default function FriendInviteModal({
         : ""
 
     useEffect(() => {
-        setCopied(null)
-        setActionError(false)
+        setFeedback(null)
         setQrBusy(false)
     }, [isOpen, inviteUrl])
 
+    useEffect(() => {
+        if (isOpen && regenerate.isSuccess) setFeedback({ action: "regenerate" })
+    }, [isOpen, regenerate.isSuccess])
+
+    useEffect(() => {
+        if (!feedback) return
+        const timeout = setTimeout(() => setFeedback(null), 2000)
+        return () => clearTimeout(timeout)
+    }, [feedback])
+
+    const codeError = regenerate.isPending ? null : (regenerate.error ?? query.error)
+    const codeErrorMessage = regenerate.error ? "regenerateError" : "inviteError"
+    useEffect(() => {
+        if (!isOpen) {
+            reportedError.current = null
+        } else if (codeError && reportedError.current !== codeError) {
+            reportedError.current = codeError
+            window.alert(t(`friends.${codeErrorMessage}`))
+        }
+    }, [isOpen, codeError, codeErrorMessage, t])
+
     const handleCopy = async (kind: "link" | "message") => {
         if (!inviteUrl) return
-        setCopied(null)
-        setActionError(false)
+        setFeedback(null)
         try {
             if (kind === "link") await copyTextToClipboard(inviteUrl)
             else await copyFriendInvite(userName, inviteUrl)
-            setCopied(kind)
+            setFeedback({ action: kind })
         } catch {
-            setActionError(true)
+            window.alert(t("friends.copyError"))
         }
     }
 
     const handleShare = async () => {
         if (!inviteUrl) return
-        setCopied(null)
-        setActionError(false)
+        setFeedback(null)
         try {
             const result = await shareFriendInvite(userName, inviteUrl)
-            if (result === "copied") setCopied("message")
+            if (result !== "cancelled")
+                setFeedback({ action: result === "copied" ? "shareCopy" : "share" })
         } catch {
-            setActionError(true)
+            window.alert(t("friends.shareError"))
         }
     }
 
@@ -143,29 +165,9 @@ export default function FriendInviteModal({
                         {t("friends.inviteLoading")}
                     </Typography>
                 )}
-                {query.isError && (
-                    <Typography type="Normal" color="Highlight.default" role="alert">
-                        {t("friends.inviteError")}
-                    </Typography>
-                )}
-                {actionError && (
-                    <Typography type="Normal" color="Highlight.default">
-                        {t("friends.inviteError")}
-                    </Typography>
-                )}
                 {regenerate.isPending && (
                     <Typography type="Normal" color="Text.placeholder" role="status">
                         {t("friends.regeneratingCode")}
-                    </Typography>
-                )}
-                {regenerate.isError && (
-                    <Typography type="Normal" color="Highlight.default" role="alert">
-                        {t("friends.regenerateError")}
-                    </Typography>
-                )}
-                {regenerate.isSuccess && (
-                    <Typography type="Small" color="Highlight.default" role="status">
-                        {t("friends.regeneratedCode")}
                     </Typography>
                 )}
                 {confirmRegenerate && regenerationControls}
@@ -184,14 +186,23 @@ export default function FriendInviteModal({
                                     type="button"
                                     disabled={qrBusy}
                                     onClick={() => {
+                                        setFeedback(null)
                                         resetRegenerate()
                                         setConfirmRegenerate(true)
                                     }}
                                 >
                                     <Icon size={16}>
-                                        <RefreshIcon />
+                                        {feedback?.action === "regenerate" ? (
+                                            <CheckIcon />
+                                        ) : (
+                                            <RefreshIcon />
+                                        )}
                                     </Icon>
-                                    {t("friends.regenerateCode")}
+                                    {t(
+                                        feedback?.action === "regenerate"
+                                            ? "friends.regenerateSuccess"
+                                            : "friends.regenerateCode",
+                                    )}
                                 </FriendInviteButton>
                             )}
                         </FlexWrapper>
@@ -206,11 +217,6 @@ export default function FriendInviteModal({
                         />
                     </>
                 )}
-                {copied && (
-                    <Typography type="Small" color="Highlight.default">
-                        {t(copied === "link" ? "friends.linkCopied" : "friends.copied")}
-                    </Typography>
-                )}
                 <FlexWrapper
                     direction="row"
                     gap={8}
@@ -223,9 +229,13 @@ export default function FriendInviteModal({
                         onClick={() => handleCopy("link")}
                     >
                         <Icon size={16}>
-                            <LinkIcon />
+                            {feedback?.action === "link" ? <CheckIcon /> : <LinkIcon />}
                         </Icon>
-                        {t("friends.copyLink")}
+                        {t(
+                            feedback?.action === "link"
+                                ? "friends.copySuccess"
+                                : "friends.copyLink",
+                        )}
                     </FriendInviteButton>
                     <FriendInviteButton
                         type="button"
@@ -233,15 +243,34 @@ export default function FriendInviteModal({
                         onClick={() => handleCopy("message")}
                     >
                         <Icon size={16}>
-                            <ContentCopyIcon />
+                            {feedback?.action === "message" ? (
+                                <CheckIcon />
+                            ) : (
+                                <ContentCopyIcon />
+                            )}
                         </Icon>
-                        {t("friends.copy")}
+                        {t(
+                            feedback?.action === "message"
+                                ? "friends.copySuccess"
+                                : "friends.copy",
+                        )}
                     </FriendInviteButton>
                     <ShareButton type="button" disabled={!code} onClick={handleShare}>
                         <Icon size={16}>
-                            <ShareIcon />
+                            {feedback?.action === "share" ||
+                            feedback?.action === "shareCopy" ? (
+                                <CheckIcon />
+                            ) : (
+                                <ShareIcon />
+                            )}
                         </Icon>
-                        {t("friends.share")}
+                        {t(
+                            feedback?.action === "share"
+                                ? "friends.shareSuccess"
+                                : feedback?.action === "shareCopy"
+                                  ? "friends.copySuccess"
+                                  : "friends.share",
+                        )}
                     </ShareButton>
                 </FlexWrapper>
             </FlexWrapper>

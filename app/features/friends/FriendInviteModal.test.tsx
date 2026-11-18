@@ -1,7 +1,7 @@
 import { StrictMode } from "react"
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { axiosClient } from "@/libs/axios"
 import { act, fireEvent, render, screen, waitFor } from "@/test/test-utils"
@@ -86,6 +86,7 @@ vi.mock("react-i18next", () => ({
 describe("friend code sharing", () => {
     beforeEach(() => {
         vi.clearAllMocks()
+        vi.stubGlobal("alert", vi.fn())
         qrMock.loadInLayoutEffect = false
         vi.mocked(useIsDevice).mockReturnValue(false)
         vi.mocked(axiosClient.request).mockResolvedValue({ data: { code: "K7L4MX" } })
@@ -94,6 +95,11 @@ describe("friend code sharing", () => {
         vi.mocked(shareFriendInvite).mockResolvedValue("shared")
         vi.mocked(downloadFriendQr).mockResolvedValue(undefined)
         vi.mocked(copyFriendQr).mockResolvedValue(undefined)
+    })
+
+    afterEach(() => {
+        vi.useRealTimers()
+        vi.unstubAllGlobals()
     })
 
     it.each([false, true])(
@@ -150,18 +156,28 @@ describe("friend code sharing", () => {
             await waitFor(() =>
                 expect(copyTextToClipboard).toHaveBeenCalledExactlyOnceWith(url),
             )
-            expect(screen.getByText("friends.linkCopied")).toBeInTheDocument()
+            expect(
+                screen.getByRole("button", { name: "friends.copySuccess" }),
+            ).toContainElement(screen.getByTestId("CheckIcon"))
             expect(copyFriendInvite).not.toHaveBeenCalled()
             fireEvent.click(screen.getByText("friends.copy"))
             await waitFor(() =>
                 expect(copyFriendInvite).toHaveBeenCalledExactlyOnceWith("구백", url),
             )
-            expect(screen.getByText("friends.copied")).toBeInTheDocument()
-            expect(screen.queryByText("friends.linkCopied")).not.toBeInTheDocument()
+            expect(
+                screen.getByRole("button", { name: "friends.copySuccess" }),
+            ).toBeInTheDocument()
+            expect(
+                screen.getByRole("button", { name: "friends.copyLink" }),
+            ).toBeInTheDocument()
             fireEvent.click(screen.getByText("friends.share"))
             await waitFor(() =>
                 expect(shareFriendInvite).toHaveBeenCalledExactlyOnceWith("구백", url),
             )
+            expect(
+                screen.getByRole("button", { name: "friends.shareSuccess" }),
+            ).toContainElement(screen.getByTestId("CheckIcon"))
+            expect(screen.queryByRole("status")).not.toBeInTheDocument()
 
             rerender(renderModal(false))
             rerender(renderModal(true))
@@ -171,6 +187,7 @@ describe("friend code sharing", () => {
                 screen.getByRole("button", { name: "friends.downloadQr" }),
             ).toBeDisabled()
             expect(screen.getByRole("button", { name: "friends.copyQr" })).toBeDisabled()
+            expect(screen.queryByTestId("CheckIcon")).not.toBeInTheDocument()
         },
     )
 
@@ -179,6 +196,71 @@ describe("friend code sharing", () => {
         await screen.findByText("friends.code: K7L4MX")
         return screen.getByRole("img", { name: "friends.inviteQr" })
     }
+
+    it.each(["friends.copyLink", "friends.copyQr"])(
+        "restores %s two seconds after the latest successful click",
+        async (name) => {
+            await openModal()
+            fireEvent.load(screen.getByTestId("qr-logo"))
+            vi.useFakeTimers()
+            const button = screen.getByRole("button", { name })
+            await act(async () => fireEvent.click(button))
+            expect(button).toHaveTextContent("friends.copySuccess")
+            expect(button).toContainElement(screen.getByTestId("CheckIcon"))
+
+            act(() => vi.advanceTimersByTime(1000))
+            await act(async () => fireEvent.click(button))
+            act(() => vi.advanceTimersByTime(1000))
+            expect(button).toHaveTextContent("friends.copySuccess")
+            act(() => vi.advanceTimersByTime(1000))
+            expect(button).toHaveTextContent(name)
+            expect(screen.queryByTestId("CheckIcon")).not.toBeInTheDocument()
+        },
+    )
+
+    it.each([
+        ["shared", "friends.shareSuccess"],
+        ["copied", "friends.copySuccess"],
+        ["cancelled", "friends.share"],
+    ] as const)("reflects the actual share result: %s", async (result, label) => {
+        await openModal()
+        vi.mocked(shareFriendInvite).mockResolvedValueOnce(result)
+        const button = screen.getByRole("button", { name: "friends.share" })
+        await act(async () => fireEvent.click(button))
+        expect(button).toHaveTextContent(label)
+        expect(Boolean(button.querySelector('[data-testid="CheckIcon"]'))).toBe(
+            result !== "cancelled",
+        )
+        expect(window.alert).not.toHaveBeenCalled()
+        expect(screen.queryByRole("status")).not.toBeInTheDocument()
+    })
+
+    it.each([
+        {
+            name: "friends.copyLink",
+            helper: copyTextToClipboard,
+            message: "friends.copyError",
+        },
+        { name: "friends.copy", helper: copyFriendInvite, message: "friends.copyError" },
+        {
+            name: "friends.share",
+            helper: shareFriendInvite,
+            message: "friends.shareError",
+        },
+    ])(
+        "alerts when $name fails without showing success",
+        async ({ name, helper, message }) => {
+            await openModal()
+            vi.mocked(helper).mockRejectedValueOnce(new Error("Permission denied"))
+            fireEvent.click(screen.getByRole("button", { name }))
+            await waitFor(() =>
+                expect(window.alert).toHaveBeenCalledExactlyOnceWith(message),
+            )
+            expect(screen.queryByTestId("CheckIcon")).not.toBeInTheDocument()
+            expect(screen.queryByRole("alert")).not.toBeInTheDocument()
+            expect(screen.getByRole("button", { name })).toBeEnabled()
+        },
+    )
 
     it("requires confirmation and updates the code, QR, copy and share together", async () => {
         await openModal()
@@ -222,6 +304,9 @@ describe("friend code sharing", () => {
         )
         await act(async () => complete())
         await screen.findByText("friends.code: ACDEFH")
+        expect(
+            await screen.findByRole("button", { name: "friends.regenerateSuccess" }),
+        ).toContainElement(screen.getByTestId("CheckIcon"))
         const url = `${window.location.origin}/friends/invite#ACDEFH`
         expect(screen.getByRole("img", { name: "friends.inviteQr" })).toHaveAttribute(
             "data-value",
@@ -283,14 +368,19 @@ describe("friend code sharing", () => {
             fireEvent.click(
                 screen.getByRole("button", { name: "friends.regenerateCode" }),
             )
-            await screen.findByText("friends.regenerateError")
+            await waitFor(() =>
+                expect(window.alert).toHaveBeenCalledExactlyOnceWith(
+                    "friends.regenerateError",
+                ),
+            )
             expect(screen.getByText(`friends.code: ${code}`)).toBeInTheDocument()
             expect(
                 vi
                     .mocked(axiosClient.request)
                     .mock.calls.map(([request]) => request.method),
             ).toEqual(["GET", "POST", "GET"])
-            expect(screen.queryByText("friends.regeneratedCode")).not.toBeInTheDocument()
+            expect(screen.queryByTestId("CheckIcon")).not.toBeInTheDocument()
+            expect(screen.queryByRole("alert")).not.toBeInTheDocument()
         },
     )
 
@@ -299,7 +389,13 @@ describe("friend code sharing", () => {
         vi.mocked(axiosClient.request).mockRejectedValue(new Error("Offline"))
         fireEvent.click(screen.getByRole("button", { name: "friends.regenerateCode" }))
         fireEvent.click(screen.getByRole("button", { name: "friends.regenerateCode" }))
-        await screen.findByText("friends.regenerateError", {}, { timeout: 3000 })
+        await waitFor(
+            () =>
+                expect(window.alert).toHaveBeenCalledExactlyOnceWith(
+                    "friends.regenerateError",
+                ),
+            { timeout: 3000 },
+        )
         expect(screen.queryByText(/K7L4MX/)).not.toBeInTheDocument()
         expect(
             screen.queryByRole("img", { name: "friends.inviteQr" }),
@@ -312,13 +408,13 @@ describe("friend code sharing", () => {
         {
             name: "friends.downloadQr",
             helper: downloadFriendQr,
-            success: "friends.qrDownloaded",
+            success: "friends.downloadSuccess",
             error: "friends.qrDownloadError",
         },
         {
             name: "friends.copyQr",
             helper: copyFriendQr,
-            success: "friends.qrCopied",
+            success: "friends.copySuccess",
             error: "friends.qrCopyError",
         },
     ]
@@ -374,7 +470,10 @@ describe("friend code sharing", () => {
             expect(copy).toBeDisabled()
 
             await act(async () => complete())
-            expect(screen.getByRole("status")).toHaveTextContent(success)
+            expect(screen.getByRole("button", { name: success })).toContainElement(
+                screen.getByTestId("CheckIcon"),
+            )
+            expect(screen.queryByRole("status")).not.toBeInTheDocument()
             expect(download).toBeEnabled()
             expect(copy).toBeEnabled()
         },
@@ -407,9 +506,11 @@ describe("friend code sharing", () => {
             vi.mocked(helper).mockRejectedValueOnce(error)
             fireEvent.click(screen.getByRole("button", { name }))
 
-            expect(await screen.findByRole("alert")).toHaveTextContent(message)
-            expect(screen.queryByText("friends.qrDownloaded")).not.toBeInTheDocument()
-            expect(screen.queryByText("friends.qrCopied")).not.toBeInTheDocument()
+            await waitFor(() =>
+                expect(window.alert).toHaveBeenCalledExactlyOnceWith(message),
+            )
+            expect(screen.queryByTestId("CheckIcon")).not.toBeInTheDocument()
+            expect(screen.queryByRole("alert")).not.toBeInTheDocument()
             expect(screen.getByRole("button", { name })).toBeEnabled()
         },
     )
@@ -420,11 +521,13 @@ describe("friend code sharing", () => {
             await openModal()
             fireEvent.load(screen.getByTestId("qr-logo"))
             fireEvent.click(screen.getByRole("button", { name }))
-            expect(await screen.findByRole("status")).toHaveTextContent(success)
+            const button = await screen.findByRole("button", { name: success })
 
             vi.mocked(helper).mockRejectedValueOnce(new Error("Export failed"))
-            fireEvent.click(screen.getByRole("button", { name }))
-            expect(await screen.findByRole("alert")).toHaveTextContent(error)
+            fireEvent.click(button)
+            await waitFor(() =>
+                expect(window.alert).toHaveBeenCalledExactlyOnceWith(error),
+            )
             expect(screen.queryByText(success)).not.toBeInTheDocument()
         },
     )
@@ -433,7 +536,7 @@ describe("friend code sharing", () => {
         await openModal()
         fireEvent.error(screen.getByTestId("qr-logo"))
 
-        expect(screen.getByRole("alert")).toHaveTextContent("friends.qrImageError")
+        expect(window.alert).toHaveBeenCalledExactlyOnceWith("friends.qrImageError")
         expect(screen.getByRole("button", { name: "friends.downloadQr" })).toBeDisabled()
         expect(screen.getByRole("button", { name: "friends.copyQr" })).toBeDisabled()
         expect(downloadFriendQr).not.toHaveBeenCalled()

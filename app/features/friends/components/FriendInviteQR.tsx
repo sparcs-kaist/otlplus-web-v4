@@ -1,6 +1,7 @@
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import styled from "@emotion/styled"
+import CheckIcon from "@mui/icons-material/Check"
 import ContentCopyIcon from "@mui/icons-material/ContentCopy"
 import DownloadIcon from "@mui/icons-material/Download"
 import { QRCodeCanvas } from "qrcode.react"
@@ -8,7 +9,6 @@ import { useTranslation } from "react-i18next"
 
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
-import Typography from "@/common/primitives/Typography"
 
 import { copyFriendQr, downloadFriendQr } from "../utils/shareFriendQR"
 import FriendInviteButton from "./FriendInviteButton"
@@ -20,7 +20,6 @@ const QrActions = styled.div`
     gap: 8px;
 `
 
-type QrError = "qrImageError" | "qrDownloadError" | "qrCopyError" | "qrCopyUnsupported"
 export default function FriendInviteQR({
     inviteUrl,
     qrBusy,
@@ -33,26 +32,34 @@ export default function FriendInviteQR({
     const { t } = useTranslation()
     const qrCanvasRef = useRef<HTMLCanvasElement>(null)
     const [qrReadyUrl, setQrReadyUrl] = useState<string | null>(null)
-    const [qrFeedback, setQrFeedback] = useState<"qrDownloaded" | "qrCopied" | null>(null)
-    const [qrError, setQrError] = useState<QrError | null>(null)
+    const [qrFeedback, setQrFeedback] = useState<{ action: "download" | "copy" } | null>(
+        null,
+    )
+    useEffect(() => {
+        if (!qrFeedback) return
+        const timeout = setTimeout(() => setQrFeedback(null), 2000)
+        return () => clearTimeout(timeout)
+    }, [qrFeedback])
     const qrReady = qrReadyUrl === inviteUrl
     const handleQrAction = async (action: "download" | "copy") => {
         const canvas = qrCanvasRef.current
         if (!canvas || !qrReady || qrBusy) return
         setQrFeedback(null)
-        setQrError(null)
         setQrBusy(true)
         try {
             if (action === "download") await downloadFriendQr(canvas)
             else await copyFriendQr(canvas)
-            setQrFeedback(action === "download" ? "qrDownloaded" : "qrCopied")
+            setQrFeedback({ action })
         } catch (error) {
-            setQrError(
-                action === "download"
-                    ? "qrDownloadError"
-                    : error instanceof DOMException && error.name === "NotSupportedError"
-                      ? "qrCopyUnsupported"
-                      : "qrCopyError",
+            window.alert(
+                t(
+                    action === "download"
+                        ? "friends.qrDownloadError"
+                        : error instanceof DOMException &&
+                            error.name === "NotSupportedError"
+                          ? "friends.qrCopyUnsupported"
+                          : "friends.qrCopyError",
+                ),
             )
         } finally {
             setQrBusy(false)
@@ -73,7 +80,7 @@ export default function FriendInviteQR({
                 onErrorCapture={(event) => {
                     if (event.target instanceof HTMLImageElement) {
                         setQrReadyUrl(null)
-                        setQrError("qrImageError")
+                        window.alert(t("friends.qrImageError"))
                     }
                 }}
             >
@@ -106,9 +113,17 @@ export default function FriendInviteQR({
                     onClick={() => handleQrAction("download")}
                 >
                     <Icon size={16}>
-                        <DownloadIcon />
+                        {qrFeedback?.action === "download" ? (
+                            <CheckIcon />
+                        ) : (
+                            <DownloadIcon />
+                        )}
                     </Icon>
-                    {t("friends.downloadQr")}
+                    {t(
+                        qrFeedback?.action === "download"
+                            ? "friends.downloadSuccess"
+                            : "friends.downloadQr",
+                    )}
                 </FriendInviteButton>
                 <FriendInviteButton
                     type="button"
@@ -116,21 +131,19 @@ export default function FriendInviteQR({
                     onClick={() => handleQrAction("copy")}
                 >
                     <Icon size={16}>
-                        <ContentCopyIcon />
+                        {qrFeedback?.action === "copy" ? (
+                            <CheckIcon />
+                        ) : (
+                            <ContentCopyIcon />
+                        )}
                     </Icon>
-                    {t("friends.copyQr")}
+                    {t(
+                        qrFeedback?.action === "copy"
+                            ? "friends.copySuccess"
+                            : "friends.copyQr",
+                    )}
                 </FriendInviteButton>
             </QrActions>
-            {qrFeedback && (
-                <Typography type="Small" color="Highlight.default" role="status">
-                    {t(`friends.${qrFeedback}`)}
-                </Typography>
-            )}
-            {qrError && (
-                <Typography type="Small" color="Highlight.default" role="alert">
-                    {t(`friends.${qrError}`)}
-                </Typography>
-            )}
         </>
     )
 }
