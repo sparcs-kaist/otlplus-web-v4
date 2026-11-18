@@ -2,11 +2,11 @@ import { useEffect, useState } from "react"
 
 import styled from "@emotion/styled"
 import ContentCopyIcon from "@mui/icons-material/ContentCopy"
+import LinkIcon from "@mui/icons-material/Link"
 import RefreshIcon from "@mui/icons-material/Refresh"
 import ShareIcon from "@mui/icons-material/Share"
 import { useTranslation } from "react-i18next"
 
-import Button from "@/common/components/Button"
 import Modal from "@/common/components/Modal"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
@@ -18,6 +18,7 @@ import FriendInviteQR from "./components/FriendInviteQR"
 import useFriendInviteCode from "./hooks/useFriendInviteCode"
 import {
     copyFriendInvite,
+    copyTextToClipboard,
     friendInviteMessage,
     shareFriendInvite,
 } from "./utils/shareFriendInvite"
@@ -33,6 +34,14 @@ const Preview = styled.div`
     overflow-wrap: anywhere;
 `
 
+const ShareButton = styled(FriendInviteButton)`
+    background: ${({ theme }) => theme.colors.Highlight.default};
+
+    &:hover:not(:disabled) {
+        background: ${({ theme }) => theme.colors.Highlight.dark};
+    }
+`
+
 interface FriendInviteModalProps {
     isOpen: boolean
     onClose: () => void
@@ -46,7 +55,7 @@ export default function FriendInviteModal({
 }: FriendInviteModalProps) {
     const { t } = useTranslation()
     const isMobile = useIsDevice("mobile")
-    const [copied, setCopied] = useState(false)
+    const [copied, setCopied] = useState<"link" | "message" | null>(null)
     const [actionError, setActionError] = useState(false)
     const [qrBusy, setQrBusy] = useState(false)
     const [confirmRegenerate, setConfirmRegenerate] = useState(false)
@@ -60,16 +69,19 @@ export default function FriendInviteModal({
         : ""
 
     useEffect(() => {
-        setCopied(false)
+        setCopied(null)
         setActionError(false)
         setQrBusy(false)
     }, [isOpen, inviteUrl])
 
-    const handleCopy = async () => {
+    const handleCopy = async (kind: "link" | "message") => {
         if (!inviteUrl) return
+        setCopied(null)
+        setActionError(false)
         try {
-            await copyFriendInvite(userName, inviteUrl)
-            setCopied(true)
+            if (kind === "link") await copyTextToClipboard(inviteUrl)
+            else await copyFriendInvite(userName, inviteUrl)
+            setCopied(kind)
         } catch {
             setActionError(true)
         }
@@ -77,9 +89,11 @@ export default function FriendInviteModal({
 
     const handleShare = async () => {
         if (!inviteUrl) return
+        setCopied(null)
+        setActionError(false)
         try {
             const result = await shareFriendInvite(userName, inviteUrl)
-            if (result === "copied") setCopied(true)
+            if (result === "copied") setCopied("message")
         } catch {
             setActionError(true)
         }
@@ -194,29 +208,41 @@ export default function FriendInviteModal({
                 )}
                 {copied && (
                     <Typography type="Small" color="Highlight.default">
-                        {t("friends.copied")}
+                        {t(copied === "link" ? "friends.linkCopied" : "friends.copied")}
                     </Typography>
                 )}
-                <FlexWrapper direction="row" gap={8} justify="flex-end">
+                <FlexWrapper
+                    direction="row"
+                    gap={8}
+                    justify="flex-end"
+                    style={{ flexWrap: "wrap" }}
+                >
                     <FriendInviteButton
                         type="button"
                         disabled={!code}
-                        onClick={handleCopy}
+                        onClick={() => handleCopy("link")}
+                    >
+                        <Icon size={16}>
+                            <LinkIcon />
+                        </Icon>
+                        {t("friends.copyLink")}
+                    </FriendInviteButton>
+                    <FriendInviteButton
+                        type="button"
+                        disabled={!code}
+                        onClick={() => handleCopy("message")}
                     >
                         <Icon size={16}>
                             <ContentCopyIcon />
                         </Icon>
                         {t("friends.copy")}
                     </FriendInviteButton>
-                    <Button
-                        type={code ? "highlighted" : "disabled"}
-                        onClick={handleShare}
-                    >
+                    <ShareButton type="button" disabled={!code} onClick={handleShare}>
                         <Icon size={16}>
                             <ShareIcon />
                         </Icon>
                         {t("friends.share")}
-                    </Button>
+                    </ShareButton>
                 </FlexWrapper>
             </FlexWrapper>
         </Modal>

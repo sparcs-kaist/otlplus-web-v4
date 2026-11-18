@@ -5,14 +5,17 @@ export const friendInviteMessage = (name: string, url: string) =>
     `${friendInviteText(name)}\n${url}`
 
 export async function copyFriendInvite(name: string, url: string) {
-    const message = friendInviteMessage(name, url)
+    await copyTextToClipboard(friendInviteMessage(name, url))
+}
+
+export async function copyTextToClipboard(text: string) {
     if (navigator.clipboard) {
-        await navigator.clipboard.writeText(message)
+        await navigator.clipboard.writeText(text)
         return
     }
 
     const textarea = document.createElement("textarea")
-    textarea.value = message
+    textarea.value = text
     textarea.style.position = "fixed"
     textarea.style.opacity = "0"
     document.body.appendChild(textarea)

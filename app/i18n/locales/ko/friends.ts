@@ -45,6 +45,8 @@ export const friends = {
     inviteLoading: "친구 코드를 불러오는 중이에요.",
     inviteError: "친구 코드를 불러오지 못했습니다. 다시 열어 주세요.",
     share: "공유하기",
+    copyLink: "초대 링크 복사",
+    linkCopied: "초대 링크를 복사했습니다.",
     copy: "초대 메시지 복사",
     copied: "초대 메시지를 복사했습니다.",
     deleteTitle: "친구 삭제",

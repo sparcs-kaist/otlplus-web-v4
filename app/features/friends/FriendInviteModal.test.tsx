@@ -8,7 +8,11 @@ import { act, fireEvent, render, screen, waitFor } from "@/test/test-utils"
 import useIsDevice from "@/utils/useIsDevice"
 
 import FriendInviteModal from "./FriendInviteModal"
-import { copyFriendInvite, shareFriendInvite } from "./utils/shareFriendInvite"
+import {
+    copyFriendInvite,
+    copyTextToClipboard,
+    shareFriendInvite,
+} from "./utils/shareFriendInvite"
 import { copyFriendQr, downloadFriendQr } from "./utils/shareFriendQR"
 
 const qrMock = vi.hoisted(() => ({ loadInLayoutEffect: false }))
@@ -18,6 +22,7 @@ vi.mock("@/utils/useIsDevice", () => ({ default: vi.fn() }))
 vi.mock("./utils/shareFriendInvite", async (importOriginal) => ({
     ...(await importOriginal<typeof import("./utils/shareFriendInvite")>()),
     copyFriendInvite: vi.fn(),
+    copyTextToClipboard: vi.fn(),
     shareFriendInvite: vi.fn(),
 }))
 vi.mock("./utils/shareFriendQR", () => ({
@@ -85,6 +90,7 @@ describe("friend code sharing", () => {
         vi.mocked(useIsDevice).mockReturnValue(false)
         vi.mocked(axiosClient.request).mockResolvedValue({ data: { code: "K7L4MX" } })
         vi.mocked(copyFriendInvite).mockResolvedValue(undefined)
+        vi.mocked(copyTextToClipboard).mockResolvedValue(undefined)
         vi.mocked(shareFriendInvite).mockResolvedValue("shared")
         vi.mocked(downloadFriendQr).mockResolvedValue(undefined)
         vi.mocked(copyFriendQr).mockResolvedValue(undefined)
@@ -140,10 +146,18 @@ describe("friend code sharing", () => {
                 minWidth: mobile ? "100dvw" : "630px",
             })
 
+            fireEvent.click(screen.getByRole("button", { name: "friends.copyLink" }))
+            await waitFor(() =>
+                expect(copyTextToClipboard).toHaveBeenCalledExactlyOnceWith(url),
+            )
+            expect(screen.getByText("friends.linkCopied")).toBeInTheDocument()
+            expect(copyFriendInvite).not.toHaveBeenCalled()
             fireEvent.click(screen.getByText("friends.copy"))
             await waitFor(() =>
                 expect(copyFriendInvite).toHaveBeenCalledExactlyOnceWith("구백", url),
             )
+            expect(screen.getByText("friends.copied")).toBeInTheDocument()
+            expect(screen.queryByText("friends.linkCopied")).not.toBeInTheDocument()
             fireEvent.click(screen.getByText("friends.share"))
             await waitFor(() =>
                 expect(shareFriendInvite).toHaveBeenCalledExactlyOnceWith("구백", url),
@@ -190,10 +204,13 @@ describe("friend code sharing", () => {
         expect(
             screen.queryByRole("img", { name: "friends.inviteQr" }),
         ).not.toBeInTheDocument()
+        expect(screen.getByRole("button", { name: "friends.copyLink" })).toBeDisabled()
+        fireEvent.click(screen.getByRole("button", { name: "friends.copyLink" }))
         fireEvent.click(screen.getByText("friends.copy"))
         fireEvent.click(screen.getByText("friends.share"))
         fireEvent.click(screen.getByRole("button", { name: "friends.regenerateCode" }))
         expect(copyFriendInvite).not.toHaveBeenCalled()
+        expect(copyTextToClipboard).not.toHaveBeenCalled()
         expect(shareFriendInvite).not.toHaveBeenCalled()
         expect(axiosClient.request).toHaveBeenCalledTimes(2)
         expect(axiosClient.request).toHaveBeenLastCalledWith(
@@ -211,9 +228,11 @@ describe("friend code sharing", () => {
             url,
         )
         expect(screen.queryByText(/K7L4MX/)).not.toBeInTheDocument()
+        fireEvent.click(screen.getByRole("button", { name: "friends.copyLink" }))
         fireEvent.click(screen.getByText("friends.copy"))
         fireEvent.click(screen.getByText("friends.share"))
         expect(copyFriendInvite).toHaveBeenCalledWith("구백", url)
+        expect(copyTextToClipboard).toHaveBeenCalledWith(url)
         expect(shareFriendInvite).toHaveBeenCalledWith("구백", url)
         expect(screen.getByRole("button", { name: "friends.downloadQr" })).toBeDisabled()
         fireEvent.load(screen.getByTestId("qr-logo"))

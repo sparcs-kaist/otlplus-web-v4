@@ -44,6 +44,8 @@ export const friends = {
     inviteLoading: "Loading your friend code…",
     inviteError: "Couldn't load your friend code. Please reopen this window.",
     share: "Share",
+    copyLink: "Copy invite link",
+    linkCopied: "Invite link copied.",
     copy: "Copy invite message",
     copied: "Invite message copied.",
     deleteTitle: "Remove friend",
