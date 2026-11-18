@@ -111,6 +111,10 @@ const MyTimetableButton = styled.button<{ $selected: boolean }>`
         $selected
             ? theme.colors.Background.Button.dark
             : theme.colors.Background.Section.default};
+
+    &:hover {
+        background-color: ${({ theme }) => theme.colors.Background.Tab.dark};
+    }
 `
 const Empty = styled(FlexWrapper)`
     padding: 24px 16px;
