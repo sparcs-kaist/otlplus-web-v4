@@ -31,6 +31,7 @@ import { useTranslation } from "react-i18next"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import { IconButton } from "@/common/primitives/IconButton"
+import Tooltip from "@/common/primitives/Tooltip"
 import Typography from "@/common/primitives/Typography"
 import type { Timetables } from "@/common/schemas/timetables"
 import SemesterButton from "@/features/timetable/sections/TabsRowSubSection/SemesterButton"
@@ -264,31 +265,41 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
                 </TimetableName>
                 <FlexWrapper direction="row" gap={0} align="center">
                     {isSelected ? (
-                        <IconButton
-                            aria-label={t(
+                        <Tooltip
+                            title={t(
                                 isHome
                                     ? "timetable.homeTimetable"
                                     : "timetable.setHomeTimetable",
                             )}
-                            aria-pressed={isHome}
-                            disabled={isSettingHome}
-                            onClick={onSetHome}
-                            styles={{ padding: 3.75 }}
                         >
-                            <Icon size={17.5} color={theme.colors.Highlight.default}>
-                                {isHome ? <StarIcon /> : <StarBorderIcon />}
-                            </Icon>
-                        </IconButton>
+                            <IconButton
+                                aria-label={t(
+                                    isHome
+                                        ? "timetable.homeTimetable"
+                                        : "timetable.setHomeTimetable",
+                                )}
+                                aria-pressed={isHome}
+                                disabled={isSettingHome}
+                                onClick={onSetHome}
+                                styles={{ padding: 3.75 }}
+                            >
+                                <Icon size={17.5} color={theme.colors.Highlight.default}>
+                                    {isHome ? <StarIcon /> : <StarBorderIcon />}
+                                </Icon>
+                            </IconButton>
+                        </Tooltip>
                     ) : isHome ? (
-                        <Icon
-                            size={17.5}
-                            color={theme.colors.Highlight.default}
-                            role="img"
-                            aria-label={t("timetable.homeTimetable")}
-                            style={{ margin: 3.75 }}
-                        >
-                            <StarIcon />
-                        </Icon>
+                        <Tooltip title={t("timetable.homeTimetable")}>
+                            <Icon
+                                size={17.5}
+                                color={theme.colors.Highlight.default}
+                                role="img"
+                                aria-label={t("timetable.homeTimetable")}
+                                style={{ margin: 3.75 }}
+                            >
+                                <StarIcon />
+                            </Icon>
+                        </Tooltip>
                     ) : null}
                     <SharedTimetableButton
                         selected={isSelected}
@@ -297,34 +308,38 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
                         onClick={onSetShared}
                     />
                     {isSelected && (
-                        <IconButton
-                            aria-label={t("timetable.shortcuts.timetableDuplicate")}
-                            onClick={onCopy}
-                            styles={{ padding: 5 }}
-                        >
-                            <Icon
-                                size={15}
-                                onClick={() => {}}
-                                color={
-                                    isSelected
-                                        ? theme.colors.Highlight.default
-                                        : theme.colors.Text.lighter
-                                }
+                        <Tooltip title={t("timetable.duplicateTimetable")}>
+                            <IconButton
+                                aria-label={t("timetable.duplicateTimetable")}
+                                onClick={onCopy}
+                                styles={{ padding: 5 }}
                             >
-                                <ContentCopyIcon />
-                            </Icon>
-                        </IconButton>
+                                <Icon
+                                    size={15}
+                                    onClick={() => {}}
+                                    color={
+                                        isSelected
+                                            ? theme.colors.Highlight.default
+                                            : theme.colors.Text.lighter
+                                    }
+                                >
+                                    <ContentCopyIcon />
+                                </Icon>
+                            </IconButton>
+                        </Tooltip>
                     )}
                     {isSelected && (
-                        <IconButton
-                            aria-label={t("timetable.shortcuts.timetableDelete")}
-                            onClick={onDelete}
-                            styles={{ padding: 3.75 }}
-                        >
-                            <Icon size={17.5} color={theme.colors.Highlight.default}>
-                                <CloseIcon />
-                            </Icon>
-                        </IconButton>
+                        <Tooltip title={t("timetable.deleteTimetable")}>
+                            <IconButton
+                                aria-label={t("timetable.deleteTimetable")}
+                                onClick={onDelete}
+                                styles={{ padding: 3.75 }}
+                            >
+                                <Icon size={17.5} color={theme.colors.Highlight.default}>
+                                    <CloseIcon />
+                                </Icon>
+                            </IconButton>
+                        </Tooltip>
                     )}
                 </FlexWrapper>
             </TabButton>
@@ -704,15 +719,17 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                     {status === "success" &&
                         timetables.isSuccess &&
                         localTimetables.length === 0 && (
-                            <Icon
-                                size={17.5}
-                                color={theme.colors.Highlight.default}
-                                role="img"
-                                aria-label={t("timetable.homeTimetable")}
-                                style={{ margin: 3.75 }}
-                            >
-                                <StarIcon />
-                            </Icon>
+                            <Tooltip title={t("timetable.homeTimetable")}>
+                                <Icon
+                                    size={17.5}
+                                    color={theme.colors.Highlight.default}
+                                    role="img"
+                                    aria-label={t("timetable.homeTimetable")}
+                                    style={{ margin: 3.75 }}
+                                >
+                                    <StarIcon />
+                                </Icon>
+                            </Tooltip>
                         )}
                     {status === "success" && (
                         <SharedTimetableButton
@@ -723,22 +740,24 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                         />
                     )}
                     {currentTimetableId === null && status === "success" && (
-                        <IconButton
-                            aria-label={t("timetable.shortcuts.timetableDuplicate")}
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                if (!isCloning) void duplicateTimetable()
-                            }}
-                            styles={{ padding: 5 }}
-                        >
-                            <Icon
-                                size={15}
-                                color={theme.colors.Highlight.default}
-                                onClick={() => {}}
+                        <Tooltip title={t("timetable.duplicateTimetable")}>
+                            <IconButton
+                                aria-label={t("timetable.duplicateTimetable")}
+                                onClick={(e) => {
+                                    e.stopPropagation()
+                                    if (!isCloning) void duplicateTimetable()
+                                }}
+                                styles={{ padding: 5 }}
                             >
-                                <ContentCopyIcon />
-                            </Icon>
-                        </IconButton>
+                                <Icon
+                                    size={15}
+                                    color={theme.colors.Highlight.default}
+                                    onClick={() => {}}
+                                >
+                                    <ContentCopyIcon />
+                                </Icon>
+                            </IconButton>
+                        </Tooltip>
                     )}
                 </TabButton>
                 <SemesterButton

@@ -1,10 +1,12 @@
 export const timetable = {
-    sharedTimetable: "친구 공유용 시간표",
-    setSharedTimetable: "친구 공유용 시간표로 지정",
+    deleteTimetable: "시간표 삭제",
+    duplicateTimetable: "시간표 복제",
+    sharedTimetable: "공유 시간표로 설정됨",
+    setSharedTimetable: "공유 시간표로 설정",
     sharedTimetableError: "친구 공유용 시간표를 설정하지 못했습니다. 다시 시도해 주세요.",
 
-    homeTimetable: "메인 시간표",
-    setHomeTimetable: "메인 시간표로 지정",
+    homeTimetable: "메인 시간표로 설정됨",
+    setHomeTimetable: "메인 시간표로 설정",
     loginToAddTimetable: "로그인 후 시간표를 추가할 수 있습니다.",
     homeTimetableError: "메인 시간표를 설정하지 못했습니다. 다시 시도해주세요.",
     editFailed: "시간표를 변경하지 못했습니다. 새로 불러온 시간표를 확인해 주세요.",

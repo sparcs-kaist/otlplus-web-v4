@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next"
 
 import Icon from "@/common/primitives/Icon"
 import { IconButton } from "@/common/primitives/IconButton"
+import Tooltip from "@/common/primitives/Tooltip"
 
 type Props = {
     selected: boolean
@@ -24,7 +25,7 @@ export default function SharedTimetableButton({
 
     if (selected) {
         return (
-            <span title={label}>
+            <Tooltip title={label}>
                 <IconButton
                     aria-label={label}
                     aria-pressed={shared}
@@ -46,19 +47,21 @@ export default function SharedTimetableButton({
                         />
                     </Icon>
                 </IconButton>
-            </span>
+            </Tooltip>
         )
     }
 
     return shared ? (
-        <Icon
-            size={17.5}
-            color={theme.colors.Highlight.default}
-            role="img"
-            aria-label={label}
-            style={{ margin: 3.75 }}
-        >
-            <PeopleIcon />
-        </Icon>
+        <Tooltip title={label}>
+            <Icon
+                size={17.5}
+                color={theme.colors.Highlight.default}
+                role="img"
+                aria-label={label}
+                style={{ margin: 3.75 }}
+            >
+                <PeopleIcon />
+            </Icon>
+        </Tooltip>
     ) : null
 }

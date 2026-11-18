@@ -128,11 +128,11 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
     })
     await page.goto("/timetable")
     const deleteButton = page.getByRole("button", {
-        name: "현재 시간표 삭제 (선택된 항목이 없을 때)",
+        name: "시간표 삭제",
         exact: true,
     })
     const setHomeButton = page.getByRole("button", {
-        name: "메인 시간표로 지정",
+        name: "메인 시간표로 설정",
         exact: true,
     })
     const addButton = page.getByRole("button", { name: "빈 시간표 추가", exact: true })
@@ -147,12 +147,7 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
             .evaluateAll((buttons) =>
                 buttons.map((button) => button.getAttribute("aria-label")),
             ),
-    ).toEqual([
-        "메인 시간표로 지정",
-        "친구 공유용 시간표로 지정",
-        "현재 시간표 복제",
-        "현재 시간표 삭제 (선택된 항목이 없을 때)",
-    ])
+    ).toEqual(["메인 시간표로 설정", "공유 시간표로 설정", "시간표 복제", "시간표 삭제"])
     await movingTab.evaluate((element) => {
         element.addEventListener("transitionstart", (event) => {
             if ((event as TransitionEvent).propertyName === "transform") {
@@ -170,7 +165,7 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
     })
     await setHomeButton.click()
     await expect(
-        page.getByRole("button", { name: "메인 시간표", exact: true }),
+        page.getByRole("button", { name: "메인 시간표로 설정됨", exact: true }),
     ).toHaveAttribute("aria-pressed", "true")
     expect(homeWrites).toEqual([{ year: 2026, semester: 3, timetableId: 2 }])
     expect(creates).toHaveLength(0)
@@ -180,7 +175,7 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
     )
 
     await page.getByText("시간표 1", { exact: true }).click()
-    const mainStar = page.getByRole("img", { name: "메인 시간표", exact: true })
+    const mainStar = page.getByRole("img", { name: "메인 시간표로 설정됨", exact: true })
     await expect(mainStar).toHaveCSS("color", "rgb(229, 76, 101)")
     await expect(deleteButton).toHaveCount(1)
     const tabOrder = () =>
@@ -212,7 +207,7 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
     await expect(deleteButton).toHaveCount(0)
     await expect(setHomeButton).toHaveCount(0)
     await expect(
-        page.getByRole("button", { name: "메인 시간표", exact: true }),
+        page.getByRole("button", { name: "메인 시간표로 설정됨", exact: true }),
     ).toHaveCount(0)
     await expect(addButton).toBeInViewport({ ratio: 1 })
     await expect(addButton).toBeEnabled()
@@ -234,7 +229,7 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
     expect(homeId).toBe(2)
     await setHomeButton.click()
     await expect(
-        page.getByRole("button", { name: "메인 시간표", exact: true }),
+        page.getByRole("button", { name: "메인 시간표로 설정됨", exact: true }),
     ).toBeVisible()
     expect(creates).toEqual([{ year: 2026, semester: 3, lectureIds: [] }])
     expect(homeId).toBe(4)
@@ -246,7 +241,7 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
     await expect(
         page
             .locator('[data-timetable-tab="1"]')
-            .getByLabel("메인 시간표", { exact: true }),
+            .getByLabel("메인 시간표로 설정됨", { exact: true }),
     ).toBeVisible()
 
     await page.setViewportSize({ width: 1920, height: 1080 })
@@ -254,7 +249,7 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
     await page.getByText("시간표 2", { exact: true }).click()
     await setHomeButton.click()
     await expect(
-        page.getByRole("button", { name: "메인 시간표", exact: true }),
+        page.getByRole("button", { name: "메인 시간표로 설정됨", exact: true }),
     ).toBeEnabled()
     await expect(movingTab).toHaveCSS("transition-duration", "0s")
     await page.getByText("시간표 1", { exact: true }).click()
@@ -270,7 +265,7 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
         const sourceTab = page.locator(`[data-timetable-tab="${source}"]`)
         await sourceTab.locator("[contenteditable], [title]").first().click()
         const sourceBox = await sourceTab.boundingBox()
-        await page.getByRole("button", { name: "현재 시간표 복제", exact: true }).click()
+        await page.getByRole("button", { name: "시간표 복제", exact: true }).click()
         const copyTab = page.locator(`[data-timetable-tab="${id}"]`)
         const ghost = page.locator(`[data-timetable-copy="${id}"]`)
         await expect(ghost).toBeVisible()
@@ -301,7 +296,7 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
     }
     expect(creates).toHaveLength(3)
     await page.emulateMedia({ reducedMotion: "reduce" })
-    await page.getByRole("button", { name: "현재 시간표 복제", exact: true }).click()
+    await page.getByRole("button", { name: "시간표 복제", exact: true }).click()
     await expect(page.locator('[data-timetable-tab="7"]')).toBeVisible()
     await expect(page.locator("[data-timetable-copy]")).toHaveCount(0)
     await page.emulateMedia({ reducedMotion: "no-preference" })
@@ -315,7 +310,7 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
     await expect(page.locator('[data-timetable-tab="8"]')).toBeVisible()
     await page.goto("/")
     await expect(page.locator(".block-title", { hasText: "메인 일정" })).toBeVisible()
-    await expect(page.getByRole("button", { name: /메인 시간표로 지정/ })).toHaveCount(0)
+    await expect(page.getByRole("button", { name: /메인 시간표로 설정/ })).toHaveCount(0)
 
     await page.emulateMedia({ reducedMotion: "reduce" })
     await page.goto("/timetable")
@@ -327,19 +322,20 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
 
     const academicTab = page.locator('[data-timetable-tab="academic"]')
     await expect(
-        academicTab.getByRole("img", { name: "메인 시간표", exact: true }),
+        academicTab.getByRole("img", { name: "메인 시간표로 설정됨", exact: true }),
     ).toBeVisible()
     await expect(
-        academicTab.getByRole("button", { name: "친구 공유용 시간표", exact: true }),
+        academicTab.getByRole("button", { name: "공유 시간표로 설정됨", exact: true }),
     ).toHaveAttribute("aria-pressed", "true")
     expect(homeId).toBeNull()
     await page.screenshot({ path: "test-results/academic-selection-defaults.png" })
     await page.getByRole("button", { name: "빈 시간표 추가", exact: true }).click()
+    await expect(page.locator('[aria-roledescription="sortable"]')).toHaveCount(1)
     const first = timetables[0]!
     await expect(
         page
             .locator(`[data-timetable-tab="${first.id}"]`)
-            .getByRole("button", { name: "메인 시간표", exact: true }),
+            .getByRole("button", { name: "메인 시간표로 설정됨", exact: true }),
     ).toHaveAttribute("aria-pressed", "true")
     expect(homeId).toBe(first.id)
 

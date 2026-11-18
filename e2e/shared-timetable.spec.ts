@@ -1,8 +1,14 @@
-import { expect, test } from "@playwright/test"
+import { type Locator, expect, test } from "@playwright/test"
 
 test("selects one shared timetable per semester independently of the main timetable", async ({
     page,
 }) => {
+    const expectTooltip = async (target: Locator, title: string) => {
+        await target.hover()
+        await expect(page.getByRole("tooltip")).toHaveText(title)
+        await page.mouse.move(0, 0)
+        await expect(page.getByRole("tooltip")).toHaveCount(0)
+    }
     const shared = new Map<number, number | null>()
     let homeId: number | null = 1
     let rejectShare = false
@@ -145,25 +151,49 @@ test("selects one shared timetable per semester independently of the main timeta
     await page.goto("/timetable")
     await page.emulateMedia({ reducedMotion: "reduce" })
     const share = page.getByRole("button", {
-        name: "친구 공유용 시간표로 지정",
+        name: "공유 시간표로 설정",
         exact: true,
     })
     const selectedShare = page.getByRole("button", {
-        name: "친구 공유용 시간표",
+        name: "공유 시간표로 설정됨",
         exact: true,
     })
     await page.getByText("시간표 1", { exact: true }).click()
     await expect(
-        page.getByRole("button", { name: "메인 시간표", exact: true }),
+        page.getByRole("button", { name: "메인 시간표로 설정됨", exact: true }),
     ).toHaveAttribute("aria-pressed", "true")
+    for (const title of [
+        "메인 시간표로 설정됨",
+        "공유 시간표로 설정",
+        "시간표 복제",
+        "시간표 삭제",
+    ]) {
+        await expectTooltip(page.getByRole("button", { name: title, exact: true }), title)
+    }
+    await page.getByRole("button", { name: "시간표 복제", exact: true }).focus()
+    await page.keyboard.press("Tab")
+    await expect(
+        page.getByRole("button", { name: "시간표 삭제", exact: true }),
+    ).toBeFocused()
+    await expect(page.getByRole("tooltip")).toHaveText("시간표 삭제")
+    await page.keyboard.press("Escape")
+    await expect(page.getByRole("tooltip")).toHaveCount(0)
     await expect(share.locator("svg")).toHaveCSS("fill", "none")
     await expect(
         page
             .locator('[data-timetable-tab="academic"]')
-            .getByRole("img", { name: "친구 공유용 시간표", exact: true }),
+            .getByRole("img", { name: "공유 시간표로 설정됨", exact: true }),
     ).toBeVisible()
+    await expectTooltip(
+        page.locator('[data-timetable-tab="academic"]').getByRole("img", {
+            name: "공유 시간표로 설정됨",
+            exact: true,
+        }),
+        "공유 시간표로 설정됨",
+    )
     await share.click()
     await expect(selectedShare).toHaveAttribute("aria-pressed", "true")
+    await expectTooltip(selectedShare, "공유 시간표로 설정됨")
     await expect(selectedShare.locator("svg")).not.toHaveCSS("fill", "none")
     await expect(page.locator('[data-timetable-tab="1"] button')).toHaveCount(4)
     expect(
@@ -173,17 +203,26 @@ test("selects one shared timetable per semester independently of the main timeta
                 buttons.map((button) => button.getAttribute("aria-label")),
             ),
     ).toEqual([
-        "메인 시간표",
-        "친구 공유용 시간표",
-        "현재 시간표 복제",
-        "현재 시간표 삭제 (선택된 항목이 없을 때)",
+        "메인 시간표로 설정됨",
+        "공유 시간표로 설정됨",
+        "시간표 복제",
+        "시간표 삭제",
     ])
     await page.getByText("시간표 2", { exact: true }).click()
+    await expectTooltip(
+        page.getByRole("button", { name: "메인 시간표로 설정", exact: true }),
+        "메인 시간표로 설정",
+    )
+    for (const title of ["메인 시간표로 설정됨", "공유 시간표로 설정됨"]) {
+        await expectTooltip(page.getByRole("img", { name: title, exact: true }), title)
+    }
     await expect(
-        page.getByRole("img", { name: "친구 공유용 시간표", exact: true }),
+        page.getByRole("img", { name: "공유 시간표로 설정됨", exact: true }),
     ).toBeVisible()
     await expect(
-        page.getByRole("img", { name: "친구 공유용 시간표", exact: true }).locator("svg"),
+        page
+            .getByRole("img", { name: "공유 시간표로 설정됨", exact: true })
+            .locator("svg"),
     ).not.toHaveCSS("fill", "none")
     await page
         .locator('[data-timetable-tab="2"]')
@@ -202,11 +241,25 @@ test("selects one shared timetable per semester independently of the main timeta
     expect(shared.get(3)).toBe(2)
     expect(homeId).toBe(1)
     await expect(
-        page.getByRole("img", { name: "친구 공유용 시간표", exact: true }),
+        page.getByRole("img", { name: "공유 시간표로 설정됨", exact: true }),
     ).toHaveCount(0)
     await page.reload()
     await page.getByText("시간표 2", { exact: true }).click()
     await expect(selectedShare).toHaveAttribute("aria-pressed", "true")
+    await page.getByRole("button", { name: "언어", exact: true }).click()
+    for (const title of [
+        "Set as main timetable",
+        "Current shared timetable",
+        "Duplicate timetable",
+        "Delete timetable",
+    ]) {
+        await expectTooltip(page.getByRole("button", { name: title, exact: true }), title)
+    }
+    await expectTooltip(
+        page.getByRole("img", { name: "Current main timetable", exact: true }),
+        "Current main timetable",
+    )
+    await page.getByRole("button", { name: "Language", exact: true }).click()
     await page.screenshot({ path: "test-results/shared-timetable-desktop.png" })
     await page
         .locator('[data-timetable-tab="2"]')
@@ -227,8 +280,13 @@ test("selects one shared timetable per semester independently of the main timeta
     await academic.getByText("학사 시간표", { exact: true }).click()
     await share.click()
     await expect(
-        academic.getByRole("button", { name: "친구 공유용 시간표", exact: true }),
+        academic.getByRole("button", { name: "공유 시간표로 설정됨", exact: true }),
     ).toHaveAttribute("aria-pressed", "true")
+    await expectTooltip(selectedShare, "공유 시간표로 설정됨")
+    await expectTooltip(
+        academic.getByRole("button", { name: "시간표 복제", exact: true }),
+        "시간표 복제",
+    )
     expect(shared.get(1)).toBeNull()
     await page.getByRole("button", { name: "다음 학기", exact: true }).click()
     await page.getByText("시간표 2", { exact: true }).click()
@@ -246,7 +304,7 @@ test("selects one shared timetable per semester independently of the main timeta
     await page.getByText("시간표 2", { exact: true }).click()
     await page
         .getByRole("button", {
-            name: "현재 시간표 삭제 (선택된 항목이 없을 때)",
+            name: "시간표 삭제",
             exact: true,
         })
         .click()

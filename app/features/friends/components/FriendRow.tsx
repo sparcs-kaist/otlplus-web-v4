@@ -6,13 +6,13 @@ import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined"
 import EventNote from "@mui/icons-material/EventNote"
 import Star from "@mui/icons-material/Star"
 import StarBorder from "@mui/icons-material/StarBorder"
-import { ThemeProvider, Tooltip, createTheme } from "@mui/material"
 import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import { IconButton } from "@/common/primitives/IconButton"
+import Tooltip from "@/common/primitives/Tooltip"
 import Typography from "@/common/primitives/Typography"
 import type { FriendListItem } from "@/common/schemas/friend"
 import { invalidateFriendQueries } from "@/features/friends/friendQueries"
@@ -24,8 +24,6 @@ const FriendRowWrapper = styled(FlexWrapper)<{ $selected: boolean }>`
     ${friendRowStyles}
     flex-shrink: 0;
 `
-
-const tooltipTheme = createTheme()
 
 const FriendIdentity = styled.div`
     display: flex;
@@ -91,20 +89,18 @@ function FriendRow({
                     {friend.name}
                 </FriendName>
                 {showSchedule && friend.hasScheduleNow === true && (
-                    <ThemeProvider theme={tooltipTheme}>
-                        <Tooltip title={t("friends.scheduleNow")} placement="top" arrow>
-                            <span
-                                role="img"
-                                aria-label={t("friends.scheduleNow")}
-                                tabIndex={0}
-                                style={{ display: "inline-flex", flexShrink: 0 }}
-                            >
-                                <Icon size={18} color={theme.colors.Text.default}>
-                                    <EventNote />
-                                </Icon>
-                            </span>
-                        </Tooltip>
-                    </ThemeProvider>
+                    <Tooltip title={t("friends.scheduleNow")}>
+                        <span
+                            role="img"
+                            aria-label={t("friends.scheduleNow")}
+                            tabIndex={0}
+                            style={{ display: "inline-flex", flexShrink: 0 }}
+                        >
+                            <Icon size={18} color={theme.colors.Text.default}>
+                                <EventNote />
+                            </Icon>
+                        </span>
+                    </Tooltip>
                 )}
             </FriendIdentity>
             {selected && (
