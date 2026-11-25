@@ -214,6 +214,37 @@ it.each(["selected", "hovered"] as const)(
 )
 
 describe("timetable lecture friend overlaps", () => {
+    it("keeps ratings above friends and reviews", () => {
+        useTimetableUIStore.setState({
+            selectedItems: [
+                {
+                    kind: "lecture",
+                    data: {
+                        ...lecture,
+                        averageGrade: 13.5,
+                        averageLoad: 9,
+                        averageSpeech: 6,
+                    },
+                },
+            ],
+        })
+        renderDetail()
+
+        const information = screen.getByText("lecture information")
+        const ratings = screen.getByText("common.grade")
+        const overlaps = screen.getByText("friends.currentLectureFriends")
+        const reviews = screen.getByText("lecture reviews")
+        for (const [before, after] of [
+            [information, ratings],
+            [ratings, overlaps],
+            [overlaps, reviews],
+        ] as const) {
+            expect(
+                before.compareDocumentPosition(after) & Node.DOCUMENT_POSITION_FOLLOWING,
+            ).toBeTruthy()
+        }
+    })
+
     it.each([false, true])(
         "shows all friend groups for a selected lecture (mobile: %s)",
         (mobile) => {

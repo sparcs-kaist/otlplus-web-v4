@@ -666,6 +666,11 @@ export default function FriendsPage() {
                                     ? null
                                     : item,
                             )
+                            setSelectedItem((prev) =>
+                                prev?.kind === item?.kind && prev?.data === item?.data
+                                    ? null
+                                    : item,
+                            )
                             if (isTablet) setDetailOpen(true)
                         }}
                         onHoverItem={(item) => {

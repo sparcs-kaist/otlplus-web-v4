@@ -141,6 +141,32 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
     const movingTab = page.locator('[aria-roledescription="sortable"]').filter({
         has: page.getByText("시간표 2", { exact: true }),
     })
+    await expect(page.locator('[data-timetable-tab="1"]')).not.toHaveAttribute(
+        "aria-roledescription",
+        "sortable",
+    )
+    await expect(page.locator('[aria-roledescription="sortable"]')).toHaveCount(2)
+    const homeTab = page.locator('[data-timetable-tab="1"]')
+    const blockedTab = page.locator('[data-timetable-tab="3"]')
+    const homeBox = await homeTab.boundingBox()
+    const blockedBox = await blockedTab.boundingBox()
+    await page.mouse.move(
+        blockedBox!.x + blockedBox!.width / 2,
+        blockedBox!.y + blockedBox!.height / 2,
+    )
+    await page.mouse.down()
+    await page.mouse.move(homeBox!.x, blockedBox!.y + blockedBox!.height / 2, {
+        steps: 10,
+    })
+    await expect
+        .poll(async () => (await blockedTab.boundingBox())?.x)
+        .toBeCloseTo(homeBox!.x + homeBox!.width + 3, 0)
+    await page.mouse.move(
+        blockedBox!.x + blockedBox!.width / 2,
+        blockedBox!.y + blockedBox!.height / 2,
+        { steps: 10 },
+    )
+    await page.mouse.up()
     expect(
         await movingTab
             .locator("button")
@@ -330,13 +356,13 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
     expect(homeId).toBeNull()
     await page.screenshot({ path: "test-results/academic-selection-defaults.png" })
     await page.getByRole("button", { name: "빈 시간표 추가", exact: true }).click()
-    await expect(page.locator('[aria-roledescription="sortable"]')).toHaveCount(1)
     const first = timetables[0]!
     await expect(
         page
             .locator(`[data-timetable-tab="${first.id}"]`)
             .getByRole("button", { name: "메인 시간표로 설정됨", exact: true }),
     ).toHaveAttribute("aria-pressed", "true")
+    await expect(page.locator('[aria-roledescription="sortable"]')).toHaveCount(0)
     expect(homeId).toBe(first.id)
 
     await page.route("**/api/v2/users/info", (route) =>

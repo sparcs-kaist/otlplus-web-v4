@@ -5,6 +5,7 @@ import {
     type DragEndEvent,
     type DragStartEvent,
     MeasuringStrategy,
+    type Modifier,
     MouseSensor,
     TouchSensor,
     closestCenter,
@@ -45,6 +46,8 @@ import SharedTimetableButton from "./SharedTimetableButton"
 import TabButton from "./TabButton"
 import getSemesterTimetables from "./getSemesterTimetables"
 import getTimetableAutoSelection from "./getTimetableAutoSelection"
+
+const TIMETABLE_TAB_GAP = 3
 
 const TabButtonRowWrapper = styled(FlexWrapper)<{ $hasTimetables: boolean }>`
     width: 100%;
@@ -219,11 +222,10 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
     }
 
     const style = {
-        transform: getTransformString(transform),
-        transition,
+        transform: isHome ? undefined : getTransformString(transform),
+        transition: isHome ? undefined : transition,
         touchAction: "manipulation" as const,
         opacity: isDragging ? 0.5 : 1,
-        zIndex: isHome ? 1 : undefined,
     }
 
     return (
@@ -231,9 +233,8 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
             ref={setNodeRef}
             data-timetable-tab={timetable.id}
             style={style}
-            {...attributes}
-            aria-disabled={false}
-            {...listeners}
+            {...(isHome ? {} : attributes)}
+            {...(isHome ? {} : listeners)}
         >
             <TabButton type={isSelected ? "selected" : "default"} onClick={onClick}>
                 <Tooltip title={timetable.name ? timetable.name : t("timetable.noTitle")}>
@@ -471,6 +472,25 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
     const [activeId, setActiveId] = useState<number | null>(null)
     const tabRowRef = useRef<HTMLDivElement>(null)
 
+    const restrictToHomeTimetableBoundary: Modifier = ({
+        draggingNodeRect,
+        transform,
+    }) => {
+        if (!draggingNodeRect || homeTimetableId == null) return transform
+
+        const homeTimetableTab = tabRowRef.current?.querySelector<HTMLElement>(
+            `[data-timetable-tab="${homeTimetableId}"]`,
+        )
+        if (!homeTimetableTab) return transform
+
+        const minimumLeft =
+            homeTimetableTab.getBoundingClientRect().right + TIMETABLE_TAB_GAP
+        return {
+            ...transform,
+            x: Math.max(transform.x, minimumLeft - draggingNodeRect.left),
+        }
+    }
+
     useEffect(() => {
         if (tabRowRef.current) tabRowRef.current.scrollLeft = 0
     }, [homeTimetableId])
@@ -608,7 +628,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                 <TabRow
                     ref={tabRowRef}
                     direction="row"
-                    gap={3}
+                    gap={TIMETABLE_TAB_GAP}
                     flex="0 1 auto"
                     onWheel={onWheel}
                 >
@@ -617,11 +637,18 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                         measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
                         collisionDetection={closestCenter}
                         onDragStart={handleDragStart}
+                        onDragCancel={() => setActiveId(null)}
                         onDragEnd={handleDragEnd}
-                        modifiers={[restrictToHorizontalAxis, restrictToParentElement]}
+                        modifiers={[
+                            restrictToHorizontalAxis,
+                            restrictToParentElement,
+                            restrictToHomeTimetableBoundary,
+                        ]}
                     >
                         <SortableContext
-                            items={localTimetables.map((t) => t.id)}
+                            items={localTimetables
+                                .filter((t) => t.id !== homeTimetableId)
+                                .map((t) => t.id)}
                             strategy={horizontalListSortingStrategy}
                         >
                             {localTimetables.map((timetable) => (
