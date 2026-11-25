@@ -145,7 +145,6 @@ describe("friend lecture details", () => {
             ).toBeTruthy()
         }
         expect(screen.getByText("common.numLabs")).toBeInTheDocument()
-        expect(courseMetrics.parentElement).toHaveStyle({ height: "29px" })
         expect(screen.getByText("common.credit")).toBeInTheDocument()
         expect(screen.queryByText("common.language")).not.toBeInTheDocument()
         expect(screen.queryByText("timetable.competitionRate")).not.toBeInTheDocument()
@@ -280,13 +279,11 @@ describe("friend lecture details", () => {
         })
     })
 
-    it("opens the course dictionary from a simple review without edit or like controls", () => {
+    it("opens the course dictionary from a review", () => {
         renderDetail()
         act(() => vi.advanceTimersByTime(1000))
 
-        const review = screen.getByRole("button", { name: /This is the lecture review/ })
-        expect(review).toHaveAttribute("type", "button")
-        expect(screen.queryByTestId("FavoriteBorderOutlinedIcon")).not.toBeInTheDocument()
+        const review = screen.getByText("This is the lecture review.")
         fireEvent.click(review)
         expect(screen.getByTestId("location")).toHaveTextContent(
             "/dictionary?courseId=1&professorId=17",
@@ -298,9 +295,6 @@ describe("friend lecture details", () => {
 
         expect(screen.getByText("common.language")).toBeInTheDocument()
         expect(screen.getByText("timetable.competitionRate")).toBeInTheDocument()
-        expect(screen.getByText("common.language").parentElement).not.toHaveStyle({
-            height: "29px",
-        })
         expect(screen.queryByText("common.numClasses")).not.toBeInTheDocument()
     })
 

@@ -392,7 +392,6 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                                     speech: t("common.speech"),
                                 }}
                                 fluid
-                                compact
                             />
                         )}
                     </LectureDetailWrapper>
@@ -411,7 +410,6 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                         <LectureReviewSubsection
                             key={selectedLecture.id}
                             showSummary={!readOnlySelection}
-                            reviewVariant={readOnlySelection ? "simple" : "default"}
                             selectedCourseId={selectedLecture.courseId}
                             selectedProfessorId={selectedLecture.professors[0]?.id ?? -1}
                         />

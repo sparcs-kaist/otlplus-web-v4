@@ -15,14 +15,12 @@ interface LectureReviewSubsectionProps {
     selectedCourseId: number | null
     selectedProfessorId: number | null
     showSummary?: boolean
-    reviewVariant?: "default" | "simple"
 }
 
 const LectureReviewSubsection: React.FC<LectureReviewSubsectionProps> = ({
     selectedCourseId,
     selectedProfessorId,
     showSummary = true,
-    reviewVariant = "default",
 }) => {
     const { t } = useTranslation()
 
@@ -88,12 +86,7 @@ const LectureReviewSubsection: React.FC<LectureReviewSubsectionProps> = ({
             )}
 
             {data?.reviews.map((review) => (
-                <ReviewBlock
-                    review={review}
-                    key={review.id}
-                    linkToDictionary={true}
-                    variant={reviewVariant}
-                />
+                <ReviewBlock review={review} key={review.id} linkToDictionary={true} />
             ))}
             {query.hasNextPage && <LoadingCircle ref={ref} />}
         </>
