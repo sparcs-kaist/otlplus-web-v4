@@ -241,7 +241,7 @@ export default function Timetable() {
     const { query: timetables, setParams: setTimetablesParams } = useAPI(
         "GET",
         "/timetables",
-        { enabled: status === "success", staleTime: 0 },
+        { enabled: status === "success" },
     )
 
     const [nonLoginTimetable, setNonLoginTimetable] = useState<TimetableItem[]>([])
