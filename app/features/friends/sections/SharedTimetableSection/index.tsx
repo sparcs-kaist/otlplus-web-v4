@@ -65,6 +65,8 @@ type Props = {
     overlappedLectureIds: number[]
     selectedItem: TimetableItem | null
     onSelectItem: (item: TimetableItem | null) => void
+    onHoverItem: (item: TimetableItem) => void
+    onLeaveItem: () => void
 }
 
 export default function SharedTimetableSection({
@@ -78,6 +80,8 @@ export default function SharedTimetableSection({
     overlappedLectureIds,
     selectedItem,
     onSelectItem,
+    onHoverItem,
+    onLeaveItem,
 }: Props) {
     const { t } = useTranslation()
     const selectedTabRef = useRef<HTMLDivElement>(null)
@@ -163,7 +167,12 @@ export default function SharedTimetableSection({
                         onCustomBlockSelect={(block) =>
                             onSelectItem({ kind: TimetableItemKind.CUSTOM, data: block })
                         }
-                        onOutsideClick={() => {onSelectItem(null)}}
+                        onItemHover={(item) => {
+                            onHoverItem(item)
+                        }}
+                        onItemLeave={() => {
+                            onLeaveItem()
+                        }}
                     />
                 </TimetableGrid>
             </TimetablePanel>

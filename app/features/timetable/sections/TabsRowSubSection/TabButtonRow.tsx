@@ -236,33 +236,35 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
             {...listeners}
         >
             <TabButton type={isSelected ? "selected" : "default"} onClick={onClick}>
-                <TimetableName
-                    onClick={(e) => {
-                        if (isSelected) {
-                            e.stopPropagation()
-                            e.currentTarget.contentEditable = "true"
-                            e.currentTarget.focus()
-                        }
-                    }}
-                    onBlur={(e) => {
-                        const newName = e.currentTarget.textContent || ""
-                        e.currentTarget.contentEditable = "false"
-                        onNameChange(timetable.id, newName)
-                    }}
-                    onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                            e.preventDefault()
-                            e.currentTarget.blur()
-                        }
-                    }}
-                    contentEditable={false}
-                    suppressContentEditableWarning={true}
-                    type="Normal"
-                    color={isSelected ? "Highlight.default" : "Text.lighter"}
-                    style={{ paddingTop: 4, paddingBottom: 3.5 }}
-                >
-                    {timetable.name ? timetable.name : "No Title"}
-                </TimetableName>
+                <Tooltip title={timetable.name ? timetable.name : t("timetable.noTitle")}>
+                    <TimetableName
+                        onClick={(e) => {
+                            if (isSelected) {
+                                e.stopPropagation()
+                                e.currentTarget.contentEditable = "true"
+                                e.currentTarget.focus()
+                            }
+                        }}
+                        onBlur={(e) => {
+                            const newName = e.currentTarget.textContent || ""
+                            e.currentTarget.contentEditable = "false"
+                            onNameChange(timetable.id, newName)
+                        }}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                                e.preventDefault()
+                                e.currentTarget.blur()
+                            }
+                        }}
+                        contentEditable={false}
+                        suppressContentEditableWarning={true}
+                        type="Normal"
+                        color={isSelected ? "Highlight.default" : "Text.lighter"}
+                        style={{ paddingTop: 4, paddingBottom: 3.5 }}
+                    >
+                        {timetable.name ? timetable.name : "No Title"}
+                    </TimetableName>
+                </Tooltip>
                 <FlexWrapper direction="row" gap={0} align="center">
                     {isSelected ? (
                         <Tooltip

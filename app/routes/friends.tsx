@@ -152,7 +152,9 @@ export default function FriendsPage() {
 
     const [selectedFriendId, setSelectedFriendId] = useState<number | null>(null)
     const [requestedYear, setRequestedYear] = useState<number | null>(null)
-    const [requestedSemester, setRequestedSemester] = useState<SemesterEnum>(SemesterEnum.SPRING)
+    const [requestedSemester, setRequestedSemester] = useState<SemesterEnum>(
+        SemesterEnum.SPRING,
+    )
     const hasRequestedTerm =
         requestedYear !== null &&
         Number.isInteger(requestedSemester) &&
@@ -178,11 +180,18 @@ export default function FriendsPage() {
     const hasSharedSemester = sharedSemesters.some(
         (term) => term.year === year && term.semester === semester,
     )
+    const [hoveredItem, setHoveredItem] = useState<TimetableItem | null>(null)
     const [selectedItem, setSelectedItem] = useState<TimetableItem | null>(null)
+    const hoveredLecture =
+        hoveredItem?.kind === TimetableItemKind.LECTURE ? hoveredItem.data : null
+    const hoveredCustomBlock =
+        hoveredItem?.kind === TimetableItemKind.CUSTOM ? hoveredItem.data : null
     const selectedLecture =
         selectedItem?.kind === TimetableItemKind.LECTURE ? selectedItem.data : null
     const selectedCustomBlock =
         selectedItem?.kind === TimetableItemKind.CUSTOM ? selectedItem.data : null
+    const activeCustomBlock = selectedCustomBlock || hoveredCustomBlock;
+    const activeLecture = selectedLecture || hoveredLecture;
     const [friendListOpen, setFriendListOpen] = useState(false)
     const [pageVisible, setPageVisible] = useState(
         () => typeof document === "undefined" || document.visibilityState !== "hidden",
@@ -218,28 +227,31 @@ export default function FriendsPage() {
         [setRequestedYear, setRequestedSemester, setSelectedItem],
     )
 
-    const handleKeyDown = useCallback((e: KeyboardEvent) => {
-        if (e.key === "Escape") {
-            setSelectedItem(null)
-        }
+    const handleKeyDown = useCallback(
+        (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                setSelectedItem(null)
+            } else if (e.key === "[" || e.key === "]") {
+                const currentIndex = sharedSemesters.findIndex(
+                    (term) => term.year === year && term.semester === semester,
+                )
 
-        else if (e.key === "[" || e.key === "]") {
-            const currentIndex = sharedSemesters.findIndex(
-                (term) => term.year === year && term.semester === semester,
-            )
-            console.log(sharedSemesters, year, semester, currentIndex)
-            if (currentIndex === -1) return
-            const nextIndex =
-                e.key === "["
-                    ? Math.max(0, currentIndex - 1)
-                    : Math.min(sharedSemesters.length - 1, currentIndex + 1)
-            if (nextIndex !== -1 && sharedSemesters[nextIndex]) {
-                handleSelectSemester(sharedSemesters[nextIndex].year, sharedSemesters[nextIndex].semester)
+                if (currentIndex === -1) return
+                const nextIndex =
+                    e.key === "["
+                        ? Math.max(0, currentIndex - 1)
+                        : Math.min(sharedSemesters.length - 1, currentIndex + 1)
+                if (nextIndex !== -1 && sharedSemesters[nextIndex]) {
+                    handleSelectSemester(
+                        sharedSemesters[nextIndex].year,
+                        sharedSemesters[nextIndex].semester,
+                    )
+                }
             }
-            console.log("nextIndex", nextIndex, sharedSemesters[nextIndex])
-        }
-    }, [handleSelectSemester, sharedSemesters])
-    
+        },
+        [handleSelectSemester, sharedSemesters, year, semester],
+    )
+
     useEffect(() => {
         setRequestedYear(positiveInteger(searchParams.get("year")))
         setRequestedSemester(Number(searchParams.get("semester")))
@@ -249,16 +261,19 @@ export default function FriendsPage() {
         searchParams.delete("semester")
         searchParams.delete("friendId")
         setSearchParams(searchParams, { replace: true })
+    }, [])
 
+    useEffect(() => {
         window.addEventListener("keydown", handleKeyDown)
 
         return () => {
             window.removeEventListener("keydown", handleKeyDown)
         }
-    }, []);
+    }, [handleKeyDown])
 
     useEffect(() => {
         if (!semestersQuery.isSuccess || hasSharedSemester) return
+        
         const latest = sharedSemesters[0]
         if (latest) handleSelectSemester(latest.year, latest.semester)
     }, [
@@ -473,6 +488,17 @@ export default function FriendsPage() {
         [sharedSemesters, year, semester, handleSelectSemester, t],
     )
 
+    const onHoverItem = useCallback(
+        (item: TimetableItem) => {
+            setHoveredItem(item)
+        },
+        [setHoveredItem],
+    )
+    
+    const onLeaveItem = useCallback(() => {
+        setHoveredItem(null)
+    }, [setHoveredItem])
+
     const closeAddedModal = () => {
         setAddedFriendName(null)
         navigate(location.pathname + location.search, { replace: true, state: null })
@@ -493,15 +519,70 @@ export default function FriendsPage() {
         )
     }
 
-    const detail = selectedCustomBlock ? (
+    const detail = activeCustomBlock ? (
         <FriendCustomBlockDetail
-            block={selectedCustomBlock}
+            block={activeCustomBlock}
             timetableName={timetableName}
             onClose={() => setSelectedItem(null)}
         />
-    ) : (
-        <FriendLectureDetail lecture={selectedLecture} year={year} semester={semester} />
-    )
+    ) : activeLecture ? (
+        <>
+            {isTablet && (
+                <LectureChoice
+                    ref={detailActionRef}
+                    type="button"
+                    onClick={() => setSelectedItem(null)}
+                >
+                    {t("friends.chooseAnotherLecture")}
+                </LectureChoice>
+                )
+            }
+            <FriendLectureDetail
+                lecture={activeLecture}
+                year={year}
+                semester={semester}
+            />
+        </>
+    ) : isTablet ?
+        <FlexWrapper direction="column" gap={8} align="stretch">
+            <Typography type="Normal" color="Text.default">
+                {t("friends.chooseLecture")}
+            </Typography>
+            {isLoadingTimetable ? (
+                <Typography role="status">
+                    {t("friends.loadingLectures")}
+                </Typography>
+            ) : hasLoadError ? (
+                <Typography role="alert">{t("friends.loadError")}</Typography>
+            ) : noSharedTimetables ? (
+                <Typography>{t("friends.noSharedTimetables")}</Typography>
+            ) : lectures.length === 0 ? (
+                <Typography>{t("friends.noLectures")}</Typography>
+            ) : (
+                lectures.map((lecture, index) => (
+                    <LectureChoice
+                        key={lecture.id}
+                        ref={index === 0 ? detailActionRef : undefined}
+                        type="button"
+                        onClick={() =>
+                            setSelectedItem({
+                                kind: TimetableItemKind.LECTURE,
+                                data: lecture,
+                            })
+                        }
+                    >
+                        {lecture.name}
+                        {lecture.subtitle}{" "}
+                        {lecture.classNo && `(${lecture.classNo})`}
+                    </LectureChoice>
+                ))
+            )}
+        </FlexWrapper> : 
+        <FlexWrapper direction="column" gap={8} align="center" justify="center" flex="1 1 0">
+            <Typography type="NormalMedium" color="Text.light">
+                {t("friends.chooseLecture")}
+            </Typography>
+        </FlexWrapper>
 
     return (
         <Page direction="column" gap={0}>
@@ -580,8 +661,18 @@ export default function FriendsPage() {
                         overlappedLectureIds={overlappedLectureIds}
                         selectedItem={selectedItem}
                         onSelectItem={(item) => {
-                            setSelectedItem((prev) => (prev?.kind === item?.kind && prev?.data === item?.data ? null : item))
+                            setSelectedItem((prev) =>
+                                prev?.kind === item?.kind && prev?.data === item?.data
+                                    ? null
+                                    : item,
+                            )
                             if (isTablet) setDetailOpen(true)
+                        }}
+                        onHoverItem={(item) => {
+                            onHoverItem(item)
+                        }}
+                        onLeaveItem={() => {
+                            onLeaveItem()
                         }}
                     />
                 </TimetableColumn>

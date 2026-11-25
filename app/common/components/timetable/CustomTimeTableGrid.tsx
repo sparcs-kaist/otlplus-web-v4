@@ -430,6 +430,7 @@ interface CustomTimeTableGridProps {
     flashItemKeys?: string[]
     onItemSelect?: (item: TimetableItem, e?: React.PointerEvent) => void
     onItemHover?: (item: TimetableItem) => void
+    onItemLeave?: () => void
     onItemDelete?: (item: TimetableItem) => void
     lectures?: Lecture[]
     customBlocks?: CustomBlock[]
@@ -442,6 +443,8 @@ interface CustomTimeTableGridProps {
     deleteLecture?: (lectureId: number) => void
     hoveredLectures?: Lecture[]
     setHoveredLectures?: React.Dispatch<React.SetStateAction<Lecture[]>>
+    hoveredCustomBlocks?: CustomBlock[]
+    setHoveredCustomBlocks?: React.Dispatch<React.SetStateAction<CustomBlock[]>>
     selectedLectures?: Lecture[]
     onLectureSelect?: (lecture: Lecture, e?: React.PointerEvent) => void
     selectedCustomBlock?: CustomBlock | null
@@ -450,7 +453,6 @@ interface CustomTimeTableGridProps {
     customBlockDraftTimes?: TimeBlock[]
     needCurrentTimeBar?: boolean
     flashLectureIds?: number[]
-    onOutsideClick?: (e: React.PointerEvent) => void
 }
 
 function CustomTimeTableGrid({
@@ -461,6 +463,7 @@ function CustomTimeTableGrid({
     flashItemKeys,
     onItemSelect,
     onItemHover,
+    onItemLeave,
     onItemDelete,
     lectures: legacyLectures = [],
     customBlocks: legacyCustomBlocks = [],
@@ -473,6 +476,8 @@ function CustomTimeTableGrid({
     deleteLecture,
     hoveredLectures = [],
     setHoveredLectures,
+    hoveredCustomBlocks = [],
+    setHoveredCustomBlocks,
     selectedLectures = [],
     onLectureSelect,
     selectedCustomBlock = null,
@@ -765,6 +770,7 @@ function CustomTimeTableGrid({
             if (!needLectureInteraction) return
 
             setHoveredLectures?.([lecture])
+            onItemHover?.({ kind: TimetableItemKind.LECTURE, data: lecture })
         },
         [setHoveredLectures, needLectureInteraction],
     )
@@ -772,8 +778,6 @@ function CustomTimeTableGrid({
     const handleLectureTileSelectCallback = useCallback(
         (lecture: Lecture, e?: React.PointerEvent) => {
             if (!needLectureInteraction) return
-
-            console.log(lecture)
 
             if (onItemSelect)
                 onItemSelect({ kind: TimetableItemKind.LECTURE, data: lecture }, e)
@@ -784,6 +788,7 @@ function CustomTimeTableGrid({
 
     const clearHoveredLecturesCallback = useCallback(() => {
         setHoveredLectures?.([])
+        onItemLeave?.()
         overlayRef.current?.setAttribute("data-is-hovering", "false")
     }, [setHoveredLectures])
 
@@ -828,6 +833,15 @@ function CustomTimeTableGrid({
             else onCustomBlockSelect?.(block, event)
         },
         [needLectureInteraction, onCustomBlockSelect, onItemSelect],
+    )
+
+    const handleCustomBlockHover = useCallback(
+        (block: CustomBlock) => {
+            if (!needLectureInteraction) return
+            onItemHover?.({ kind: TimetableItemKind.CUSTOM, data: block })
+            setHoveredCustomBlocks?.([block])
+        },
+        [needLectureInteraction, onItemHover],
     )
 
     return (
@@ -1045,6 +1059,11 @@ function CustomTimeTableGrid({
                                             needLectureDeletable &&
                                             onItemDelete
                                                 ? deleteCustomBlockCallback
+                                                : undefined
+                                        }
+                                        onHover={
+                                            needLectureInteraction
+                                                ? handleCustomBlockHover
                                                 : undefined
                                         }
                                     />
