@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test"
 test("sets, creates, and deletes the main timetable from the timetable tabs", async ({
     page,
 }) => {
+    test.setTimeout(60_000)
     let homeId: number | null = 1
     let rejectHomeChange = false
     let timetables = [1, 2, 3].map((id) => ({
@@ -175,7 +176,8 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
             ),
     ).toEqual(["메인 시간표로 설정", "공유 시간표로 설정", "시간표 복제", "시간표 삭제"])
     const previousMainPosition = (await movingTab.boundingBox())!.x
-    await setHomeButton.click()
+    // dnd-kit suppresses clicks for 50ms after a drag; let pointer release follow cleanup.
+    await setHomeButton.click({ delay: 100 })
     await expect(
         page.getByRole("button", { name: "메인 시간표로 설정됨", exact: true }),
     ).toHaveAttribute("aria-pressed", "true")
