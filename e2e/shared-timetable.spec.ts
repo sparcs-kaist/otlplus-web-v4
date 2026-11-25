@@ -5,7 +5,9 @@ test("selects one shared timetable per semester independently of the main timeta
 }) => {
     const expectTooltip = async (target: Locator, title: string) => {
         await target.hover()
-        await expect(page.getByRole("tooltip")).toHaveText(title)
+        await expect(
+            page.getByRole("tooltip", { name: title, exact: true }),
+        ).toBeVisible()
         await page.mouse.move(0, 0)
         await expect(page.getByRole("tooltip")).toHaveCount(0)
     }
@@ -158,7 +160,10 @@ test("selects one shared timetable per semester independently of the main timeta
         name: "공유 시간표로 설정됨",
         exact: true,
     })
-    await page.getByText("시간표 1", { exact: true }).click()
+    await page
+        .locator('[data-timetable-tab="1"]')
+        .getByText("시간표 1", { exact: true })
+        .click()
     await expect(
         page.getByRole("button", { name: "메인 시간표로 설정됨", exact: true }),
     ).toHaveAttribute("aria-pressed", "true")
@@ -175,7 +180,9 @@ test("selects one shared timetable per semester independently of the main timeta
     await expect(
         page.getByRole("button", { name: "시간표 삭제", exact: true }),
     ).toBeFocused()
-    await expect(page.getByRole("tooltip")).toHaveText("시간표 삭제")
+    await expect(
+        page.getByRole("tooltip", { name: "시간표 삭제", exact: true }),
+    ).toBeVisible()
     await page.keyboard.press("Escape")
     await expect(page.getByRole("tooltip")).toHaveCount(0)
     await expect(share.locator("svg")).toHaveCSS("fill", "none")
@@ -208,7 +215,10 @@ test("selects one shared timetable per semester independently of the main timeta
         "시간표 복제",
         "시간표 삭제",
     ])
-    await page.getByText("시간표 2", { exact: true }).click()
+    await page
+        .locator('[data-timetable-tab="2"]')
+        .getByText("시간표 2", { exact: true })
+        .click()
     await expectTooltip(
         page.getByRole("button", { name: "메인 시간표로 설정", exact: true }),
         "메인 시간표로 설정",
@@ -244,7 +254,10 @@ test("selects one shared timetable per semester independently of the main timeta
         page.getByRole("img", { name: "공유 시간표로 설정됨", exact: true }),
     ).toHaveCount(0)
     await page.reload()
-    await page.getByText("시간표 2", { exact: true }).click()
+    await page
+        .locator('[data-timetable-tab="2"]')
+        .getByText("시간표 2", { exact: true })
+        .click()
     await expect(selectedShare).toHaveAttribute("aria-pressed", "true")
     await page.getByRole("button", { name: "언어", exact: true }).click()
     for (const title of [
@@ -269,7 +282,10 @@ test("selects one shared timetable per semester independently of the main timeta
     await expect(selectedShare).toBeInViewport()
     await page.screenshot({ path: "test-results/shared-timetable-mobile.png" })
     await page.getByRole("button", { name: "이전 학기", exact: true }).click()
-    await page.getByText("시간표 3", { exact: true }).click()
+    await page
+        .locator('[data-timetable-tab="3"]')
+        .getByText("시간표 3", { exact: true })
+        .click()
     await share.click()
     await expect(selectedShare).toHaveAttribute("aria-pressed", "true")
     expect(shared.get(1)).toBe(3)
@@ -289,7 +305,10 @@ test("selects one shared timetable per semester independently of the main timeta
     )
     expect(shared.get(1)).toBeNull()
     await page.getByRole("button", { name: "다음 학기", exact: true }).click()
-    await page.getByText("시간표 2", { exact: true }).click()
+    await page
+        .locator('[data-timetable-tab="2"]')
+        .getByText("시간표 2", { exact: true })
+        .click()
     await expect(selectedShare).toHaveAttribute("aria-pressed", "true")
     await page.goto("/friends?friendId=7&year=2026&semester=3")
     await expect(
@@ -301,14 +320,19 @@ test("selects one shared timetable per semester independently of the main timeta
     await expect(page.locator(".block-title", { hasText: "공유 일정" })).toBeVisible()
     expect(requests).not.toContain("GET /friends/7/timetables/my-timetable")
     await page.goto("/timetable")
-    await page.getByText("시간표 2", { exact: true }).click()
+    await page
+        .locator('[data-timetable-tab="2"]')
+        .getByText("시간표 2", { exact: true })
+        .click()
     await page
         .getByRole("button", {
             name: "시간표 삭제",
             exact: true,
         })
         .click()
-    await expect(page.getByText("시간표 2", { exact: true })).toHaveCount(0)
+    await expect(
+        page.locator('[data-timetable-tab="2"]').getByText("시간표 2", { exact: true }),
+    ).toHaveCount(0)
     expect(shared.get(3)).toBeNull()
     expect(homeId).toBe(1)
     await page.goto("/friends?friendId=7&year=2026&semester=3")
