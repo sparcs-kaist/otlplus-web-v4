@@ -163,7 +163,9 @@ export default function SharedTimetableSection({
                         onCustomBlockSelect={(block) =>
                             onSelectItem({ kind: TimetableItemKind.CUSTOM, data: block })
                         }
-                        onOutsideClick={() => {onSelectItem(null)}}
+                        onOutsideClick={() => {
+                            onSelectItem(null)
+                        }}
                     />
                 </TimetableGrid>
             </TimetablePanel>

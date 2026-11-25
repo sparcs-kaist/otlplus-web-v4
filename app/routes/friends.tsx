@@ -152,7 +152,9 @@ export default function FriendsPage() {
 
     const [selectedFriendId, setSelectedFriendId] = useState<number | null>(null)
     const [requestedYear, setRequestedYear] = useState<number | null>(null)
-    const [requestedSemester, setRequestedSemester] = useState<SemesterEnum>(SemesterEnum.SPRING)
+    const [requestedSemester, setRequestedSemester] = useState<SemesterEnum>(
+        SemesterEnum.SPRING,
+    )
     const hasRequestedTerm =
         requestedYear !== null &&
         Number.isInteger(requestedSemester) &&
@@ -218,28 +220,32 @@ export default function FriendsPage() {
         [setRequestedYear, setRequestedSemester, setSelectedItem],
     )
 
-    const handleKeyDown = useCallback((e: KeyboardEvent) => {
-        if (e.key === "Escape") {
-            setSelectedItem(null)
-        }
-
-        else if (e.key === "[" || e.key === "]") {
-            const currentIndex = sharedSemesters.findIndex(
-                (term) => term.year === year && term.semester === semester,
-            )
-            console.log(sharedSemesters, year, semester, currentIndex)
-            if (currentIndex === -1) return
-            const nextIndex =
-                e.key === "["
-                    ? Math.max(0, currentIndex - 1)
-                    : Math.min(sharedSemesters.length - 1, currentIndex + 1)
-            if (nextIndex !== -1 && sharedSemesters[nextIndex]) {
-                handleSelectSemester(sharedSemesters[nextIndex].year, sharedSemesters[nextIndex].semester)
+    const handleKeyDown = useCallback(
+        (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                setSelectedItem(null)
+            } else if (e.key === "[" || e.key === "]") {
+                const currentIndex = sharedSemesters.findIndex(
+                    (term) => term.year === year && term.semester === semester,
+                )
+                console.log(sharedSemesters, year, semester, currentIndex)
+                if (currentIndex === -1) return
+                const nextIndex =
+                    e.key === "["
+                        ? Math.max(0, currentIndex - 1)
+                        : Math.min(sharedSemesters.length - 1, currentIndex + 1)
+                if (nextIndex !== -1 && sharedSemesters[nextIndex]) {
+                    handleSelectSemester(
+                        sharedSemesters[nextIndex].year,
+                        sharedSemesters[nextIndex].semester,
+                    )
+                }
+                console.log("nextIndex", nextIndex, sharedSemesters[nextIndex])
             }
-            console.log("nextIndex", nextIndex, sharedSemesters[nextIndex])
-        }
-    }, [handleSelectSemester, sharedSemesters])
-    
+        },
+        [handleSelectSemester, sharedSemesters],
+    )
+
     useEffect(() => {
         setRequestedYear(positiveInteger(searchParams.get("year")))
         setRequestedSemester(Number(searchParams.get("semester")))
@@ -255,7 +261,7 @@ export default function FriendsPage() {
         return () => {
             window.removeEventListener("keydown", handleKeyDown)
         }
-    }, []);
+    }, [])
 
     useEffect(() => {
         if (!semestersQuery.isSuccess || hasSharedSemester) return
@@ -580,7 +586,11 @@ export default function FriendsPage() {
                         overlappedLectureIds={overlappedLectureIds}
                         selectedItem={selectedItem}
                         onSelectItem={(item) => {
-                            setSelectedItem((prev) => (prev?.kind === item?.kind && prev?.data === item?.data ? null : item))
+                            setSelectedItem((prev) =>
+                                prev?.kind === item?.kind && prev?.data === item?.data
+                                    ? null
+                                    : item,
+                            )
                             if (isTablet) setDetailOpen(true)
                         }}
                     />
