@@ -380,24 +380,22 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                             selectedLecture={selectedLecture}
                             metrics={readOnlySelection ? "course" : "enrollment"}
                         />
-                        {readOnlySelection && (
-                            <ReviewScoreSummary
-                                averageGrade={selectedLecture.averageGrade / 3}
-                                averageLoad={selectedLecture.averageLoad / 3}
-                                averageSpeech={selectedLecture.averageSpeech / 3}
-                                reviewCount={undefined}
-                                labels={{
-                                    grade: t("common.grade"),
-                                    load: t("common.load"),
-                                    speech: t("common.speech"),
-                                }}
-                                fluid
-                            />
-                        )}
+                        <ReviewScoreSummary
+                            averageGrade={selectedLecture.averageGrade / 3}
+                            averageLoad={selectedLecture.averageLoad / 3}
+                            averageSpeech={selectedLecture.averageSpeech / 3}
+                            reviewCount={undefined}
+                            labels={{
+                                grade: t("common.grade"),
+                                load: t("common.load"),
+                                speech: t("common.speech"),
+                            }}
+                            fluid
+                        />
                     </LectureDetailWrapper>
+                    <StyledDivider />
                     {(status === "success" || readOnlySelection) && (
                         <>
-                            <StyledDivider />
                             <LectureFriendOverlaps lectureId={selectedLecture.id} />
                             <StyledDivider />
                         </>
@@ -409,7 +407,6 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                     >
                         <LectureReviewSubsection
                             key={selectedLecture.id}
-                            showSummary={!readOnlySelection}
                             selectedCourseId={selectedLecture.courseId}
                             selectedProfessorId={selectedLecture.professors[0]?.id ?? -1}
                         />
