@@ -74,6 +74,14 @@ export function useTimetableEditor({
     const key = timetableHistoryKey(currentTimetableId, year, semesterEnum)
     const language = i18n.resolvedLanguage
     const path = `/timetables/${currentTimetableId}/items` as const
+    const { mutation: addMutation } = useAPI("POST", path, {
+        mutationKey: [path, language, "POST"],
+        retry: false,
+    })
+    const { mutation: removeMutation } = useAPI("DELETE", path, {
+        mutationKey: [path, language, "DELETE"],
+        retry: false,
+    })
     const { mutation } = useAPI("PATCH", path, {
         mutationKey: [path, language],
         retry: false,
@@ -150,9 +158,16 @@ export function useTimetableEditor({
             const remappedIds = new Map<number, number>()
             if (status === "success") {
                 void queryClient.cancelQueries({ queryKey: [detailPath] })
-                const response = await mutation.mutateAsync({
-                    changes: edits.map(changeForEdit),
-                })
+                const changes = edits.map(changeForEdit)
+                const response = changes.every((change) => change.op === "add")
+                    ? await addMutation.mutateAsync({
+                          items: changes.map(({ op: _op, ...item }) => item),
+                      })
+                    : changes.every((change) => change.op === "remove")
+                      ? await removeMutation.mutateAsync({
+                            items: changes.map(({ op: _op, ...item }) => item),
+                        })
+                      : await mutation.mutateAsync({ changes })
                 if (!sameUser()) return false
                 finalItems = response.timetableItems
                 applied = edits.map((edit, index) => {
@@ -193,6 +208,7 @@ export function useTimetableEditor({
                         query.queryKey[2] !== language && query.queryKey[3] === "/api/v2",
                 })
                 void queryClient.invalidateQueries({ queryKey: ["/timetables/home"] })
+                void queryClient.invalidateQueries({ queryKey: ["/timetables/shared"] })
                 void queryClient.invalidateQueries({ queryKey: [queryKeys.timetables] })
             } else {
                 const removed = new Set(
@@ -314,6 +330,7 @@ export function useTimetableEditor({
                     }
                 }
                 void queryClient.invalidateQueries({ queryKey: ["/timetables/home"] })
+                void queryClient.invalidateQueries({ queryKey: ["/timetables/shared"] })
             }
             if (isCurrent())
                 alert(

@@ -4,6 +4,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { act, renderHook, waitFor } from "@testing-library/react"
 import { afterEach, expect, it, vi } from "vitest"
 
+import {
+    DELETERequest,
+    PATCHRequest,
+    POSTRequest,
+} from "@/api/timetables/$timetableId/items"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimetableChange, TimetableItem } from "@/common/schemas/timetableItem"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
@@ -56,7 +61,10 @@ afterEach(() => {
 
 async function setup(initial: TimetableItem[] = [lecture(1), block]) {
     const queryClient = new QueryClient({
-        defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+        defaultOptions: {
+            queries: { retry: false },
+            mutations: { retry: 2, retryDelay: 0 },
+        },
     })
     clients.push(queryClient)
     useUserStore.getState().setUser({ id: 1, name: "Tester" })
@@ -68,13 +76,26 @@ async function setup(initial: TimetableItem[] = [lecture(1), block]) {
     ])
     let customId = 100
     let intercept: ((apply: () => unknown) => Promise<unknown>) | null = null
-    const writes: { id: number; changes: TimetableChange[] }[] = []
+    const writes: {
+        id: number
+        method: string
+        data: unknown
+        changes: TimetableChange[]
+    }[] = []
     vi.mocked(axiosClient.request).mockImplementation(async ({ method, url, data }) => {
         if (url === "/api/v2/semesters") return { data: { semesters: [] } }
         const id = Number(url?.match(/timetables\/(\d+)/)?.[1])
         if (method === "GET") return { data: detail(server.get(id) ?? []) }
-        const changes = (data as { changes: TimetableChange[] }).changes
-        writes.push({ id, changes })
+        const changes: TimetableChange[] =
+            method === "POST"
+                ? POSTRequest.parse(data).items.map((item) => ({ op: "add", ...item }))
+                : method === "DELETE"
+                  ? DELETERequest.parse(data).items.map((item) => ({
+                        op: "remove",
+                        ...item,
+                    }))
+                  : PATCHRequest.parse(data).changes
+        writes.push({ id, method: method!, data, changes })
         const apply = () => {
             let items = [...(server.get(id) ?? [])]
             const results = changes.map((change, index) => {
@@ -143,6 +164,125 @@ async function setup(initial: TimetableItem[] = [lecture(1), block]) {
     }
 }
 
+it("uses POST and DELETE without op fields and remaps custom IDs through undo and redo", async () => {
+    const { result, writes } = await setup([lecture(1)])
+    await act(async () => {
+        expect(await result.current.editor.addItems([lecture(2), block])).toBe(true)
+    })
+    const customData = {
+        block_name: "Study",
+        place: "Original",
+        day: 1,
+        begin: 600,
+        end: 660,
+        times: [{ day: 1, begin: 600, end: 660 }],
+    }
+    expect(writes[0]?.method).toBe("POST")
+    expect(writes[0]?.data).toEqual({
+        items: [
+            { kind: "lecture", lectureId: 2 },
+            { kind: "custom", data: customData },
+        ],
+    })
+    await act(async () => {
+        expect(await result.current.editor.undo()).toBe(true)
+    })
+    expect(writes[1]?.method).toBe("DELETE")
+    expect(writes[1]?.data).toEqual({
+        items: [
+            { kind: "custom", id: 101 },
+            { kind: "lecture", id: 2 },
+        ],
+    })
+    expect(result.current.query.data).toEqual(detail([lecture(1)]))
+    await act(async () => {
+        expect(await result.current.editor.redo()).toBe(true)
+    })
+    expect(writes.map(({ method }) => method)).toEqual(["POST", "DELETE", "POST"])
+    expect(result.current.query.data?.timetableItems).toEqual([
+        lecture(1),
+        lecture(2),
+        { kind: "custom", data: { ...customData, id: 102 } },
+    ])
+    await act(async () => {
+        expect(await result.current.editor.undo()).toBe(true)
+    })
+    expect(writes[3]?.data).toEqual({
+        items: [
+            { kind: "custom", id: 102 },
+            { kind: "lecture", id: 2 },
+        ],
+    })
+})
+
+it("keeps replacement and its undo/redo in one atomic PATCH each", async () => {
+    const { result, writes } = await setup()
+    await act(async () => {
+        expect(
+            await result.current.editor.addItems([lecture(2)], [lecture(1), block]),
+        ).toBe(true)
+    })
+    expect(writes[0]?.data).toEqual({
+        changes: [
+            { op: "remove", kind: "lecture", id: 1 },
+            { op: "remove", kind: "custom", id: 10 },
+            { op: "add", kind: "lecture", lectureId: 2 },
+        ],
+    })
+    await act(async () => {
+        expect(await result.current.editor.undo()).toBe(true)
+    })
+    expect(result.current.query.data?.timetableItems).toEqual([
+        {
+            kind: "custom",
+            data: { ...block.data, id: 101, times: [{ day: 1, begin: 600, end: 660 }] },
+        },
+        lecture(1),
+    ])
+    await act(async () => {
+        expect(await result.current.editor.redo()).toBe(true)
+    })
+    expect(writes.map(({ method }) => method)).toEqual(["PATCH", "PATCH", "PATCH"])
+    expect(writes[2]?.changes).toContainEqual({ op: "remove", kind: "custom", id: 101 })
+    expect(result.current.query.data).toEqual(detail([lecture(2)]))
+})
+
+it.each(["POST", "DELETE", "PATCH"])(
+    "does not retry %s after a lost response and invalidates my shared timetable",
+    async (method) => {
+        const { result, writes, intercept, queryClient, server } = await setup([block])
+        const sharedKey = [
+            "/timetables/shared",
+            { year: 2026, semester: 1 },
+            "ko",
+            "/api/v2",
+        ]
+        queryClient.setQueryData(sharedKey, detail([block]))
+        intercept(async (apply) => {
+            apply()
+            throw new Error("Network Error")
+        })
+        await act(async () => {
+            const succeeded =
+                method === "POST"
+                    ? await result.current.editor.addItems([lecture(2)])
+                    : method === "DELETE"
+                      ? await result.current.editor.removeItems([block])
+                      : await result.current.editor.updateCustomBlock(10, {
+                            ...block.data,
+                            place: "Edited",
+                        } as never)
+            expect(succeeded).toBe(false)
+        })
+        expect(writes).toHaveLength(1)
+        expect(writes[0]?.method).toBe(method)
+        expect(result.current.query.data).toEqual(detail(server.get(1)!))
+        expect(queryClient.getQueryState(sharedKey)?.isInvalidated).toBe(true)
+        expect(result.current.editor.canUndo).toBe(false)
+        expect(result.current.editor.canRedo).toBe(false)
+    },
+)
+
 it("flashes only explicitly animated edits and history replay", async () => {
     const { result } = await setup([lecture(1)])
 
@@ -174,7 +314,7 @@ it("flashes only explicitly animated edits and history replay", async () => {
     expect(useTimetableUIStore.getState().flashItemKeys).toEqual(["lecture:3"])
 })
 
-it("commits a mixed batch and history only after success, blocks concurrent edits, and preserves other locales", async () => {
+it("commits a mixed-kind deletion and history only after success, blocks concurrent edits, and preserves other locales", async () => {
     const { result, queryClient, writes, intercept } = await setup()
     const englishKey = ["/timetables/1", null, "en", "/api/v2"]
     const english = detail([
@@ -186,6 +326,8 @@ it("commits a mixed batch and history only after success, blocks concurrent edit
     queryClient.setQueryData(englishKey, english)
     const otherKey = ["/timetables/2", null, "ko", "/api/v2"]
     queryClient.setQueryData(otherKey, detail([lecture(2)]))
+    const sharedKey = ["/timetables/shared", { year: 2026, semester: 1 }, "ko", "/api/v2"]
+    queryClient.setQueryData(sharedKey, detail([lecture(1), block]))
     let finish!: () => void
     intercept(
         (apply) =>
@@ -217,6 +359,7 @@ it("commits a mixed batch and history only after success, blocks concurrent edit
     expect(queryClient.getQueryData(englishKey)).toEqual(english)
     expect(queryClient.getQueryState(englishKey)?.isInvalidated).toBe(true)
     expect(queryClient.getQueryData(otherKey)).toEqual(detail([lecture(2)]))
+    expect(queryClient.getQueryState(sharedKey)?.isInvalidated).toBe(true)
 })
 
 it("remaps recreated custom IDs through older history and the source clipboard", async () => {

@@ -1,5 +1,10 @@
 import { type Page, expect, test } from "@playwright/test"
 
+import {
+    DELETERequest,
+    PATCHRequest,
+    POSTRequest,
+} from "../app/api/timetables/$timetableId/items"
 import type { Lecture } from "../app/common/schemas/lecture"
 import type { TimetableChange, TimetableItem } from "../app/common/schemas/timetableItem"
 
@@ -70,6 +75,7 @@ async function setup(page: Page, initialHomeId: number | null = null) {
     let nextBlockId = 20
     let homeId = initialHomeId
     const cloneRequests: unknown[] = []
+    const itemRequests: { method: string; body: unknown }[] = []
     const home = () => ({
         source: homeId === null ? "enrolled" : "saved",
         timetableId: homeId,
@@ -144,7 +150,20 @@ async function setup(page: Page, initialHomeId: number | null = null) {
         } else if (/^\/timetables\/\d+\/items$/.test(path)) {
             const id = Number(path.split("/")[2])
             let items = [...tables.get(id)!]
-            const { changes } = request.postDataJSON() as { changes: TimetableChange[] }
+            const body = request.postDataJSON()
+            itemRequests.push({ method, body })
+            const changes: TimetableChange[] =
+                method === "POST"
+                    ? POSTRequest.parse(body).items.map((item) => ({
+                          op: "add",
+                          ...item,
+                      }))
+                    : method === "DELETE"
+                      ? DELETERequest.parse(body).items.map((item) => ({
+                            op: "remove",
+                            ...item,
+                        }))
+                      : PATCHRequest.parse(body).changes
             const results = changes.map((change, index) => {
                 let itemId: number
                 if (change.op === "add") {
@@ -185,13 +204,13 @@ async function setup(page: Page, initialHomeId: number | null = null) {
             json = { courses: [] }
         await route.fulfill({ json })
     })
-    return { tables, cloneRequests, getHomeId: () => homeId }
+    return { tables, cloneRequests, itemRequests, getHomeId: () => homeId }
 }
 
 test("mixed selection deletes whole items and undo remaps recreated blocks", async ({
     page,
 }) => {
-    const { tables, cloneRequests } = await setup(page)
+    const { tables, cloneRequests, itemRequests } = await setup(page)
     await Promise.all([
         page.waitForResponse(/\/api\/v2\/timetables\/1(?:\?|$)/),
         page.goto("/timetable"),
@@ -223,6 +242,15 @@ test("mixed selection deletes whole items and undo remaps recreated blocks", asy
     await expect(page.locator(".block-title")).toHaveCount(0)
     await expect(page.locator(".lecture-title")).toHaveCount(0)
     expect(tables.has(1)).toBe(true)
+    expect(itemRequests[0]).toEqual({
+        method: "DELETE",
+        body: {
+            items: [
+                { kind: "lecture", id: 7 },
+                { kind: "custom", id: 7 },
+            ],
+        },
+    })
     await page.keyboard.press("Control+z")
     await expect(page.locator(".block-title", { hasText: "Study time" })).toBeVisible()
     expect(tables.get(1)!.find((item) => item.kind === "custom")!.data.id).not.toBe(7)
@@ -230,6 +258,17 @@ test("mixed selection deletes whole items and undo remaps recreated blocks", asy
     await expect(page.locator(".block-title")).toHaveCount(0)
     await page.keyboard.press("Control+z")
     await expect(page.locator(".block-title", { hasText: "Study time" })).toBeVisible()
+    expect(itemRequests.map(({ method }) => method)).toEqual([
+        "DELETE",
+        "POST",
+        "DELETE",
+        "POST",
+    ])
+    for (const { body } of itemRequests) {
+        expect(body).not.toHaveProperty("changes")
+        for (const item of (body as { items: unknown[] }).items)
+            expect(item).not.toHaveProperty("op")
+    }
     await page.keyboard.press("Control+d")
     await expect.poll(() => cloneRequests.length).toBe(1)
     expect(cloneRequests[0]).toEqual({ year: 2026, semester: 1, sourceTimetableId: 1 })

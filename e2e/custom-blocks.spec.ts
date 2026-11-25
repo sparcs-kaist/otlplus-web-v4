@@ -1,6 +1,11 @@
 import { type Page, expect, test } from "@playwright/test"
 import { readFile } from "node:fs/promises"
 
+import {
+    DELETERequest,
+    PATCHRequest,
+    POSTRequest,
+} from "../app/api/timetables/$timetableId/items"
 import type { CustomBlock } from "../app/common/schemas/customBlock"
 
 async function dragTime(
@@ -42,6 +47,7 @@ test("creates, edits, exports, and deletes one custom block with multiple time s
 }) => {
     let blocks: CustomBlock[] = []
     let patchBody: Partial<CustomBlock> | null = null
+    const itemMethods: string[] = []
 
     await page.route("**/api/v2/**", async (route) => {
         const request = route.request()
@@ -88,8 +94,21 @@ test("creates, edits, exports, and deletes one custom block with multiple time s
             await route.fulfill({ json: { year: 2026, semester: 1 } })
             return
         }
-        if (path.endsWith("/timetables/1/items") && method === "PATCH") {
-            const { changes } = request.postDataJSON()
+        if (path.endsWith("/timetables/1/items")) {
+            itemMethods.push(method)
+            const body = request.postDataJSON()
+            const changes =
+                method === "POST"
+                    ? POSTRequest.parse(body).items.map((item) => ({
+                          op: "add",
+                          ...item,
+                      }))
+                    : method === "DELETE"
+                      ? DELETERequest.parse(body).items.map((item) => ({
+                            op: "remove",
+                            ...item,
+                        }))
+                      : PATCHRequest.parse(body).changes
             const results = changes.map((change: any, index: number) => {
                 if (change.op === "add") {
                     const id =
@@ -328,6 +347,7 @@ test("creates, edits, exports, and deletes one custom block with multiple time s
     await expect(draftTimes).toHaveCount(0)
     await expect(page.locator(".block-title")).toHaveCount(0)
     expect(blocks).toHaveLength(0)
+    expect(itemMethods).toEqual(["POST", "PATCH", "DELETE"])
     await page.keyboard.press("Control+z")
     await expect(
         page.locator(".block-title", { hasText: "Focus time updated" }),
