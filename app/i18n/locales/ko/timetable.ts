@@ -12,6 +12,7 @@ export const timetable = {
     editFailed: "시간표를 변경하지 못했습니다. 새로 불러온 시간표를 확인해 주세요.",
     cloneFailed: "시간표를 복제하지 못했습니다. 목록을 확인한 뒤 다시 시도해 주세요.",
     myTimetable: "학사 시간표",
+    temporaryTimetable: "시간표",
     examTimetable: "시험시간표",
     addLectureConflict: "기존 강의나 커스텀 블록과 시간이 겹칩니다.",
     pasteLectureConflict:
