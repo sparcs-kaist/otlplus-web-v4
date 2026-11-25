@@ -213,10 +213,6 @@ export default function Timetable() {
 
     const hoveredLectures = useTimetableUIStore((s) => s.hoveredLectures)
     const setHoveredLectures = useTimetableUIStore((s) => s.setHoveredLectures)
-    const hoveredCustomBlocks = useTimetableUIStore((s) => s.hoveredCustomBlocks)
-    const setHoveredCustomBlocks = useTimetableUIStore(
-        (s) => s.setHoveredCustomBlocks,
-    )
     const selectedItems = useTimetableUIStore((s) => s.selectedItems)
     const setSelectedItems = useTimetableUIStore((s) => s.setSelectedItems)
 
@@ -350,12 +346,6 @@ export default function Timetable() {
             setMobileSearchOpen(true)
         }
     }, [isCustomBlockSectionOpen, isTablet, setMobileSearchOpen, timeFilter])
-
-    useEffect(() => {
-        if (hoveredCustomBlocks) {
-            setIsCustomBlockSectionOpen(true)
-        }
-    },[hoveredCustomBlocks]);
 
     const {
         addLectures,
@@ -511,8 +501,6 @@ export default function Timetable() {
                                     deleteLecture={handleDeleteLecture}
                                     hoveredLectures={hoveredLectures}
                                     setHoveredLectures={setHoveredLectures}
-                                    hoveredCustomBlocks={hoveredCustomBlocks}
-                                    setHoveredCustomBlocks={setHoveredCustomBlocks}
                                     selectedItems={selectedItems}
                                     timeFilter={timeFilter}
                                     customBlockDraftTimes={customBlockDraftTimes}

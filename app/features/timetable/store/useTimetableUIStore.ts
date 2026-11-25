@@ -11,7 +11,6 @@ import type { TimetableItem } from "@/common/schemas/timetableItem"
 interface TimetableUIState {
     // 1. 시간표 & 리스트 상호작용
     hoveredLectures: Lecture[]
-    hoveredCustomBlocks: CustomBlock[]
     selectedItems: TimetableItem[]
     clipboard: { items: TimetableItem[]; sourceKey: string } | null
     timeFilter: TimeBlock | null
@@ -42,9 +41,6 @@ interface TimetableUIState {
     // Actions
     setHoveredLectures: (
         lecturesOrUpdater: Lecture[] | ((prev: Lecture[]) => Lecture[]),
-    ) => void
-    setHoveredCustomBlocks: (
-        blocksOrUpdater: CustomBlock[] | ((prev: CustomBlock[]) => CustomBlock[]),
     ) => void
     setSelectedItems: (
         items: TimetableItem[] | ((prev: TimetableItem[]) => TimetableItem[]),
@@ -92,7 +88,6 @@ interface TimetableUIState {
 export const useTimetableUIStore = create<TimetableUIState>((set) => ({
     // Initial States
     hoveredLectures: [],
-    hoveredCustomBlocks: [],
     selectedItems: [],
     clipboard: null,
     timeFilter: null,
@@ -118,11 +113,6 @@ export const useTimetableUIStore = create<TimetableUIState>((set) => ({
     setHoveredLectures: (val) =>
         set((state) => ({
             hoveredLectures: typeof val === "function" ? val(state.hoveredLectures) : val,
-        })),
-    setHoveredCustomBlocks: (val) =>
-        set((state) => ({
-            hoveredCustomBlocks:
-                typeof val === "function" ? val(state.hoveredCustomBlocks) : val,
         })),
     setSelectedItems: (val) =>
         set((state) => ({
