@@ -300,7 +300,7 @@ describe("friend code sharing", () => {
         expect(axiosClient.request).toHaveBeenCalledTimes(2)
         expect(axiosClient.request).toHaveBeenLastCalledWith(
             expect.objectContaining({
-                method: "POST",
+                method: "PUT",
                 url: "/api/v2/friends/code",
                 data: {},
             }),
@@ -355,7 +355,7 @@ describe("friend code sharing", () => {
         expect(
             vi
                 .mocked(axiosClient.request)
-                .mock.calls.filter(([request]) => request.method === "POST"),
+                .mock.calls.filter(([request]) => request.method === "PUT"),
         ).toHaveLength(1)
     })
 
@@ -382,7 +382,7 @@ describe("friend code sharing", () => {
                 vi
                     .mocked(axiosClient.request)
                     .mock.calls.map(([request]) => request.method),
-            ).toEqual(["GET", "POST", "GET"])
+            ).toEqual(["GET", "PUT", "GET"])
             expect(screen.queryByTestId("CheckIcon")).not.toBeInTheDocument()
             expect(screen.queryByRole("alert")).not.toBeInTheDocument()
         },

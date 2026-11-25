@@ -10,7 +10,7 @@ export default function useFriendInviteCode(isOpen: boolean, onSettled: () => vo
         gcTime: 0,
     })
     const { mutation: regenerate, requestFunction: regenerateCode } = useAPI(
-        "POST",
+        "PUT",
         "/friends/code",
         {
             retry: false,
