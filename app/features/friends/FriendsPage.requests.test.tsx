@@ -24,7 +24,11 @@ vi.mock("react-i18next", () => ({
 vi.mock("@/features/friends/FriendInviteModal", () => ({ default: () => null }))
 vi.mock("@/features/friends/FriendLectureDetail", () => ({ default: () => null }))
 vi.mock("@/common/components/timetable/CustomTimeTableGrid", () => ({
-    default: () => null,
+    default: ({ overlappedLectureIds }: { overlappedLectureIds: number[] }) => (
+        <output data-testid="overlapped-lectures">
+            {overlappedLectureIds.join(" ")}
+        </output>
+    ),
 }))
 
 const clients: QueryClient[] = []
@@ -40,7 +44,7 @@ function setup(friendBResponse = Promise.resolve()) {
     const router = createMemoryRouter([{ path: "/friends", element: <FriendsPage /> }], {
         initialEntries: ["/friends?friendId=7&year=2026&semester=3"],
     })
-    const requests: { url: string; year: number; semester: number; search: string }[] = []
+    const requests: { url: string; year: number; semester: number }[] = []
     vi.mocked(axiosClient.request).mockImplementation(async ({ url, params }) => {
         const term = params as { year: number; semester: number } | null
         if (term) {
@@ -48,7 +52,6 @@ function setup(friendBResponse = Promise.resolve()) {
                 url: url!,
                 year: term.year,
                 semester: term.semester,
-                search: router.state.location.search,
             })
         }
         if (url === "/api/v2/friends") {
@@ -65,13 +68,23 @@ function setup(friendBResponse = Promise.resolve()) {
         if (url?.endsWith("/shared/semesters")) {
             return {
                 data: {
-                    semesters: [{ year: friendId === 7 ? 2026 : 2025, semester: 3 }],
+                    semesters:
+                        friendId === 7
+                            ? [
+                                  { year: 2026, semester: 3 },
+                                  { year: 2024, semester: 1 },
+                              ]
+                            : [{ year: 2025, semester: 3 }],
                 },
             }
         }
-        if (url === "/api/users/1/timetables") return { data: [] }
-        if (url === "/api/v2/timetables/my-timetable") {
-            return { data: { timetableItems: [] } }
+        if (url === "/api/v2/timetables/shared") {
+            return {
+                data: {
+                    source: "saved",
+                    timetableItems: [{ kind: "lecture", data: { id: term?.year } }],
+                },
+            }
         }
         if (url?.endsWith("/shared")) {
             if (friendId === 8) await friendBResponse
@@ -79,7 +92,7 @@ function setup(friendBResponse = Promise.resolve()) {
                 data: {
                     name: `Shared ${friendId} ${term?.year}`,
                     source: "saved",
-                    timetableItems: [],
+                    timetableItems: [{ kind: "lecture", data: { id: term?.year } }],
                 },
             }
         }
@@ -108,7 +121,7 @@ it("requests only the available semester when switching friends and revisiting c
     }
     expect(
         requests
-            .filter(({ url }) => url.endsWith("/shared"))
+            .filter(({ url }) => url.startsWith("/api/v2/friends/"))
             .map(({ url, year, semester }) => [url, year, semester]),
     ).toEqual([
         ["/api/v2/friends/7/timetables/shared", 2026, 3],
@@ -116,37 +129,106 @@ it("requests only the available semester when switching friends and revisiting c
         ["/api/v2/friends/7/timetables/shared", 2026, 3],
         ["/api/v2/friends/8/timetables/shared", 2025, 3],
     ])
-    for (const { year, semester, search } of requests) {
-        const params = new URLSearchParams(search)
-        expect({ year, semester }).toEqual({
-            year: Number(params.get("year")),
-            semester: Number(params.get("semester")),
-        })
-    }
+    expect(
+        requests
+            .filter(({ url }) => url === "/api/v2/timetables/shared")
+            .map(({ year, semester }) => [year, semester]),
+    ).toEqual([
+        [2026, 3],
+        [2025, 3],
+        [2026, 3],
+        [2025, 3],
+    ])
+    expect(
+        vi
+            .mocked(axiosClient.request)
+            .mock.calls.some(([{ url }]) =>
+                ["/api/users/1/timetables", "/api/v2/timetables/my-timetable"].includes(
+                    url!,
+                ),
+            ),
+    ).toBe(false)
 })
 
-it("keeps request semesters in sync with rapid URL navigation while an older response is pending", async () => {
+it("keeps both shared requests in sync with the selected semester", async () => {
+    const { requests } = setup()
+    await screen.findByText("Shared 7 2026")
+    fireEvent.click(screen.getByRole("tab", { selected: false }))
+    await screen.findByText("Shared 7 2024")
+    await waitFor(() =>
+        expect(screen.getByTestId("overlapped-lectures")).toHaveTextContent("2024"),
+    )
+
+    expect(requests.filter(({ year }) => year === 2024)).toEqual(
+        expect.arrayContaining([
+            { url: "/api/v2/timetables/shared", year: 2024, semester: 1 },
+            { url: "/api/v2/friends/7/timetables/shared", year: 2024, semester: 1 },
+        ]),
+    )
+    expect(requests.filter(({ year }) => year === 2024)).toHaveLength(2)
+    expect(
+        requests.every(
+            ({ year, semester }) =>
+                (year === 2026 && semester === 3) || (year === 2024 && semester === 1),
+        ),
+    ).toBe(true)
+})
+
+it("consumes an overlap link while mounted and loads the target friend's shared semester", async () => {
     let releaseFriendB!: () => void
     const pendingFriendB = new Promise<void>((resolve) => {
         releaseFriendB = resolve
     })
     const { router, requests } = setup(pendingFriendB)
     await screen.findByText("Shared 7 2026")
+    const initialRequestCount = requests.length
+
     await act(() => router.navigate("/friends?friendId=8&year=2025&semester=3"))
+    await waitFor(() =>
+        expect(requests.slice(initialRequestCount)).toEqual(
+            expect.arrayContaining([
+                { url: "/api/v2/timetables/shared", year: 2025, semester: 3 },
+                { url: "/api/v2/friends/8/timetables/shared", year: 2025, semester: 3 },
+            ]),
+        ),
+    )
+    expect(requests.slice(initialRequestCount)).toHaveLength(2)
+    expect(screen.getByRole("tablist", { name: "Friend B" })).toBeInTheDocument()
+    expect(screen.getAllByRole("tab", { selected: true })).toHaveLength(1)
+    expect(screen.queryByText("Shared 7 2026")).not.toBeInTheDocument()
+    expect(router.state.location.search).toBe("")
+
+    await act(async () => releaseFriendB())
+    await screen.findByText("Shared 8 2025")
+    await waitFor(() =>
+        expect(screen.getByTestId("overlapped-lectures")).toHaveTextContent("2025"),
+    )
+    expect(screen.queryByText("Shared 7 2026")).not.toBeInTheDocument()
+})
+
+it("ignores an older friend's pending response after switching back", async () => {
+    let releaseFriendB!: () => void
+    const pendingFriendB = new Promise<void>((resolve) => {
+        releaseFriendB = resolve
+    })
+    const { requests } = setup(pendingFriendB)
+    await screen.findByText("Shared 7 2026")
+    fireEvent.click(screen.getByRole("button", { name: /Friend B/ }))
     await waitFor(() =>
         expect(requests.some(({ url }) => url.includes("/friends/8/"))).toBe(true),
     )
-    await act(() => router.navigate("/friends?friendId=7&year=2026&semester=3"))
-    await act(() => router.navigate("/friends?friendId=8&year=2025&semester=3"))
-    await act(() => router.navigate("/friends?friendId=7&year=2026&semester=3"))
+    fireEvent.click(screen.getByRole("button", { name: /Friend A/ }))
     await act(async () => releaseFriendB())
     await screen.findByText("Shared 7 2026")
     expect(screen.queryByText("Shared 8 2025")).not.toBeInTheDocument()
-    for (const { year, semester, search } of requests) {
-        const params = new URLSearchParams(search)
-        expect({ year, semester }).toEqual({
-            year: Number(params.get("year")),
-            semester: Number(params.get("semester")),
-        })
-    }
+    await waitFor(() =>
+        expect(screen.getByTestId("overlapped-lectures")).toHaveTextContent("2026"),
+    )
+    expect(
+        requests.every(({ url, year, semester }) => {
+            if (url.includes("/friends/7/")) return year === 2026 && semester === 3
+            if (url.includes("/friends/8/")) return year === 2025 && semester === 3
+            return (year === 2026 || year === 2025) && semester === 3
+        }),
+    ).toBe(true)
 })
