@@ -24,7 +24,9 @@ import { IconButton } from "@/common/primitives/IconButton"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 import { timetableItemKey } from "@/common/utils/timetableItems"
-import LectureFriendOverlaps from "@/features/friends/LectureFriendOverlaps"
+import LectureFriendOverlaps, {
+    LectureFriendOverlapsLoading,
+} from "@/features/friends/LectureFriendOverlaps"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
 import isLectureAddDisabled from "@/features/timetable/utils/isLectureAddDisabled"
 import { trackEvent } from "@/libs/mixpanel"
@@ -394,9 +396,13 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                         />
                     </LectureDetailWrapper>
                     <StyledDivider />
-                    {(status === "success" || readOnlySelection) && (
+                    {(status !== "idle" || readOnlySelection) && (
                         <>
-                            <LectureFriendOverlaps lectureId={selectedLecture.id} />
+                            {status === "loading" && !readOnlySelection ? (
+                                <LectureFriendOverlapsLoading />
+                            ) : (
+                                <LectureFriendOverlaps lectureId={selectedLecture.id} />
+                            )}
                             <StyledDivider />
                         </>
                     )}

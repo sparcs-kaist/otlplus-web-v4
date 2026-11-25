@@ -573,10 +573,14 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
     useEffect(() => {
         setCurrentTimetableName(
             currentTimetableId == null
-                ? t("timetable.myTimetable")
+                ? t(
+                      status === "success"
+                          ? "timetable.myTimetable"
+                          : "timetable.temporaryTimetable",
+                  )
                 : localTimetables.find((t) => t.id === currentTimetableId)?.name || "",
         )
-    }, [currentTimetableId, localTimetables, setCurrentTimetableName, t])
+    }, [currentTimetableId, localTimetables, setCurrentTimetableName, status, t])
 
     const handleDragStart = (event: DragStartEvent) => {
         setActiveId(event.active.id as number)
@@ -700,23 +704,37 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                     </DndContext>
                 </TabRow>
             )}
-            <TabButton
-                style={{ flexShrink: 0 }}
-                title={
-                    status === "success" ? undefined : t("timetable.loginToAddTimetable")
-                }
-            >
-                <IconButton
-                    aria-label={t("timetable.shortcuts.timetableAdd")}
-                    disabled={status !== "success" || createTimetable.isPending}
-                    onClick={() => addTimetable({ year, semester, lectureIds: [] })}
-                    styles={{ padding: 3.75 }}
+            {status === "success" && (
+                <TabButton style={{ flexShrink: 0 }}>
+                    <IconButton
+                        aria-label={t("timetable.shortcuts.timetableAdd")}
+                        disabled={createTimetable.isPending}
+                        onClick={() => addTimetable({ year, semester, lectureIds: [] })}
+                        styles={{ padding: 3.75 }}
+                    >
+                        <Icon size={17.5} color={theme.colors.Text.default}>
+                            <AddIcon />
+                        </Icon>
+                    </IconButton>
+                </TabButton>
+            )}
+            {status !== "success" && (
+                <TabButton
+                    key="temporary-timetable"
+                    data-timetable-tab="temporary"
+                    type="selected"
+                    onClick={() => setCurrentTimetableId(null)}
                 >
-                    <Icon size={17.5} color={theme.colors.Text.default}>
-                        <AddIcon />
-                    </Icon>
-                </IconButton>
-            </TabButton>
+                    <AcademicTimetableName
+                        title={t("timetable.temporaryTimetable")}
+                        type="Normal"
+                        color="Highlight.default"
+                        style={{ paddingTop: 4, paddingBottom: 3.5 }}
+                    >
+                        {t("timetable.temporaryTimetable")}
+                    </AcademicTimetableName>
+                </TabButton>
+            )}
             <FlexWrapper
                 direction="row"
                 gap={4}
@@ -724,30 +742,29 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                 flex="0 0 auto"
                 style={{ marginLeft: "auto" }}
             >
-                <TabButton
-                    key="my-timetable"
-                    data-timetable-tab="academic"
-                    type={currentTimetableId == null ? "selected" : "default"}
-                    onClick={() => {
-                        setPendingMyTimetableSelection(true)
-                        setCurrentTimetableId(null)
-                    }}
-                >
-                    <AcademicTimetableName
-                        title={t("timetable.myTimetable")}
-                        type="Normal"
-                        color={
-                            currentTimetableId === null
-                                ? "Highlight.default"
-                                : "Text.lighter"
-                        }
-                        style={{ paddingTop: 4, paddingBottom: 3.5 }}
+                {status === "success" && (
+                    <TabButton
+                        key="my-timetable"
+                        data-timetable-tab="academic"
+                        type={currentTimetableId == null ? "selected" : "default"}
+                        onClick={() => {
+                            setPendingMyTimetableSelection(true)
+                            setCurrentTimetableId(null)
+                        }}
                     >
-                        {t("timetable.myTimetable")}
-                    </AcademicTimetableName>
-                    {status === "success" &&
-                        timetables.isSuccess &&
-                        localTimetables.length === 0 && (
+                        <AcademicTimetableName
+                            title={t("timetable.myTimetable")}
+                            type="Normal"
+                            color={
+                                currentTimetableId === null
+                                    ? "Highlight.default"
+                                    : "Text.lighter"
+                            }
+                            style={{ paddingTop: 4, paddingBottom: 3.5 }}
+                        >
+                            {t("timetable.myTimetable")}
+                        </AcademicTimetableName>
+                        {timetables.isSuccess && localTimetables.length === 0 && (
                             <Tooltip title={t("timetable.homeTimetable")}>
                                 <Icon
                                     size={17.5}
@@ -760,35 +777,34 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                                 </Icon>
                             </Tooltip>
                         )}
-                    {status === "success" && (
                         <SharedTimetableButton
                             selected={currentTimetableId === null}
                             shared={isAcademicShared}
                             disabled={isSettingShared}
                             onClick={() => void handleSetShared(null)}
                         />
-                    )}
-                    {currentTimetableId === null && status === "success" && (
-                        <Tooltip title={t("timetable.duplicateTimetable")}>
-                            <IconButton
-                                aria-label={t("timetable.duplicateTimetable")}
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    if (!isCloning) void duplicateTimetable()
-                                }}
-                                styles={{ padding: 5 }}
-                            >
-                                <Icon
-                                    size={15}
-                                    color={theme.colors.Highlight.default}
-                                    onClick={() => {}}
+                        {currentTimetableId === null && (
+                            <Tooltip title={t("timetable.duplicateTimetable")}>
+                                <IconButton
+                                    aria-label={t("timetable.duplicateTimetable")}
+                                    onClick={(e) => {
+                                        e.stopPropagation()
+                                        if (!isCloning) void duplicateTimetable()
+                                    }}
+                                    styles={{ padding: 5 }}
                                 >
-                                    <ContentCopyIcon />
-                                </Icon>
-                            </IconButton>
-                        </Tooltip>
-                    )}
-                </TabButton>
+                                    <Icon
+                                        size={15}
+                                        color={theme.colors.Highlight.default}
+                                        onClick={() => {}}
+                                    >
+                                        <ContentCopyIcon />
+                                    </Icon>
+                                </IconButton>
+                            </Tooltip>
+                        )}
+                    </TabButton>
+                )}
                 <SemesterButton
                     year={year}
                     semester={semester}

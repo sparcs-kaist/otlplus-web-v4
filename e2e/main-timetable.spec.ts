@@ -126,6 +126,7 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
         localStorage.setItem("i18nextLng", "ko")
         localStorage.setItem("theme", "dark")
     })
+    await page.setViewportSize({ width: 1920, height: 1080 })
     await page.goto("/timetable")
     const deleteButton = page.getByRole("button", {
         name: "시간표 삭제",
@@ -138,9 +139,7 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
     const addButton = page.getByRole("button", { name: "빈 시간표 추가", exact: true })
     await expect(deleteButton).toHaveCount(1)
     await page.getByText("시간표 2", { exact: true }).click()
-    const movingTab = page.locator('[aria-roledescription="sortable"]').filter({
-        has: page.getByText("시간표 2", { exact: true }),
-    })
+    const movingTab = page.locator('[data-timetable-tab="2"]')
     await expect(page.locator('[data-timetable-tab="1"]')).not.toHaveAttribute(
         "aria-roledescription",
         "sortable",
@@ -174,31 +173,16 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
                 buttons.map((button) => button.getAttribute("aria-label")),
             ),
     ).toEqual(["메인 시간표로 설정", "공유 시간표로 설정", "시간표 복제", "시간표 삭제"])
-    await movingTab.evaluate((element) => {
-        element.addEventListener("transitionstart", (event) => {
-            if ((event as TransitionEvent).propertyName === "transform") {
-                element.setAttribute(
-                    "data-start-x",
-                    `${element.getBoundingClientRect().x}`,
-                )
-            }
-        })
-        element.addEventListener("transitionend", (event) => {
-            if ((event as TransitionEvent).propertyName === "transform") {
-                element.setAttribute("data-end-x", `${element.getBoundingClientRect().x}`)
-            }
-        })
-    })
+    const previousMainPosition = (await movingTab.boundingBox())!.x
     await setHomeButton.click()
     await expect(
         page.getByRole("button", { name: "메인 시간표로 설정됨", exact: true }),
     ).toHaveAttribute("aria-pressed", "true")
     expect(homeWrites).toEqual([{ year: 2026, semester: 3, timetableId: 2 }])
     expect(creates).toHaveLength(0)
-    await expect(movingTab).toHaveAttribute("data-end-x")
-    expect(Number(await movingTab.getAttribute("data-end-x"))).toBeLessThan(
-        Number(await movingTab.getAttribute("data-start-x")),
-    )
+    await expect
+        .poll(async () => (await movingTab.boundingBox())?.x)
+        .toBeLessThan(previousMainPosition)
 
     await page.getByText("시간표 1", { exact: true }).click()
     const mainStar = page.getByRole("img", { name: "메인 시간표로 설정됨", exact: true })
@@ -370,13 +354,15 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
     )
     await page.goto("/timetable")
     await expect(page.getByRole("button", { name: "Sign in", exact: true })).toBeVisible()
-    await expect(addButton).toBeDisabled()
-    await expect(addButton).toBeInViewport({ ratio: 1 })
+    await expect(addButton).toHaveCount(0)
+    await expect(page.locator('[data-timetable-tab="temporary"]')).toBeInViewport({
+        ratio: 1,
+    })
     const semesterControl = page.getByText("2026", { exact: true }).locator("..")
     const semesterBox = await semesterControl.boundingBox()
     const rowBox = await semesterControl.locator("../..").boundingBox()
     expect(semesterBox!.x + semesterBox!.width).toBeCloseTo(rowBox!.x + rowBox!.width, 0)
-    await expect(academic).toBeVisible()
+    await expect(academic).toHaveCount(0)
     await expect(setHomeButton).toHaveCount(0)
     await page.screenshot({ path: "test-results/main-timetable-guest.png" })
 })

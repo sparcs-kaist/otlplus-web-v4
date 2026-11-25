@@ -143,6 +143,37 @@ async function setup(initial: TimetableItem[] = [lecture(1), block]) {
     }
 }
 
+it("flashes only explicitly animated edits and history replay", async () => {
+    const { result } = await setup([lecture(1)])
+
+    await act(async () => {
+        expect(
+            await result.current.editor.addLectures([
+                (lecture(2) as { kind: "lecture"; data: Lecture }).data,
+            ]),
+        ).toBe(true)
+    })
+    expect(useTimetableUIStore.getState().flashItemKeys).toBeNull()
+
+    await act(async () => {
+        expect(await result.current.editor.removeItems([lecture(1)])).toBe(true)
+    })
+    expect(useTimetableUIStore.getState().flashItemKeys).toBeNull()
+
+    await act(async () => {
+        expect(await result.current.editor.undo()).toBe(true)
+    })
+    expect(useTimetableUIStore.getState().flashItemKeys).toEqual(["lecture:1"])
+
+    useTimetableUIStore.setState({ flashItemKeys: null })
+    await act(async () => {
+        expect(
+            await result.current.editor.addItems([lecture(3)], [], { flash: true }),
+        ).toBe(true)
+    })
+    expect(useTimetableUIStore.getState().flashItemKeys).toEqual(["lecture:3"])
+})
+
 it("commits a mixed batch and history only after success, blocks concurrent edits, and preserves other locales", async () => {
     const { result, queryClient, writes, intercept } = await setup()
     const englishKey = ["/timetables/1", null, "en", "/api/v2"]

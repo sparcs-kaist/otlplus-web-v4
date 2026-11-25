@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react"
+
 import userEvent from "@testing-library/user-event"
 import type { Window as HappyDOMWindow } from "happy-dom"
 import { Link, MemoryRouter, useLocation, useNavigate } from "react-router-dom"
@@ -120,6 +122,7 @@ let friendSharedResponse: {
 let sharedSemestersQueryState = { isSuccess: true, isPending: false, isError: false }
 let sharedSemestersResponse: typeof semesters
 let ownSharedResponse: typeof friendSharedResponse
+let ownSharedQueryState = { isSuccess: true, isPending: false, isError: false }
 const timetables = {
     timetables: [
         { id: 42, name: "Saved timetable" },
@@ -211,22 +214,28 @@ describe("mobile friend timetable navigation", () => {
             source: "enrolled",
             name: "학사 시간표",
         } as typeof friendSharedResponse
+        ownSharedQueryState = { isSuccess: true, isPending: false, isError: false }
         sharedSemestersResponse = semesters
         sharedSemestersQueryState = { isSuccess: true, isPending: false, isError: false }
         friendsQueryState = { isSuccess: true, isFetching: false, isError: false }
         parameterSetters.clear()
         testWindow.happyDOM.setViewport({ width: 390, height: 844 })
         vi.mocked(useAPI).mockImplementation(function useMockAPI(_method, path) {
-            const { search } = useLocation()
-            const year = new URLSearchParams(search).get("year")
-            if (!parameterSetters.has(path)) parameterSetters.set(path, vi.fn())
+            const [params, setParams] = useState<{ year: number } | null>(null)
+            const [setQueryParams] = useState(() => vi.fn(setParams))
+            const [ready, setReady] = useState(false)
+            useEffect(() => setReady(true), [])
+            parameterSetters.set(path, setQueryParams)
+            const year = params?.year
             return {
                 query: {
                     data:
                         path === "/friends"
                             ? friendsResponse
                             : path.endsWith("/shared/semesters")
-                              ? sharedSemestersResponse
+                              ? ready
+                                  ? sharedSemestersResponse
+                                  : undefined
                               : path === "/timetables/shared"
                                 ? ownSharedResponse
                                 : path === "/semesters"
@@ -240,7 +249,7 @@ describe("mobile friend timetable navigation", () => {
                                         : path.endsWith("my-timetable")
                                           ? lectures
                                           : path === "/friends/7/timetables/shared"
-                                            ? year === "2024"
+                                            ? year === 2024
                                                 ? earlierLectures
                                                 : friendSharedResponse
                                             : path.endsWith("/42")
@@ -254,12 +263,16 @@ describe("mobile friend timetable navigation", () => {
                     isError: false,
                     refetch: refetchFriends,
                     ...(path === "/friends" ? friendsQueryState : {}),
+                    ...(path === "/timetables/shared" ? ownSharedQueryState : {}),
                     ...(path.endsWith("/shared/semesters")
-                        ? sharedSemestersQueryState
+                        ? {
+                              ...sharedSemestersQueryState,
+                              isSuccess: ready && sharedSemestersQueryState.isSuccess,
+                          }
                         : {}),
                 },
                 mutation: { isPending: false, isError: false },
-                setParams: parameterSetters.get(path),
+                setParams: setQueryParams,
                 requestFunction: vi.fn(),
             } as unknown as ReturnType<typeof useAPI>
         })
@@ -314,7 +327,7 @@ describe("mobile friend timetable navigation", () => {
     )
 
     it.each([390, 1440])(
-        "selects my timetable and clears the friend and saved table at width %i",
+        "selects my timetable while keeping the selected semester at width %i",
         (width) => {
             testWindow.happyDOM.setViewport({ width, height: 844 })
             renderPage("/friends?friendId=7&year=2025&semester=3&timetableId=42")
@@ -327,9 +340,8 @@ describe("mobile friend timetable navigation", () => {
             expect(ownRow).toHaveAttribute("aria-pressed", "false")
             fireEvent.click(ownRow)
             expect(currentParams().has("friendId")).toBe(false)
-            expect(currentParams().has("timetableId")).toBe(false)
-            expect(currentParams().get("year")).toBe("2025")
-            expect(currentParams().get("semester")).toBe("3")
+            expect(currentParams().has("year")).toBe(false)
+            expect(currentParams().has("semester")).toBe(false)
             expect(
                 screen.getByRole("tablist", { name: "friends.myTimetable" }),
             ).toBeInTheDocument()
@@ -372,7 +384,9 @@ describe("mobile friend timetable navigation", () => {
             screen.getByRole("button", { name: "friends.myTimetable" }).focus()
             await act(async () => user.keyboard(key))
             expect(currentParams().has("friendId")).toBe(false)
-            expect(currentParams().has("timetableId")).toBe(false)
+            expect(
+                screen.getByRole("tablist", { name: "friends.myTimetable" }),
+            ).toBeInTheDocument()
             if (width === 390)
                 expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
         },
@@ -601,7 +615,7 @@ describe("mobile friend timetable navigation", () => {
         ).toHaveTextContent("Fluid mechanics")
     })
 
-    it("opens a saved timetable deep link without replacing its older semester or selection", () => {
+    it("opens a saved timetable deep link and consumes its semester parameters", () => {
         renderPage("/friends?friendId=7&year=2025&semester=3&timetableId=42")
 
         expect(
@@ -619,11 +633,11 @@ describe("mobile friend timetable navigation", () => {
             expect.objectContaining({ enabled: true }),
         ])
         expect(currentParams().get("timetableId")).toBe("42")
-        expect(currentParams().get("year")).toBe("2025")
+        expect(currentParams().has("year")).toBe(false)
     })
 
     it.each([390, 1440])(
-        "marks exact shared lectures from all my saved and enrolled timetables in the seven-day friend grid at width %i",
+        "marks only exact lectures in both shared timetables, ignoring private and enrolled extras at width %i",
         (width) => {
             testWindow.happyDOM.setViewport({ width, height: 844 })
             ownAllSavedResponse = [
@@ -641,11 +655,22 @@ describe("mobile friend timetable navigation", () => {
                     },
                 ],
             }
+            ownSharedResponse = {
+                source: "saved",
+                timetableItems: [
+                    { kind: "lecture", data: { ...lecture, id: 2 } as Lecture },
+                    { kind: "lecture", data: { ...lecture, id: 6 } as Lecture },
+                    {
+                        kind: "custom",
+                        data: { id: 4, block_name: "My custom block" } as CustomBlock,
+                    },
+                ],
+            }
             friendSharedResponse = {
                 timetableItems: [
                     {
                         kind: "lecture",
-                        data: { ...lecture, id: 2, name: "Saved only" } as Lecture,
+                        data: { ...lecture, id: 2, name: "Shared lecture" } as Lecture,
                     },
                     {
                         kind: "lecture",
@@ -664,6 +689,14 @@ describe("mobile friend timetable navigation", () => {
                         data: { ...lecture, id: 5, classNo: "B" } as Lecture,
                     },
                     {
+                        kind: "lecture",
+                        data: {
+                            ...lecture,
+                            id: 90,
+                            name: "Private saved only",
+                        } as Lecture,
+                    },
+                    {
                         kind: "custom",
                         data: { id: 6, block_name: "Friend custom block" } as CustomBlock,
                     },
@@ -677,11 +710,11 @@ describe("mobile friend timetable navigation", () => {
                 ],
             }
 
-            renderPage("/friends?friendId=7&year=2025&semester=3&timetableId=42")
+            renderPage("/friends?friendId=7&year=2026&semester=3&timetableId=42")
 
             expect(screen.getByTestId("timetable-grid")).toHaveAttribute(
                 "data-overlapped-lectures",
-                "2 3",
+                "2",
             )
             expect(screen.getByTestId("timetable-grid")).toHaveAttribute(
                 "data-displayed-days",
@@ -689,29 +722,62 @@ describe("mobile friend timetable navigation", () => {
             )
             expect(vi.mocked(useAPI).mock.calls).toContainEqual([
                 "GET",
-                "/users/1/timetables",
-                expect.objectContaining({ enabled: true, apiPrefix: "/api" }),
-            ])
-            expect(vi.mocked(useAPI).mock.calls).toContainEqual([
-                "GET",
-                "/timetables/my-timetable",
+                "/timetables/shared",
                 expect.objectContaining({ enabled: true }),
             ])
-            for (const path of [
-                "/users/1/timetables",
-                "/timetables/my-timetable",
-                "/friends/7/timetables/shared",
-            ]) {
+            expect(
+                vi
+                    .mocked(useAPI)
+                    .mock.calls.some(([, path]) =>
+                        ["/users/1/timetables", "/timetables/my-timetable"].includes(
+                            path,
+                        ),
+                    ),
+            ).toBe(false)
+            for (const path of ["/timetables/shared", "/friends/7/timetables/shared"]) {
                 expect(parameterSetters.get(path)).toHaveBeenLastCalledWith({
-                    year: 2025,
+                    year: 2026,
                     semester: 3,
                 })
             }
         },
     )
 
+    it.each(["empty", "failed"])(
+        "does not use enrolled or private lectures when my shared timetable is %s",
+        (state) => {
+            if (state === "empty")
+                ownSharedResponse = { source: "saved", timetableItems: [] }
+            else
+                ownSharedQueryState = {
+                    isSuccess: false,
+                    isPending: false,
+                    isError: true,
+                }
+
+            renderPage("/friends?friendId=7&year=2026&semester=3")
+
+            expect(screen.getByTestId("timetable-grid")).toHaveAttribute(
+                "data-overlapped-lectures",
+                "",
+            )
+            expect(
+                screen.getByRole("button", { name: "Tile: Saved fluid mechanics" }),
+            ).toBeInTheDocument()
+        },
+    )
+
+    it("uses the server's enrolled fallback as my shared timetable", () => {
+        renderPage("/friends?friendId=7&year=2026&semester=3")
+
+        expect(screen.getByTestId("timetable-grid")).toHaveAttribute(
+            "data-overlapped-lectures",
+            "1",
+        )
+    })
+
     it.each(["", "&timetableId=42"])(
-        "does not mark my own timetable as shared or fetch all my saved timetables (%s)",
+        "does not mark my own timetable as shared or fetch legacy timetables (%s)",
         (timetableParam) => {
             renderPage(`/friends?year=2026&semester=3${timetableParam}`)
 
@@ -723,11 +789,15 @@ describe("mobile friend timetable navigation", () => {
                 "data-displayed-days",
                 "7",
             )
-            expect(vi.mocked(useAPI).mock.calls).toContainEqual([
-                "GET",
-                "/users/1/timetables",
-                expect.objectContaining({ enabled: false, apiPrefix: "/api" }),
-            ])
+            expect(
+                vi
+                    .mocked(useAPI)
+                    .mock.calls.some(([, path]) =>
+                        ["/users/1/timetables", "/timetables/my-timetable"].includes(
+                            path,
+                        ),
+                    ),
+            ).toBe(false)
         },
     )
 
@@ -957,10 +1027,10 @@ describe("mobile friend timetable navigation", () => {
             semester: 1,
         })
         expect(currentParams().has("timetableId")).toBe(false)
-        expect(currentParams().get("year")).toBe("2025")
+        expect(currentParams().has("year")).toBe(false)
     })
 
-    it("closes mobile detail on a same-friend overlap link and restores the previous target on back", async () => {
+    it("closes mobile detail on same-friend overlap navigation and browser back", async () => {
         renderPage("/friends?friendId=7&year=2025&semester=3&timetableId=42")
         fireEvent.pointerDown(
             screen.getByRole("button", { name: "Tile: Saved fluid mechanics" }),
@@ -972,22 +1042,23 @@ describe("mobile friend timetable navigation", () => {
         )
 
         await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument())
-        expect(
-            screen.getByRole("button", { name: "Tile: Earlier fluid mechanics" }),
-        ).toBeInTheDocument()
-        expect(
-            parameterSetters.get("/friends/7/timetables/shared"),
-        ).toHaveBeenLastCalledWith({
-            year: 2024,
-            semester: 3,
-        })
         expect(currentParams().get("timetableId")).toBe("43")
+        expect(screen.getByRole("tab", { name: "2024 Fall" })).toHaveAttribute(
+            "aria-selected",
+            "true",
+        )
+        for (const path of ["/friends/7/timetables/shared", "/timetables/shared"]) {
+            expect(parameterSetters.get(path)).toHaveBeenLastCalledWith({
+                year: 2024,
+                semester: 3,
+            })
+        }
 
         fireEvent.click(screen.getByRole("button", { name: "Browser back" }))
         expect(
-            screen.getByRole("button", { name: "Tile: Saved fluid mechanics" }),
+            screen.getByRole("button", { name: "Tile: Earlier fluid mechanics" }),
         ).toBeInTheDocument()
-        expect(currentParams().get("year")).toBe("2025")
+        expect(currentParams().has("year")).toBe(false)
         expect(currentParams().get("timetableId")).toBe("42")
         expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
     })
@@ -1097,8 +1168,8 @@ describe("mobile friend timetable navigation", () => {
             "aria-selected",
             "true",
         )
-        expect(currentParams().get("year")).toBe("2026")
-        expect(currentParams().get("semester")).toBe("3")
+        expect(currentParams().has("year")).toBe(false)
+        expect(currentParams().has("semester")).toBe(false)
         expect(
             screen.queryByRole("tab", { name: "Saved timetable" }),
         ).not.toBeInTheDocument()
@@ -1122,7 +1193,7 @@ describe("mobile friend timetable navigation", () => {
     })
 
     it.each(["/friends?friendId=7", "/friends?friendId=7&year=2023&semester=2"])(
-        "replaces the automatic semester fallback so back leaves %s",
+        "consumes entry parameters without adding a history entry for %s",
         (entry) => {
             render(
                 <MemoryRouter initialEntries={["/friends?year=2024&semester=1", entry]}>
@@ -1136,13 +1207,14 @@ describe("mobile friend timetable navigation", () => {
             )
 
             fireEvent.click(screen.getByRole("button", { name: "Browser back" }))
-            expect(screen.getByTestId("location")).toHaveTextContent(
-                "/friends?year=2024&semester=1",
-            )
+            expect(screen.getByTestId("location")).toHaveTextContent(/^\/friends$/)
             expect(screen.getByRole("tab", { name: "2024 Spring" })).toHaveAttribute(
                 "aria-selected",
                 "true",
             )
+            expect(
+                screen.getByRole("tablist", { name: "friends.myTimetable" }),
+            ).toBeInTheDocument()
         },
     )
 
@@ -1159,12 +1231,13 @@ describe("mobile friend timetable navigation", () => {
         expect(dialog.queryByText("friends.noSharedTimetables")).not.toBeInTheDocument()
     })
 
-    it("keeps semester tab selection in the URL and clears the old timetable ID", () => {
+    it("updates both shared queries on semester tab selection without changing the URL", () => {
         renderPage("/friends?friendId=7&year=2025&semester=3&timetableId=42")
         expect(screen.getByRole("tab", { name: "2025 Fall" })).toHaveAttribute(
             "aria-selected",
             "true",
         )
+        const initialLocation = screen.getByTestId("location").textContent
         fireEvent.keyDown(screen.getByRole("tab", { name: "2025 Spring" }), {
             key: "Enter",
         })
@@ -1173,14 +1246,8 @@ describe("mobile friend timetable navigation", () => {
             "true",
         )
         expect(screen.getAllByRole("tab", { selected: true })).toHaveLength(1)
-        expect(currentParams().get("year")).toBe("2025")
-        expect(currentParams().get("semester")).toBe("1")
-        expect(currentParams().has("timetableId")).toBe(false)
-        for (const path of [
-            "/friends/7/timetables/shared",
-            "/users/1/timetables",
-            "/timetables/my-timetable",
-        ]) {
+        expect(screen.getByTestId("location")).toHaveTextContent(initialLocation!)
+        for (const path of ["/friends/7/timetables/shared", "/timetables/shared"]) {
             expect(parameterSetters.get(path)).toHaveBeenLastCalledWith({
                 year: 2025,
                 semester: 1,
@@ -1189,13 +1256,6 @@ describe("mobile friend timetable navigation", () => {
         expect(
             screen.getByRole("button", { name: "Tile: Saved fluid mechanics" }),
         ).toBeInTheDocument()
-
-        fireEvent.click(screen.getByRole("button", { name: "Browser back" }))
-        expect(screen.getByRole("tab", { name: "2025 Fall" })).toHaveAttribute(
-            "aria-selected",
-            "true",
-        )
-        expect(currentParams().get("timetableId")).toBe("42")
     })
 
     it("closes mobile detail even when an overlap points to the currently open timetable", () => {
@@ -1211,7 +1271,11 @@ describe("mobile friend timetable navigation", () => {
 
         expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
         expect(currentParams().get("timetableId")).toBe("43")
-        expect(currentParams().get("year")).toBe("2024")
+        expect(currentParams().has("year")).toBe(false)
+        expect(screen.getByRole("tab", { name: "2024 Fall" })).toHaveAttribute(
+            "aria-selected",
+            "true",
+        )
         expect(
             screen.getByRole("button", { name: "Tile: Earlier fluid mechanics" }),
         ).toBeInTheDocument()
@@ -1220,12 +1284,10 @@ describe("mobile friend timetable navigation", () => {
     it("falls back to the current official timetable for invalid link parameters", () => {
         renderPage("/friends?friendId=-7&year=invalid&semester=9&timetableId=-42")
 
-        expect(parameterSetters.get("/timetables/my-timetable")).toHaveBeenLastCalledWith(
-            {
-                year: 2026,
-                semester: 3,
-            },
-        )
+        expect(parameterSetters.get("/timetables/shared")).toHaveBeenLastCalledWith({
+            year: 2026,
+            semester: 3,
+        })
         expect(
             screen.getByRole("button", { name: "Tile: Fluid mechanics" }),
         ).toBeInTheDocument()

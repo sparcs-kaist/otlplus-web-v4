@@ -12,6 +12,7 @@ export const timetable = {
     editFailed: "Could not update the timetable. Please check the refreshed timetable.",
     cloneFailed: "Could not duplicate the timetable. Check the list before trying again.",
     myTimetable: "Academic Timetable",
+    temporaryTimetable: "Timetable",
     examTimetable: "Exam Timetable",
     addLectureConflict: "This overlaps an existing lecture or custom block.",
     pasteLectureConflict:

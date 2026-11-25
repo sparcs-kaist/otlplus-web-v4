@@ -49,7 +49,11 @@ function setup(items: TimetableItem[] = [lecture(7), custom(7)]) {
         undo: vi.fn(async () => true),
         redo: vi.fn(async () => true),
         addItems: vi.fn(
-            async (_items: TimetableItem[], _replace?: TimetableItem[]) => true,
+            async (
+                _items: TimetableItem[],
+                _replace?: TimetableItem[],
+                _options?: { flash?: boolean },
+            ) => true,
         ),
         removeItems: vi.fn(async (_items: TimetableItem[]) => true),
         addLectures: vi.fn(async () => true),
@@ -151,7 +155,9 @@ it("pastes mixed items and removes both kinds of conflicts with one atomic edito
         .setClipboard({ items: incoming, sourceKey: "2-2026-1" })
     shortcut("v")
     await waitFor(() =>
-        expect(operations.addItems).toHaveBeenCalledWith(incoming, existing),
+        expect(operations.addItems).toHaveBeenCalledWith(incoming, existing, {
+            flash: true,
+        }),
     )
     expect(operations.addItems).toHaveBeenCalledTimes(1)
     expect(operations.removeItems).not.toHaveBeenCalled()
@@ -251,6 +257,10 @@ it("does not delete a clipboard lecture already in the target when pasting a leg
         .getState()
         .setClipboard({ items: [existing, incoming], sourceKey: "2-2026-1" })
     shortcut("v")
-    await waitFor(() => expect(operations.addItems).toHaveBeenCalledWith([incoming], []))
+    await waitFor(() =>
+        expect(operations.addItems).toHaveBeenCalledWith([incoming], [], {
+            flash: true,
+        }),
+    )
     expect(operations.removeItems).not.toHaveBeenCalled()
 })

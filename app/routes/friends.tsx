@@ -253,15 +253,22 @@ export default function FriendsPage() {
     )
 
     useEffect(() => {
+        if (
+            !searchParams.has("year") &&
+            !searchParams.has("semester") &&
+            !searchParams.has("friendId")
+        )
+            return
         setRequestedYear(positiveInteger(searchParams.get("year")))
         setRequestedSemester(Number(searchParams.get("semester")))
         setSelectedFriendId(positiveInteger(searchParams.get("friendId")))
 
-        searchParams.delete("year")
-        searchParams.delete("semester")
-        searchParams.delete("friendId")
-        setSearchParams(searchParams, { replace: true })
-    }, [])
+        const remainingParams = new URLSearchParams(searchParams)
+        remainingParams.delete("year")
+        remainingParams.delete("semester")
+        remainingParams.delete("friendId")
+        setSearchParams(remainingParams, { replace: true })
+    }, [searchParams, setSearchParams])
 
     useEffect(() => {
         window.addEventListener("keydown", handleKeyDown)
@@ -348,23 +355,14 @@ export default function FriendsPage() {
         year: number
         semester: SemesterEnum
     } | null>(null)
-    // useAPI stores GET params separately; wait until all three queries use this term.
+    // useAPI stores GET params separately; wait until both queries use this term.
     const paramsReady = syncedTerm?.year === year && syncedTerm.semester === semester
     const canLoadTimetable = status === "success" && hasSharedSemester && paramsReady
 
-    const { query: ownActual, setParams: setOwnActualParams } = useAPI(
+    const { query: ownShared, setParams: setOwnSharedParams } = useAPI(
         "GET",
-        "/timetables/my-timetable",
+        "/timetables/shared",
         {
-            enabled: canLoadTimetable && selectedFriendId !== null,
-        },
-    )
-    // The existing v1 list includes every saved timetable's lecture IDs in one read.
-    const { query: ownAllSaved, setParams: setOwnAllSavedParams } = useAPI(
-        "GET",
-        `/users/${user?.id ?? 0}/timetables`,
-        {
-            apiPrefix: "/api",
             enabled: canLoadTimetable && selectedFriendId !== null,
             staleTime: 0,
         },
@@ -396,8 +394,7 @@ export default function FriendsPage() {
     useEffect(() => {
         if (year < 0) return
         const params = { year, semester }
-        setOwnActualParams(params)
-        setOwnAllSavedParams(params)
+        setOwnSharedParams(params)
         setTimetableParams(params)
         setSyncedTerm(params)
     }, [year, semester])
@@ -444,27 +441,17 @@ export default function FriendsPage() {
     )
     const overlappedLectureIds = useMemo(() => {
         if (selectedFriendId === null) return []
-        const ownLectureIds = new Set([
-            ...(ownAllSaved.isError ? [] : (ownAllSaved.data ?? [])).flatMap(
-                (timetable) => timetable.lectures?.map(({ id }) => id) ?? [],
-            ),
-            ...(ownActual.isError ? [] : (ownActual.data?.timetableItems ?? [])).flatMap(
+        const ownLectureIds = new Set(
+            (ownShared.isError ? [] : (ownShared.data?.timetableItems ?? [])).flatMap(
                 (item) => (item.kind === TimetableItemKind.LECTURE ? [item.data.id] : []),
             ),
-        ])
+        )
         return timetableItems.flatMap((item) =>
             item.kind === TimetableItemKind.LECTURE && ownLectureIds.has(item.data.id)
                 ? [item.data.id]
                 : [],
         )
-    }, [
-        selectedFriendId,
-        ownAllSaved.data,
-        ownAllSaved.isError,
-        ownActual.data,
-        ownActual.isError,
-        timetableItems,
-    ])
+    }, [selectedFriendId, ownShared.data, ownShared.isError, timetableItems])
     const semesterName = (termYear: number, termSemester: SemesterEnum) =>
         t("friends.semesterLabel", {
             year: termYear,
@@ -665,11 +652,6 @@ export default function FriendsPage() {
                         overlappedLectureIds={overlappedLectureIds}
                         selectedItem={selectedItem}
                         onSelectItem={(item) => {
-                            setSelectedItem((prev) =>
-                                prev?.kind === item?.kind && prev?.data === item?.data
-                                    ? null
-                                    : item,
-                            )
                             setSelectedItem((prev) =>
                                 prev?.kind === item?.kind && prev?.data === item?.data
                                     ? null

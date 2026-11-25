@@ -144,15 +144,12 @@ async function setup(page: Page, language = "ko") {
         else if (path === "/api/v2/friends") {
             json = { friends, checkedAt: new Date().toISOString() }
         } else if (path === "/api/users/1/timetables") {
-            // The matching lecture lives in a different saved table, not the first.
-            json = [
-                { id: 1, lectures: [{ id: 99 }] },
-                { id: 2, lectures: [{ id: sharedLecture.id }] },
-            ]
+            // Private saved lectures must not affect shared-timetable overlaps.
+            json = [{ id: 1, lectures: [{ id: 9 }, { id: 10 }] }]
         } else if (path === "/api/v2/timetables/my-timetable") {
             json = {
-                lectures: [lectures[4]],
-                timetableItems: [{ kind: "lecture", data: lectures[4] }],
+                lectures: [lectures[5]],
+                timetableItems: [{ kind: "lecture", data: lectures[5] }],
             }
         } else if (
             path === "/api/v2/timetables/shared" ||
@@ -190,7 +187,15 @@ async function setup(page: Page, language = "ko") {
                             year,
                             semester: term,
                             lectures,
-                            timetableItems: items,
+                            timetableItems:
+                                path === "/api/v2/timetables/shared"
+                                    ? items.filter(
+                                          (item) =>
+                                              item.kind === "custom" ||
+                                              item.data.id === sharedLecture.id ||
+                                              item.data.id === 12,
+                                      )
+                                    : items,
                         }
         } else if (path === "/api/v2/timetables") {
             json = {
@@ -288,11 +293,11 @@ test("semester tabs open one shared timetable per term and fall back to academic
     await expect(page.locator(".custom-block-tile").first()).toBeVisible()
 
     await page.getByRole("tab", { name: "2025 가을학기" }).click()
-    await expect(page).toHaveURL(/year=2025&semester=3/)
+    await expect(page).toHaveURL(/\/friends$/)
     await expect(page.locator("[data-lecture-id='81'] .lecture-tile")).toBeVisible()
     await expect(page.locator(".custom-block-tile")).toHaveCount(0)
     await expect(page.getByRole("tab", { selected: true })).toHaveText("2025 가을학기")
-    await page.reload()
+    await page.goto("/friends?friendId=7&year=2025&semester=3")
     await expect(page.getByRole("tab", { name: "2025 가을학기" })).toBeInViewport()
     await expect(page.locator("[data-lecture-id='81'] .lecture-tile")).toBeVisible()
 
@@ -302,7 +307,7 @@ test("semester tabs open one shared timetable per term and fall back to academic
     await expect(page.locator("[data-lecture-id='81'] .lecture-tile")).toHaveCount(0)
     await expect(page.getByRole("tab", { selected: true })).toHaveText("2026 봄학기")
     await expectNoHorizontalOverflow(page)
-    await page.goBack()
+    await page.getByRole("tab", { name: "2025 가을학기" }).click()
     await expect(page.getByRole("tab", { selected: true })).toHaveText("2025 가을학기")
     await expect(page.locator("[data-lecture-id='81'] .lecture-tile")).toBeVisible()
 })
@@ -352,6 +357,12 @@ test("desktop matches the friends layout and exact-lecture overlap treatment", a
         page.locator("[data-lecture-id='9'] [data-friend-overlap] "),
     ).toHaveCount(0)
     await expect(
+        page.locator("[data-lecture-id='10'] [data-friend-overlap] "),
+    ).toHaveCount(0)
+    await expect(
+        page.locator("[data-lecture-id='13'] [data-friend-overlap] "),
+    ).toHaveCount(0)
+    await expect(
         page.locator("[data-lecture-id='7'] [data-friend-overlap] "),
     ).toHaveCount(2)
     const searchBox = page.getByRole("textbox", { name: "검색", exact: true })
@@ -391,7 +402,6 @@ test("desktop matches the friends layout and exact-lecture overlap treatment", a
         "0.5",
     )
     await page.getByRole("tab", { name: "2026 봄학기", exact: true }).click()
-    await expect(page).toHaveURL(/semester=1/)
     await expect(page.getByRole("tab", { name: "2026 봄학기" })).toHaveAttribute(
         "aria-selected",
         "true",
@@ -430,7 +440,9 @@ for (const viewport of [
         })
         await friendDialog.getByRole("button", { name: /^김교수 / }).click()
         await expect(friendDialog).toHaveCount(0)
-        await expect(page).toHaveURL(/friendId=8/)
+        await expect(
+            page.getByRole("tablist", { name: "김교수", exact: true }),
+        ).toBeVisible()
         await page.getByRole("tab", { name: "2026 가을학기" }).click()
         await page.locator("[data-lecture-id='7'] .lecture-tile").first().click()
         const lectureDialog = page.getByRole("dialog", { name: "겹강 확인" })
@@ -451,7 +463,8 @@ for (const viewport of [
         await expect(customDialog.getByRole("textbox")).toHaveCount(0)
         await customDialog.getByRole("button", { name: "닫기", exact: true }).click()
         await page.getByRole("tab", { name: "2026 봄학기", exact: true }).click()
-        await expect(page).toHaveURL(/semester=1/)
+        await expect(page.getByRole("tab", { selected: true })).toHaveText("2026 봄학기")
+        await expect(page.locator("[data-lecture-id='80'] .lecture-tile")).toBeVisible()
         await expectNoHorizontalOverflow(page)
     })
 }
@@ -505,7 +518,10 @@ for (const viewport of [
             }
             await page.mouse.move(viewport.width - 2, 2)
             for (const tile of await sharedTiles.all()) {
-                await expect(tile).toHaveCSS("opacity", "0.5")
+                await expect(tile).toHaveCSS(
+                    "opacity",
+                    viewport.name === "mobile" ? "1" : "0.5",
+                )
                 await expect(tile).toHaveCSS("background-color", courseColor)
             }
             await page.locator(".custom-block-tile").first().click()
@@ -517,7 +533,10 @@ for (const viewport of [
             }
             await page.mouse.move(viewport.width - 2, 2)
             for (const tile of await sharedTiles.all()) {
-                await expect(tile).toHaveCSS("opacity", "0.5")
+                await expect(tile).toHaveCSS(
+                    "opacity",
+                    viewport.name === "mobile" ? "1" : "0.5",
+                )
                 await expect(tile).toHaveCSS("background-color", courseColor)
             }
 
@@ -544,9 +563,9 @@ for (const viewport of [
             await expect(ownRow).toBeVisible()
             await expect(firstFriend).toHaveCount(0)
             await ownRow.click()
-            const params = new URL(page.url()).searchParams
-            expect(params.has("friendId")).toBe(false)
-            expect(params.has("timetableId")).toBe(false)
+            await expect(
+                page.getByRole("tablist", { name: "My Timetable", exact: true }),
+            ).toBeVisible()
             await expect(page.getByRole("tab", { name: "2026 Fall" })).toHaveAttribute(
                 "aria-selected",
                 "true",

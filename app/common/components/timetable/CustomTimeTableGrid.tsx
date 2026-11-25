@@ -443,8 +443,6 @@ interface CustomTimeTableGridProps {
     deleteLecture?: (lectureId: number) => void
     hoveredLectures?: Lecture[]
     setHoveredLectures?: React.Dispatch<React.SetStateAction<Lecture[]>>
-    hoveredCustomBlocks?: CustomBlock[]
-    setHoveredCustomBlocks?: React.Dispatch<React.SetStateAction<CustomBlock[]>>
     selectedLectures?: Lecture[]
     onLectureSelect?: (lecture: Lecture, e?: React.PointerEvent) => void
     selectedCustomBlock?: CustomBlock | null
@@ -476,8 +474,6 @@ function CustomTimeTableGrid({
     deleteLecture,
     hoveredLectures = [],
     setHoveredLectures,
-    hoveredCustomBlocks = [],
-    setHoveredCustomBlocks,
     selectedLectures = [],
     onLectureSelect,
     selectedCustomBlock = null,
@@ -839,7 +835,6 @@ function CustomTimeTableGrid({
         (block: CustomBlock) => {
             if (!needLectureInteraction) return
             onItemHover?.({ kind: TimetableItemKind.CUSTOM, data: block })
-            setHoveredCustomBlocks?.([block])
         },
         [needLectureInteraction, onItemHover],
     )

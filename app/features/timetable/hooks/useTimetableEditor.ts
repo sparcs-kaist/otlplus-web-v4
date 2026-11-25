@@ -16,6 +16,7 @@ import { useAPI } from "@/utils/api/useAPI"
 import useUserStore from "@/utils/zustand/useUserStore"
 
 export type TimetableEdit = { before?: TimetableItem; after?: TimetableItem }
+export type TimetableEditOptions = { flash?: boolean }
 type Transaction = TimetableEdit[]
 type Stack = { undo: Transaction[]; redo: Transaction[] }
 const emptyStack = (): Stack => ({ undo: [], redo: [] })
@@ -125,6 +126,7 @@ export function useTimetableEditor({
     const execute = async (
         edits: Transaction,
         mode: "record" | "undo" | "redo" = "record",
+        options: TimetableEditOptions = {},
     ) => {
         if (
             !edits.length ||
@@ -272,11 +274,13 @@ export function useTimetableEditor({
                 ui.setSelectedItems((items) =>
                     items.flatMap((item) => byKey.get(timetableItemKey(item)) ?? []),
                 )
-                ui.triggerFlash(
-                    applied.flatMap((edit) =>
-                        edit.after ? [timetableItemKey(edit.after)] : [],
-                    ),
-                )
+                if (mode !== "record" || options.flash) {
+                    ui.triggerFlash(
+                        applied.flatMap((edit) =>
+                            edit.after ? [timetableItemKey(edit.after)] : [],
+                        ),
+                    )
+                }
                 if (
                     ui.selectedCustomBlock &&
                     !byKey.has(`custom:${ui.selectedCustomBlock.id}`)
@@ -328,6 +332,7 @@ export function useTimetableEditor({
     const addItems = async (
         items: TimetableItem[],
         replaceItems: TimetableItem[] = [],
+        options: TimetableEditOptions = {},
     ) => {
         const existing = currentItems()
         const removed = new Set(replaceItems.map(timetableItemKey))
@@ -349,12 +354,16 @@ export function useTimetableEditor({
                 ) === index,
         )
         if (!unique.length) return false
-        return execute([
-            ...existing
-                .filter((item) => removed.has(timetableItemKey(item)))
-                .map((before) => ({ before })),
-            ...unique.map((after) => ({ after })),
-        ])
+        return execute(
+            [
+                ...existing
+                    .filter((item) => removed.has(timetableItemKey(item)))
+                    .map((before) => ({ before })),
+                ...unique.map((after) => ({ after })),
+            ],
+            "record",
+            options,
+        )
     }
     const removeItems = async (items: TimetableItem[]) => {
         const keys = new Set(items.map(timetableItemKey))

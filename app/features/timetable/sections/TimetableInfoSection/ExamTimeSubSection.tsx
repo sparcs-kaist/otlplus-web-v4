@@ -6,7 +6,8 @@ import { useTranslation } from "react-i18next"
 import { WeekdayEnum, weekdayToString } from "@/common/enum/weekdayEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
-import type { Lecture } from "@/common/schemas/lecture"
+import type { ExamTime, Lecture } from "@/common/schemas/lecture"
+import { formatMinuteToString } from "@/utils/timetable/formatTimeblockToString"
 
 const ExamTimeSubSectionWrapper = styled(FlexWrapper)`
     overflow-y: auto;
@@ -50,6 +51,9 @@ const dayLabels = [
     { day: WeekdayEnum.Fri, color: "#9B59B6" },
 ]
 
+const formatExamTime = (exam: ExamTime) =>
+    `${formatMinuteToString(exam.begin)} - ${formatMinuteToString(exam.end)}`
+
 export default function ExamTimeSubSection({
     timetableLectures,
     hover,
@@ -76,7 +80,7 @@ export default function ExamTimeSubSection({
                     examsByDay[day].push({
                         lectureName: lecture.name,
                         lectureId: lecture.id,
-                        time: exam.str.split(" ").slice(1).join(" "), // Remove day prefix
+                        time: formatExamTime(exam),
                     })
                 }
             })
@@ -92,7 +96,7 @@ export default function ExamTimeSubSection({
                         examsByDay[day].push({
                             lectureName: lecture.name,
                             lectureId: lecture.id,
-                            time: exam.str,
+                            time: formatExamTime(exam),
                         })
                     }
                 })

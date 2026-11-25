@@ -554,8 +554,14 @@ for (const viewport of [
                       }
             await route.fulfill({ json })
         })
-        await page.route("**/api/users/1/timetables**", (route) =>
-            route.fulfill({ json: [{ id: 1, lectures: [{ id: lecture.id }] }] }),
+        await page.route("**/api/v2/timetables/shared?*", (route) =>
+            route.fulfill({
+                json: {
+                    source: "saved",
+                    timetableId: 1,
+                    timetableItems: [{ kind: "lecture", data: lecture }],
+                },
+            }),
         )
         await page.route("**/api/v2/users/written-reviews**", (route) =>
             route.fulfill({ json: { reviews: [] } }),
@@ -611,7 +617,7 @@ for (const viewport of [
         expect(reviewBox!.y).toBeGreaterThan(classmateBox!.y + classmateBox!.height)
 
         await classmate.click()
-        await expect(page).toHaveURL(/\/friends\?friendId=7&year=2025&semester=3$/)
+        await expect(page.getByRole("tablist", { name: "Alex" })).toBeVisible()
         await expect(page.getByRole("tab", { name: "2025 Fall" })).toHaveAttribute(
             "aria-selected",
             "true",

@@ -309,6 +309,13 @@ describe("timetable lecture friend overlaps", () => {
             expect(overlapCalls()).toHaveLength(0)
             expect(screen.queryByText("friends.sameLecture")).not.toBeInTheDocument()
             expect(screen.queryByText("Same section 101")).not.toBeInTheDocument()
+            if (status === "loading") {
+                expect(screen.getByRole("status")).toHaveTextContent(
+                    "friends.loadingOverlaps",
+                )
+            } else {
+                expect(screen.queryByRole("status")).not.toBeInTheDocument()
+            }
         },
     )
 

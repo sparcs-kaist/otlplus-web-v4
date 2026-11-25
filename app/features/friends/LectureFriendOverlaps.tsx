@@ -9,6 +9,7 @@ import { useAPI } from "@/utils/api/useAPI"
 
 const Groups = styled(FlexWrapper)`
     width: 100%;
+    min-height: 135px;
     flex-shrink: 0;
 `
 
@@ -45,6 +46,18 @@ const Chip = styled.button`
 `
 
 type ClassifiedFriend = OverlapFriend & { description: string }
+
+export function LectureFriendOverlapsLoading() {
+    const { t } = useTranslation()
+
+    return (
+        <Groups direction="column" gap={24} align="stretch" aria-busy="true">
+            <Typography type="Small" color="Text.placeholder" role="status">
+                {t("friends.loadingOverlaps")}
+            </Typography>
+        </Groups>
+    )
+}
 
 function FriendGroup({ title, friends }: { title: string; friends: ClassifiedFriend[] }) {
     const { t } = useTranslation()
@@ -107,13 +120,11 @@ export default function LectureFriendOverlaps({ lectureId }: { lectureId: number
         }
     }
 
+    if (query.isPending) return <LectureFriendOverlapsLoading />
+
     return (
         <Groups direction="column" gap={24} align="stretch">
-            {query.isPending ? (
-                <Typography type="Small" color="Text.placeholder" role="status">
-                    {t("friends.loadingOverlaps")}
-                </Typography>
-            ) : query.isError ? (
+            {query.isError ? (
                 <Typography type="Small" color="Highlight.default" role="alert">
                     {t("friends.loadError")}
                 </Typography>

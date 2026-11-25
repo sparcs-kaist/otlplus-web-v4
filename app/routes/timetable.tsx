@@ -509,8 +509,6 @@ export default function Timetable() {
                                     deleteLecture={handleDeleteLecture}
                                     hoveredLectures={hoveredLectures}
                                     setHoveredLectures={setHoveredLectures}
-                                    hoveredCustomBlocks={hoveredCustomBlocks}
-                                    setHoveredCustomBlocks={setHoveredCustomBlocks}
                                     selectedItems={selectedItems}
                                     timeFilter={timeFilter}
                                     customBlockDraftTimes={customBlockDraftTimes}
