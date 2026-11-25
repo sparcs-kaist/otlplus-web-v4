@@ -214,9 +214,7 @@ export default function Timetable() {
     const hoveredLectures = useTimetableUIStore((s) => s.hoveredLectures)
     const setHoveredLectures = useTimetableUIStore((s) => s.setHoveredLectures)
     const hoveredCustomBlocks = useTimetableUIStore((s) => s.hoveredCustomBlocks)
-    const setHoveredCustomBlocks = useTimetableUIStore(
-        (s) => s.setHoveredCustomBlocks,
-    )
+    const setHoveredCustomBlocks = useTimetableUIStore((s) => s.setHoveredCustomBlocks)
     const selectedItems = useTimetableUIStore((s) => s.selectedItems)
     const setSelectedItems = useTimetableUIStore((s) => s.setSelectedItems)
 
@@ -355,7 +353,7 @@ export default function Timetable() {
         if (hoveredCustomBlocks) {
             setIsCustomBlockSectionOpen(true)
         }
-    },[hoveredCustomBlocks]);
+    }, [hoveredCustomBlocks])
 
     const {
         addLectures,

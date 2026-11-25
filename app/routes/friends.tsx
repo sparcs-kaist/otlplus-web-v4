@@ -190,8 +190,8 @@ export default function FriendsPage() {
         selectedItem?.kind === TimetableItemKind.LECTURE ? selectedItem.data : null
     const selectedCustomBlock =
         selectedItem?.kind === TimetableItemKind.CUSTOM ? selectedItem.data : null
-    const activeCustomBlock = selectedCustomBlock || hoveredCustomBlock;
-    const activeLecture = selectedLecture || hoveredLecture;
+    const activeCustomBlock = selectedCustomBlock || hoveredCustomBlock
+    const activeLecture = selectedLecture || hoveredLecture
     const [friendListOpen, setFriendListOpen] = useState(false)
     const [pageVisible, setPageVisible] = useState(
         () => typeof document === "undefined" || document.visibilityState !== "hidden",
@@ -273,7 +273,7 @@ export default function FriendsPage() {
 
     useEffect(() => {
         if (!semestersQuery.isSuccess || hasSharedSemester) return
-        
+
         const latest = sharedSemesters[0]
         if (latest) handleSelectSemester(latest.year, latest.semester)
     }, [
@@ -494,7 +494,7 @@ export default function FriendsPage() {
         },
         [setHoveredItem],
     )
-    
+
     const onLeaveItem = useCallback(() => {
         setHoveredItem(null)
     }, [setHoveredItem])
@@ -535,23 +535,20 @@ export default function FriendsPage() {
                 >
                     {t("friends.chooseAnotherLecture")}
                 </LectureChoice>
-                )
-            }
+            )}
             <FriendLectureDetail
                 lecture={activeLecture}
                 year={year}
                 semester={semester}
             />
         </>
-    ) : isTablet ?
+    ) : isTablet ? (
         <FlexWrapper direction="column" gap={8} align="stretch">
             <Typography type="Normal" color="Text.default">
                 {t("friends.chooseLecture")}
             </Typography>
             {isLoadingTimetable ? (
-                <Typography role="status">
-                    {t("friends.loadingLectures")}
-                </Typography>
+                <Typography role="status">{t("friends.loadingLectures")}</Typography>
             ) : hasLoadError ? (
                 <Typography role="alert">{t("friends.loadError")}</Typography>
             ) : noSharedTimetables ? (
@@ -572,17 +569,24 @@ export default function FriendsPage() {
                         }
                     >
                         {lecture.name}
-                        {lecture.subtitle}{" "}
-                        {lecture.classNo && `(${lecture.classNo})`}
+                        {lecture.subtitle} {lecture.classNo && `(${lecture.classNo})`}
                     </LectureChoice>
                 ))
             )}
-        </FlexWrapper> : 
-        <FlexWrapper direction="column" gap={8} align="center" justify="center" flex="1 1 0">
+        </FlexWrapper>
+    ) : (
+        <FlexWrapper
+            direction="column"
+            gap={8}
+            align="center"
+            justify="center"
+            flex="1 1 0"
+        >
             <Typography type="NormalMedium" color="Text.light">
                 {t("friends.chooseLecture")}
             </Typography>
         </FlexWrapper>
+    )
 
     return (
         <Page direction="column" gap={0}>
