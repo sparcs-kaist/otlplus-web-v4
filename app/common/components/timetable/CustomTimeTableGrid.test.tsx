@@ -1,8 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from "vitest"
 
-import { GETResponse as FriendTimetableResponse } from "@/api/friends/$friendId/timetables/$timetableId"
-import { GETResponse as FriendActualResponse } from "@/api/friends/$friendId/timetables/my-timetable"
+import { GETResponse as FriendSharedResponse } from "@/api/friends/$friendId/timetables/shared"
 import type { CustomBlock } from "@/common/schemas/customBlock"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
@@ -45,21 +44,27 @@ const lecture = {
 } as unknown as Lecture
 
 describe("unified timetable item reads", () => {
-    it.each([FriendTimetableResponse, FriendActualResponse])(
-        "keeps all custom block times in a friend response",
-        (schema) => {
-            const timetableItems = [{ kind: "custom", data: block }]
-            expect(schema.parse({ lectures: [], timetableItems }).timetableItems).toEqual(
-                timetableItems,
-            )
-            expect(
-                schema.safeParse({
-                    lectures: [],
-                    timetableItems: [{ kind: "unknown", data: block }],
-                }).success,
-            ).toBe(false)
-        },
-    )
+    it("keeps all custom block times in a shared friend response", () => {
+        const timetableItems = [{ kind: "custom", data: block }]
+        const response = {
+            source: "saved",
+            timetableId: 42,
+            name: "Shared timetable",
+            year: 2026,
+            semester: 3,
+            lectures: [],
+            timetableItems,
+        }
+        expect(FriendSharedResponse.parse(response).timetableItems).toEqual(
+            timetableItems,
+        )
+        expect(
+            FriendSharedResponse.safeParse({
+                ...response,
+                timetableItems: [{ kind: "unknown", data: block }],
+            }).success,
+        ).toBe(false)
+    })
 
     it("renders each slot once, including weekend/exact-minute overflow, without editing controls", () => {
         const onLectureSelect = vi.fn()

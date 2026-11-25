@@ -105,20 +105,6 @@ export default function LectureFriendOverlaps({ lectureId }: { lectureId: number
         staleTime: 0,
         gcTime: 0,
     })
-    const currentFriends = new Map<number, ClassifiedFriend>()
-    for (const [description, friends] of [
-        [t("friends.sameLecture"), query.data?.sameLecture ?? []],
-        [
-            t("friends.sameCourseDifferentSection"),
-            query.data?.sameCourseDifferentSection ?? [],
-        ],
-    ] as const) {
-        for (const friend of friends) {
-            if (!currentFriends.has(friend.id)) {
-                currentFriends.set(friend.id, { ...friend, description })
-            }
-        }
-    }
 
     if (query.isPending) return <LectureFriendOverlapsLoading />
 
@@ -132,14 +118,17 @@ export default function LectureFriendOverlaps({ lectureId }: { lectureId: number
                 <>
                     <FriendGroup
                         title={t("friends.currentLectureFriends")}
-                        friends={[...currentFriends.values()]}
+                        friends={(query.data?.sameLecture ?? []).map((friend) => ({
+                            ...friend,
+                            description: t("friends.sameLecture"),
+                        }))}
                     />
                     <FriendGroup
                         title={t("friends.pastLectureFriends")}
-                        friends={(query.data?.previousSemesterSameProfessor ?? []).map(
+                        friends={(query.data?.sameCourseOtherSemester ?? []).map(
                             (friend) => ({
                                 ...friend,
-                                description: t("friends.previousSemesterSameProfessor"),
+                                description: t("friends.sameCourseOtherSemester"),
                             }),
                         )}
                     />

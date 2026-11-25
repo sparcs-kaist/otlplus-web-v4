@@ -1,5 +1,10 @@
 import { type Page, expect, test } from "@playwright/test"
 
+import {
+    DELETERequest,
+    PATCHRequest,
+    POSTRequest,
+} from "../app/api/timetables/$timetableId/items"
 import type { Lecture } from "../app/common/schemas/lecture"
 import type { TimetableChange, TimetableItem } from "../app/common/schemas/timetableItem"
 
@@ -70,6 +75,7 @@ async function setup(page: Page, initialHomeId: number | null = null) {
     let nextBlockId = 20
     let homeId = initialHomeId
     const cloneRequests: unknown[] = []
+    const itemRequests: { method: string; body: unknown }[] = []
     const home = () => ({
         source: homeId === null ? "enrolled" : "saved",
         timetableId: homeId,
@@ -144,16 +150,49 @@ async function setup(page: Page, initialHomeId: number | null = null) {
         } else if (/^\/timetables\/\d+\/items$/.test(path)) {
             const id = Number(path.split("/")[2])
             let items = [...tables.get(id)!]
-            const { changes } = request.postDataJSON() as { changes: TimetableChange[] }
+            const addedItems: TimetableItem[] = []
+            const body = request.postDataJSON()
+            itemRequests.push({ method, body })
+            let changes: TimetableChange[]
+            if (method === "POST") {
+                const { lectureIds = [], customBlocks = [] } = POSTRequest.parse(body)
+                changes = [
+                    ...lectureIds.map((lectureId) => ({
+                        op: "add" as const,
+                        kind: "lecture" as const,
+                        lectureId,
+                    })),
+                    ...customBlocks.map((data) => ({
+                        op: "add" as const,
+                        kind: "custom" as const,
+                        data,
+                    })),
+                ]
+            } else if (method === "DELETE") {
+                const { lectureIds = [], customBlockIds = [] } = DELETERequest.parse(body)
+                changes = [
+                    ...lectureIds.map((id) => ({
+                        op: "remove" as const,
+                        kind: "lecture" as const,
+                        id,
+                    })),
+                    ...customBlockIds.map((id) => ({
+                        op: "remove" as const,
+                        kind: "custom" as const,
+                        id,
+                    })),
+                ]
+            } else changes = PATCHRequest.parse(body).changes
             const results = changes.map((change, index) => {
                 let itemId: number
                 if (change.op === "add") {
                     itemId = change.kind === "lecture" ? change.lectureId : nextBlockId++
-                    items.push(
+                    const item: TimetableItem =
                         change.kind === "lecture"
                             ? { kind: "lecture", data: lecture }
-                            : { kind: "custom", data: { ...change.data, id: itemId } },
-                    )
+                            : { kind: "custom", data: { ...change.data, id: itemId } }
+                    items.push(item)
+                    addedItems.push(item)
                 } else {
                     itemId = change.id
                     if (change.op === "remove")
@@ -171,7 +210,26 @@ async function setup(page: Page, initialHomeId: number | null = null) {
                 return { index, kind: change.kind, id: itemId }
             })
             tables.set(id, items)
-            json = { timetableItems: items, results }
+            json =
+                method === "PATCH"
+                    ? { timetableItems: items, results }
+                    : method === "POST"
+                      ? {
+                            lectures: addedItems.flatMap((item) =>
+                                item.kind === "lecture" ? [item.data] : [],
+                            ),
+                            customBlocks: addedItems.flatMap((item) =>
+                                item.kind === "custom" ? [item.data] : [],
+                            ),
+                        }
+                      : {
+                            lectureIds: results
+                                .filter(({ kind }) => kind === "lecture")
+                                .map(({ id }) => id),
+                            customBlockIds: results
+                                .filter(({ kind }) => kind === "custom")
+                                .map(({ id }) => id),
+                        }
         } else if (/^\/timetables\/\d+$/.test(path)) {
             const items = tables.get(Number(path.split("/")[2])) ?? []
             json = {
@@ -185,13 +243,13 @@ async function setup(page: Page, initialHomeId: number | null = null) {
             json = { courses: [] }
         await route.fulfill({ json })
     })
-    return { tables, cloneRequests, getHomeId: () => homeId }
+    return { tables, cloneRequests, itemRequests, getHomeId: () => homeId }
 }
 
 test("mixed selection deletes whole items and undo remaps recreated blocks", async ({
     page,
 }) => {
-    const { tables, cloneRequests } = await setup(page)
+    const { tables, cloneRequests, itemRequests } = await setup(page)
     await Promise.all([
         page.waitForResponse(/\/api\/v2\/timetables\/1(?:\?|$)/),
         page.goto("/timetable"),
@@ -223,6 +281,13 @@ test("mixed selection deletes whole items and undo remaps recreated blocks", asy
     await expect(page.locator(".block-title")).toHaveCount(0)
     await expect(page.locator(".lecture-title")).toHaveCount(0)
     expect(tables.has(1)).toBe(true)
+    expect(itemRequests[0]).toEqual({
+        method: "DELETE",
+        body: {
+            lectureIds: [7],
+            customBlockIds: [7],
+        },
+    })
     await page.keyboard.press("Control+z")
     await expect(page.locator(".block-title", { hasText: "Study time" })).toBeVisible()
     expect(tables.get(1)!.find((item) => item.kind === "custom")!.data.id).not.toBe(7)
@@ -230,6 +295,17 @@ test("mixed selection deletes whole items and undo remaps recreated blocks", asy
     await expect(page.locator(".block-title")).toHaveCount(0)
     await page.keyboard.press("Control+z")
     await expect(page.locator(".block-title", { hasText: "Study time" })).toBeVisible()
+    expect(itemRequests.map(({ method }) => method)).toEqual([
+        "DELETE",
+        "POST",
+        "DELETE",
+        "POST",
+    ])
+    for (const { body } of itemRequests) {
+        expect(body).not.toHaveProperty("changes")
+        expect(body).not.toHaveProperty("items")
+        expect(body).not.toHaveProperty("op")
+    }
     await page.keyboard.press("Control+d")
     await expect.poll(() => cloneRequests.length).toBe(1)
     expect(cloneRequests[0]).toEqual({ year: 2026, semester: 1, sourceTimetableId: 1 })
@@ -529,8 +605,7 @@ for (const viewport of [
             const json = path.endsWith("/overlaps")
                 ? {
                       sameLecture: [{ ...friend, timetable: linkedTimetable }],
-                      sameCourseDifferentSection: [],
-                      previousSemesterSameProfessor: [],
+                      sameCourseOtherSemester: [],
                   }
                 : path === "/api/v2/friends"
                   ? { friends: [friend], checkedAt: new Date().toISOString() }
@@ -609,6 +684,9 @@ for (const viewport of [
         const classmate = detail.getByRole("button", { name: "Alex", exact: true })
         const review = detail.getByText(reviewContent, { exact: true })
         await expect(classmate).toBeVisible()
+        await expect(
+            detail.getByText("Friends taking this class", { exact: true }),
+        ).toBeVisible()
         await expect(review).toBeVisible()
         const infoBox = await courseInfo.boundingBox()
         const classmateBox = await classmate.boundingBox()

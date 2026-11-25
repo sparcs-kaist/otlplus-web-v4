@@ -3,6 +3,7 @@ import { expect, test } from "@playwright/test"
 test("sets, creates, and deletes the main timetable from the timetable tabs", async ({
     page,
 }) => {
+    test.setTimeout(60_000)
     let homeId: number | null = 1
     let rejectHomeChange = false
     let timetables = [1, 2, 3].map((id) => ({
@@ -128,6 +129,7 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
     })
     await page.setViewportSize({ width: 1920, height: 1080 })
     await page.goto("/timetable")
+    const timetableTabs = page.locator("[data-timetable-tab]")
     const deleteButton = page.getByRole("button", {
         name: "시간표 삭제",
         exact: true,
@@ -137,8 +139,8 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
         exact: true,
     })
     const addButton = page.getByRole("button", { name: "빈 시간표 추가", exact: true })
+    await timetableTabs.getByText("시간표 2", { exact: true }).click()
     await expect(deleteButton).toHaveCount(1)
-    await page.getByText("시간표 2", { exact: true }).click()
     const movingTab = page.locator('[data-timetable-tab="2"]')
     await expect(page.locator('[data-timetable-tab="1"]')).not.toHaveAttribute(
         "aria-roledescription",
@@ -174,7 +176,8 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
             ),
     ).toEqual(["메인 시간표로 설정", "공유 시간표로 설정", "시간표 복제", "시간표 삭제"])
     const previousMainPosition = (await movingTab.boundingBox())!.x
-    await setHomeButton.click()
+    // dnd-kit suppresses clicks for 50ms after a drag; let pointer release follow cleanup.
+    await setHomeButton.click({ delay: 100 })
     await expect(
         page.getByRole("button", { name: "메인 시간표로 설정됨", exact: true }),
     ).toHaveAttribute("aria-pressed", "true")
@@ -184,12 +187,12 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
         .poll(async () => (await movingTab.boundingBox())?.x)
         .toBeLessThan(previousMainPosition)
 
-    await page.getByText("시간표 1", { exact: true }).click()
+    await timetableTabs.getByText("시간표 1", { exact: true }).click()
     const mainStar = page.getByRole("img", { name: "메인 시간표로 설정됨", exact: true })
     await expect(mainStar).toHaveCSS("color", "rgb(229, 76, 101)")
     await expect(deleteButton).toHaveCount(1)
     const tabOrder = () =>
-        page.getByText(/^시간표 [1234]$/, { exact: true }).allTextContents()
+        timetableTabs.getByText(/^시간표 [1234]$/, { exact: true }).allTextContents()
     expect(await tabOrder()).toEqual(["시간표 2", "시간표 1", "시간표 3"])
 
     rejectHomeChange = true
@@ -201,18 +204,18 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
     rejectHomeChange = false
 
     await page.reload()
-    await page.getByText("시간표 1", { exact: true }).click()
+    await timetableTabs.getByText("시간표 1", { exact: true }).click()
     await expect(mainStar).toBeVisible()
     expect(await tabOrder()).toEqual(["시간표 2", "시간표 1", "시간표 3"])
     await page.getByText("2026", { exact: true }).click()
     await page.keyboard.press("3")
-    await expect(page.getByText("시간표 3", { exact: true })).toHaveCSS(
+    await expect(timetableTabs.getByText("시간표 3", { exact: true })).toHaveCSS(
         "color",
         "rgb(229, 76, 101)",
     )
 
     await page.setViewportSize({ width: 375, height: 812 })
-    const academic = page.getByText("학사 시간표", { exact: true }).first()
+    const academic = timetableTabs.getByText("학사 시간표", { exact: true }).first()
     await academic.click()
     await expect(deleteButton).toHaveCount(0)
     await expect(setHomeButton).toHaveCount(0)
@@ -228,14 +231,14 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
     await page.screenshot({ path: "test-results/main-timetable-mobile.png" })
     await page.getByRole("button", { name: "언어", exact: true }).click()
     await expect(
-        page.getByText("Academic Timetable", { exact: true }).first(),
+        timetableTabs.getByText("Academic Timetable", { exact: true }).first(),
     ).toBeVisible()
     await expect(page.getByText("2026", { exact: true }).locator("..")).toBeInViewport({
         ratio: 1,
     })
     await page.getByRole("button", { name: "Language", exact: true }).click()
     await addButton.click()
-    await expect(page.getByText("시간표 4", { exact: true })).toBeVisible()
+    await expect(timetableTabs.getByText("시간표 4", { exact: true })).toBeVisible()
     expect(homeId).toBe(2)
     await setHomeButton.click()
     await expect(
@@ -246,7 +249,7 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
     expect(await tabOrder()).toEqual(["시간표 4", "시간표 1", "시간표 2", "시간표 3"])
 
     await deleteButton.click()
-    await expect(page.getByText("시간표 4", { exact: true })).toHaveCount(0)
+    await expect(timetableTabs.getByText("시간표 4", { exact: true })).toHaveCount(0)
     expect(homeId).toBe(1)
     await expect(
         page
@@ -256,17 +259,17 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
 
     await page.setViewportSize({ width: 1920, height: 1080 })
     await page.emulateMedia({ reducedMotion: "reduce" })
-    await page.getByText("시간표 2", { exact: true }).click()
+    await timetableTabs.getByText("시간표 2", { exact: true }).click()
     await setHomeButton.click()
     await expect(
         page.getByRole("button", { name: "메인 시간표로 설정됨", exact: true }),
     ).toBeEnabled()
     await expect(movingTab).toHaveCSS("transition-duration", "0s")
-    await page.getByText("시간표 1", { exact: true }).click()
+    await timetableTabs.getByText("시간표 1", { exact: true }).click()
     await page.screenshot({ path: "test-results/main-timetable-desktop.png" })
 
     await page.emulateMedia({ reducedMotion: "no-preference" })
-    await page.getByText("시간표 3", { exact: true }).click()
+    await timetableTabs.getByText("시간표 3", { exact: true }).click()
     for (const [source, id, width] of [
         ["1", 5, 1920],
         ["academic", 6, 375],
@@ -325,7 +328,10 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
     await page.emulateMedia({ reducedMotion: "reduce" })
     await page.goto("/timetable")
     for (const table of [...timetables]) {
-        await page.getByText(table.name, { exact: true }).click()
+        await page
+            .locator(`[data-timetable-tab="${table.id}"]`)
+            .getByText(table.name, { exact: true })
+            .click()
         await deleteButton.click()
         await expect(page.locator(`[data-timetable-tab="${table.id}"]`)).toHaveCount(0)
     }

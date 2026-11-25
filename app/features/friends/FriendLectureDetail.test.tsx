@@ -5,7 +5,7 @@ import type { OverlapFriend } from "@/common/schemas/friend"
 import type { Lecture } from "@/common/schemas/lecture"
 import LectureInfoSubsection from "@/features/timetable/sections/LectureDetailSection/LectureInfoSubsection"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
-import { act, fireEvent, render, screen } from "@/test/test-utils"
+import { act, fireEvent, render, screen, within } from "@/test/test-utils"
 import { useAPI } from "@/utils/api/useAPI"
 import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
 
@@ -55,20 +55,18 @@ function LocationProbe() {
 }
 
 describe("friend lecture details", () => {
+    const sameLectureFriend: OverlapFriend = {
+        id: 2,
+        name: "Test friend",
+        isFavorite: false,
+        timetable: { id: 42, year: 2025, semester: 3 },
+    }
     const query = {
         isPending: false,
         isError: false,
         data: {
-            sameLecture: [
-                {
-                    id: 2,
-                    name: "Test friend",
-                    isFavorite: false,
-                    timetable: { id: 42, year: 2025, semester: 3 },
-                },
-            ],
-            sameCourseDifferentSection: [] as OverlapFriend[],
-            previousSemesterSameProfessor: [] as OverlapFriend[],
+            sameLecture: [sameLectureFriend],
+            sameCourseOtherSemester: [] as OverlapFriend[],
         },
     }
 
@@ -77,8 +75,8 @@ describe("friend lecture details", () => {
         vi.clearAllMocks()
         query.isPending = false
         query.isError = false
-        query.data.sameCourseDifferentSection = []
-        query.data.previousSemesterSameProfessor = []
+        query.data.sameLecture = [sameLectureFriend]
+        query.data.sameCourseOtherSemester = []
         vi.mocked(useAPI).mockImplementation(
             (_method, path) =>
                 ({
@@ -181,16 +179,8 @@ describe("friend lecture details", () => {
         },
     )
 
-    it("shows only the two Figma groups and preserves classifications on the buttons", () => {
-        query.data.sameCourseDifferentSection = [
-            {
-                id: 3,
-                name: "Different section friend",
-                isFavorite: false,
-                timetable: { id: 43, year: 2025, semester: 3 },
-            },
-        ]
-        query.data.previousSemesterSameProfessor = [
+    it("separates exact classmates from other-semester course friends with matching descriptions", () => {
+        query.data.sameCourseOtherSemester = [
             {
                 id: 4,
                 name: "Past semester friend",
@@ -203,12 +193,25 @@ describe("friend lecture details", () => {
         const friendButton = screen.getByRole("button", { name: "Test friend" })
         expect(friendButton).toHaveAttribute("type", "button")
         expect(friendButton).not.toHaveAttribute("href")
-        expect(screen.getByText("friends.currentLectureFriends")).toBeInTheDocument()
-        expect(screen.getByText("friends.pastLectureFriends")).toBeInTheDocument()
+        const currentGroup = within(
+            screen.getByText("friends.currentLectureFriends").parentElement!,
+        )
+        const pastGroup = within(
+            screen.getByText("friends.pastLectureFriends").parentElement!,
+        )
+        expect(currentGroup.getByRole("button", { name: "Test friend" })).toBeVisible()
+        expect(
+            currentGroup.queryByRole("button", { name: "Past semester friend" }),
+        ).not.toBeInTheDocument()
+        expect(
+            pastGroup.getByRole("button", { name: "Past semester friend" }),
+        ).toBeVisible()
+        expect(
+            pastGroup.queryByRole("button", { name: "Test friend" }),
+        ).not.toBeInTheDocument()
         for (const [name, description] of [
             ["Test friend", "friends.sameLecture"],
-            ["Different section friend", "friends.sameCourseDifferentSection"],
-            ["Past semester friend", "friends.previousSemesterSameProfessor"],
+            ["Past semester friend", "friends.sameCourseOtherSemester"],
         ] as const) {
             expect(screen.queryByText(description)).not.toBeInTheDocument()
             expect(screen.getByRole("button", { name })).toHaveAttribute(
@@ -224,25 +227,32 @@ describe("friend lecture details", () => {
         expect(screen.getByTestId("location")).toHaveTextContent(
             "/friends?friendId=2&year=2025&semester=3",
         )
+        fireEvent.click(screen.getByRole("button", { name: "Past semester friend" }))
+        expect(screen.getByTestId("location")).toHaveTextContent(
+            "/friends?friendId=4&year=2024&semester=1",
+        )
     })
 
-    it("deduplicates current friends and prefers the same-section timetable", () => {
-        query.data.sameCourseDifferentSection = [
+    it("keeps current classmates empty when only another-semester course match exists", () => {
+        query.data.sameLecture = []
+        query.data.sameCourseOtherSemester = [
             {
                 id: 2,
                 name: "Test friend",
                 isFavorite: false,
-                timetable: { id: 99, year: 2025, semester: 3 },
+                timetable: { id: 99, year: 2024, semester: 3 },
             },
         ]
         renderDetail()
 
-        const [button] = screen.getAllByRole("button", { name: "Test friend" })
-        expect(screen.getAllByRole("button", { name: "Test friend" })).toHaveLength(1)
-        expect(button).toHaveAttribute("title", "friends.sameLecture")
-        fireEvent.click(button!)
-        expect(screen.getByTestId("location")).toHaveTextContent(
-            "/friends?friendId=2&year=2025&semester=3",
+        const currentGroup = within(
+            screen.getByText("friends.currentLectureFriends").parentElement!,
+        )
+        expect(currentGroup.getByText("friends.nobody")).toBeInTheDocument()
+        expect(currentGroup.queryByRole("button")).not.toBeInTheDocument()
+        expect(screen.getByRole("button", { name: "Test friend" })).toHaveAttribute(
+            "title",
+            "friends.sameCourseOtherSemester",
         )
     })
 
