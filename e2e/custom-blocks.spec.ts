@@ -7,6 +7,7 @@ import {
     POSTRequest,
 } from "../app/api/timetables/$timetableId/items"
 import type { CustomBlock } from "../app/common/schemas/customBlock"
+import type { TimetableChange } from "../app/common/schemas/timetableItem"
 
 async function dragTime(
     page: Page,
@@ -97,18 +98,36 @@ test("creates, edits, exports, and deletes one custom block with multiple time s
         if (path.endsWith("/timetables/1/items")) {
             itemMethods.push(method)
             const body = request.postDataJSON()
-            const changes =
-                method === "POST"
-                    ? POSTRequest.parse(body).items.map((item) => ({
-                          op: "add",
-                          ...item,
-                      }))
-                    : method === "DELETE"
-                      ? DELETERequest.parse(body).items.map((item) => ({
-                            op: "remove",
-                            ...item,
-                        }))
-                      : PATCHRequest.parse(body).changes
+            let changes: TimetableChange[]
+            if (method === "POST") {
+                const { lectureIds = [], customBlocks = [] } = POSTRequest.parse(body)
+                changes = [
+                    ...lectureIds.map((lectureId) => ({
+                        op: "add" as const,
+                        kind: "lecture" as const,
+                        lectureId,
+                    })),
+                    ...customBlocks.map((data) => ({
+                        op: "add" as const,
+                        kind: "custom" as const,
+                        data,
+                    })),
+                ]
+            } else if (method === "DELETE") {
+                const { lectureIds = [], customBlockIds = [] } = DELETERequest.parse(body)
+                changes = [
+                    ...lectureIds.map((id) => ({
+                        op: "remove" as const,
+                        kind: "lecture" as const,
+                        id,
+                    })),
+                    ...customBlockIds.map((id) => ({
+                        op: "remove" as const,
+                        kind: "custom" as const,
+                        id,
+                    })),
+                ]
+            } else changes = PATCHRequest.parse(body).changes
             const results = changes.map((change: any, index: number) => {
                 if (change.op === "add") {
                     const id =
@@ -127,10 +146,28 @@ test("creates, edits, exports, and deletes one custom block with multiple time s
                 return { index, kind: "custom", id: change.id }
             })
             await route.fulfill({
-                json: {
-                    timetableItems: blocks.map((data) => ({ kind: "custom", data })),
-                    results,
-                },
+                json:
+                    method === "PATCH"
+                        ? {
+                              timetableItems: blocks.map((data) => ({
+                                  kind: "custom",
+                                  data,
+                              })),
+                              results,
+                          }
+                        : method === "POST"
+                          ? {
+                                lectures: [],
+                                customBlocks: results.map(({ id }: { id: number }) =>
+                                    blocks.find((block) => block.id === id),
+                                ),
+                            }
+                          : {
+                                lectureIds: [],
+                                customBlockIds: results.map(
+                                    ({ id }: { id: number }) => id,
+                                ),
+                            },
             })
             return
         }

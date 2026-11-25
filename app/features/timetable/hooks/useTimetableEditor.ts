@@ -11,6 +11,7 @@ import type { Lecture } from "@/common/schemas/lecture"
 import type { TimetableChange, TimetableItem } from "@/common/schemas/timetableItem"
 import { getCustomBlockTimes, timetableItemKey } from "@/common/utils/timetableItems"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
+import { axiosClient } from "@/libs/axios"
 import { queryKeys } from "@/libs/query/queryKeys"
 import { useAPI } from "@/utils/api/useAPI"
 import useUserStore from "@/utils/zustand/useUserStore"
@@ -152,6 +153,7 @@ export function useTimetableEditor({
         pending.current.add(key)
         refresh()
         const detailPath = queryKeys.timetableDetail(currentTimetableId ?? 0)
+        let mutationCompleted = false
         try {
             let finalItems: TimetableItem[]
             let applied = edits
@@ -159,31 +161,65 @@ export function useTimetableEditor({
             if (status === "success") {
                 void queryClient.cancelQueries({ queryKey: [detailPath] })
                 const changes = edits.map(changeForEdit)
-                const response = changes.every((change) => change.op === "add")
-                    ? await addMutation.mutateAsync({
-                          items: changes.map(({ op: _op, ...item }) => item),
-                      })
-                    : changes.every((change) => change.op === "remove")
-                      ? await removeMutation.mutateAsync({
-                            items: changes.map(({ op: _op, ...item }) => item),
-                        })
-                      : await mutation.mutateAsync({ changes })
+                let createdCustomIds: number[] | null = null
+                let patchResponse: Awaited<
+                    ReturnType<typeof mutation.mutateAsync>
+                > | null = null
+                if (changes.every((change) => change.op === "add")) {
+                    const response = await addMutation.mutateAsync({
+                        lectureIds: changes.flatMap((change) =>
+                            change.kind === TimetableItemKind.LECTURE
+                                ? [change.lectureId]
+                                : [],
+                        ),
+                        customBlocks: changes.flatMap((change) =>
+                            change.kind === TimetableItemKind.CUSTOM ? [change.data] : [],
+                        ),
+                    })
+                    createdCustomIds = response.customBlocks.map(({ id }) => id)
+                } else if (changes.every((change) => change.op === "remove")) {
+                    await removeMutation.mutateAsync({
+                        lectureIds: changes.flatMap((change) =>
+                            change.kind === TimetableItemKind.LECTURE ? [change.id] : [],
+                        ),
+                        customBlockIds: changes.flatMap((change) =>
+                            change.kind === TimetableItemKind.CUSTOM ? [change.id] : [],
+                        ),
+                    })
+                } else patchResponse = await mutation.mutateAsync({ changes })
+                mutationCompleted = true
                 if (!sameUser()) return false
-                finalItems = response.timetableItems
+                if (patchResponse) finalItems = patchResponse.timetableItems
+                else {
+                    const { data } = await axiosClient.request<{
+                        timetableItems: TimetableItem[]
+                    }>({
+                        method: "GET",
+                        url: `/api/v2${detailPath}`,
+                        headers: { "Accept-Language": language },
+                    })
+                    if (!sameUser()) return false
+                    finalItems = data.timetableItems
+                }
+                let customIndex = 0
                 applied = edits.map((edit, index) => {
                     if (edit.before || edit.after?.kind !== TimetableItemKind.CUSTOM)
                         return edit
-                    const created = response.results.find(
-                        (result) =>
-                            result.index === index &&
-                            result.kind === TimetableItemKind.CUSTOM,
-                    )
-                    if (!created) throw new Error("Missing created timetable item")
-                    remappedIds.set(edit.after.data.id, created.id)
+                    const createdId =
+                        createdCustomIds === null
+                            ? patchResponse?.results.find(
+                                  (result) =>
+                                      result.index === index &&
+                                      result.kind === TimetableItemKind.CUSTOM,
+                              )?.id
+                            : createdCustomIds[customIndex++]
+                    if (createdId === undefined)
+                        throw new Error("Missing created timetable item")
+                    remappedIds.set(edit.after.data.id, createdId)
                     return {
                         after: {
                             kind: TimetableItemKind.CUSTOM,
-                            data: { ...edit.after.data, id: created.id },
+                            data: { ...edit.after.data, id: createdId },
                         },
                     }
                 })
@@ -309,7 +345,10 @@ export function useTimetableEditor({
         } catch (error) {
             if (!sameUser()) return false
             const definiteFailure =
-                isAxiosError(error) && error.response && error.response.status < 500
+                !mutationCompleted &&
+                isAxiosError(error) &&
+                error.response &&
+                error.response.status < 500
             if (!definiteFailure) {
                 histories.current[key] = emptyStack()
                 await queryClient.invalidateQueries({ queryKey: [detailPath] })

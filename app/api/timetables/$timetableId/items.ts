@@ -1,39 +1,35 @@
 import { z } from "zod"
 
 import { TimetableItemKind } from "@/common/enum/timetableItemKind"
+import { CustomBlockSchema } from "@/common/schemas/customBlock"
+import { LectureSchema } from "@/common/schemas/lecture"
 import {
     CustomBlockInputSchema,
     TimetableChangeSchema,
     TimetableItemSchema,
 } from "@/common/schemas/timetableItem"
 
-export const POSTRequest = z.object({
-    items: z
-        .array(
-            z.discriminatedUnion("kind", [
-                z.object({
-                    kind: z.literal(TimetableItemKind.LECTURE),
-                    lectureId: z.number().int().positive(),
-                }),
-                z.object({
-                    kind: z.literal(TimetableItemKind.CUSTOM),
-                    data: CustomBlockInputSchema,
-                }),
-            ]),
-        )
-        .min(1),
-})
+export const POSTRequest = z
+    .object({
+        lectureIds: z.array(z.number().int().positive()).optional(),
+        customBlocks: z.array(CustomBlockInputSchema).optional(),
+    })
+    .refine(
+        ({ lectureIds, customBlocks }) =>
+            (lectureIds?.length ?? 0) + (customBlocks?.length ?? 0) > 0,
+        "At least one lecture or custom block is required",
+    )
 
-export const DELETERequest = z.object({
-    items: z
-        .array(
-            z.object({
-                kind: z.enum(TimetableItemKind),
-                id: z.number().int().positive(),
-            }),
-        )
-        .min(1),
-})
+export const DELETERequest = z
+    .object({
+        lectureIds: z.array(z.number().int().positive()).optional(),
+        customBlockIds: z.array(z.number().int().positive()).optional(),
+    })
+    .refine(
+        ({ lectureIds, customBlockIds }) =>
+            (lectureIds?.length ?? 0) + (customBlockIds?.length ?? 0) > 0,
+        "At least one lecture or custom block is required",
+    )
 
 export const PATCHRequest = z.object({ changes: z.array(TimetableChangeSchema).min(1) })
 
@@ -48,5 +44,11 @@ export const PATCHResponse = z.object({
     ),
 })
 
-export const POSTResponse = PATCHResponse
-export const DELETEResponse = PATCHResponse
+export const POSTResponse = z.object({
+    lectures: z.array(LectureSchema),
+    customBlocks: z.array(CustomBlockSchema),
+})
+export const DELETEResponse = z.object({
+    lectureIds: z.array(z.number().int().positive()),
+    customBlockIds: z.array(z.number().int().positive()),
+})

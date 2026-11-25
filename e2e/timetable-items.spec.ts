@@ -150,29 +150,49 @@ async function setup(page: Page, initialHomeId: number | null = null) {
         } else if (/^\/timetables\/\d+\/items$/.test(path)) {
             const id = Number(path.split("/")[2])
             let items = [...tables.get(id)!]
+            const addedItems: TimetableItem[] = []
             const body = request.postDataJSON()
             itemRequests.push({ method, body })
-            const changes: TimetableChange[] =
-                method === "POST"
-                    ? POSTRequest.parse(body).items.map((item) => ({
-                          op: "add",
-                          ...item,
-                      }))
-                    : method === "DELETE"
-                      ? DELETERequest.parse(body).items.map((item) => ({
-                            op: "remove",
-                            ...item,
-                        }))
-                      : PATCHRequest.parse(body).changes
+            let changes: TimetableChange[]
+            if (method === "POST") {
+                const { lectureIds = [], customBlocks = [] } = POSTRequest.parse(body)
+                changes = [
+                    ...lectureIds.map((lectureId) => ({
+                        op: "add" as const,
+                        kind: "lecture" as const,
+                        lectureId,
+                    })),
+                    ...customBlocks.map((data) => ({
+                        op: "add" as const,
+                        kind: "custom" as const,
+                        data,
+                    })),
+                ]
+            } else if (method === "DELETE") {
+                const { lectureIds = [], customBlockIds = [] } = DELETERequest.parse(body)
+                changes = [
+                    ...lectureIds.map((id) => ({
+                        op: "remove" as const,
+                        kind: "lecture" as const,
+                        id,
+                    })),
+                    ...customBlockIds.map((id) => ({
+                        op: "remove" as const,
+                        kind: "custom" as const,
+                        id,
+                    })),
+                ]
+            } else changes = PATCHRequest.parse(body).changes
             const results = changes.map((change, index) => {
                 let itemId: number
                 if (change.op === "add") {
                     itemId = change.kind === "lecture" ? change.lectureId : nextBlockId++
-                    items.push(
+                    const item: TimetableItem =
                         change.kind === "lecture"
                             ? { kind: "lecture", data: lecture }
-                            : { kind: "custom", data: { ...change.data, id: itemId } },
-                    )
+                            : { kind: "custom", data: { ...change.data, id: itemId } }
+                    items.push(item)
+                    addedItems.push(item)
                 } else {
                     itemId = change.id
                     if (change.op === "remove")
@@ -190,7 +210,26 @@ async function setup(page: Page, initialHomeId: number | null = null) {
                 return { index, kind: change.kind, id: itemId }
             })
             tables.set(id, items)
-            json = { timetableItems: items, results }
+            json =
+                method === "PATCH"
+                    ? { timetableItems: items, results }
+                    : method === "POST"
+                      ? {
+                            lectures: addedItems.flatMap((item) =>
+                                item.kind === "lecture" ? [item.data] : [],
+                            ),
+                            customBlocks: addedItems.flatMap((item) =>
+                                item.kind === "custom" ? [item.data] : [],
+                            ),
+                        }
+                      : {
+                            lectureIds: results
+                                .filter(({ kind }) => kind === "lecture")
+                                .map(({ id }) => id),
+                            customBlockIds: results
+                                .filter(({ kind }) => kind === "custom")
+                                .map(({ id }) => id),
+                        }
         } else if (/^\/timetables\/\d+$/.test(path)) {
             const items = tables.get(Number(path.split("/")[2])) ?? []
             json = {
@@ -245,10 +284,8 @@ test("mixed selection deletes whole items and undo remaps recreated blocks", asy
     expect(itemRequests[0]).toEqual({
         method: "DELETE",
         body: {
-            items: [
-                { kind: "lecture", id: 7 },
-                { kind: "custom", id: 7 },
-            ],
+            lectureIds: [7],
+            customBlockIds: [7],
         },
     })
     await page.keyboard.press("Control+z")
@@ -266,8 +303,8 @@ test("mixed selection deletes whole items and undo remaps recreated blocks", asy
     ])
     for (const { body } of itemRequests) {
         expect(body).not.toHaveProperty("changes")
-        for (const item of (body as { items: unknown[] }).items)
-            expect(item).not.toHaveProperty("op")
+        expect(body).not.toHaveProperty("items")
+        expect(body).not.toHaveProperty("op")
     }
     await page.keyboard.press("Control+d")
     await expect.poll(() => cloneRequests.length).toBe(1)

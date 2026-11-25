@@ -75,6 +75,7 @@ async function setup(initial: TimetableItem[] = [lecture(1), block]) {
         [2, [lecture(2)]],
     ])
     let customId = 100
+    let detailReadError: Error | null = null
     let intercept: ((apply: () => unknown) => Promise<unknown>) | null = null
     const writes: {
         id: number
@@ -85,19 +86,44 @@ async function setup(initial: TimetableItem[] = [lecture(1), block]) {
     vi.mocked(axiosClient.request).mockImplementation(async ({ method, url, data }) => {
         if (url === "/api/v2/semesters") return { data: { semesters: [] } }
         const id = Number(url?.match(/timetables\/(\d+)/)?.[1])
-        if (method === "GET") return { data: detail(server.get(id) ?? []) }
-        const changes: TimetableChange[] =
-            method === "POST"
-                ? POSTRequest.parse(data).items.map((item) => ({ op: "add", ...item }))
-                : method === "DELETE"
-                  ? DELETERequest.parse(data).items.map((item) => ({
-                        op: "remove",
-                        ...item,
-                    }))
-                  : PATCHRequest.parse(data).changes
+        if (method === "GET") {
+            if (detailReadError) throw detailReadError
+            return { data: detail(server.get(id) ?? []) }
+        }
+        let changes: TimetableChange[]
+        if (method === "POST") {
+            const { lectureIds = [], customBlocks = [] } = POSTRequest.parse(data)
+            changes = [
+                ...lectureIds.map((lectureId) => ({
+                    op: "add" as const,
+                    kind: "lecture" as const,
+                    lectureId,
+                })),
+                ...customBlocks.map((data) => ({
+                    op: "add" as const,
+                    kind: "custom" as const,
+                    data,
+                })),
+            ]
+        } else if (method === "DELETE") {
+            const { lectureIds = [], customBlockIds = [] } = DELETERequest.parse(data)
+            changes = [
+                ...lectureIds.map((id) => ({
+                    op: "remove" as const,
+                    kind: "lecture" as const,
+                    id,
+                })),
+                ...customBlockIds.map((id) => ({
+                    op: "remove" as const,
+                    kind: "custom" as const,
+                    id,
+                })),
+            ]
+        } else changes = PATCHRequest.parse(data).changes
         writes.push({ id, method: method!, data, changes })
         const apply = () => {
             let items = [...(server.get(id) ?? [])]
+            const addedItems: TimetableItem[] = []
             const results = changes.map((change, index) => {
                 let itemId: number
                 if (change.op === "add") {
@@ -106,6 +132,7 @@ async function setup(initial: TimetableItem[] = [lecture(1), block]) {
                             ? lecture(change.lectureId)
                             : { kind: "custom", data: { ...change.data, id: ++customId } }
                     items.push(item)
+                    addedItems.push(item)
                     itemId = item.data.id
                 } else {
                     itemId = change.id
@@ -130,7 +157,28 @@ async function setup(initial: TimetableItem[] = [lecture(1), block]) {
                 return { index, kind: change.kind, id: itemId }
             })
             server.set(id, items)
-            return { data: { timetableItems: items, results } }
+            return {
+                data:
+                    method === "PATCH"
+                        ? { timetableItems: items, results }
+                        : method === "POST"
+                          ? {
+                                lectures: addedItems.flatMap((item) =>
+                                    item.kind === "lecture" ? [item.data] : [],
+                                ),
+                                customBlocks: addedItems.flatMap((item) =>
+                                    item.kind === "custom" ? [item.data] : [],
+                                ),
+                            }
+                          : {
+                                lectureIds: results
+                                    .filter(({ kind }) => kind === "lecture")
+                                    .map(({ id }) => id),
+                                customBlockIds: results
+                                    .filter(({ kind }) => kind === "custom")
+                                    .map(({ id }) => id),
+                            },
+            }
         }
         return (intercept ? await intercept(apply) : apply()) as never
     })
@@ -158,16 +206,37 @@ async function setup(initial: TimetableItem[] = [lecture(1), block]) {
         queryClient,
         server,
         writes,
+        failDetailReads: (error: Error | null) => {
+            detailReadError = error
+        },
         intercept: (handler: typeof intercept) => {
             intercept = handler
         },
     }
 }
 
-it("uses POST and DELETE without op fields and remaps custom IDs through undo and redo", async () => {
+it.each([
+    ["POST", POSTRequest],
+    ["DELETE", DELETERequest],
+] as const)("requires at least one item across the %s groups", (_method, schema) => {
+    expect(schema.safeParse({}).success).toBe(false)
+    expect(
+        schema.safeParse({ lectureIds: [], customBlocks: [], customBlockIds: [] })
+            .success,
+    ).toBe(false)
+    expect(schema.safeParse({ lectureIds: [1] }).success).toBe(true)
+    expect(schema.safeParse({ lectureIds: [0] }).success).toBe(false)
+})
+
+it("accepts custom-only requests without a lectureIds field", () => {
+    expect(POSTRequest.safeParse({ customBlocks: [block.data] }).success).toBe(true)
+    expect(DELETERequest.safeParse({ customBlockIds: [10] }).success).toBe(true)
+})
+
+it("uses separate POST and DELETE fields and remaps custom IDs through undo and redo", async () => {
     const { result, writes } = await setup([lecture(1)])
     await act(async () => {
-        expect(await result.current.editor.addItems([lecture(2), block])).toBe(true)
+        expect(await result.current.editor.addItems([block, lecture(2)])).toBe(true)
     })
     const customData = {
         block_name: "Study",
@@ -179,20 +248,16 @@ it("uses POST and DELETE without op fields and remaps custom IDs through undo an
     }
     expect(writes[0]?.method).toBe("POST")
     expect(writes[0]?.data).toEqual({
-        items: [
-            { kind: "lecture", lectureId: 2 },
-            { kind: "custom", data: customData },
-        ],
+        lectureIds: [2],
+        customBlocks: [customData],
     })
     await act(async () => {
         expect(await result.current.editor.undo()).toBe(true)
     })
     expect(writes[1]?.method).toBe("DELETE")
     expect(writes[1]?.data).toEqual({
-        items: [
-            { kind: "custom", id: 101 },
-            { kind: "lecture", id: 2 },
-        ],
+        lectureIds: [2],
+        customBlockIds: [101],
     })
     expect(result.current.query.data).toEqual(detail([lecture(1)]))
     await act(async () => {
@@ -208,11 +273,73 @@ it("uses POST and DELETE without op fields and remaps custom IDs through undo an
         expect(await result.current.editor.undo()).toBe(true)
     })
     expect(writes[3]?.data).toEqual({
-        items: [
-            { kind: "custom", id: 102 },
-            { kind: "lecture", id: 2 },
-        ],
+        lectureIds: [2],
+        customBlockIds: [102],
     })
+})
+
+it("maps interleaved custom additions using the returned customBlocks order", async () => {
+    const { result, writes } = await setup([])
+    const secondBlock: TimetableItem = {
+        kind: "custom",
+        data: { ...block.data, id: 11, block_name: "Second" },
+    }
+    await act(async () => {
+        expect(
+            await result.current.editor.addItems([block, lecture(2), secondBlock]),
+        ).toBe(true)
+    })
+    await act(async () => {
+        expect(await result.current.editor.undo()).toBe(true)
+    })
+    expect(writes[1]?.data).toEqual({ lectureIds: [2], customBlockIds: [102, 101] })
+    expect(result.current.query.data).toEqual(detail([]))
+})
+
+it("reloads the canonical detail after POST so concurrent edits remain visible", async () => {
+    const { result, server, intercept } = await setup([lecture(1)])
+    intercept(async (apply) => {
+        const response = apply()
+        server.set(1, [...server.get(1)!, lecture(99)])
+        return response
+    })
+    await act(async () => {
+        expect(await result.current.editor.addItems([lecture(2)])).toBe(true)
+    })
+    expect(result.current.query.data).toEqual(
+        detail([lecture(1), lecture(2), lecture(99)]),
+    )
+})
+
+it("clears unsafe history when detail reload fails after a successful write", async () => {
+    const { result, writes, server, failDetailReads } = await setup([block])
+    await act(async () => {
+        expect(
+            await result.current.editor.updateCustomBlock(10, {
+                ...block.data,
+                place: "Edited",
+            } as never),
+        ).toBe(true)
+    })
+    expect(result.current.editor.canUndo).toBe(true)
+    failDetailReads(
+        Object.assign(new Error("Forbidden"), {
+            isAxiosError: true,
+            response: { status: 403 },
+        }),
+    )
+    await act(async () => {
+        expect(await result.current.editor.addItems([lecture(2)])).toBe(false)
+    })
+    expect(writes.map(({ method }) => method)).toEqual(["PATCH", "POST"])
+    expect(server.get(1)).toContainEqual(lecture(2))
+    expect(result.current.editor.canUndo).toBe(false)
+    expect(result.current.editor.canRedo).toBe(false)
+    failDetailReads(null)
+    await act(async () => {
+        await result.current.query.refetch()
+    })
+    await waitFor(() => expect(result.current.query.data).toEqual(detail(server.get(1)!)))
 })
 
 it("keeps replacement and its undo/redo in one atomic PATCH each", async () => {
@@ -552,6 +679,15 @@ it("keeps a pending mutation and its history attached to the originating tab", a
         await pending
     })
     expect(writes[0]?.id).toBe(1)
+    const lastDetailRead = vi
+        .mocked(axiosClient.request)
+        .mock.calls.map(([request]) => request)
+        .filter(({ method, url }) => method === "GET" && /\/timetables\/\d+$/.test(url!))
+        .at(-1)
+    expect(lastDetailRead).toMatchObject({
+        url: "/api/v2/timetables/1",
+        headers: { "Accept-Language": "ko" },
+    })
     expect(result.current.query.data).toEqual(detail([lecture(2)]))
     expect(useTimetableUIStore.getState().selectedItems).toEqual([lecture(2)])
     expect(result.current.editor.canUndo).toBe(false)
