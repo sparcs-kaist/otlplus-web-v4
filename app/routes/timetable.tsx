@@ -315,6 +315,8 @@ export default function Timetable() {
             ) {
                 setHoveredLectures([])
                 setSelectedItems([])
+                setSelectedCustomBlock(null)
+                setIsCustomBlockSectionOpen(false)
             }
         }
         document.addEventListener("mousedown", handleClickOutside)

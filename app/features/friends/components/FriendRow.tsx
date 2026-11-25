@@ -112,7 +112,7 @@ function FriendRow({
                     }}
                     styles={{ padding: 6 }}
                 >
-                    <Icon size={18} color={theme.colors.Text.lighter}>
+                    <Icon size={18} color={theme.colors.Text.lighter} onClick={() => {}}>
                         <DeleteOutlineOutlined />
                     </Icon>
                 </IconButton>
@@ -134,6 +134,7 @@ function FriendRow({
                             ? theme.colors.Icon.yellow
                             : theme.colors.Text.lighter
                     }
+                    onClick={() => {}}
                 >
                     {friend.isFavorite ? <Star /> : <StarBorder />}
                 </Icon>

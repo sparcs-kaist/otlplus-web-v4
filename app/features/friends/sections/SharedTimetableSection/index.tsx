@@ -64,7 +64,7 @@ type Props = {
     timetableItems: TimetableItem[]
     overlappedLectureIds: number[]
     selectedItem: TimetableItem | null
-    onSelectItem: (item: TimetableItem) => void
+    onSelectItem: (item: TimetableItem | null) => void
 }
 
 export default function SharedTimetableSection({
@@ -163,6 +163,7 @@ export default function SharedTimetableSection({
                         onCustomBlockSelect={(block) =>
                             onSelectItem({ kind: TimetableItemKind.CUSTOM, data: block })
                         }
+                        onOutsideClick={() => {onSelectItem(null)}}
                     />
                 </TimetableGrid>
             </TimetablePanel>

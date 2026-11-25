@@ -150,9 +150,9 @@ export default function FriendsPage() {
     const location = useLocation()
     const navigate = useNavigate()
 
-    const selectedFriendId = positiveInteger(searchParams.get("friendId"))
-    const requestedYear = positiveInteger(searchParams.get("year"))
-    const requestedSemester = Number(searchParams.get("semester"))
+    const [selectedFriendId, setSelectedFriendId] = useState<number | null>(null)
+    const [requestedYear, setRequestedYear] = useState<number | null>(null)
+    const [requestedSemester, setRequestedSemester] = useState<SemesterEnum>(SemesterEnum.SPRING)
     const hasRequestedTerm =
         requestedYear !== null &&
         Number.isInteger(requestedSemester) &&
@@ -196,35 +196,71 @@ export default function FriendsPage() {
         (location.state as { friendAddedName?: string } | null)?.friendAddedName ?? null,
     )
 
+    const handleOutsideClick = useCallback(() => {
+        setSelectedItem(null)
+    }, [setSelectedItem])
+
     const handleSelectFriend = useCallback(
         (friendId: number | null) => {
             setFriendListOpen(false)
-            setSearchParams((previous) => {
-                const params = new URLSearchParams(previous)
-                if (friendId === null) params.delete("friendId")
-                else params.set("friendId", String(friendId))
-                params.delete("timetableId")
-                return params
-            })
+            setSelectedFriendId(friendId)
+            setSelectedItem(null)
         },
-        [setSearchParams],
+        [setSelectedFriendId, setSelectedItem],
     )
 
     const handleSelectSemester = useCallback(
-        (nextYear: number, nextSemester: SemesterEnum, replace = false) => {
-            const params = new URLSearchParams(searchParams)
-            params.set("year", String(nextYear))
-            params.set("semester", String(nextSemester))
-            params.delete("timetableId")
-            setSearchParams(params, { replace })
+        (nextYear: number, nextSemester: SemesterEnum) => {
+            setRequestedYear(nextYear)
+            setRequestedSemester(nextSemester)
+            setSelectedItem(null)
         },
-        [searchParams, setSearchParams],
+        [setRequestedYear, setRequestedSemester, setSelectedItem],
     )
+
+    const handleKeyDown = useCallback((e: KeyboardEvent) => {
+        if (e.key === "Escape") {
+            setSelectedItem(null)
+        }
+
+        else if (e.key === "[" || e.key === "]") {
+            const currentIndex = sharedSemesters.findIndex(
+                (term) => term.year === year && term.semester === semester,
+            )
+            console.log(sharedSemesters, year, semester, currentIndex)
+            if (currentIndex === -1) return
+            const nextIndex =
+                e.key === "["
+                    ? Math.max(0, currentIndex - 1)
+                    : Math.min(sharedSemesters.length - 1, currentIndex + 1)
+            if (nextIndex !== -1 && sharedSemesters[nextIndex]) {
+                handleSelectSemester(sharedSemesters[nextIndex].year, sharedSemesters[nextIndex].semester)
+            }
+            console.log("nextIndex", nextIndex, sharedSemesters[nextIndex])
+        }
+    }, [handleSelectSemester, sharedSemesters])
+    
+    useEffect(() => {
+        setRequestedYear(positiveInteger(searchParams.get("year")))
+        setRequestedSemester(Number(searchParams.get("semester")))
+        setSelectedFriendId(positiveInteger(searchParams.get("friendId")))
+
+        searchParams.delete("year")
+        searchParams.delete("semester")
+        searchParams.delete("friendId")
+        setSearchParams(searchParams, { replace: true })
+
+        window.addEventListener("keydown", handleKeyDown)
+
+        return () => {
+            window.removeEventListener("keydown", handleKeyDown)
+        }
+    }, []);
 
     useEffect(() => {
         if (!semestersQuery.isSuccess || hasSharedSemester) return
         const latest = sharedSemesters[0]
-        if (latest) handleSelectSemester(latest.year, latest.semester, true)
+        if (latest) handleSelectSemester(latest.year, latest.semester)
     }, [
         semestersQuery.isSuccess,
         hasSharedSemester,
@@ -544,7 +580,7 @@ export default function FriendsPage() {
                         overlappedLectureIds={overlappedLectureIds}
                         selectedItem={selectedItem}
                         onSelectItem={(item) => {
-                            setSelectedItem(item)
+                            setSelectedItem((prev) => (prev?.kind === item?.kind && prev?.data === item?.data ? null : item))
                             if (isTablet) setDetailOpen(true)
                         }}
                     />
