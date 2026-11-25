@@ -12,7 +12,10 @@ import {
     timetableItemKey,
     timetableItemsOverlap,
 } from "@/common/utils/timetableItems"
-import { timetableHistoryKey } from "@/features/timetable/hooks/useTimetableEditor"
+import {
+    type TimetableEditOptions,
+    timetableHistoryKey,
+} from "@/features/timetable/hooks/useTimetableEditor"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
 import { queryKeys } from "@/libs/query/queryKeys"
 import { useAPI } from "@/utils/api/useAPI"
@@ -22,7 +25,11 @@ interface UseTimetableKeyboardOptions {
     currentTimetableItems: TimetableItem[]
     undo: () => Promise<boolean>
     redo: () => Promise<boolean>
-    addItems: (items: TimetableItem[], replaceItems?: TimetableItem[]) => Promise<boolean>
+    addItems: (
+        items: TimetableItem[],
+        replaceItems?: TimetableItem[],
+        options?: TimetableEditOptions,
+    ) => Promise<boolean>
     removeItems: (items: TimetableItem[]) => Promise<boolean>
     addLectures: (lectures: Lecture[]) => Promise<boolean>
     removeLectures: (lectureIds: number[]) => Promise<boolean>
@@ -247,7 +254,7 @@ export function useTimetableKeyboard({
                 !overlapping.length ||
                 window.confirm(t("timetable.pasteLectureConflict"))
             )
-                await addItems(items, overlapping)
+                await addItems(items, overlapping, { flash: true })
             return
         }
         if (isMod && key === "m") {
