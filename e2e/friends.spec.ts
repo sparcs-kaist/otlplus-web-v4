@@ -206,10 +206,7 @@ async function setup(page: Page, language = "ko") {
         } else if (path.endsWith("/overlaps")) {
             json = {
                 sameLecture: [{ ...friends[1], timetable: { ...semester, id: 42 } }],
-                sameCourseDifferentSection: [
-                    { ...friends[2], timetable: { ...semester, id: null } },
-                ],
-                previousSemesterSameProfessor: [
+                sameCourseOtherSemester: [
                     { ...friends[3], timetable: { id: null, year: 2025, semester: 3 } },
                 ],
             }
@@ -379,6 +376,22 @@ test("desktop matches the friends layout and exact-lecture overlap treatment", a
     await expect(
         page.getByText("이 수업을 같이 듣는 친구", { exact: true }),
     ).toBeVisible()
+    const classmates = page
+        .getByText("이 수업을 같이 듣는 친구", { exact: true })
+        .locator("..")
+    await expect(classmates.getByRole("button")).toHaveCount(1)
+    await expect(classmates.getByRole("button")).toHaveAttribute(
+        "title",
+        "같은 수업 · 같은 분반",
+    )
+    const otherSemesterFriends = page
+        .getByText("이 수업을 수강한 친구", { exact: true })
+        .locator("..")
+    await expect(otherSemesterFriends.getByRole("button")).toHaveCount(1)
+    await expect(otherSemesterFriends.getByRole("button")).toHaveAttribute(
+        "title",
+        "같은 과목 · 다른 학기",
+    )
     const detailCode = await page.getByText("CS206 (A)", { exact: true }).boundingBox()
     const grid = await page.locator(".custom-timetable").boundingBox()
     expect(detailCode!.x).toBeGreaterThan(grid!.x + grid!.width)
@@ -588,8 +601,7 @@ test("long friend names wrap inside lecture details on a narrow screen", async (
                 sameLecture: [
                     { ...friends[1], name: longName, timetable: { ...semester, id: 42 } },
                 ],
-                sameCourseDifferentSection: [],
-                previousSemesterSameProfessor: [],
+                sameCourseOtherSemester: [],
             },
         }),
     )

@@ -1,6 +1,6 @@
 export const friends = {
     overlapLabel: "Shared",
-    currentLectureFriends: "Friends taking this course",
+    currentLectureFriends: "Friends taking this class",
     pastLectureFriends: "Friends who took this course",
     semesterLabel: "{{year}} {{semester}}",
     previousSemester: "Previous semester",
@@ -62,8 +62,7 @@ export const friends = {
     noSharedTimetables: "No timetables are available to share.",
     selectLecture: "Select a lecture to see friends with matching classes.",
     sameLecture: "Same lecture and section",
-    sameCourseDifferentSection: "Same course, different section",
-    previousSemesterSameProfessor: "Other semester, same course and professor",
+    sameCourseOtherSemester: "Same course, different semester",
     nobody: "No matching friends.",
     inviteAccepting: "Adding your timetable friend…",
     inviteInvalid: "This friend invite is invalid or belongs to you.",

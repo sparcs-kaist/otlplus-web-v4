@@ -605,8 +605,7 @@ for (const viewport of [
             const json = path.endsWith("/overlaps")
                 ? {
                       sameLecture: [{ ...friend, timetable: linkedTimetable }],
-                      sameCourseDifferentSection: [],
-                      previousSemesterSameProfessor: [],
+                      sameCourseOtherSemester: [],
                   }
                 : path === "/api/v2/friends"
                   ? { friends: [friend], checkedAt: new Date().toISOString() }
@@ -685,6 +684,9 @@ for (const viewport of [
         const classmate = detail.getByRole("button", { name: "Alex", exact: true })
         const review = detail.getByText(reviewContent, { exact: true })
         await expect(classmate).toBeVisible()
+        await expect(
+            detail.getByText("Friends taking this class", { exact: true }),
+        ).toBeVisible()
         await expect(review).toBeVisible()
         const infoBox = await courseInfo.boundingBox()
         const classmateBox = await classmate.boundingBox()
