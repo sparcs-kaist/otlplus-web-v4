@@ -87,8 +87,7 @@ test("selects one shared timetable per semester independently of the main timeta
                     timetableId: homeId,
                     source: homeId === null ? "enrolled" : "saved",
                     name: "Main",
-                    lectures: [],
-                    customBlocks: [],
+                    ...(method === "GET" ? { lectures: [], customBlocks: [] } : {}),
                 }
             } else if (path === "/timetables") {
                 if (method === "DELETE") {

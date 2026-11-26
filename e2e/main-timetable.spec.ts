@@ -71,8 +71,9 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
                 year: 2026,
                 semester: 3,
                 name: "Main",
-                lectures: [],
-                customBlocks: homeId === 2 ? [block] : [],
+                ...(method === "GET"
+                    ? { lectures: [], customBlocks: homeId === 2 ? [block] : [] }
+                    : {}),
             }
         } else if (path === "/timetables/shared") {
             json = {

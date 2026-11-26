@@ -113,8 +113,11 @@ async function setup(page: Page, initialHomeId: number | null = null) {
         else if (path === "/semesters") json = { semesters: [semester] }
         else if (path === "/semesters/current") json = semester
         else if (path === "/timetables/home") {
-            if (method === "PATCH") homeId = request.postDataJSON().timetableId
-            json = home()
+            if (method === "PATCH") {
+                homeId = request.postDataJSON().timetableId
+                const { lectures, customBlocks, ...selection } = home()
+                json = selection
+            } else json = home()
         } else if (path === "/timetables/my-timetable")
             json = {
                 lectures: [lecture],
