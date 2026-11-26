@@ -6,4 +6,4 @@ export { GETRequest, GETResponse }
 export const PATCHRequest = GETRequest.extend({
     timetableId: z.number().int().positive().nullable(),
 })
-export const PATCHResponse = GETResponse
+export const PATCHResponse = GETResponse.omit({ lectures: true, customBlocks: true })

@@ -16,6 +16,7 @@ import Typography from "@/common/primitives/Typography"
 import Widget from "@/common/primitives/Widget"
 import type { Friend } from "@/common/schemas/friend"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
+import { toTimetableItems } from "@/common/utils/timetableItems"
 import FriendCustomBlockDetail from "@/features/friends/FriendCustomBlockDetail"
 import FriendInviteModal from "@/features/friends/FriendInviteModal"
 import FriendLectureDetail from "@/features/friends/FriendLectureDetail"
@@ -432,18 +433,21 @@ export default function FriendsPage() {
             (sharedSemesters.length > 0 &&
                 (!hasSharedSemester || !paramsReady || timetableQuery.isPending)))
     const noSharedTimetables = semestersQuery.isSuccess && sharedSemesters.length === 0
-    const timetableItems =
-        !hasSharedSemester || !paramsReady || hasLoadError
-            ? []
-            : (timetableQuery.data?.timetableItems ?? [])
+    const timetableItems = useMemo(
+        () =>
+            !hasSharedSemester || !paramsReady || hasLoadError
+                ? []
+                : toTimetableItems(timetableQuery.data),
+        [hasSharedSemester, paramsReady, hasLoadError, timetableQuery.data],
+    )
     const lectures = timetableItems.flatMap((item) =>
         item.kind === TimetableItemKind.LECTURE ? [item.data] : [],
     )
     const overlappedLectureIds = useMemo(() => {
         if (selectedFriendId === null) return []
         const ownLectureIds = new Set(
-            (ownShared.isError ? [] : (ownShared.data?.timetableItems ?? [])).flatMap(
-                (item) => (item.kind === TimetableItemKind.LECTURE ? [item.data.id] : []),
+            (ownShared.isError ? [] : (ownShared.data?.lectures ?? [])).map(
+                (lecture) => lecture.id,
             ),
         )
         return timetableItems.flatMap((item) =>

@@ -11,6 +11,7 @@ import {
 } from "@/api/timetables/$timetableId/items"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimetableChange, TimetableItem } from "@/common/schemas/timetableItem"
+import { toTimetableItems } from "@/common/utils/timetableItems"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
 import { axiosClient } from "@/libs/axios"
 import { useAPI } from "@/utils/api/useAPI"
@@ -41,9 +42,11 @@ const block: TimetableItem = {
     },
 }
 const detail = (timetableItems: TimetableItem[]) => ({
-    timetableItems,
     lectures: timetableItems.flatMap((item) =>
         item.kind === "lecture" ? [item.data] : [],
+    ),
+    customBlocks: timetableItems.flatMap((item) =>
+        item.kind === "custom" ? [item.data] : [],
     ),
 })
 const clients: QueryClient[] = []
@@ -187,7 +190,7 @@ async function setup(initial: TimetableItem[] = [lecture(1), block]) {
             const id = useTimetableUIStore((state) => state.currentTimetableId)
             const { query } = useAPI("GET", `/timetables/${id}`)
             const editor = useTimetableEditor({
-                currentTimetableItems: query.data?.timetableItems ?? [],
+                currentTimetableItems: toTimetableItems(query.data),
                 nonLoginTimetable: [],
                 setNonLoginTimetable: vi.fn(),
             })
@@ -264,11 +267,13 @@ it("uses separate POST and DELETE fields and remaps custom IDs through undo and 
         expect(await result.current.editor.redo()).toBe(true)
     })
     expect(writes.map(({ method }) => method)).toEqual(["POST", "DELETE", "POST"])
-    expect(result.current.query.data?.timetableItems).toEqual([
-        lecture(1),
-        lecture(2),
-        { kind: "custom", data: { ...customData, id: 102 } },
-    ])
+    expect(result.current.query.data).toEqual(
+        detail([
+            lecture(1),
+            lecture(2),
+            { kind: "custom", data: { ...customData, id: 102 } },
+        ]),
+    )
     await act(async () => {
         expect(await result.current.editor.undo()).toBe(true)
     })
@@ -359,13 +364,19 @@ it("keeps replacement and its undo/redo in one atomic PATCH each", async () => {
     await act(async () => {
         expect(await result.current.editor.undo()).toBe(true)
     })
-    expect(result.current.query.data?.timetableItems).toEqual([
-        {
-            kind: "custom",
-            data: { ...block.data, id: 101, times: [{ day: 1, begin: 600, end: 660 }] },
-        },
-        lecture(1),
-    ])
+    expect(result.current.query.data).toEqual(
+        detail([
+            {
+                kind: "custom",
+                data: {
+                    ...block.data,
+                    id: 101,
+                    times: [{ day: 1, begin: 600, end: 660 }],
+                },
+            },
+            lecture(1),
+        ]),
+    )
     await act(async () => {
         expect(await result.current.editor.redo()).toBe(true)
     })
@@ -534,17 +545,19 @@ it("remaps recreated custom IDs through older history and the source clipboard",
         await result.current.editor.undo()
     })
     expect(useTimetableUIStore.getState().clipboard?.items[0]?.data.id).toBe(102)
-    expect(result.current.query.data?.timetableItems).toEqual([
-        {
-            kind: "custom",
-            data: {
-                ...block.data,
-                id: 102,
-                place: "Edited",
-                times: [{ day: 1, begin: 600, end: 660 }],
+    expect(result.current.query.data).toEqual(
+        detail([
+            {
+                kind: "custom",
+                data: {
+                    ...block.data,
+                    id: 102,
+                    place: "Edited",
+                    times: [{ day: 1, begin: 600, end: 660 }],
+                },
             },
-        },
-    ])
+        ]),
+    )
 })
 
 it("keeps every time slot under one ID through updates, deletion, undo and clipboard remapping", async () => {
@@ -571,8 +584,11 @@ it("keeps every time slot under one ID through updates, deletion, undo and clipb
             data: expect.objectContaining({ times }),
         }),
     ])
-    const multiTimeBlock = result.current.query.data!.timetableItems[0]!
-    expect(result.current.query.data!.timetableItems).toHaveLength(1)
+    const multiTimeBlock: TimetableItem = {
+        kind: "custom",
+        data: result.current.query.data!.customBlocks[0]!,
+    }
+    expect(result.current.query.data!.customBlocks).toHaveLength(1)
     useTimetableUIStore
         .getState()
         .setClipboard({ sourceKey: "1-2026-1", items: [multiTimeBlock] })
@@ -583,9 +599,9 @@ it("keeps every time slot under one ID through updates, deletion, undo and clipb
     await act(async () => {
         await result.current.editor.undo()
     })
-    expect(result.current.query.data!.timetableItems).toEqual([
-        { kind: "custom", data: { ...multiTimeBlock.data, id: 101 } },
-    ])
+    expect(result.current.query.data).toEqual(
+        detail([{ kind: "custom", data: { ...multiTimeBlock.data, id: 101 } }]),
+    )
     expect(useTimetableUIStore.getState().clipboard?.items).toEqual([
         { kind: "custom", data: { ...multiTimeBlock.data, id: 101 } },
     ])
@@ -601,9 +617,9 @@ it("keeps every time slot under one ID through updates, deletion, undo and clipb
     await act(async () => {
         await result.current.editor.redo()
     })
-    expect(result.current.query.data!.timetableItems).toEqual([
-        { kind: "custom", data: { ...multiTimeBlock.data, id: 101 } },
-    ])
+    expect(result.current.query.data).toEqual(
+        detail([{ kind: "custom", data: { ...multiTimeBlock.data, id: 101 } }]),
+    )
 })
 
 it("retains history and canonical state when a definite failure rejects undo", async () => {

@@ -172,14 +172,14 @@ test("creates, edits, exports, and deletes one custom block with multiple time s
             return
         }
         if (path.endsWith("/timetables/my-timetable")) {
-            await route.fulfill({ json: { lectures: [], timetableItems: [] } })
+            await route.fulfill({ json: { lectures: [], customBlocks: [] } })
             return
         }
         if (path.endsWith("/timetables/1")) {
             await route.fulfill({
                 json: {
                     lectures: [],
-                    timetableItems: blocks.map((data) => ({ kind: "custom", data })),
+                    customBlocks: blocks,
                 },
             })
             return

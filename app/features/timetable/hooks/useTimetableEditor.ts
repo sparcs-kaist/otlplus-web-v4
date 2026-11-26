@@ -5,11 +5,16 @@ import { isAxiosError } from "axios"
 import { useTranslation } from "react-i18next"
 import { match } from "ts-pattern"
 
+import type { GETTimetableByIdResponse } from "@/api/timetables/$timetableId"
 import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import type { CustomBlock } from "@/common/schemas/customBlock"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimetableChange, TimetableItem } from "@/common/schemas/timetableItem"
-import { getCustomBlockTimes, timetableItemKey } from "@/common/utils/timetableItems"
+import {
+    getCustomBlockTimes,
+    timetableItemKey,
+    toTimetableItems,
+} from "@/common/utils/timetableItems"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
 import { axiosClient } from "@/libs/axios"
 import { queryKeys } from "@/libs/query/queryKeys"
@@ -122,14 +127,13 @@ export function useTimetableEditor({
     // Read from the canonical cache too: another key event can precede React's next render.
     const currentItems = () => {
         if (status !== "success") return localItems.current
-        const cached = queryClient.getQueriesData<{ timetableItems: TimetableItem[] }>({
+        const cached = queryClient.getQueriesData<GETTimetableByIdResponse>({
             queryKey: [queryKeys.timetableDetail(currentTimetableId ?? 0)],
             predicate: (query) =>
                 query.queryKey[2] === language && query.queryKey[3] === "/api/v2",
         })
-        return (
-            cached.find(([, data]) => data)?.[1]?.timetableItems ?? currentTimetableItems
-        )
+        const detail = cached.find(([, data]) => data)?.[1]
+        return detail ? toTimetableItems(detail) : currentTimetableItems
     }
 
     const execute = async (
@@ -191,15 +195,13 @@ export function useTimetableEditor({
                 if (!sameUser()) return false
                 if (patchResponse) finalItems = patchResponse.timetableItems
                 else {
-                    const { data } = await axiosClient.request<{
-                        timetableItems: TimetableItem[]
-                    }>({
+                    const { data } = await axiosClient.request<GETTimetableByIdResponse>({
                         method: "GET",
                         url: `/api/v2${detailPath}`,
                         headers: { "Accept-Language": language },
                     })
                     if (!sameUser()) return false
-                    finalItems = data.timetableItems
+                    finalItems = toTimetableItems(data)
                 }
                 let customIndex = 0
                 applied = edits.map((edit, index) => {
@@ -223,10 +225,12 @@ export function useTimetableEditor({
                         },
                     }
                 })
-                const detail = {
-                    timetableItems: finalItems,
+                const detail: GETTimetableByIdResponse = {
                     lectures: finalItems.flatMap((item) =>
                         item.kind === TimetableItemKind.LECTURE ? [item.data] : [],
+                    ),
+                    customBlocks: finalItems.flatMap((item) =>
+                        item.kind === TimetableItemKind.CUSTOM ? [item.data] : [],
                     ),
                 }
                 queryClient.setQueriesData(

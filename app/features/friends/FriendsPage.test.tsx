@@ -110,12 +110,13 @@ let friendsQueryState = { isSuccess: true, isFetching: false, isError: false }
 const refetchFriends = vi.fn()
 const lectures = {
     lectures: [lecture],
-    timetableItems: [{ kind: "lecture", data: lecture }],
+    customBlocks: [],
 }
-let ownActualResponse: { timetableItems: TimetableItem[] }
+let ownActualResponse: { lectures: Lecture[]; customBlocks: CustomBlock[] }
 let ownAllSavedResponse: { id: number; lectures: { id: number }[] }[]
 let friendSharedResponse: {
-    timetableItems: TimetableItem[]
+    lectures: Lecture[]
+    customBlocks: CustomBlock[]
     source?: "saved" | "enrolled"
     name?: string
 }
@@ -141,31 +142,25 @@ const semesters = {
     ],
 }
 const savedLectures = {
-    lectures: [{ ...lecture, name: "Legacy lecture should not be shown" }],
-    timetableItems: [
-        { kind: "lecture", data: { ...lecture, name: "Saved fluid mechanics" } },
+    lectures: [{ ...lecture, name: "Saved fluid mechanics" }],
+    customBlocks: [
         {
-            kind: "custom",
-            data: {
-                id: 1,
-                block_name: "Club meeting",
-                place: "Student center",
-                day: 0,
-                begin: 600,
-                end: 660,
-                times: [
-                    { day: 0, begin: 600, end: 660 },
-                    { day: 2, begin: 840, end: 900 },
-                ],
-            },
+            id: 1,
+            block_name: "Club meeting",
+            place: "Student center",
+            day: 0,
+            begin: 600,
+            end: 660,
+            times: [
+                { day: 0, begin: 600, end: 660 },
+                { day: 2, begin: 840, end: 900 },
+            ],
         },
     ],
 }
 const earlierLectures = {
     lectures: [{ ...lecture, name: "Earlier fluid mechanics" }],
-    timetableItems: [
-        { kind: "lecture", data: { ...lecture, name: "Earlier fluid mechanics" } },
-    ],
+    customBlocks: [],
 }
 const parameterSetters = new Map<string, ReturnType<typeof vi.fn>>()
 const testWindow = window as unknown as HappyDOMWindow
@@ -646,67 +641,31 @@ describe("mobile friend timetable navigation", () => {
                 { id: 44, lectures: [{ id: 2 }] },
             ]
             ownActualResponse = {
-                timetableItems: [
-                    { kind: "lecture", data: { ...lecture, id: 3 } as Lecture },
-                    { kind: "lecture", data: { ...lecture, id: 99 } as Lecture },
-                    {
-                        kind: "custom",
-                        data: { id: 4, block_name: "My custom block" } as CustomBlock,
-                    },
+                lectures: [
+                    { ...lecture, id: 3 },
+                    { ...lecture, id: 99 },
                 ],
+                customBlocks: [{ id: 4, block_name: "My custom block" } as CustomBlock],
             }
             ownSharedResponse = {
                 source: "saved",
-                timetableItems: [
-                    { kind: "lecture", data: { ...lecture, id: 2 } as Lecture },
-                    { kind: "lecture", data: { ...lecture, id: 6 } as Lecture },
-                    {
-                        kind: "custom",
-                        data: { id: 4, block_name: "My custom block" } as CustomBlock,
-                    },
+                lectures: [
+                    { ...lecture, id: 2 },
+                    { ...lecture, id: 6 },
                 ],
+                customBlocks: [{ id: 4, block_name: "My custom block" } as CustomBlock],
             }
             friendSharedResponse = {
-                timetableItems: [
-                    {
-                        kind: "lecture",
-                        data: { ...lecture, id: 2, name: "Shared lecture" } as Lecture,
-                    },
-                    {
-                        kind: "lecture",
-                        data: { ...lecture, id: 3, name: "Enrolled only" } as Lecture,
-                    },
-                    {
-                        kind: "lecture",
-                        data: {
-                            ...lecture,
-                            id: 4,
-                            name: "Custom ID collision",
-                        } as Lecture,
-                    },
-                    {
-                        kind: "lecture",
-                        data: { ...lecture, id: 5, classNo: "B" } as Lecture,
-                    },
-                    {
-                        kind: "lecture",
-                        data: {
-                            ...lecture,
-                            id: 90,
-                            name: "Private saved only",
-                        } as Lecture,
-                    },
-                    {
-                        kind: "custom",
-                        data: { id: 6, block_name: "Friend custom block" } as CustomBlock,
-                    },
-                    {
-                        kind: "custom",
-                        data: {
-                            id: 2,
-                            block_name: "Shared ID custom block",
-                        } as CustomBlock,
-                    },
+                lectures: [
+                    { ...lecture, id: 2, name: "Shared lecture" },
+                    { ...lecture, id: 3, name: "Enrolled only" },
+                    { ...lecture, id: 4, name: "Custom ID collision" },
+                    { ...lecture, id: 5, classNo: "B" },
+                    { ...lecture, id: 90, name: "Private saved only" },
+                ],
+                customBlocks: [
+                    { id: 6, block_name: "Friend custom block" } as CustomBlock,
+                    { id: 2, block_name: "Shared ID custom block" } as CustomBlock,
                 ],
             }
 
@@ -747,7 +706,7 @@ describe("mobile friend timetable navigation", () => {
         "does not use enrolled or private lectures when my shared timetable is %s",
         (state) => {
             if (state === "empty")
-                ownSharedResponse = { source: "saved", timetableItems: [] }
+                ownSharedResponse = { source: "saved", lectures: [], customBlocks: [] }
             else
                 ownSharedQueryState = {
                     isSuccess: false,
@@ -1130,12 +1089,8 @@ describe("mobile friend timetable navigation", () => {
     it.each(["empty", "custom-only"])(
         "keeps the shared semester tab when its timetable is %s",
         (contents) => {
-            friendSharedResponse.timetableItems =
-                contents === "empty"
-                    ? []
-                    : friendSharedResponse.timetableItems.filter(
-                          (item) => item.kind === "custom",
-                      )
+            friendSharedResponse.lectures = []
+            if (contents === "empty") friendSharedResponse.customBlocks = []
             sharedSemestersResponse = { semesters: [{ year: 2026, semester: 3 }] }
             renderPage("/friends?friendId=7&year=2026&semester=3")
             expect(screen.getByRole("tab", { name: "2026 Fall" })).toHaveAttribute(

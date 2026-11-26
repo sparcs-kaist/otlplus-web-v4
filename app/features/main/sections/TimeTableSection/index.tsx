@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
@@ -12,6 +12,7 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
+import { toTimetableItems } from "@/common/utils/timetableItems"
 import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
 import { handleLogin } from "@/utils/handleLoginLogout"
@@ -113,7 +114,10 @@ const TimeTableSection = () => {
         }
     }, [currentSemester.data, setHomeTimetableParams])
 
-    const timetableItems = homeTimetable.data?.timetableItems ?? []
+    const timetableItems = useMemo(
+        () => toTimetableItems(homeTimetable.data),
+        [homeTimetable.data],
+    )
 
     return (
         <StyledWidget direction="column" gap={0} padding="30px 23px" flex="1 1 auto">
