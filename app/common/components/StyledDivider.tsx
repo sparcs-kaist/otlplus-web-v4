@@ -4,11 +4,15 @@ import styled from "@emotion/styled"
 const StyledDividerRow = styled.div<{ color: string }>`
     width: 100%;
     height: 1px;
+    min-height: 1px;
+    flex-shrink: 0;
     background: ${({ color }) => color};
 `
 
 const StyledDividerColumn = styled.div<{ color: string }>`
     width: 1px;
+    min-width: 1px;
+    flex-shrink: 0;
     background: ${({ color }) => color};
     align-self: stretch;
 `

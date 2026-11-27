@@ -10,10 +10,16 @@ import LoadingCircle from "@/common/components/LoadingCircle"
 import { type SearchParamsType } from "@/common/components/search/SearchArea"
 import { LectureActionEnum } from "@/common/enum/lectureActionEnum"
 import { LECTURE_ORDERS, LectureOrderEnum } from "@/common/enum/orderEnum"
+import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
-import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
+import type { TimetableItem } from "@/common/schemas/timetableItem"
+import {
+    useHoveredLectures,
+    useSelectedLectures,
+    useTimetableUIStore,
+} from "@/features/timetable/store/useTimetableUIStore"
 import { trackEvent } from "@/libs/mixpanel"
 import { queryKeys } from "@/libs/query/queryKeys"
 import { media } from "@/styles/themes/media"
@@ -21,7 +27,7 @@ import type { getAPIResponseType } from "@/utils/api/getAPIType"
 import { useAPI } from "@/utils/api/useAPI"
 import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
 import checkEmpty from "@/utils/search/checkEmpty"
-import checkOverlap from "@/utils/timetable/checkOverlap"
+import { timetableItemsOverlap } from "@/utils/timetable/timetableItems"
 import useIsDevice from "@/utils/useIsDevice"
 import useUserStore from "@/utils/zustand/useUserStore"
 
@@ -151,7 +157,7 @@ const mergeCoursesById = (response?: GETLecturesResponse) => {
 }
 
 interface LectureListSectionProps {
-    timetableLectures: Lecture[]
+    timetableItems: TimetableItem[]
     addLectures: (lectures: Lecture[]) => void
     onLectureSelect?: (lecture: Lecture, e?: React.MouseEvent) => void
 }
@@ -159,7 +165,7 @@ interface LectureListSectionProps {
 const SEARCH_LIMIT = 50
 
 const LectureListSection: React.FC<LectureListSectionProps> = ({
-    timetableLectures,
+    timetableItems,
     addLectures,
     onLectureSelect,
 }) => {
@@ -170,17 +176,14 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     const currentTimetableId = useTimetableUIStore((s) => s.currentTimetableId)
     const year = useTimetableUIStore((s) => s.year)
     const semester = useTimetableUIStore((s) => s.semesterEnum)
-    const hoveredLecture = useTimetableUIStore((s) => s.hoveredLectures)
-    const setHoveredLecture = useTimetableUIStore((s) => s.setHoveredLectures)
-    const selectedLectures = useTimetableUIStore((s) => s.selectedLectures)
-    const setSelectedLectures = useTimetableUIStore((s) => s.setSelectedLectures)
+    const hoveredLecture = useHoveredLectures()
+    const setHoveredItems = useTimetableUIStore((s) => s.setHoveredItems)
+    const selectedLectures = useSelectedLectures()
+    const setSelectedItems = useTimetableUIStore((s) => s.setSelectedItems)
     const timeFilter = useTimetableUIStore((s) => s.timeFilter)
     const setTimeFilter = useTimetableUIStore((s) => s.setTimeFilter)
     const onSearchLecturesChange = useTimetableUIStore((s) => s.setSearchLectures)
-    const onClearSelection = useCallback(
-        () => setSelectedLectures([]),
-        [setSelectedLectures],
-    )
+    const onClearSelection = useCallback(() => setSelectedItems([]), [setSelectedItems])
 
     const { ref, inView } = useInView({ threshold: 0 })
 
@@ -216,7 +219,6 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     const { query, setParams, data } = useInfiniteAPI("GET", "/lectures", {
         infinites: ["courses"],
         limit: SEARCH_LIMIT,
-        gcTime: 0,
         select: mergeCoursesById,
         enabled: enabled,
         iterate: (data) => {
@@ -315,7 +317,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     const handleMobileScroll = useCallback(() => {
         if (!isTablet) return
         if (!courseResultRef.current) {
-            setHoveredLecture([])
+            setHoveredItems([])
             return
         }
 
@@ -337,12 +339,12 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
             )
             const lecture = allLectures.find((lec) => lec.id === lectureId)
             if (lecture) {
-                setHoveredLecture([lecture])
+                setHoveredItems([{ kind: TimetableItemKind.LECTURE, data: lecture }])
             } else {
-                setHoveredLecture([])
+                setHoveredItems([])
             }
         }
-    }, [isTablet, allLectures, setHoveredLecture])
+    }, [isTablet, allLectures, setHoveredItems])
 
     useEffect(() => {
         if (!isTablet || !courseResultRef.current) return
@@ -398,64 +400,54 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     }
 
     const handleAddToTimetable = (lecture: Lecture) => {
-        if (status === "success") {
-            if (currentTimetableId == null) {
-                alert(t("timetable.myTimeTableLectureAddWarning"))
-                return
-            }
-            if (
-                timetableLectures.some((lec) =>
-                    checkOverlap(lec.classes, lecture.classes),
-                )
-            ) {
-                alert(t("timetable.addLectureConflict"))
-                return
-            }
-
-            addLectures([lecture])
-            trackEvent("Add Lecture to Timetable", {
-                lectureId: lecture.id,
-                lectureCode: lecture.code,
-                courseName: lecture.name,
-                timetableId: currentTimetableId,
-            })
-        } else {
-            if (
-                timetableLectures.some((lec) =>
-                    checkOverlap(lec.classes, lecture.classes),
-                )
-            ) {
-                alert(t("timetable.addLectureConflict"))
-                return
-            }
-            addLectures([lecture])
-            trackEvent("Add Lecture to Timetable", {
-                lectureId: lecture.id,
-                lectureCode: lecture.code,
-                courseName: lecture.name,
-                timetableId: null,
-                isGuest: true,
-            })
+        if (status === "success" && currentTimetableId == null) {
+            alert(t("timetable.myTimeTableLectureAddWarning"))
+            return
         }
+        if (
+            timetableItems.some((item) =>
+                timetableItemsOverlap(item, {
+                    kind: TimetableItemKind.LECTURE,
+                    data: lecture,
+                }),
+            )
+        ) {
+            alert(t("timetable.addLectureConflict"))
+            return
+        }
+
+        addLectures([lecture])
+        trackEvent("Add Lecture to Timetable", {
+            lectureId: lecture.id,
+            lectureCode: lecture.code,
+            courseName: lecture.name,
+            timetableId: status === "success" ? currentTimetableId : null,
+            ...(status !== "success" ? { isGuest: true } : {}),
+        })
     }
 
     const handleSetHoveredLecture = useCallback(
         (lecture: Lecture) => {
             if (isTablet) return
             if (useTimetableUIStore.getState().isKeyboardNavigating) return
-            setHoveredLecture((prev) => {
-                if (prev.length === 1 && prev[0]?.id === lecture.id) return prev
-                return [lecture]
+            setHoveredItems((prev) => {
+                if (
+                    prev.length === 1 &&
+                    prev[0]?.kind === TimetableItemKind.LECTURE &&
+                    prev[0].data.id === lecture.id
+                )
+                    return prev
+                return [{ kind: TimetableItemKind.LECTURE, data: lecture }]
             })
         },
-        [isTablet, setHoveredLecture],
+        [isTablet, setHoveredItems],
     )
 
     const handleClearHoveredLecture = useCallback(() => {
         if (isTablet) return
         if (useTimetableUIStore.getState().isKeyboardNavigating) return
-        setHoveredLecture([])
-    }, [isTablet, setHoveredLecture])
+        setHoveredItems([])
+    }, [isTablet, setHoveredItems])
 
     const handleSetSelectedLecture = useCallback(
         (lecture: Lecture, e?: React.MouseEvent) => {
@@ -519,7 +511,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                                     selectedLectures={selectedLectures}
                                     wishlist={wishlist}
                                     currentTimetableId={currentTimetableId}
-                                    timetableLectures={timetableLectures}
+                                    timetableItems={timetableItems}
                                     handleSetHoveredLecture={handleSetHoveredLecture}
                                     handleClearHoveredLecture={handleClearHoveredLecture}
                                     handleSetSelectedLecture={handleSetSelectedLecture}
@@ -547,7 +539,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
 
 const LectureListSectionMemo = React.memo(LectureListSection, (prev, next) => {
     return (
-        prev.timetableLectures === next.timetableLectures &&
+        prev.timetableItems === next.timetableItems &&
         prev.addLectures === next.addLectures &&
         prev.onLectureSelect === next.onLectureSelect
     )

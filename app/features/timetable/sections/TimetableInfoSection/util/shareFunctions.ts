@@ -1,11 +1,12 @@
 import { CanvasRenderingContext2D, createCanvas, loadImage } from "canvas"
 import ical, { ICalAlarmType, ICalEventRepeatingFreq } from "ical-generator"
 
-import type { CustomBlock } from "@/common/schemas/customBlock"
-import type { Lecture } from "@/common/schemas/lecture"
+import { TimetableItemKind } from "@/common/enum/timetableItemKind"
+import type { TimetableItem } from "@/common/schemas/timetableItem"
 import { colors } from "@/styles/themes/_base/variables/colors"
 import { darkThemeColors } from "@/styles/themes/dark/variables/colors"
 import professorName from "@/utils/professorName"
+import { getTimetableItemTimes } from "@/utils/timetable/timetableItems"
 
 import { isExpectedClipboardError } from "./clipboardErrors"
 
@@ -46,8 +47,7 @@ interface DrawTileOptions {
 
 interface DrawTimetableDatas {
     timetableName: string
-    lectures: Lecture[]
-    customBlocks: CustomBlock[]
+    timetableItems: TimetableItem[]
     timetableType: string
     semesterName: string
     semesterFontSize: number
@@ -56,27 +56,28 @@ interface DrawTimetableDatas {
     language: "ko" | "en"
 }
 
-function getTimetableExportEntries(lectures: Lecture[], customBlocks: CustomBlock[]) {
-    return [
-        ...lectures.flatMap((lecture) =>
-            lecture.classes.map((classtime) => ({
-                ...classtime,
-                title: lecture.name,
-                professor: professorName(lecture.professors),
-                location: `${classtime.buildingCode} ${classtime.roomName}`.trim(),
-                colorIndex: lecture.courseId,
-            })),
-        ),
-        ...customBlocks.map((block) => ({
-            day: block.day,
-            begin: block.begin,
-            end: block.end,
-            title: block.block_name,
-            professor: "",
-            location: block.place,
-            colorIndex: block.id * 3 + 7,
+function getTimetableExportEntries(items: TimetableItem[]) {
+    return items.flatMap((item) =>
+        getTimetableItemTimes(item).map((time, index) => ({
+            ...time,
+            title:
+                item.kind === TimetableItemKind.LECTURE
+                    ? item.data.name
+                    : item.data.block_name,
+            professor:
+                item.kind === TimetableItemKind.LECTURE
+                    ? professorName(item.data.professors)
+                    : "",
+            location:
+                item.kind === TimetableItemKind.LECTURE
+                    ? `${item.data.classes[index]!.buildingCode} ${item.data.classes[index]!.roomName}`.trim()
+                    : item.data.place,
+            colorIndex:
+                item.kind === TimetableItemKind.LECTURE
+                    ? item.data.courseId
+                    : item.data.id,
         })),
-    ]
+    )
 }
 
 function drawRoundedRectangle(options: RoundedRectangleOptions) {
@@ -195,8 +196,7 @@ function drawTile(options: DrawTileOptions) {
 async function timeTableImage(drawTimetableData: DrawTimetableDatas) {
     const {
         timetableName,
-        lectures,
-        customBlocks,
+        timetableItems,
         timetableType,
         semesterName,
         semesterFontSize,
@@ -236,9 +236,9 @@ async function timeTableImage(drawTimetableData: DrawTimetableDatas) {
         align: "right",
     })
 
-    for (const entry of getTimetableExportEntries(lectures, customBlocks)) {
+    for (const entry of getTimetableExportEntries(timetableItems)) {
         const color =
-            TIMETABLE_CELL_COLORS[entry.colorIndex % TIMETABLE_CELL_COLORS.length] ||
+            TIMETABLE_CELL_COLORS.at(entry.colorIndex % TIMETABLE_CELL_COLORS.length) ||
             "#F2CECE"
         const [x, y, width, height] = [
             178 * entry.day + 76,
@@ -303,11 +303,10 @@ interface Semester {
 
 export function downloadTimetableCalendar(timetableIcalData: {
     name: string
-    lectures: Lecture[]
-    customBlocks: CustomBlock[]
+    timetableItems: TimetableItem[]
     semesterObject: Semester
 }) {
-    const { name, lectures, customBlocks, semesterObject } = timetableIcalData
+    const { name, timetableItems, semesterObject } = timetableIcalData
 
     const calendar = ical({
         name,
@@ -315,7 +314,7 @@ export function downloadTimetableCalendar(timetableIcalData: {
         timezone: "Asia/Seoul",
     })
 
-    for (const entry of getTimetableExportEntries(lectures, customBlocks)) {
+    for (const entry of getTimetableExportEntries(timetableItems)) {
         const semesterBeginning = new Date(semesterObject.beginning)
         const dayOfWeek = (entry.day + 1) % 7
 

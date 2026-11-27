@@ -32,7 +32,7 @@ const TabButtonDefaultInner = styled(TabButtonInner)`
 
 const TabButtonSelectedInner = styled(TabButtonInner)`
     color: ${({ theme }) => theme.colors.Highlight.default};
-    background-color: ${({ theme }) => theme.colors.Background.Tab.default};
+    background-color: ${({ theme }) => theme.colors.Background.Section.default};
     cursor: pointer;
 `
 
@@ -51,10 +51,6 @@ const TabButtonWithTextInner = styled.div`
     white-space: nowrap;
 `
 
-const TabButtonWithChildren = (children: React.ReactNode) => (
-    <TabButtonWithTextInner>{children}</TabButtonWithTextInner>
-)
-
 const TabButton = ({
     type = "default",
     children = undefined,
@@ -63,13 +59,9 @@ const TabButton = ({
 }: TabButtonProps) => {
     const TabButtonChosenInner = TabButtonTypeInner[type]
 
-    const ButtonContent = () => {
-        return TabButtonWithChildren(children)
-    }
-
     return (
         <TabButtonChosenInner ref={buttonRef} {...divProps} onClick={divProps.onClick}>
-            <ButtonContent />
+            <TabButtonWithTextInner>{children}</TabButtonWithTextInner>
         </TabButtonChosenInner>
     )
 }

@@ -94,7 +94,6 @@ const Header: React.FC = () => {
 
     const { query } = useAPI("GET", queryKeys.userInfo, {
         enabled,
-        staleTime: 0,
     })
 
     const handleAccountButtonClick = () => {

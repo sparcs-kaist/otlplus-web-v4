@@ -1,22 +1,25 @@
-import { memo, useCallback, useEffect, useState } from "react"
+import { memo, useCallback, useEffect, useRef, useState } from "react"
 
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
-import { Close, Delete } from "@mui/icons-material"
-import { useQueryClient } from "@tanstack/react-query"
+import Close from "@mui/icons-material/Close"
+import Delete from "@mui/icons-material/Delete"
 import { useTranslation } from "react-i18next"
 
 import Button from "@/common/components/Button"
 import TextInput from "@/common/components/search/TextInput"
 import TimeFilterArea from "@/common/components/search/TimeFilterArea"
+import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import { IconButton } from "@/common/primitives/IconButton"
 import TextInputArea from "@/common/primitives/TextInputArea"
 import Typography from "@/common/primitives/Typography"
 import type { CustomBlock } from "@/common/schemas/customBlock"
+import type { TimeBlock } from "@/common/schemas/timeblock"
+import type { TimetableItem } from "@/common/schemas/timetableItem"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
-import { useAPI } from "@/utils/api/useAPI"
+import { hasInternalTimeOverlap } from "@/utils/timetable/timetableItems"
 
 const CustomBlockSectionInner = styled(FlexWrapper)`
     ::-webkit-scrollbar {
@@ -25,10 +28,27 @@ const CustomBlockSectionInner = styled(FlexWrapper)`
     }
 `
 
-function CustomBlockSection({ customBlocks }: { customBlocks: CustomBlock[] }) {
+const FieldLabel = styled(Typography)`
+    flex-shrink: 0;
+    min-width: 3em;
+    white-space: nowrap;
+`
+
+interface CustomBlockSectionProps {
+    addCustomBlock: (data: Omit<CustomBlock, "id">) => Promise<boolean>
+    updateCustomBlock: (id: number, data: Omit<CustomBlock, "id">) => Promise<boolean>
+    removeItems: (items: TimetableItem[]) => Promise<boolean>
+    isPending: boolean
+}
+
+function CustomBlockSection({
+    addCustomBlock,
+    updateCustomBlock,
+    removeItems,
+    isPending,
+}: CustomBlockSectionProps) {
     const { t } = useTranslation()
     const theme = useTheme()
-    const queryClient = useQueryClient()
 
     const currentTimetableId = useTimetableUIStore((s) => s.currentTimetableId)
     const currentTimetableName = useTimetableUIStore((s) => s.currentTimetableName)
@@ -37,11 +57,30 @@ function CustomBlockSection({ customBlocks }: { customBlocks: CustomBlock[] }) {
     const setIsCustomBlockSectionOpen = useTimetableUIStore(
         (s) => s.setIsCustomBlockSectionOpen,
     )
-    const timeBlock = useTimetableUIStore((s) => s.timeFilter)
-    const setTimeBlock = useTimetableUIStore((s) => s.setTimeFilter)
+    const timeBlock = useTimetableUIStore((s) => s.customBlockTimeInput)
+    const setTimeBlock = useTimetableUIStore((s) => s.setCustomBlockTimeInput)
 
     const [title, setTitle] = useState(customBlock?.block_name ?? "")
     const [place, setPlace] = useState(customBlock?.place ?? "")
+    const [times, setTimes] = useState<TimeBlock[]>(() =>
+        customBlock ? customBlock.times : timeBlock ? [timeBlock] : [],
+    )
+    const consumedTimeBlock = useRef(timeBlock)
+    const setCustomBlockDraftTimes = useTimetableUIStore(
+        (s) => s.setCustomBlockDraftTimes,
+    )
+
+    useEffect(() => {
+        setCustomBlockDraftTimes(times)
+    }, [setCustomBlockDraftTimes, times])
+
+    useEffect(
+        () => () => {
+            setCustomBlockDraftTimes([])
+            setTimeBlock(null)
+        },
+        [setCustomBlockDraftTimes, setTimeBlock],
+    )
 
     const closeEditor = useCallback(() => {
         setIsCustomBlockSectionOpen(false)
@@ -49,90 +88,87 @@ function CustomBlockSection({ customBlocks }: { customBlocks: CustomBlock[] }) {
         setTimeBlock(null)
     }, [setIsCustomBlockSectionOpen, setSelectedCustomBlock, setTimeBlock])
 
-    const refreshAndClose = useCallback(() => {
-        void queryClient.invalidateQueries({
-            queryKey: [`/timetables/${currentTimetableId}/custom-blocks`],
-        })
-        closeEditor()
-    }, [closeEditor, currentTimetableId, queryClient])
-
-    const { mutation: postMutation, requestFunction: postCustomBlock } = useAPI(
-        "POST",
-        `/timetables/${currentTimetableId}/custom-blocks`,
-        { onSuccess: refreshAndClose },
-    )
-    const { mutation: patchMutation, requestFunction: patchCustomBlock } = useAPI(
-        "PATCH",
-        `/timetables/${currentTimetableId}/custom-blocks/${customBlock?.id}`,
-        { onSuccess: refreshAndClose },
-    )
-    const { mutation: deleteMutation, requestFunction: deleteCustomBlock } = useAPI(
-        "DELETE",
-        `/timetables/${currentTimetableId}/custom-blocks/${customBlock?.id}`,
-        { onSuccess: refreshAndClose },
-    )
-
     useEffect(() => {
         setTitle(customBlock?.block_name ?? "")
         setPlace(customBlock?.place ?? "")
-        if (customBlock) {
-            setTimeBlock({
-                day: customBlock.day,
-                begin: customBlock.begin,
-                end: customBlock.end,
-            })
-        }
-    }, [customBlock, setTimeBlock])
+        const currentTime = useTimetableUIStore.getState().customBlockTimeInput
+        consumedTimeBlock.current = currentTime
+        setTimes(customBlock ? customBlock.times : currentTime ? [currentTime] : [])
+    }, [customBlock, currentTimetableId])
+
+    useEffect(() => {
+        if (consumedTimeBlock.current === timeBlock) return
+        consumedTimeBlock.current = timeBlock
+        if (!timeBlock || isPending) return
+        setTimes((previous) =>
+            previous.some(
+                (time) =>
+                    time.day === timeBlock.day &&
+                    time.begin === timeBlock.begin &&
+                    time.end === timeBlock.end,
+            )
+                ? previous
+                : [...previous, timeBlock],
+        )
+    }, [timeBlock, isPending])
 
     const validate = useCallback(() => {
         if (!title.trim()) {
             alert(t("timetable.customBlock.errorNameRequired"))
             return false
         }
-        if (!timeBlock || timeBlock.begin >= timeBlock.end) {
+        if (!times.length || times.some((time) => time.begin >= time.end)) {
             alert(t("timetable.customBlock.errorTimeInvalid"))
             return false
         }
-        if (
-            customBlocks.some(
-                (block) =>
-                    block.id !== customBlock?.id &&
-                    block.day === timeBlock.day &&
-                    block.begin < timeBlock.end &&
-                    timeBlock.begin < block.end,
-            )
-        ) {
-            alert(t("timetable.customBlock.overlap"))
+        if (hasInternalTimeOverlap(times)) {
+            alert(t("timetable.customBlock.errorTimeOverlap"))
             return false
         }
         return true
-    }, [customBlock?.id, customBlocks, t, timeBlock, title])
+    }, [t, times, title])
 
-    const handleSave = useCallback(() => {
-        if (!timeBlock || !validate()) return
-        patchCustomBlock({
+    const closeAfterSuccess = useCallback(() => {
+        const current = useTimetableUIStore.getState()
+        if (
+            current.currentTimetableId === currentTimetableId &&
+            (current.selectedCustomBlock?.id === customBlock?.id ||
+                !current.isCustomBlockSectionOpen)
+        ) {
+            closeEditor()
+        }
+    }, [closeEditor, currentTimetableId, customBlock?.id])
+
+    const handleSubmit = useCallback(async () => {
+        if (isPending || !times[0] || !validate()) return
+        const data = {
             block_name: title.trim(),
             place: place.trim(),
-            day: timeBlock.day,
-            begin: timeBlock.begin,
-            end: timeBlock.end,
-        })
-    }, [patchCustomBlock, place, timeBlock, title, validate])
+            times,
+        }
+        const saved = customBlock
+            ? await updateCustomBlock(customBlock.id, data)
+            : await addCustomBlock(data)
+        if (saved) closeAfterSuccess()
+    }, [
+        addCustomBlock,
+        closeAfterSuccess,
+        customBlock,
+        isPending,
+        place,
+        times,
+        title,
+        updateCustomBlock,
+        validate,
+    ])
 
-    const handlePost = useCallback(() => {
-        if (!timeBlock || !validate()) return
-        postCustomBlock({
-            block_name: title.trim(),
-            place: place.trim(),
-            day: timeBlock.day,
-            begin: timeBlock.begin,
-            end: timeBlock.end,
-        })
-    }, [place, postCustomBlock, timeBlock, title, validate])
+    const handleDelete = useCallback(async () => {
+        if (!customBlock || isPending) return
+        if (await removeItems([{ kind: TimetableItemKind.CUSTOM, data: customBlock }]))
+            closeAfterSuccess()
+    }, [closeAfterSuccess, customBlock, isPending, removeItems])
 
-    const isPending =
-        postMutation.isPending || patchMutation.isPending || deleteMutation.isPending
-    const canSubmit = Boolean(title.trim() && timeBlock && !isPending)
+    const canSubmit = Boolean(title.trim() && times.length && !isPending)
 
     return (
         <CustomBlockSectionInner
@@ -141,6 +177,21 @@ function CustomBlockSection({ customBlocks }: { customBlocks: CustomBlock[] }) {
             align="stretch"
             justify="stretch"
             flex="1 1 auto"
+            onKeyDown={(event) => {
+                if (event.nativeEvent.isComposing || event.keyCode === 229) return
+                if (event.key === "Escape") {
+                    event.preventDefault()
+                    event.stopPropagation()
+                    closeEditor()
+                } else if (
+                    event.key === "Enter" &&
+                    event.target instanceof HTMLInputElement
+                ) {
+                    event.preventDefault()
+                    event.stopPropagation()
+                    void handleSubmit()
+                }
+            }}
         >
             <FlexWrapper direction="column" padding="12px" gap={12} align="space-between">
                 <FlexWrapper direction="column" gap={12} align="stretch" flex="1 1 auto">
@@ -152,6 +203,7 @@ function CustomBlockSection({ customBlocks }: { customBlocks: CustomBlock[] }) {
                     >
                         <TextInput
                             placeholder={t("timetable.customBlock.name")}
+                            disabled={isPending}
                             value={title}
                             handleChange={setTitle}
                             style={{ fontSize: "20px", paddingLeft: "0px" }}
@@ -162,11 +214,15 @@ function CustomBlockSection({ customBlocks }: { customBlocks: CustomBlock[] }) {
                                 styles={customBlock ? undefined : { display: "none" }}
                                 onClick={
                                     customBlock && !isPending
-                                        ? () => deleteCustomBlock({})
+                                        ? () => void handleDelete()
                                         : undefined
                                 }
                             >
-                                <Icon size={20} color={theme.colors.Text.default}>
+                                <Icon
+                                    size={20}
+                                    color={theme.colors.Text.default}
+                                    onClick={() => {}}
+                                >
                                     <Delete />
                                 </Icon>
                             </IconButton>
@@ -174,44 +230,91 @@ function CustomBlockSection({ customBlocks }: { customBlocks: CustomBlock[] }) {
                                 aria-label="Close custom block editor"
                                 onClick={closeEditor}
                             >
-                                <Icon size={20} color={theme.colors.Text.default}>
+                                <Icon
+                                    size={20}
+                                    color={theme.colors.Text.default}
+                                    onClick={() => {}}
+                                >
                                     <Close />
                                 </Icon>
                             </IconButton>
                         </FlexWrapper>
                     </FlexWrapper>
                     <FlexWrapper direction="row" gap={10}>
-                        <Typography type="NormalBold" color="Text.light">
+                        <FieldLabel type="NormalBold" color="Text.light">
                             {t("timetable.customBlock.timetable")}
-                        </Typography>
+                        </FieldLabel>
                         <Typography type="NormalMedium" color="Highlight.default">
                             {currentTimetableName}
                         </Typography>
                     </FlexWrapper>
-                    <FlexWrapper direction="row" gap={20} align="stretch">
-                        <Typography type="NormalBold" color="Text.light">
+                    <FlexWrapper direction="row" gap={10} align="flex-start">
+                        <FieldLabel type="NormalBold" color="Text.light">
                             {t("timetable.customBlock.time")}
-                        </Typography>
-                        <TimeFilterArea
-                            timeFilter={timeBlock}
-                            setTimeFilter={setTimeBlock}
-                        />
+                        </FieldLabel>
+                        <FlexWrapper
+                            direction="column"
+                            gap={8}
+                            align="stretch"
+                            flex="1"
+                            style={{ minWidth: 0 }}
+                        >
+                            {times.length === 0 ? (
+                                <TimeFilterArea
+                                    timeFilter={null}
+                                    setTimeFilter={undefined}
+                                />
+                            ) : (
+                                times.map((time, index) => (
+                                    <TimeFilterArea
+                                        key={index}
+                                        timeFilter={time}
+                                        disabled={isPending}
+                                        removeLabel={t(
+                                            "timetable.customBlock.removeTime",
+                                            {
+                                                index: index + 1,
+                                            },
+                                        )}
+                                        setTimeFilter={() => {
+                                            setTimes((previous) =>
+                                                previous.filter(
+                                                    (_, timeIndex) => timeIndex !== index,
+                                                ),
+                                            )
+                                            setTimeBlock(null)
+                                        }}
+                                    />
+                                ))
+                            )}
+                        </FlexWrapper>
                     </FlexWrapper>
-                    <FlexWrapper direction="row" gap={20} align="center">
-                        <Typography type="NormalBold" color="Text.light">
+                    <FlexWrapper direction="row" gap={10} align="center">
+                        <FieldLabel type="NormalBold" color="Text.light">
                             {t("timetable.customBlock.place")}
-                        </Typography>
+                        </FieldLabel>
                         <TextInputArea
                             placeholder={t("timetable.customBlock.place")}
                             style={{ border: "1px solid #ccc", padding: "8px" }}
                             handleChange={setPlace}
+                            disabled={isPending}
                             value={place}
                         />
                     </FlexWrapper>
                 </FlexWrapper>
                 <Button
+                    role="button"
+                    tabIndex={canSubmit ? 0 : -1}
+                    aria-disabled={!canSubmit}
                     type={canSubmit ? "selected" : "disabled"}
-                    onClick={customBlock ? handleSave : handlePost}
+                    onClick={() => void handleSubmit()}
+                    onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault()
+                            event.stopPropagation()
+                            void handleSubmit()
+                        }
+                    }}
                     $isFlexRow={true}
                 >
                     {t(

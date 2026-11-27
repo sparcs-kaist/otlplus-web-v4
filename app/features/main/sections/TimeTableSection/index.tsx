@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
@@ -8,6 +8,7 @@ import { useNavigate } from "react-router"
 
 import LoadingCircle from "@/common/components/LoadingCircle"
 import CustomTimeTableGrid from "@/common/components/timetable/CustomTimeTableGrid"
+import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
@@ -15,6 +16,7 @@ import type { Lecture } from "@/common/schemas/lecture"
 import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
 import { handleLogin } from "@/utils/handleLoginLogout"
+import { toTimetableItems } from "@/utils/timetable/timetableItems"
 import useUserStore from "@/utils/zustand/useUserStore"
 
 import Widget from "../../../../common/primitives/Widget"
@@ -37,7 +39,7 @@ const BlurWrapper = styled(FlexWrapper)<{ blur: boolean }>`
     filter: ${(props) => (props.blur ? "blur(4px)" : "none")};
     width: 100%;
     height: 100%;
-    pointer-events: none;
+    pointer-events: ${({ blur }) => (blur ? "none" : "auto")};
 `
 
 const LoginWrapper = styled(FlexWrapper)`
@@ -79,9 +81,9 @@ const TimeTableSection = () => {
 
     const [selectedLecture, setSelectedLecture] = useState<Lecture | null>(null)
 
-    const { query: myTimetable, setParams: setMyTimetableParams } = useAPI(
+    const { query: homeTimetable, setParams: setHomeTimetableParams } = useAPI(
         "GET",
-        "/timetables/my-timetable",
+        "/timetables/home",
         {
             enabled: status === "success",
         },
@@ -105,14 +107,17 @@ const TimeTableSection = () => {
     }, [selectedLecture])
     useEffect(() => {
         if (currentSemester.data) {
-            setMyTimetableParams({
+            setHomeTimetableParams({
                 year: currentSemester.data.year,
                 semester: currentSemester.data.semester,
             })
         }
-    }, [currentSemester.data, setMyTimetableParams])
+    }, [currentSemester.data, setHomeTimetableParams])
 
-    const lectures = myTimetable.data?.lectures ?? []
+    const timetableItems = useMemo(
+        () => toTimetableItems(homeTimetable.data),
+        [homeTimetable.data],
+    )
 
     return (
         <StyledWidget direction="column" gap={0} padding="30px 23px" flex="1 1 auto">
@@ -172,10 +177,13 @@ const TimeTableSection = () => {
                     >
                         <TimeTableGridWrapper style={{ overflow: "hidden" }}>
                             <CustomTimeTableGrid
-                                lectures={lectures}
-                                needLectureDeletable={false}
+                                timetableItems={timetableItems}
+                                needItemDeletable={false}
                                 needTimeFilter={false}
-                                onLectureSelect={(lecture) => setSelectedLecture(lecture)}
+                                onItemSelect={(item) => {
+                                    if (item.kind === TimetableItemKind.LECTURE)
+                                        setSelectedLecture(item.data)
+                                }}
                                 needCurrentTimeBar={true}
                             />
                         </TimeTableGridWrapper>

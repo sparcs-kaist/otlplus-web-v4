@@ -3,6 +3,7 @@ import { memo, useMemo, useState } from "react"
 import styled from "@emotion/styled"
 import FavoriteIcon from "@mui/icons-material/Favorite"
 import FavoriteBorderOutlinedIcon from "@mui/icons-material/FavoriteBorderOutlined"
+import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { useNavigate } from "react-router"
 
@@ -13,11 +14,14 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import { type Review } from "@/common/schemas/review"
+import { queryKeys } from "@/libs/query/queryKeys"
 import { useAPI } from "@/utils/api/useAPI"
 import professorName from "@/utils/professorName"
 import useUserStore from "@/utils/zustand/useUserStore"
 
-const Content = styled(Typography)<{ overflow: boolean }>`
+const Content = styled(Typography, {
+    shouldForwardProp: (prop) => prop !== "overflow",
+})<{ overflow: boolean }>`
     line-height: 1.5;
     width: 100%;
     white-space: pre-wrap;
@@ -76,8 +80,9 @@ function ReviewBlock({
     linkToDictionary = true,
 }: ReviewBlockProps) {
     const { t } = useTranslation()
-    const { status } = useUserStore()
+    const { user, status } = useUserStore()
     const navigator = useNavigate()
+    const queryClient = useQueryClient()
 
     const { query: userReviewsQuery } = useAPI("GET", `/users/written-reviews`, {
         enabled: status === "success",
@@ -92,6 +97,21 @@ function ReviewBlock({
                     return !prev
                 }
             })
+            // Keep the visible feed in place; refetch when the review list is shown again.
+            void queryClient.invalidateQueries({
+                queryKey: [queryKeys.reviews],
+                refetchType: "none",
+            })
+            void queryClient.invalidateQueries({
+                queryKey: [queryKeys.writtenReviews],
+                refetchType: "none",
+            })
+            if (user) {
+                void queryClient.invalidateQueries({
+                    queryKey: [`/users/${user.id}/reviews/liked`],
+                    refetchType: "none",
+                })
+            }
         },
     })
 

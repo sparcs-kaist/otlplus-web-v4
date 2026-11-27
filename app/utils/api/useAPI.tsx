@@ -31,6 +31,7 @@ type UseAPIQueryOptions<Res> = {
     staleTime?: number
     gcTime?: number
     retry?: UseQueryOptions<Res, Error>["retry"]
+    refetchInterval?: UseQueryOptions<Res, Error>["refetchInterval"]
     select?: (data: Res) => Res
     apiPrefix?: "/api" | "/api/v2"
     apiPath?: string
@@ -71,6 +72,7 @@ export function useAPI<
         enabled = true,
         staleTime = Infinity,
         gcTime = 5 * 60 * 1000,
+        refetchInterval,
         select,
         apiPrefix = "/api/v2",
         apiPath,
@@ -100,6 +102,7 @@ export function useAPI<
             retry,
             staleTime,
             gcTime,
+            refetchInterval,
             enabled:
                 enabled &&
                 (params !== null || requestSchema.safeParse({})?.success === true),
