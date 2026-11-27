@@ -131,7 +131,7 @@ function FriendRow({
                     size={18}
                     color={
                         friend.isFavorite
-                            ? theme.colors.Icon.yellow
+                            ? theme.colors.Highlight.default
                             : theme.colors.Text.lighter
                     }
                     onClick={() => {}}
