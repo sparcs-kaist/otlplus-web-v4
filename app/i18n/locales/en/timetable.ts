@@ -47,6 +47,7 @@ export const timetable = {
         timetableDuplicate: "Duplicate current timetable",
         timetableDelete: "Delete current timetable (when no items are selected)",
         timetableSelect: "Select timetable",
+        timetableSelectMy: "Go to academic timetable",
         etcSemester: "Semester change",
         etcLectureSearchMove: "Explore in lecture search result",
         etcLectureAddDelete: "Add or delete current exploring lecture",

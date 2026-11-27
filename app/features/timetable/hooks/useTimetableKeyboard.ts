@@ -292,6 +292,11 @@ export function useTimetableKeyboard({
             changeSemester(key === "[" ? "prev" : "next")
             return
         }
+        if (!isMod && key === "0") {
+            event.preventDefault()
+            setCurrentTimetableId(null)
+            return
+        }
         if (!isMod && /^[1-9]$/.test(key)) {
             event.preventDefault()
             const id = timetableIds[parseInt(key) - 1]

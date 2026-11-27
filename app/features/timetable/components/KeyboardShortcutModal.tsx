@@ -205,6 +205,14 @@ function KeyboardShortcutModal() {
                             <Keycap>1 ~ 9</Keycap>
                         </KeycapContainer>
                     </ShortcutRow>
+                    <ShortcutRow>
+                        <Typography type="Normal" color="Text.default">
+                            {t("timetable.shortcuts.timetableSelectMy")}
+                        </Typography>
+                        <KeycapContainer>
+                            <Keycap>0</Keycap>
+                        </KeycapContainer>
+                    </ShortcutRow>
                 </SectionContainer>
             </GridLayout>
 

@@ -46,6 +46,7 @@ export const timetable = {
         timetableDuplicate: "현재 시간표 복제",
         timetableDelete: "현재 시간표 삭제 (선택된 항목이 없을 때)",
         timetableSelect: "시간표 탭 이동",
+        timetableSelectMy: "학사 시간표로 이동",
         etcSemester: "학기 이동",
         etcLectureSearchMove: "검색 결과 내 탐색",
         etcLectureAddDelete: "탐색중인 과목 추가 / 제거",
