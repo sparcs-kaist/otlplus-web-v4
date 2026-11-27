@@ -79,9 +79,6 @@ const items: TimetableItem[] = [
             id: 55,
             block_name: "스터디 모임",
             place: "학술문화관 2층",
-            day: 5,
-            begin: 720,
-            end: 810,
             times: [
                 { day: 5, begin: 720, end: 810 },
                 { day: 6, begin: 720, end: 810 },

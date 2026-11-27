@@ -35,9 +35,7 @@ const block: TimetableItem = {
         id: 10,
         block_name: "Study",
         place: "Original",
-        day: 1,
-        begin: 600,
-        end: 660,
+        times: [{ day: 1, begin: 600, end: 660 }],
     },
 }
 const detail = (timetableItems: TimetableItem[]) => ({
@@ -173,9 +171,6 @@ it("uses grouped PATCH fields and remaps custom IDs through undo and redo", asyn
     const customData = {
         block_name: "Study",
         place: "Original",
-        day: 1,
-        begin: 600,
-        end: 660,
         times: [{ day: 1, begin: 600, end: 660 }],
     }
     expect(writes[0]?.method).toBe("PATCH")
@@ -217,7 +212,7 @@ it("matches added blocks by content in a reordered full response", async () => {
     const { result, writes, server, intercept } = await setup([])
     const secondBlock: TimetableItem = {
         kind: "custom",
-        data: { ...block.data, id: 11, day: 2 },
+        data: { ...block.data, id: 11, times: [{ day: 2, begin: 600, end: 660 }] },
     }
     intercept(async (apply) => {
         apply()
@@ -466,9 +461,6 @@ it("remaps recreated custom IDs through older history and the source clipboard",
             id: 101,
             block_name: "Study",
             place: "Original",
-            day: 1,
-            begin: 600,
-            end: 660,
             times: [{ day: 1, begin: 600, end: 660 }],
         },
     ])
@@ -510,7 +502,6 @@ it("keeps every time slot under one ID through updates, deletion, undo and clipb
             await result.current.editor.updateCustomBlock(10, {
                 block_name: "Study",
                 place: "Original",
-                ...times[0]!,
                 times,
             }),
         ).toBe(true)

@@ -21,9 +21,6 @@ it("exports every custom slot to the calendar, including split times and weekend
                         id: 1,
                         block_name: "Study",
                         place: "Library",
-                        day: 0,
-                        begin: 600,
-                        end: 660,
                         times: [
                             { day: 0, begin: 600, end: 660 },
                             { day: 0, begin: 780, end: 840 },

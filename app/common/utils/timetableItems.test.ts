@@ -9,44 +9,37 @@ import {
     timetableItemsOverlap,
 } from "./timetableItems"
 
-const legacyBlock = {
+const baseBlock = {
     id: 7,
     block_name: "Study",
     place: "Library",
-    day: 0,
-    begin: 600,
-    end: 660,
 }
 const times = [
     { day: 0, begin: 600, end: 660 },
     { day: 5, begin: 1380, end: 1440 },
 ]
 
-it("preserves multiple slots through both response and mutation schemas, with legacy fallback", () => {
-    expect(getCustomBlockTimes(CustomBlockSchema.parse(legacyBlock))).toEqual([times[0]])
-    const block = CustomBlockSchema.parse({ ...legacyBlock, times })
+it("preserves multiple slots through both response and mutation schemas", () => {
+    const block = CustomBlockSchema.parse({ ...baseBlock, times })
+    expect(getCustomBlockTimes(block)).toEqual(times)
     expect(getTimetableItemTimes({ kind: "custom", data: block })).toEqual(times)
     const input = CustomBlockInputSchema.parse(block)
-    expect(input).toEqual({
-        block_name: "Study",
-        place: "Library",
-        ...times[0],
-        times,
-    })
-    expect(CustomBlockSchema.safeParse({ ...legacyBlock, times: [] }).success).toBe(false)
+    expect(input).toEqual({ block_name: "Study", place: "Library", times })
+    expect(CustomBlockSchema.safeParse({ ...baseBlock, times: [] }).success).toBe(false)
+    expect(CustomBlockSchema.safeParse(baseBlock).success).toBe(false)
 })
 
 it("detects collisions with later slots but allows adjacent times", () => {
-    const block = { kind: "custom", data: { ...legacyBlock, times } } as const
+    const block = { kind: "custom", data: { ...baseBlock, times } } as const
     const adjacent = {
         kind: "custom",
-        data: { ...legacyBlock, id: 8, day: 5, begin: 1320, end: 1380 },
+        data: { ...baseBlock, id: 8, times: [{ day: 5, begin: 1320, end: 1380 }] },
     } as const
     expect(timetableItemsOverlap(block, adjacent)).toBe(false)
     expect(
         timetableItemsOverlap(block, {
             ...adjacent,
-            data: { ...adjacent.data, end: 1381 },
+            data: { ...adjacent.data, times: [{ day: 5, begin: 1320, end: 1381 }] },
         }),
     ).toBe(true)
 })

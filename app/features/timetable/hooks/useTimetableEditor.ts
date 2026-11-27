@@ -31,8 +31,7 @@ type Stack = { undo: Transaction[]; redo: Transaction[] }
 const emptyStack = (): Stack => ({ undo: [], redo: [] })
 const customInput = (block: CustomBlock) => {
     const { id: _id, ...data } = block
-    const times = getCustomBlockTimes(block)
-    return { ...data, ...times[0], times }
+    return data
 }
 
 export const timetableHistoryKey = (id: number | null, year: number, semester: number) =>

@@ -17,11 +17,9 @@ const block = {
     id: 11,
     block_name: "Study",
     place: "Library",
-    day: 0,
-    begin: 540,
-    end: 600,
+    times: [{ day: 0, begin: 540, end: 600 }],
 }
-const firstTime = { day: block.day, begin: block.begin, end: block.end }
+const firstTime = block.times[0]!
 const selection: TimetableItem[] = [
     { kind: "custom", data: block },
     { kind: "lecture", data: { id: 11 } } as TimetableItem,
@@ -61,9 +59,6 @@ it("does not submit during IME composition, then saves through the unified edito
         expect(callbacks.updateCustomBlock).toHaveBeenCalledExactlyOnceWith(11, {
             block_name: "New name",
             place: "Library",
-            day: 0,
-            begin: 540,
-            end: 600,
             times: [firstTime],
         }),
     )
@@ -98,7 +93,6 @@ it("keeps edited grouped time slots when a save fails", async () => {
         expect(callbacks.updateCustomBlock).toHaveBeenCalledExactlyOnceWith(11, {
             block_name: "Revised study",
             place: "Library",
-            ...firstTime,
             times: [firstTime, { day: 1, begin: 540, end: 660 }],
         }),
     )
@@ -138,7 +132,6 @@ it("appends separate grid drags to one new block and suppresses duplicate ranges
         expect(callbacks.addCustomBlock).toHaveBeenCalledExactlyOnceWith({
             block_name: "Study",
             place: "",
-            ...firstTime,
             times,
         }),
     )
@@ -169,7 +162,6 @@ it("preserves grouped ranges while removing one range and dragging a new one", a
         expect(callbacks.updateCustomBlock).toHaveBeenCalledExactlyOnceWith(11, {
             block_name: "Study",
             place: "Library",
-            ...secondTime,
             times: [secondTime, thirdTime, addedTime],
         }),
     )
@@ -203,7 +195,6 @@ it("rejects overlapping draft ranges without losing them, then allows adjacent r
         expect(callbacks.updateCustomBlock).toHaveBeenCalledExactlyOnceWith(11, {
             block_name: "Study",
             place: "Library",
-            ...firstTime,
             times: [firstTime, { day: 0, begin: 600, end: 660 }],
         }),
     )

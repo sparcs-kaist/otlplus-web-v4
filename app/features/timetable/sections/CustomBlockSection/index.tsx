@@ -147,7 +147,6 @@ function CustomBlockSection({
         const data = {
             block_name: title.trim(),
             place: place.trim(),
-            ...times[0],
             times,
         }
         const saved = customBlock

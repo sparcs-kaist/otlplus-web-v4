@@ -23,5 +23,4 @@ export type TimetableItems = z.infer<typeof TimetableItemsSchema>
 export const CustomBlockInputSchema = CustomBlockSchema.omit({ id: true }).extend({
     block_name: z.string().trim().min(1).max(255),
     place: z.string().max(255),
-    day: z.number().int().min(0).max(6),
 })
