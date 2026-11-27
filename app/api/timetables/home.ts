@@ -11,7 +11,7 @@ export const PATCHRequest = GETRequest.extend({
 })
 
 export const PATCHResponse = z.object({
-    source: z.enum(["saved", "enrolled"]),
+    timetableType: z.enum(["timetable", "scholar"]),
     timetableId: z.number().int().nullable(),
     name: z.string(),
     year: GETRequest.shape.year,

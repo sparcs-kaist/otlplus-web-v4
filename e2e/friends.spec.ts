@@ -158,7 +158,7 @@ async function setup(page: Page, language = "ko") {
             json =
                 year === 2025
                     ? {
-                          source: "saved",
+                          timetableType: "timetable",
                           timetableId: 43,
                           name: "지난 시간표",
                           year,
@@ -168,7 +168,7 @@ async function setup(page: Page, language = "ko") {
                       }
                     : term === 1
                       ? {
-                            source: "enrolled",
+                            timetableType: "scholar",
                             timetableId: null,
                             name: "학사 시간표",
                             year,
@@ -177,7 +177,7 @@ async function setup(page: Page, language = "ko") {
                             customBlocks: [],
                         }
                       : {
-                            source: "saved",
+                            timetableType: "timetable",
                             timetableId: 42,
                             name: "공유 시간표",
                             year,

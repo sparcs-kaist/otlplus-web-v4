@@ -34,6 +34,7 @@ import UtilButtonsSubSection from "@/features/timetable/sections/TimetableInfoSe
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
 import isInvalidTimetableError from "@/features/timetable/utils/isInvalidTimetableError"
 import { trackEvent } from "@/libs/mixpanel"
+import { queryKeys } from "@/libs/query/queryKeys"
 import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
 import useIsDevice from "@/utils/useIsDevice"
@@ -250,11 +251,15 @@ export default function Timetable() {
     )
 
     const [nonLoginTimetable, setNonLoginTimetable] = useState<TimetableItem[]>([])
-    const { query: timetable } = useAPI("GET", `/timetables/${currentTimetableId}`, {
-        enabled: currentTimetableId !== null && status === "success",
-        retry: (failureCount, error) =>
-            !isInvalidTimetableError(error) && failureCount < 1,
-    })
+    const { query: timetable } = useAPI(
+        "GET",
+        queryKeys.timetableDetail(currentTimetableId ?? 0),
+        {
+            enabled: currentTimetableId !== null && status === "success",
+            retry: (failureCount, error) =>
+                !isInvalidTimetableError(error) && failureCount < 1,
+        },
+    )
     const { query: myTimetable, setParams: setMyTimetableParams } = useAPI(
         "GET",
         "/timetables/my-timetable",

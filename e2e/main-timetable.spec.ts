@@ -66,7 +66,7 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
                 homeId = request.postDataJSON().timetableId
             }
             json = {
-                source: homeId === null ? "enrolled" : "saved",
+                timetableType: homeId === null ? "scholar" : "timetable",
                 timetableId: homeId,
                 year: 2026,
                 semester: 3,
@@ -80,7 +80,7 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
                 year: 2026,
                 semester: 3,
                 timetableId: null,
-                source: "enrolled",
+                timetableType: "scholar",
                 name: "Enrolled",
                 lectures: [],
                 customBlocks: [],

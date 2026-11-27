@@ -120,7 +120,7 @@ let ownAllSavedResponse: { id: number; lectures: { id: number }[] }[]
 let friendSharedResponse: {
     lectures: Lecture[]
     customBlocks: CustomBlock[]
-    source?: "saved" | "enrolled"
+    timetableType?: "timetable" | "scholar"
     name?: string
 }
 let sharedSemestersQueryState = { isSuccess: true, isPending: false, isError: false }
@@ -204,12 +204,12 @@ describe("mobile friend timetable navigation", () => {
         ownAllSavedResponse = [{ id: 42, lectures: [{ id: lecture.id }] }]
         friendSharedResponse = {
             ...savedLectures,
-            source: "saved",
+            timetableType: "timetable",
             name: "Saved timetable",
         } as typeof friendSharedResponse
         ownSharedResponse = {
             ...lectures,
-            source: "enrolled",
+            timetableType: "scholar",
             name: "학사 시간표",
         } as typeof friendSharedResponse
         ownSharedQueryState = { isSuccess: true, isPending: false, isError: false }
@@ -651,7 +651,7 @@ describe("mobile friend timetable navigation", () => {
                 customBlocks: [{ id: 4, block_name: "My custom block" } as CustomBlock],
             }
             ownSharedResponse = {
-                source: "saved",
+                timetableType: "timetable",
                 lectures: [
                     { ...lecture, id: 2 },
                     { ...lecture, id: 6 },
@@ -709,7 +709,11 @@ describe("mobile friend timetable navigation", () => {
         "does not use enrolled or private lectures when my shared timetable is %s",
         (state) => {
             if (state === "empty")
-                ownSharedResponse = { source: "saved", lectures: [], customBlocks: [] }
+                ownSharedResponse = {
+                    timetableType: "timetable",
+                    lectures: [],
+                    customBlocks: [],
+                }
             else
                 ownSharedQueryState = {
                     isSuccess: false,
@@ -937,7 +941,7 @@ describe("mobile friend timetable navigation", () => {
     it("shows the enrolled timetable when no saved timetable is selected for sharing", () => {
         friendSharedResponse = {
             ...lectures,
-            source: "enrolled",
+            timetableType: "scholar",
         } as typeof friendSharedResponse
         renderPage("/friends?friendId=7&year=2026&semester=3&timetableId=42")
         expect(screen.getByRole("tab", { name: "2026 Fall" })).toHaveAttribute(

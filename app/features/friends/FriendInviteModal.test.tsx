@@ -157,7 +157,7 @@ describe("friend code sharing", () => {
                 expect(copyTextToClipboard).toHaveBeenCalledExactlyOnceWith(url),
             )
             expect(
-                screen.getByRole("button", { name: "friends.copySuccess" }),
+                await screen.findByRole("button", { name: "friends.copySuccess" }),
             ).toContainElement(screen.getByTestId("CheckIcon"))
             expect(copyFriendInvite).not.toHaveBeenCalled()
             fireEvent.click(screen.getByText("friends.copy"))
@@ -165,7 +165,7 @@ describe("friend code sharing", () => {
                 expect(copyFriendInvite).toHaveBeenCalledExactlyOnceWith("구백", url),
             )
             expect(
-                screen.getByRole("button", { name: "friends.copySuccess" }),
+                await screen.findByRole("button", { name: "friends.copySuccess" }),
             ).toBeInTheDocument()
             expect(
                 screen.getByRole("button", { name: "friends.copyLink" }),
@@ -175,7 +175,7 @@ describe("friend code sharing", () => {
                 expect(shareFriendInvite).toHaveBeenCalledExactlyOnceWith("구백", url),
             )
             expect(
-                screen.getByRole("button", { name: "friends.shareSuccess" }),
+                await screen.findByRole("button", { name: "friends.shareSuccess" }),
             ).toContainElement(screen.getByTestId("CheckIcon"))
             expect(screen.queryByRole("status")).not.toBeInTheDocument()
 

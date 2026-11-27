@@ -459,7 +459,7 @@ export default function FriendsPage() {
             semester: semesterToString(termSemester),
         })
     const timetableName =
-        timetableQuery.data?.source === "enrolled"
+        timetableQuery.data?.timetableType === "scholar"
             ? t("friends.actualTimetable")
             : timetableQuery.data?.name || semesterName(year, semester)
     const timetableTabs = useMemo(
@@ -748,7 +748,9 @@ export default function FriendsPage() {
                                     key={lecture.id}
                                     ref={index === 0 ? detailActionRef : undefined}
                                     type="button"
-                                    onClick={() => setSelectedItem(toLectureItem(lecture))}
+                                    onClick={() =>
+                                        setSelectedItem(toLectureItem(lecture))
+                                    }
                                 >
                                     {lecture.name}
                                     {lecture.subtitle}{" "}

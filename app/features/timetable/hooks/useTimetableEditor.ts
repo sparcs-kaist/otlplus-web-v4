@@ -3,16 +3,15 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { isAxiosError } from "axios"
 import { useTranslation } from "react-i18next"
-import { match } from "ts-pattern"
 
 import type { GETTimetableByIdResponse } from "@/api/timetables/$timetableId"
+import type { PATCHTimetableItemsBody } from "@/api/timetables/$timetableId/items"
 import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import type { CustomBlock } from "@/common/schemas/customBlock"
 import type { Lecture } from "@/common/schemas/lecture"
-import type { TimetableChange, TimetableItem } from "@/common/schemas/timetableItem"
+import type { TimetableItem } from "@/common/schemas/timetableItem"
 import {
     getCustomBlockTimes,
-    groupTimetableItems,
     isCustomBlockItem,
     isLectureItem,
     timetableItemKey,
@@ -21,7 +20,6 @@ import {
     toTimetableItems,
 } from "@/common/utils/timetableItems"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
-import { axiosClient } from "@/libs/axios"
 import { queryKeys } from "@/libs/query/queryKeys"
 import { useAPI } from "@/utils/api/useAPI"
 import useUserStore from "@/utils/zustand/useUserStore"
@@ -40,29 +38,45 @@ const customInput = (block: CustomBlock) => {
 export const timetableHistoryKey = (id: number | null, year: number, semester: number) =>
     `${id ?? "my"}-${year}-${semester}`
 
-function changeForEdit({ before, after }: TimetableEdit): TimetableChange {
-    if (!after) {
-        if (before) return { op: "remove", kind: before.kind, id: before.data.id }
-        throw new Error("Empty timetable edit")
+function buildPatch(edits: Transaction): PATCHTimetableItemsBody {
+    const request: PATCHTimetableItemsBody = {
+        adds: { lectures: [], customBlocks: [] },
+        deletes: { lectures: [], customBlocks: [] },
+        updates: { customBlocks: [] },
     }
-    return match(after)
-        .returnType<TimetableChange>()
-        .with({ kind: TimetableItemKind.LECTURE }, ({ data }) => ({
-            op: "add",
-            kind: TimetableItemKind.LECTURE,
-            lectureId: data.id,
-        }))
-        .with({ kind: TimetableItemKind.CUSTOM }, ({ data }) =>
-            before
-                ? {
-                      op: "update",
-                      kind: TimetableItemKind.CUSTOM,
-                      id: before.data.id,
-                      data: customInput(data),
-                  }
-                : { op: "add", kind: TimetableItemKind.CUSTOM, data: customInput(data) },
+    for (const { before, after } of edits) {
+        if (!after) {
+            if (!before) throw new Error("Empty timetable edit")
+            const { id } = before.data
+            if (before.kind === TimetableItemKind.LECTURE)
+                request.deletes.lectures.push({ id })
+            else request.deletes.customBlocks.push({ id })
+        } else if (after.kind === TimetableItemKind.LECTURE) {
+            request.adds.lectures.push({ id: after.data.id })
+        } else if (before) {
+            request.updates.customBlocks.push({
+                ...customInput(after.data),
+                id: before.data.id,
+            })
+        } else {
+            request.adds.customBlocks.push(customInput(after.data))
+        }
+    }
+    return request
+}
+
+function sameCustomBlockContent(left: CustomBlock, right: CustomBlock) {
+    if (left.block_name !== right.block_name || left.place !== right.place) return false
+    const times = getCustomBlockTimes(left)
+    const otherTimes = getCustomBlockTimes(right)
+    return (
+        times.length === otherTimes.length &&
+        times.every(({ day, begin, end }) =>
+            otherTimes.some(
+                (time) => time.day === day && time.begin === begin && time.end === end,
+            ),
         )
-        .exhaustive()
+    )
 }
 
 interface UseTimetableEditorOptions {
@@ -85,14 +99,6 @@ export function useTimetableEditor({
     const key = timetableHistoryKey(currentTimetableId, year, semesterEnum)
     const language = i18n.resolvedLanguage
     const path = `/timetables/${currentTimetableId}/items` as const
-    const { mutation: addMutation } = useAPI("POST", path, {
-        mutationKey: [path, language, "POST"],
-        retry: false,
-    })
-    const { mutation: removeMutation } = useAPI("DELETE", path, {
-        mutationKey: [path, language, "DELETE"],
-        retry: false,
-    })
     const { mutation } = useAPI("PATCH", path, {
         mutationKey: [path, language],
         retry: false,
@@ -169,68 +175,31 @@ export function useTimetableEditor({
             const remappedIds = new Map<number, number>()
             if (status === "success") {
                 void queryClient.cancelQueries({ queryKey: [detailPath] })
-                const changes = edits.map(changeForEdit)
-                let createdCustomIds: number[] | null = null
-                let patchResponse: Awaited<
-                    ReturnType<typeof mutation.mutateAsync>
-                > | null = null
-                if (changes.every((change) => change.op === "add")) {
-                    const response = await addMutation.mutateAsync({
-                        lectureIds: changes.flatMap((change) =>
-                            change.kind === TimetableItemKind.LECTURE
-                                ? [change.lectureId]
-                                : [],
-                        ),
-                        customBlocks: changes.flatMap((change) =>
-                            change.kind === TimetableItemKind.CUSTOM ? [change.data] : [],
-                        ),
-                    })
-                    createdCustomIds = response.customBlocks.map(({ id }) => id)
-                } else if (changes.every((change) => change.op === "remove")) {
-                    await removeMutation.mutateAsync({
-                        lectureIds: changes.flatMap((change) =>
-                            change.kind === TimetableItemKind.LECTURE ? [change.id] : [],
-                        ),
-                        customBlockIds: changes.flatMap((change) =>
-                            change.kind === TimetableItemKind.CUSTOM ? [change.id] : [],
-                        ),
-                    })
-                } else patchResponse = await mutation.mutateAsync({ changes })
+                const previousBlockIds = new Set(
+                    currentItems().flatMap((item) =>
+                        isCustomBlockItem(item) ? [item.data.id] : [],
+                    ),
+                )
+                const detail = await mutation.mutateAsync(buildPatch(edits))
                 mutationCompleted = true
                 if (!sameUser()) return false
-                if (patchResponse) finalItems = patchResponse.timetableItems
-                else {
-                    const { data } = await axiosClient.request<GETTimetableByIdResponse>({
-                        method: "GET",
-                        url: `/api/v2${detailPath}`,
-                        headers: { "Accept-Language": language },
-                    })
-                    if (!sameUser()) return false
-                    finalItems = toTimetableItems(data)
-                }
-                let customIndex = 0
-                applied = edits.map((edit, index) => {
+                finalItems = toTimetableItems(detail)
+                const createdBlocks = detail.customBlocks.filter(
+                    (block) => !previousBlockIds.has(block.id),
+                )
+                applied = edits.map((edit) => {
                     if (edit.before || edit.after?.kind !== TimetableItemKind.CUSTOM)
                         return edit
-                    const createdId =
-                        createdCustomIds === null
-                            ? patchResponse?.results.find(
-                                  (result) =>
-                                      result.index === index &&
-                                      result.kind === TimetableItemKind.CUSTOM,
-                              )?.id
-                            : createdCustomIds[customIndex++]
-                    if (createdId === undefined)
-                        throw new Error("Missing created timetable item")
-                    remappedIds.set(edit.after.data.id, createdId)
-                    return {
-                        after: {
-                            kind: TimetableItemKind.CUSTOM,
-                            data: { ...edit.after.data, id: createdId },
-                        },
-                    }
+                    const added = edit.after.data
+                    const [created, duplicate] = createdBlocks.filter((block) =>
+                        sameCustomBlockContent(block, added),
+                    )
+                    if (!created || duplicate)
+                        throw new Error("Cannot identify created timetable item")
+                    createdBlocks.splice(createdBlocks.indexOf(created), 1)
+                    remappedIds.set(added.id, created.id)
+                    return { after: { kind: TimetableItemKind.CUSTOM, data: created } }
                 })
-                const detail: GETTimetableByIdResponse = groupTimetableItems(finalItems)
                 queryClient.setQueriesData(
                     {
                         queryKey: [detailPath],
@@ -245,7 +214,9 @@ export function useTimetableEditor({
                     predicate: (query) =>
                         query.queryKey[2] !== language && query.queryKey[3] === "/api/v2",
                 })
-                void queryClient.invalidateQueries({ queryKey: [queryKeys.homeTimetable] })
+                void queryClient.invalidateQueries({
+                    queryKey: [queryKeys.homeTimetable],
+                })
                 void queryClient.invalidateQueries({
                     queryKey: [queryKeys.sharedTimetable],
                 })
@@ -372,7 +343,9 @@ export function useTimetableEditor({
                         ui.setIsCustomBlockSectionOpen(false)
                     }
                 }
-                void queryClient.invalidateQueries({ queryKey: [queryKeys.homeTimetable] })
+                void queryClient.invalidateQueries({
+                    queryKey: [queryKeys.homeTimetable],
+                })
                 void queryClient.invalidateQueries({
                     queryKey: [queryKeys.sharedTimetable],
                 })
