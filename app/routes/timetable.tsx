@@ -530,7 +530,10 @@ export default function Timetable() {
                     {/* 중간: MobileControlBar + TimetableInfoArea */}
                     <TimetableInfoArea>
                         {isCustomBlockSectionOpen ? (
-                            <CustomBlockSection {...customBlockEditorProps} />
+                            <CustomBlockSection
+                                {...customBlockEditorProps}
+                                onClose={closeMobileLectureModal}
+                            />
                         ) : (
                             <TimetableInfoSection
                                 timetableItems={currentTimetableItems}

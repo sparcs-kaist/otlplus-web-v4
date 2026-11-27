@@ -77,6 +77,16 @@ it("closes on Escape while retaining mixed selection", () => {
     expect(callbacks.updateCustomBlock).not.toHaveBeenCalled()
 })
 
+it("runs the onClose callback when the editor closes", () => {
+    const onClose = vi.fn()
+    render(<CustomBlockSection {...callbacks} isPending={false} onClose={onClose} />)
+    fireEvent.keyDown(screen.getByPlaceholderText("timetable.customBlock.name"), {
+        key: "Escape",
+    })
+    expect(onClose).toHaveBeenCalledOnce()
+    expect(useTimetableUIStore.getState().isCustomBlockSectionOpen).toBe(false)
+})
+
 it("keeps edited grouped time slots when a save fails", async () => {
     callbacks.updateCustomBlock.mockResolvedValue(false)
     render(<CustomBlockSection {...callbacks} isPending={false} />)
