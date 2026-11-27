@@ -6,8 +6,6 @@ export default function useFriendInviteCode(isOpen: boolean, onSettled: () => vo
     const queryClient = useQueryClient()
     const { query } = useAPI("GET", "/friends/code", {
         enabled: isOpen,
-        staleTime: 0,
-        gcTime: 0,
     })
     const { mutation: regenerate, requestFunction: regenerateCode } = useAPI(
         "PUT",

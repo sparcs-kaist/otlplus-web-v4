@@ -155,6 +155,9 @@ export function useTimetableKeyboard({
             void queryClient.invalidateQueries({ queryKey: [queryKeys.timetables] })
             void queryClient.invalidateQueries({ queryKey: [queryKeys.homeTimetable] })
             void queryClient.invalidateQueries({ queryKey: [queryKeys.sharedTimetable] })
+            void queryClient.invalidateQueries({
+                queryKey: [queryKeys.sharedTimetableSemesters],
+            })
         },
     })
 

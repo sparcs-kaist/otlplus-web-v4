@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 
 import { useTranslation } from "react-i18next"
 import { useInView } from "react-intersection-observer"
@@ -8,7 +8,6 @@ import ReviewBlock from "@/common/components/reviews/ReviewBlock"
 import { ReviewModeEnum } from "@/common/enum/reviewModeEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
-import { useAPI } from "@/utils/api/useAPI"
 import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
 
 function RecentFeedSubSection() {
@@ -16,7 +15,6 @@ function RecentFeedSubSection() {
 
     const { query, setParams, data } = useInfiniteAPI("GET", "/reviews", {
         infinites: ["reviews"],
-        gcTime: 0,
         initialOffset: 0,
         limit: 10,
     })

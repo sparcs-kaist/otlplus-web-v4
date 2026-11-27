@@ -174,7 +174,6 @@ export default function FriendsPage() {
             : (`/friends/${selectedFriendId}/timetables/shared` as const)
     const { query: semestersQuery } = useAPI("GET", `${sharedPath}/semesters`, {
         enabled: status === "success",
-        staleTime: 0,
     })
     const sharedSemesters = useMemo(
         () =>
@@ -299,7 +298,6 @@ export default function FriendsPage() {
     const friendListVisible = !isTablet || friendListOpen
     const { query: friendsQuery } = useAPI("GET", "/friends", {
         enabled: status === "success",
-        staleTime: 0,
         refetchInterval:
             status === "success" && friendListVisible && pageVisible ? 60_000 : false,
         refetchOnWindowFocus: friendListVisible,
@@ -366,7 +364,6 @@ export default function FriendsPage() {
         "/timetables/shared",
         {
             enabled: canLoadTimetable && selectedFriendId !== null,
-            staleTime: 0,
         },
     )
     const { query: timetableQuery, setParams: setTimetableParams } = useAPI(
@@ -374,8 +371,6 @@ export default function FriendsPage() {
         sharedPath,
         {
             enabled: canLoadTimetable,
-            staleTime: 0,
-            gcTime: 0,
         },
     )
 

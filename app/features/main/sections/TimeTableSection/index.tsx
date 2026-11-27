@@ -85,7 +85,6 @@ const TimeTableSection = () => {
         "/timetables/home",
         {
             enabled: status === "success",
-            staleTime: 0,
         },
     )
     const { query: currentSemester } = useAPI("GET", "/semesters/current")

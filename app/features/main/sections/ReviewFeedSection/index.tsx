@@ -29,7 +29,7 @@ function ReviewFeedSection({ mode }: ReviewFeedSectionProps) {
     const theme = useTheme()
     const isLaptop = useIsDevice("laptop")
 
-    const { query, setParams } = useAPI("GET", "/reviews", { gcTime: 0 })
+    const { query, setParams } = useAPI("GET", "/reviews")
 
     useEffect(() => {
         setParams({
