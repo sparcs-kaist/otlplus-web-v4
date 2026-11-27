@@ -83,9 +83,10 @@ describe("unified timetable item reads", () => {
         expect(
             container.querySelector('.overflow-grid-wrapper [data-class-time="7835"]'),
         ).toHaveAttribute("title", "Study group · common.days.saturday 10:35–11:35")
-        expect(
-            container.querySelectorAll('[data-custom-block-interaction="true"]'),
-        ).toHaveLength(3)
+        expect(container.querySelector(".custom-timetable")).toHaveAttribute(
+            "data-interaction",
+            "true",
+        )
         expect(container.querySelectorAll("button")).toHaveLength(0)
 
         fireEvent.pointerDown(screen.getAllByText("Study group")[0]!)
@@ -318,9 +319,10 @@ describe("unified timetable item reads", () => {
 
         rerender(<CustomTimeTableGrid {...props} needLectureInteraction={false} />)
         expect(screen.queryAllByRole("button")).toHaveLength(0)
-        expect(
-            container.querySelectorAll('[data-custom-block-interaction="true"]'),
-        ).toHaveLength(0)
+        expect(container.querySelector(".custom-timetable")).toHaveAttribute(
+            "data-interaction",
+            "false",
+        )
         fireEvent.pointerDown(screen.getAllByText("Study group")[0]!)
         expect(onItemSelect).not.toHaveBeenCalled()
         expect(onItemDelete).toHaveBeenCalledTimes(3)

@@ -94,6 +94,7 @@ function HoverTile({ style, className }: { style?: CSSProperties; className?: st
 
 const MemoizedHoverTile = memo(HoverTile)
 
+export const TIMETABLE_TILE_CLASSNAME = "timetable-tile"
 export const LECTURE_TILE_CLASSNAME = "lecture-tile"
 export const CUSTOM_BLOCK_TILE_CLASSNAME = "custom-block-tile"
 
@@ -163,7 +164,6 @@ const TileWrapper = styled(FlexWrapper)<{
 const TileInner = styled(SelectableTileBase)<{
     colorIndex: number
     lectureId?: number
-    customBlockId?: number
 }>`
     background: ${({ theme, colorIndex }) =>
         getPaletteColor(
@@ -178,35 +178,19 @@ const TileInner = styled(SelectableTileBase)<{
         opacity: 0.8;
     }
 
-    [data-interaction="true"]
-        &.${LECTURE_TILE_CLASSNAME},
-        [data-custom-block-interaction="true"]
-        &.${CUSTOM_BLOCK_TILE_CLASSNAME} {
+    [data-interaction="true"] & {
         pointer-events: auto;
         cursor: pointer;
     }
 
-    [data-interaction="true"] &.${LECTURE_TILE_CLASSNAME} {
-        @media (hover: hover) {
-            &:hover {
-                ${({ theme }) => TileHoverCss(theme)}
-            }
+    @media (hover: hover) {
+        .custom-timetable[data-interaction="true"]:has(
+                .${TIMETABLE_TILE_CLASSNAME}[data-item-key="${({ itemKey }) => itemKey}"]:hover
+            )
+            & {
+            ${({ theme }) => TileHoverCss(theme)}
         }
     }
-
-    ${({ customBlockId, theme }) =>
-        customBlockId !== undefined &&
-        css`
-            @media (hover: hover) {
-                .custom-timetable[data-interaction="true"]:has(
-                        [data-custom-block-id="${customBlockId}"][data-custom-block-interaction="true"]
-                            .${CUSTOM_BLOCK_TILE_CLASSNAME}:hover
-                    )
-                    & {
-                    ${TileHoverCss(theme)}
-                }
-            }
-        `}
 
     [data-is-dragging="true"] & {
         pointer-events: none;
@@ -416,7 +400,6 @@ function TimetableTile({
             itemKey={itemKey}
             data-class-time={time.day * 24 * 60 + time.begin}
             data-custom-block-id={isLecture ? undefined : item.data.id}
-            data-custom-block-interaction={isLecture ? undefined : Boolean(onSelect)}
             title={isLecture ? undefined : `${item.data.block_name} · ${timeLabel}`}
             onPointerDown={onSelect ? handlePointerDown : undefined}
             onPointerEnter={onHover ? handlePointerEnter : undefined}
@@ -424,6 +407,7 @@ function TimetableTile({
         >
             <TileInner
                 itemKey={itemKey}
+                data-item-key={itemKey}
                 direction="row"
                 gap={0}
                 flex="1 1 auto"
@@ -432,10 +416,9 @@ function TimetableTile({
                 padding="2px"
                 colorIndex={colorIndex}
                 lectureId={isLecture ? item.data.id : undefined}
-                customBlockId={isLecture ? undefined : item.data.id}
-                className={
+                className={`${TIMETABLE_TILE_CLASSNAME} ${
                     isLecture ? LECTURE_TILE_CLASSNAME : CUSTOM_BLOCK_TILE_CLASSNAME
-                }
+                }`}
                 data-friend-overlap={isLecture && overlapLabel ? true : undefined}
                 role={!isLecture && onSelect ? "button" : undefined}
                 tabIndex={!isLecture && onSelect ? 0 : undefined}
@@ -658,6 +641,7 @@ function OverflowTile({
             </FlexWrapper>
             <OverflowTileInner
                 itemKey={timetableItemKey(item)}
+                data-item-key={timetableItemKey(item)}
                 direction="column"
                 gap={0}
                 align="flex-start"
@@ -665,7 +649,7 @@ function OverflowTile({
                 colorIndex={getTimetableItemColorIndex(item)}
                 lectureId={lecture.id}
                 flex="1 1 auto"
-                className={LECTURE_TILE_CLASSNAME}
+                className={`${TIMETABLE_TILE_CLASSNAME} ${LECTURE_TILE_CLASSNAME}`}
                 data-friend-overlap={overlapLabel ? true : undefined}
             >
                 <LectureTileTitle lecture={lecture} overlapLabel={overlapLabel} />

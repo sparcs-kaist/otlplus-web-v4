@@ -159,17 +159,8 @@ const MemoizedBackgroundGridBlock = memo(
     },
 )
 
-const LectureTileWrapper = styled.div<{ lectureId: number }>`
+const LectureTileWrapper = styled.div`
     display: contents;
-
-    .custom-timetable:has(
-            [data-lecture-id="${({ lectureId }) => lectureId}"]
-                .${LECTURE_TILE_CLASSNAME}:hover
-        )
-        &
-        .${LECTURE_TILE_CLASSNAME} {
-        ${({ theme }) => TileHoverCss(theme)}
-    }
 `
 
 interface LectureTilesProps {
@@ -217,7 +208,6 @@ const MemoizedLectureTiles = memo(
 
         return (
             <LectureTileWrapper
-                lectureId={lecture.id}
                 data-lecture-id={lecture.id}
                 onPointerEnter={handleMouseEnter}
                 onPointerLeave={handleMouseLeave}
@@ -289,20 +279,11 @@ function validTime(time: TimeBlock | null, displayedDayCount: 5 | 7) {
     )
 }
 
-const OverflowTileWrapper = styled.div<{ lectureId: number }>`
+const OverflowTileWrapper = styled.div`
     display: contents;
     z-index: 3;
     overflow: hidden;
     pointer-events: auto;
-
-    .custom-timetable:has(
-            [data-lecture-id="${({ lectureId }) => lectureId}"]
-                .${LECTURE_TILE_CLASSNAME}:hover
-        )
-        &
-        .${LECTURE_TILE_CLASSNAME} {
-        ${({ theme }) => TileHoverCss(theme)}
-    }
 `
 
 interface OverflowTileProps {
@@ -349,7 +330,6 @@ const MemoizedOverflowTiles = memo(
         return lecture.classes.length === 0 ||
             lecture.classes.some((cls) => !validTime(cls, displayedDayCount)) ? (
             <OverflowTileWrapper
-                lectureId={lecture.id}
                 data-lecture-id={lecture.id}
                 data-ghost={isGhost ? true : undefined}
                 onPointerEnter={handleMouseEnter}
