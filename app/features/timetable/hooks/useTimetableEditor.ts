@@ -40,8 +40,8 @@ export const timetableHistoryKey = (id: number | null, year: number, semester: n
 
 function buildPatch(edits: Transaction): PATCHTimetableItemsBody {
     const request: PATCHTimetableItemsBody = {
-        adds: { lectures: [], customBlocks: [] },
-        deletes: { lectures: [], customBlocks: [] },
+        adds: { lectureIds: [], customBlocks: [] },
+        deletes: { lectureIds: [], customBlockIds: [] },
         updates: { customBlocks: [] },
     }
     for (const { before, after } of edits) {
@@ -49,10 +49,10 @@ function buildPatch(edits: Transaction): PATCHTimetableItemsBody {
             if (!before) throw new Error("Empty timetable edit")
             const { id } = before.data
             if (before.kind === TimetableItemKind.LECTURE)
-                request.deletes.lectures.push({ id })
-            else request.deletes.customBlocks.push({ id })
+                request.deletes.lectureIds.push(id)
+            else request.deletes.customBlockIds.push(id)
         } else if (after.kind === TimetableItemKind.LECTURE) {
-            request.adds.lectures.push({ id: after.data.id })
+            request.adds.lectureIds.push(after.data.id)
         } else if (before) {
             request.updates.customBlocks.push({
                 ...customInput(after.data),

@@ -94,9 +94,7 @@ test("creates, edits, exports, and deletes one custom block with multiple time s
             expect(method).toBe("PATCH")
             itemMethods.push(method)
             const { adds, deletes, updates } = PATCHRequest.parse(request.postDataJSON())
-            blocks = blocks.filter(
-                (block) => !deletes.customBlocks.some(({ id }) => id === block.id),
-            )
+            blocks = blocks.filter((block) => !deletes.customBlockIds.includes(block.id))
             blocks = blocks.map((block) => {
                 const update = updates.customBlocks.find(({ id }) => id === block.id)
                 if (!update) return block

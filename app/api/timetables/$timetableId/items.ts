@@ -7,17 +7,19 @@ import { GETRequest, GETResponse } from "../$timetableId"
 export { GETRequest, GETResponse }
 
 const positiveId = z.number().int().positive()
-const itemRef = z.object({ id: positiveId })
 
 export const PATCHRequest = z
     .object({
         adds: z.object({
-            lectures: z.array(itemRef),
+            lectureIds: z.array(positiveId),
             customBlocks: z.array(
                 CustomBlockInputSchema.extend({ id: z.number().int().optional() }),
             ),
         }),
-        deletes: z.object({ lectures: z.array(itemRef), customBlocks: z.array(itemRef) }),
+        deletes: z.object({
+            lectureIds: z.array(positiveId),
+            customBlockIds: z.array(positiveId),
+        }),
         updates: z.object({
             customBlocks: z.array(
                 CustomBlockInputSchema.partial().extend({ id: positiveId }),
@@ -26,10 +28,10 @@ export const PATCHRequest = z
     })
     .refine(
         ({ adds, deletes, updates }) =>
-            adds.lectures.length +
+            adds.lectureIds.length +
                 adds.customBlocks.length +
-                deletes.lectures.length +
-                deletes.customBlocks.length +
+                deletes.lectureIds.length +
+                deletes.customBlockIds.length +
                 updates.customBlocks.length >
             0,
         "At least one timetable item edit is required",

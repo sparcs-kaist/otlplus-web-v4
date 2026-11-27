@@ -94,15 +94,13 @@ async function setup(initial: TimetableItem[] = [lecture(1), block]) {
             const { adds, deletes, updates } = patch
             const items = (server.get(id) ?? []).flatMap((item): TimetableItem[] => {
                 if (item.kind === "lecture")
-                    return deletes.lectures.some(({ id }) => id === item.data.id)
-                        ? []
-                        : [item]
-                if (deletes.customBlocks.some(({ id }) => id === item.data.id)) return []
+                    return deletes.lectureIds.includes(item.data.id) ? [] : [item]
+                if (deletes.customBlockIds.includes(item.data.id)) return []
                 const update = updates.customBlocks.find(({ id }) => id === item.data.id)
                 return [{ kind: "custom", data: { ...item.data, ...update } }]
             })
             items.push(
-                ...adds.lectures.map(({ id }) => lecture(id)),
+                ...adds.lectureIds.map((id) => lecture(id)),
                 ...adds.customBlocks.map(
                     (data): TimetableItem => ({
                         kind: "custom",
@@ -147,18 +145,23 @@ async function setup(initial: TimetableItem[] = [lecture(1), block]) {
 
 it("requires all PATCH groups and at least one operation", () => {
     const empty = {
-        adds: { lectures: [], customBlocks: [] },
-        deletes: { lectures: [], customBlocks: [] },
+        adds: { lectureIds: [], customBlocks: [] },
+        deletes: { lectureIds: [], customBlockIds: [] },
         updates: { customBlocks: [] },
     }
     expect(PATCHRequest.safeParse({}).success).toBe(false)
     expect(PATCHRequest.safeParse(empty).success).toBe(false)
-    expect(
-        PATCHRequest.safeParse({ ...empty, adds: { lectures: [{ id: 1 }] } }).success,
-    ).toBe(false)
-    for (const id of [0, 1]) {
-        const adds = { ...empty.adds, lectures: [{ id }] }
-        expect(PATCHRequest.safeParse({ ...empty, adds }).success).toBe(id === 1)
+    expect(PATCHRequest.safeParse({ ...empty, adds: { lectureIds: [1] } }).success).toBe(
+        false,
+    )
+    for (const id of [0, 1, -1, 1.5, "1", { id: 1 }, null]) {
+        for (const request of [
+            { ...empty, adds: { ...empty.adds, lectureIds: [id] } },
+            { ...empty, deletes: { ...empty.deletes, lectureIds: [id] } },
+            { ...empty, deletes: { ...empty.deletes, customBlockIds: [id] } },
+        ]) {
+            expect(PATCHRequest.safeParse(request).success).toBe(id === 1)
+        }
     }
 })
 
@@ -177,8 +180,8 @@ it("uses grouped PATCH fields and remaps custom IDs through undo and redo", asyn
     }
     expect(writes[0]?.method).toBe("PATCH")
     expect(writes[0]?.data).toEqual({
-        adds: { lectures: [{ id: 2 }], customBlocks: [customData] },
-        deletes: { lectures: [], customBlocks: [] },
+        adds: { lectureIds: [2], customBlocks: [customData] },
+        deletes: { lectureIds: [], customBlockIds: [] },
         updates: { customBlocks: [] },
     })
     await act(async () => {
@@ -186,8 +189,8 @@ it("uses grouped PATCH fields and remaps custom IDs through undo and redo", asyn
     })
     expect(writes[1]?.method).toBe("PATCH")
     expect(writes[1]?.data.deletes).toEqual({
-        lectures: [{ id: 2 }],
-        customBlocks: [{ id: 101 }],
+        lectureIds: [2],
+        customBlockIds: [101],
     })
     expect(result.current.query.data).toEqual(detail([lecture(1)]))
     await act(async () => {
@@ -205,8 +208,8 @@ it("uses grouped PATCH fields and remaps custom IDs through undo and redo", asyn
         expect(await result.current.editor.undo()).toBe(true)
     })
     expect(writes[3]?.data.deletes).toEqual({
-        lectures: [{ id: 2 }],
-        customBlocks: [{ id: 102 }],
+        lectureIds: [2],
+        customBlockIds: [102],
     })
 })
 
@@ -229,8 +232,8 @@ it("matches added blocks by content in a reordered full response", async () => {
         expect(await result.current.editor.undo()).toBe(true)
     })
     expect(writes[1]?.data.deletes).toEqual({
-        lectures: [{ id: 2 }],
-        customBlocks: [{ id: 102 }, { id: 101 }],
+        lectureIds: [2],
+        customBlockIds: [102, 101],
     })
     expect(result.current.query.data).toEqual(detail([]))
 })
@@ -243,7 +246,7 @@ it("only remaps to newly returned IDs when an existing block has matching conten
     await act(async () => {
         expect(await result.current.editor.undo()).toBe(true)
     })
-    expect(writes[1]?.data.deletes.customBlocks).toEqual([{ id: 101 }])
+    expect(writes[1]?.data.deletes.customBlockIds).toEqual([101])
     expect(result.current.query.data).toEqual(detail([block]))
 })
 
@@ -296,8 +299,8 @@ it("keeps replacement and its undo/redo in one atomic PATCH each", async () => {
         ).toBe(true)
     })
     expect(writes[0]?.data).toEqual({
-        adds: { lectures: [{ id: 2 }], customBlocks: [] },
-        deletes: { lectures: [{ id: 1 }], customBlocks: [{ id: 10 }] },
+        adds: { lectureIds: [2], customBlocks: [] },
+        deletes: { lectureIds: [1], customBlockIds: [10] },
         updates: { customBlocks: [] },
     })
     await act(async () => {
@@ -320,7 +323,7 @@ it("keeps replacement and its undo/redo in one atomic PATCH each", async () => {
         expect(await result.current.editor.redo()).toBe(true)
     })
     expect(writes.map(({ method }) => method)).toEqual(["PATCH", "PATCH", "PATCH"])
-    expect(writes[2]?.data.deletes.customBlocks).toEqual([{ id: 101 }])
+    expect(writes[2]?.data.deletes.customBlockIds).toEqual([101])
     expect(result.current.query.data).toEqual(detail([lecture(2)]))
 })
 
@@ -475,7 +478,7 @@ it("remaps recreated custom IDs through older history and the source clipboard",
     await act(async () => {
         await result.current.editor.redo()
     })
-    expect(writes.at(-1)?.data.deletes.customBlocks).toEqual([{ id: 101 }])
+    expect(writes.at(-1)?.data.deletes.customBlockIds).toEqual([101])
     await act(async () => {
         await result.current.editor.undo()
     })
@@ -526,7 +529,7 @@ it("keeps every time slot under one ID through updates, deletion, undo and clipb
     await act(async () => {
         await result.current.editor.removeItems([multiTimeBlock])
     })
-    expect(writes.at(-1)?.data.deletes.customBlocks).toEqual([{ id: 10 }])
+    expect(writes.at(-1)?.data.deletes.customBlockIds).toEqual([10])
     await act(async () => {
         await result.current.editor.undo()
     })

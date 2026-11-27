@@ -158,16 +158,14 @@ async function setup(page: Page, initialHomeId: number | null = null) {
             const { adds, deletes, updates } = PATCHRequest.parse(body)
             const items = (tables.get(id) ?? []).flatMap((item): TimetableItem[] => {
                 if (item.kind === "lecture")
-                    return deletes.lectures.some(({ id }) => id === item.data.id)
-                        ? []
-                        : [item]
-                if (deletes.customBlocks.some(({ id }) => id === item.data.id)) return []
+                    return deletes.lectureIds.includes(item.data.id) ? [] : [item]
+                if (deletes.customBlockIds.includes(item.data.id)) return []
                 const update = updates.customBlocks.find(({ id }) => id === item.data.id)
                 return [{ kind: "custom", data: { ...item.data, ...update } }]
             })
             items.push(
-                ...adds.lectures.map(
-                    ({ id }): TimetableItem => ({
+                ...adds.lectureIds.map(
+                    (id): TimetableItem => ({
                         kind: "lecture",
                         data: { ...lecture, id },
                     }),
@@ -242,8 +240,8 @@ test("mixed selection deletes whole items and undo remaps recreated blocks", asy
     expect(itemRequests[0]).toEqual({
         method: "PATCH",
         body: {
-            adds: { lectures: [], customBlocks: [] },
-            deletes: { lectures: [{ id: 7 }], customBlocks: [{ id: 7 }] },
+            adds: { lectureIds: [], customBlocks: [] },
+            deletes: { lectureIds: [7], customBlockIds: [7] },
             updates: { customBlocks: [] },
         },
     })
