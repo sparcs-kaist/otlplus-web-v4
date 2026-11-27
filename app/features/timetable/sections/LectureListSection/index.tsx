@@ -15,7 +15,6 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
-import { timetableItemsOverlap } from "@/utils/timetable/timetableItems"
 import {
     useHoveredLectures,
     useSelectedLectures,
@@ -28,6 +27,7 @@ import type { getAPIResponseType } from "@/utils/api/getAPIType"
 import { useAPI } from "@/utils/api/useAPI"
 import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
 import checkEmpty from "@/utils/search/checkEmpty"
+import { timetableItemsOverlap } from "@/utils/timetable/timetableItems"
 import useIsDevice from "@/utils/useIsDevice"
 import useUserStore from "@/utils/zustand/useUserStore"
 

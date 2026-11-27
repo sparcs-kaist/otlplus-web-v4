@@ -16,7 +16,6 @@ import Typography from "@/common/primitives/Typography"
 import Widget from "@/common/primitives/Widget"
 import type { Friend } from "@/common/schemas/friend"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
-import { extractLectures, toTimetableItems } from "@/utils/timetable/timetableItems"
 import FriendCustomBlockDetail from "@/features/friends/FriendCustomBlockDetail"
 import FriendInviteModal from "@/features/friends/FriendInviteModal"
 import FriendLectureDetail from "@/features/friends/FriendLectureDetail"
@@ -29,6 +28,7 @@ import FriendsListSection from "@/features/friends/sections/FriendsListSection"
 import SharedTimetableSection from "@/features/friends/sections/SharedTimetableSection"
 import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
+import { extractLectures, toTimetableItems } from "@/utils/timetable/timetableItems"
 import useIsDevice from "@/utils/useIsDevice"
 import useUserStore from "@/utils/zustand/useUserStore"
 
@@ -544,7 +544,12 @@ export default function FriendsPage() {
                         key={lecture.id}
                         ref={index === 0 ? detailActionRef : undefined}
                         type="button"
-                        onClick={() => setSelectedItem({ kind: TimetableItemKind.LECTURE, data: lecture })}
+                        onClick={() =>
+                            setSelectedItem({
+                                kind: TimetableItemKind.LECTURE,
+                                data: lecture,
+                            })
+                        }
                     >
                         {lecture.name}
                         {lecture.subtitle} {lecture.classNo && `(${lecture.classNo})`}
@@ -744,7 +749,10 @@ export default function FriendsPage() {
                                     ref={index === 0 ? detailActionRef : undefined}
                                     type="button"
                                     onClick={() =>
-                                        setSelectedItem({ kind: TimetableItemKind.LECTURE, data: lecture })
+                                        setSelectedItem({
+                                            kind: TimetableItemKind.LECTURE,
+                                            data: lecture,
+                                        })
                                     }
                                 >
                                     {lecture.name}

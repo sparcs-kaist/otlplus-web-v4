@@ -24,12 +24,6 @@ import { IconButton } from "@/common/primitives/IconButton"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
-import {
-    getPaletteColor,
-    getTimetableItemColorIndex,
-    timetableItemKey,
-    timetableItemsOverlap,
-} from "@/utils/timetable/timetableItems"
 import FriendCustomBlockDetail from "@/features/friends/FriendCustomBlockDetail"
 import LectureFriendOverlaps, {
     LectureFriendOverlapsLoading,
@@ -40,6 +34,12 @@ import { trackEvent } from "@/libs/mixpanel"
 import { queryKeys } from "@/libs/query/queryKeys"
 import { useAPI } from "@/utils/api/useAPI"
 import getSyllabusUrl from "@/utils/timetable/getSyllabusUrl"
+import {
+    getPaletteColor,
+    getTimetableItemColorIndex,
+    timetableItemKey,
+    timetableItemsOverlap,
+} from "@/utils/timetable/timetableItems"
 import useIsDevice from "@/utils/useIsDevice"
 import useUserStore from "@/utils/zustand/useUserStore"
 
@@ -139,8 +139,7 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
         ? readOnlySelection.lecture
         : selectedItem?.kind === TimetableItemKind.LECTURE
           ? selectedItem.data
-          : selectedItems.length === 0 &&
-              hoveredItem?.kind === TimetableItemKind.LECTURE
+          : selectedItems.length === 0 && hoveredItem?.kind === TimetableItemKind.LECTURE
             ? hoveredItem.data
             : null
     const hoveredCustomBlock =

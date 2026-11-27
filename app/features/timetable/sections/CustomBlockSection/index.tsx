@@ -18,8 +18,8 @@ import Typography from "@/common/primitives/Typography"
 import type { CustomBlock } from "@/common/schemas/customBlock"
 import type { TimeBlock } from "@/common/schemas/timeblock"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
-import { hasInternalTimeOverlap } from "@/utils/timetable/timetableItems"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
+import { hasInternalTimeOverlap } from "@/utils/timetable/timetableItems"
 
 const CustomBlockSectionInner = styled(FlexWrapper)`
     ::-webkit-scrollbar {
@@ -87,13 +87,7 @@ function CustomBlockSection({
         setPlace(customBlock?.place ?? "")
         const currentTime = useTimetableUIStore.getState().timeFilter
         consumedTimeBlock.current = currentTime
-        setTimes(
-            customBlock
-                ? customBlock.times
-                : currentTime
-                  ? [currentTime]
-                  : [],
-        )
+        setTimes(customBlock ? customBlock.times : currentTime ? [currentTime] : [])
     }, [customBlock, currentTimetableId])
 
     useEffect(() => {

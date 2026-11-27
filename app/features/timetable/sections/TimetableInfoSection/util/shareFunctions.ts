@@ -3,14 +3,14 @@ import ical, { ICalAlarmType, ICalEventRepeatingFreq } from "ical-generator"
 
 import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
+import { colors } from "@/styles/themes/_base/variables/colors"
+import { darkThemeColors } from "@/styles/themes/dark/variables/colors"
+import professorName from "@/utils/professorName"
 import {
     getPaletteColor,
     getTimetableItemColorIndex,
     getTimetableItemTimes,
 } from "@/utils/timetable/timetableItems"
-import { colors } from "@/styles/themes/_base/variables/colors"
-import { darkThemeColors } from "@/styles/themes/dark/variables/colors"
-import professorName from "@/utils/professorName"
 
 import { isExpectedClipboardError } from "./clipboardErrors"
 

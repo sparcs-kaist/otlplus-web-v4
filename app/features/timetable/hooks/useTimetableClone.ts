@@ -4,10 +4,10 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 
 import type { TimetableItem } from "@/common/schemas/timetableItem"
-import { extractLectures } from "@/utils/timetable/timetableItems"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
 import { queryKeys } from "@/libs/query/queryKeys"
 import { useAPI } from "@/utils/api/useAPI"
+import { extractLectures } from "@/utils/timetable/timetableItems"
 import useUserStore from "@/utils/zustand/useUserStore"
 
 export function useTimetableClone(timetableItems: TimetableItem[]) {

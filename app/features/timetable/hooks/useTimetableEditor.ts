@@ -10,10 +10,10 @@ import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import type { CustomBlock } from "@/common/schemas/customBlock"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
-import { timetableItemKey, toTimetableItems } from "@/utils/timetable/timetableItems"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
 import { queryKeys } from "@/libs/query/queryKeys"
 import { useAPI } from "@/utils/api/useAPI"
+import { timetableItemKey, toTimetableItems } from "@/utils/timetable/timetableItems"
 import useUserStore from "@/utils/zustand/useUserStore"
 
 export type TimetableEdit = { before?: TimetableItem; after?: TimetableItem }
@@ -421,7 +421,10 @@ export function useTimetableEditor({
         )
         return before
             ? execute([
-                  { before, after: { kind: TimetableItemKind.CUSTOM, data: { ...data, id } } },
+                  {
+                      before,
+                      after: { kind: TimetableItemKind.CUSTOM, data: { ...data, id } },
+                  },
               ])
             : false
     }

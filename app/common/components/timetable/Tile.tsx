@@ -13,13 +13,13 @@ import Typography from "@/common/primitives/Typography"
 import { type Lecture } from "@/common/schemas/lecture"
 import type { TimeBlock } from "@/common/schemas/timeblock"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
+import { media } from "@/styles/themes/media"
+import { formatMinuteToString } from "@/utils/timetable/formatTimeblockToString"
 import {
     getPaletteColor,
     getTimetableItemColorIndex,
     timetableItemKey,
 } from "@/utils/timetable/timetableItems"
-import { media } from "@/styles/themes/media"
-import { formatMinuteToString } from "@/utils/timetable/formatTimeblockToString"
 
 const DAYS = [
     "monday",

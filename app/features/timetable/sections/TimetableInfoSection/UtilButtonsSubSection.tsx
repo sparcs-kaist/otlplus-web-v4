@@ -14,7 +14,6 @@ import { SemesterEnum, semesterToString } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
-import { getTimetableItemTimes } from "@/utils/timetable/timetableItems"
 import {
     copyTimetableImageToClipboard,
     downloadTimetableCalendar,
@@ -23,6 +22,7 @@ import {
 import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
 import logger from "@/utils/logger"
+import { getTimetableItemTimes } from "@/utils/timetable/timetableItems"
 import useIsDevice from "@/utils/useIsDevice"
 import useThemeStore from "@/utils/zustand/useThemeStore"
 

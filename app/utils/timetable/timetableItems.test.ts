@@ -1,7 +1,10 @@
 import { expect, it } from "vitest"
 
 import { CustomBlockSchema } from "@/common/schemas/customBlock"
-import { CustomBlockInputSchema, type TimetableItem } from "@/common/schemas/timetableItem"
+import {
+    CustomBlockInputSchema,
+    type TimetableItem,
+} from "@/common/schemas/timetableItem"
 
 import { getTimetableItemTimes, timetableItemsOverlap } from "./timetableItems"
 

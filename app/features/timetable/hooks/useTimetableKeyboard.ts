@@ -8,11 +8,6 @@ import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
 import {
-    getTimetableItemTimes,
-    timetableItemKey,
-    timetableItemsOverlap,
-} from "@/utils/timetable/timetableItems"
-import {
     type TimetableEditOptions,
     timetableHistoryKey,
 } from "@/features/timetable/hooks/useTimetableEditor"
@@ -23,6 +18,11 @@ import {
 import { queryKeys } from "@/libs/query/queryKeys"
 import { useAPI } from "@/utils/api/useAPI"
 import { getPlatform } from "@/utils/getPlatform"
+import {
+    getTimetableItemTimes,
+    timetableItemKey,
+    timetableItemsOverlap,
+} from "@/utils/timetable/timetableItems"
 
 interface UseTimetableKeyboardOptions {
     currentTimetableItems: TimetableItem[]

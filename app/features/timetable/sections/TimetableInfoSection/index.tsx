@@ -6,7 +6,6 @@ import StyledDivider from "@/common/components/StyledDivider"
 import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
-import { extractLectures } from "@/utils/timetable/timetableItems"
 import CreditGridSubSection from "@/features/timetable/sections/TimetableInfoSection/CreditGridSubSection"
 import CreditScoreSubSection from "@/features/timetable/sections/TimetableInfoSection/CreditScoreSubSection"
 import ExamTimeSubSection from "@/features/timetable/sections/TimetableInfoSection/ExamTimeSubSection"
@@ -18,6 +17,7 @@ import {
     useTimetableUIStore,
 } from "@/features/timetable/store/useTimetableUIStore"
 import { media } from "@/styles/themes/media"
+import { extractLectures } from "@/utils/timetable/timetableItems"
 import useIsDevice from "@/utils/useIsDevice"
 
 const InfoArea = styled.div`

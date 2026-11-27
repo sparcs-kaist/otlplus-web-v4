@@ -5,14 +5,10 @@ import type { TimeBlock } from "@/common/schemas/timeblock"
 import type { TimetableItem, TimetableItems } from "@/common/schemas/timetableItem"
 
 export const extractLectures = (items: readonly TimetableItem[]): Lecture[] =>
-    items.flatMap((item) =>
-        item.kind === TimetableItemKind.LECTURE ? [item.data] : [],
-    )
+    items.flatMap((item) => (item.kind === TimetableItemKind.LECTURE ? [item.data] : []))
 
 export const extractCustomBlocks = (items: readonly TimetableItem[]): CustomBlock[] =>
-    items.flatMap((item) =>
-        item.kind === TimetableItemKind.CUSTOM ? [item.data] : [],
-    )
+    items.flatMap((item) => (item.kind === TimetableItemKind.CUSTOM ? [item.data] : []))
 
 export const toTimetableItems = (
     timetable: Partial<TimetableItems> | undefined,
