@@ -81,7 +81,7 @@ function setup(friendBResponse = Promise.resolve()) {
         if (url === "/api/v2/timetables/shared") {
             return {
                 data: {
-                    source: "saved",
+                    timetableType: "timetable",
                     lectures: [{ id: term?.year }],
                     customBlocks: [],
                 },
@@ -92,7 +92,7 @@ function setup(friendBResponse = Promise.resolve()) {
             return {
                 data: {
                     name: `Shared ${friendId} ${term?.year}`,
-                    source: "saved",
+                    timetableType: "timetable",
                     lectures: [{ id: term?.year }],
                     customBlocks: [],
                 },

@@ -1,12 +1,8 @@
 import { type Page, expect, test } from "@playwright/test"
 
-import {
-    DELETERequest,
-    PATCHRequest,
-    POSTRequest,
-} from "../app/api/timetables/$timetableId/items"
+import { PATCHRequest } from "../app/api/timetables/$timetableId/items"
 import type { Lecture } from "../app/common/schemas/lecture"
-import type { TimetableChange, TimetableItem } from "../app/common/schemas/timetableItem"
+import type { TimetableItem } from "../app/common/schemas/timetableItem"
 
 const semester = {
     year: 2026,
@@ -77,7 +73,7 @@ async function setup(page: Page, initialHomeId: number | null = null) {
     const cloneRequests: unknown[] = []
     const itemRequests: { method: string; body: unknown }[] = []
     const home = () => ({
-        source: homeId === null ? "enrolled" : "saved",
+        timetableType: homeId === null ? "scholar" : "timetable",
         timetableId: homeId,
         name: homeId === null ? "Enrolled timetable" : `Saved ${homeId}`,
         year: 2026,
@@ -154,90 +150,43 @@ async function setup(page: Page, initialHomeId: number | null = null) {
                         timeTableOrder: id - 1,
                     })),
                 }
-        } else if (/^\/timetables\/\d+\/items$/.test(path)) {
+        } else if (/^\/timetables\/\d+\/items$/.test(path) && method === "PATCH") {
             const id = Number(path.split("/")[2])
-            let items = [...tables.get(id)!]
-            const addedItems: TimetableItem[] = []
+            expect(method).toBe("PATCH")
             const body = request.postDataJSON()
             itemRequests.push({ method, body })
-            let changes: TimetableChange[]
-            if (method === "POST") {
-                const { lectureIds = [], customBlocks = [] } = POSTRequest.parse(body)
-                changes = [
-                    ...lectureIds.map((lectureId) => ({
-                        op: "add" as const,
-                        kind: "lecture" as const,
-                        lectureId,
-                    })),
-                    ...customBlocks.map((data) => ({
-                        op: "add" as const,
-                        kind: "custom" as const,
-                        data,
-                    })),
-                ]
-            } else if (method === "DELETE") {
-                const { lectureIds = [], customBlockIds = [] } = DELETERequest.parse(body)
-                changes = [
-                    ...lectureIds.map((id) => ({
-                        op: "remove" as const,
-                        kind: "lecture" as const,
-                        id,
-                    })),
-                    ...customBlockIds.map((id) => ({
-                        op: "remove" as const,
-                        kind: "custom" as const,
-                        id,
-                    })),
-                ]
-            } else changes = PATCHRequest.parse(body).changes
-            const results = changes.map((change, index) => {
-                let itemId: number
-                if (change.op === "add") {
-                    itemId = change.kind === "lecture" ? change.lectureId : nextBlockId++
-                    const item: TimetableItem =
-                        change.kind === "lecture"
-                            ? { kind: "lecture", data: lecture }
-                            : { kind: "custom", data: { ...change.data, id: itemId } }
-                    items.push(item)
-                    addedItems.push(item)
-                } else {
-                    itemId = change.id
-                    if (change.op === "remove")
-                        items = items.filter(
-                            (item) =>
-                                item.kind !== change.kind || item.data.id !== change.id,
-                        )
-                    else
-                        items = items.map((item) =>
-                            item.kind === "custom" && item.data.id === change.id
-                                ? { ...item, data: { ...item.data, ...change.data } }
-                                : item,
-                        )
-                }
-                return { index, kind: change.kind, id: itemId }
+            const { adds, deletes, updates } = PATCHRequest.parse(body)
+            const items = (tables.get(id) ?? []).flatMap((item): TimetableItem[] => {
+                if (item.kind === "lecture")
+                    return deletes.lectureIds.includes(item.data.id) ? [] : [item]
+                if (deletes.customBlockIds.includes(item.data.id)) return []
+                const update = updates.customBlocks.find(({ id }) => id === item.data.id)
+                return [{ kind: "custom", data: { ...item.data, ...update } }]
             })
+            items.push(
+                ...adds.lectureIds.map(
+                    (id): TimetableItem => ({
+                        kind: "lecture",
+                        data: { ...lecture, id },
+                    }),
+                ),
+                ...adds.customBlocks.map(
+                    (data): TimetableItem => ({
+                        kind: "custom",
+                        data: { ...data, id: nextBlockId++ },
+                    }),
+                ),
+            )
             tables.set(id, items)
-            json =
-                method === "PATCH"
-                    ? { timetableItems: items, results }
-                    : method === "POST"
-                      ? {
-                            lectures: addedItems.flatMap((item) =>
-                                item.kind === "lecture" ? [item.data] : [],
-                            ),
-                            customBlocks: addedItems.flatMap((item) =>
-                                item.kind === "custom" ? [item.data] : [],
-                            ),
-                        }
-                      : {
-                            lectureIds: results
-                                .filter(({ kind }) => kind === "lecture")
-                                .map(({ id }) => id),
-                            customBlockIds: results
-                                .filter(({ kind }) => kind === "custom")
-                                .map(({ id }) => id),
-                        }
-        } else if (/^\/timetables\/\d+$/.test(path)) {
+            json = {
+                lectures: items.flatMap((item) =>
+                    item.kind === "lecture" ? [item.data] : [],
+                ),
+                customBlocks: items.flatMap((item) =>
+                    item.kind === "custom" ? [item.data] : [],
+                ),
+            }
+        } else if (/^\/timetables\/\d+\/items$/.test(path) && method === "GET") {
             const items = tables.get(Number(path.split("/")[2])) ?? []
             json = {
                 lectures: items.flatMap((i) => (i.kind === "lecture" ? [i.data] : [])),
@@ -258,7 +207,7 @@ test("mixed selection deletes whole items and undo remaps recreated blocks", asy
 }) => {
     const { tables, cloneRequests, itemRequests } = await setup(page)
     await Promise.all([
-        page.waitForResponse(/\/api\/v2\/timetables\/1(?:\?|$)/),
+        page.waitForResponse(/\/api\/v2\/timetables\/1\/items(?:\?|$)/),
         page.goto("/timetable"),
     ])
     await expect(page.locator(".block-title", { hasText: "Study time" })).toBeVisible()
@@ -289,10 +238,11 @@ test("mixed selection deletes whole items and undo remaps recreated blocks", asy
     await expect(page.locator(".lecture-title")).toHaveCount(0)
     expect(tables.has(1)).toBe(true)
     expect(itemRequests[0]).toEqual({
-        method: "DELETE",
+        method: "PATCH",
         body: {
-            lectureIds: [7],
-            customBlockIds: [7],
+            adds: { lectureIds: [], customBlocks: [] },
+            deletes: { lectureIds: [7], customBlockIds: [7] },
+            updates: { customBlocks: [] },
         },
     })
     await page.keyboard.press("Control+z")
@@ -303,10 +253,10 @@ test("mixed selection deletes whole items and undo remaps recreated blocks", asy
     await page.keyboard.press("Control+z")
     await expect(page.locator(".block-title", { hasText: "Study time" })).toBeVisible()
     expect(itemRequests.map(({ method }) => method)).toEqual([
-        "DELETE",
-        "POST",
-        "DELETE",
-        "POST",
+        "PATCH",
+        "PATCH",
+        "PATCH",
+        "PATCH",
     ])
     for (const { body } of itemRequests) {
         expect(body).not.toHaveProperty("changes")
@@ -391,7 +341,7 @@ test("keeps zero-time lectures and off-grid blocks visible as separate items", a
         },
     ])
     await Promise.all([
-        page.waitForResponse(/\/api\/v2\/timetables\/1(?:\?|$)/),
+        page.waitForResponse(/\/api\/v2\/timetables\/1\/items(?:\?|$)/),
         page.goto("/timetable"),
     ])
     await expect(page.locator(".lecture-title", { hasText: "Algorithms" })).toBeVisible()
@@ -452,7 +402,7 @@ for (const theme of ["light", "dark"] as const) {
         const state = await setupGroupedBlocks(page)
         await page.addInitScript((value) => localStorage.setItem("theme", value), theme)
         await Promise.all([
-            page.waitForResponse(/\/api\/v2\/timetables\/1(?:\?|$)/),
+            page.waitForResponse(/\/api\/v2\/timetables\/1\/items(?:\?|$)/),
             page.goto("/timetable"),
         ])
         const group = page.locator('[data-custom-block-id="7"] .custom-block-tile')
@@ -559,7 +509,7 @@ test("mobile selection details include custom blocks and can be closed", async (
 }) => {
     await setupGroupedBlocks(page)
     await Promise.all([
-        page.waitForResponse(/\/api\/v2\/timetables\/1(?:\?|$)/),
+        page.waitForResponse(/\/api\/v2\/timetables\/1\/items(?:\?|$)/),
         page.goto("/timetable"),
     ])
     await page.keyboard.press("Control+a")

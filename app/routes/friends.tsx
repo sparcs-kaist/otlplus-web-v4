@@ -459,7 +459,7 @@ export default function FriendsPage() {
             semester: semesterToString(termSemester),
         })
     const timetableName =
-        timetableQuery.data?.source === "enrolled"
+        timetableQuery.data?.timetableType === "scholar"
             ? t("friends.actualTimetable")
             : timetableQuery.data?.name || semesterName(year, semester)
     const timetableTabs = useMemo(

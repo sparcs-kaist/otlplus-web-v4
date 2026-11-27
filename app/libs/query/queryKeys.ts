@@ -2,8 +2,8 @@ export const queryKeys = {
     reviews: "/reviews",
     semesters: "/semesters",
     timetables: "/timetables",
-    timetableDetail: (timetableId: number): `/timetables/${number}` =>
-        `/timetables/${timetableId}`,
+    timetableDetail: (timetableId: number): `/timetables/${number}/items` =>
+        `/timetables/${timetableId}/items`,
     myTimetable: "/timetables/my-timetable",
     homeTimetable: "/timetables/home",
     sharedTimetable: "/timetables/shared",

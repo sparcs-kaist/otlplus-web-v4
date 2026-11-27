@@ -27,7 +27,7 @@ describe("timetable selection response contracts", () => {
         "keeps %s PATCH metadata-only while GET requires both arrays",
         (_, get, patch) => {
             const metadata = {
-                source: "saved",
+                timetableType: "timetable",
                 timetableId: 42,
                 name: "Spring timetable",
                 year: 2026,

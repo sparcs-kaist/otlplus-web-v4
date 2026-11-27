@@ -47,7 +47,7 @@ const lecture = {
 describe("unified timetable item reads", () => {
     it("keeps all custom block times in a shared friend response", () => {
         const response = {
-            source: "saved",
+            timetableType: "timetable",
             timetableId: 42,
             name: "Shared timetable",
             year: 2026,

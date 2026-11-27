@@ -1,13 +1,8 @@
 import { type Page, expect, test } from "@playwright/test"
 import { readFile } from "node:fs/promises"
 
-import {
-    DELETERequest,
-    PATCHRequest,
-    POSTRequest,
-} from "../app/api/timetables/$timetableId/items"
+import { PATCHRequest } from "../app/api/timetables/$timetableId/items"
 import type { CustomBlock } from "../app/common/schemas/customBlock"
-import type { TimetableChange } from "../app/common/schemas/timetableItem"
 
 async function dragTime(
     page: Page,
@@ -95,87 +90,29 @@ test("creates, edits, exports, and deletes one custom block with multiple time s
             await route.fulfill({ json: { year: 2026, semester: 1 } })
             return
         }
-        if (path.endsWith("/timetables/1/items")) {
+        if (path.endsWith("/timetables/1/items") && method === "PATCH") {
+            expect(method).toBe("PATCH")
             itemMethods.push(method)
-            const body = request.postDataJSON()
-            let changes: TimetableChange[]
-            if (method === "POST") {
-                const { lectureIds = [], customBlocks = [] } = POSTRequest.parse(body)
-                changes = [
-                    ...lectureIds.map((lectureId) => ({
-                        op: "add" as const,
-                        kind: "lecture" as const,
-                        lectureId,
-                    })),
-                    ...customBlocks.map((data) => ({
-                        op: "add" as const,
-                        kind: "custom" as const,
-                        data,
-                    })),
-                ]
-            } else if (method === "DELETE") {
-                const { lectureIds = [], customBlockIds = [] } = DELETERequest.parse(body)
-                changes = [
-                    ...lectureIds.map((id) => ({
-                        op: "remove" as const,
-                        kind: "lecture" as const,
-                        id,
-                    })),
-                    ...customBlockIds.map((id) => ({
-                        op: "remove" as const,
-                        kind: "custom" as const,
-                        id,
-                    })),
-                ]
-            } else changes = PATCHRequest.parse(body).changes
-            const results = changes.map((change: any, index: number) => {
-                if (change.op === "add") {
-                    const id =
-                        blocks.reduce((max, block) => Math.max(max, block.id), 9) + 1
-                    blocks.push({ id, ...change.data })
-                    return { index, kind: "custom", id }
-                }
-                if (change.op === "update") {
-                    patchBody = change.data
-                    blocks = blocks.map((block) =>
-                        block.id === change.id ? { ...block, ...change.data } : block,
-                    )
-                } else {
-                    blocks = blocks.filter((block) => block.id !== change.id)
-                }
-                return { index, kind: "custom", id: change.id }
+            const { adds, deletes, updates } = PATCHRequest.parse(request.postDataJSON())
+            blocks = blocks.filter((block) => !deletes.customBlockIds.includes(block.id))
+            blocks = blocks.map((block) => {
+                const update = updates.customBlocks.find(({ id }) => id === block.id)
+                if (!update) return block
+                patchBody = update
+                return { ...block, ...update }
             })
-            await route.fulfill({
-                json:
-                    method === "PATCH"
-                        ? {
-                              timetableItems: blocks.map((data) => ({
-                                  kind: "custom",
-                                  data,
-                              })),
-                              results,
-                          }
-                        : method === "POST"
-                          ? {
-                                lectures: [],
-                                customBlocks: results.map(({ id }: { id: number }) =>
-                                    blocks.find((block) => block.id === id),
-                                ),
-                            }
-                          : {
-                                lectureIds: [],
-                                customBlockIds: results.map(
-                                    ({ id }: { id: number }) => id,
-                                ),
-                            },
-            })
+            for (const data of adds.customBlocks) {
+                const id = blocks.reduce((max, block) => Math.max(max, block.id), 9) + 1
+                blocks.push({ ...data, id })
+            }
+            await route.fulfill({ json: { lectures: [], customBlocks: blocks } })
             return
         }
         if (path.endsWith("/timetables/my-timetable")) {
             await route.fulfill({ json: { lectures: [], customBlocks: [] } })
             return
         }
-        if (path.endsWith("/timetables/1")) {
+        if (path.endsWith("/timetables/1/items") && method === "GET") {
             await route.fulfill({
                 json: {
                     lectures: [],
@@ -227,7 +164,7 @@ test("creates, edits, exports, and deletes one custom block with multiple time s
     })
 
     await Promise.all([
-        page.waitForResponse(/\/api\/v2\/timetables\/1(?:\?|$)/),
+        page.waitForResponse(/\/api\/v2\/timetables\/1\/items(?:\?|$)/),
         page.goto("/timetable"),
     ])
 
@@ -384,7 +321,7 @@ test("creates, edits, exports, and deletes one custom block with multiple time s
     await expect(draftTimes).toHaveCount(0)
     await expect(page.locator(".block-title")).toHaveCount(0)
     expect(blocks).toHaveLength(0)
-    expect(itemMethods).toEqual(["POST", "PATCH", "DELETE"])
+    expect(itemMethods).toEqual(["PATCH", "PATCH", "PATCH"])
     await page.keyboard.press("Control+z")
     await expect(
         page.locator(".block-title", { hasText: "Focus time updated" }),

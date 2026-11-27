@@ -75,7 +75,7 @@ test("selects one shared timetable per semester independently of the main timeta
                     year: 2026,
                     semester: term,
                     timetableId: shared.get(term) ?? null,
-                    source: shared.get(term) == null ? "enrolled" : "saved",
+                    timetableType: shared.get(term) == null ? "scholar" : "timetable",
                     name: "Shared",
                     ...(method === "GET" ? { lectures: [], customBlocks: [] } : {}),
                 }
@@ -85,7 +85,7 @@ test("selects one shared timetable per semester independently of the main timeta
                     year: 2026,
                     semester: term,
                     timetableId: homeId,
-                    source: homeId === null ? "enrolled" : "saved",
+                    timetableType: homeId === null ? "scholar" : "timetable",
                     name: "Main",
                     ...(method === "GET" ? { lectures: [], customBlocks: [] } : {}),
                 }
@@ -124,7 +124,7 @@ test("selects one shared timetable per semester independently of the main timeta
                     year: 2026,
                     semester: term,
                     timetableId: shared.get(term) ?? null,
-                    source: shared.get(term) == null ? "enrolled" : "saved",
+                    timetableType: shared.get(term) == null ? "scholar" : "timetable",
                     name: "Shared",
                     lectures: [],
                     customBlocks: shared.get(term) == null ? [] : [block],
