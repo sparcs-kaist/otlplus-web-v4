@@ -101,8 +101,7 @@ function FriendGroup({ title, friends }: { title: string; friends: ClassifiedFri
 
 export default function LectureFriendOverlaps({ lectureId }: { lectureId: number }) {
     const { t } = useTranslation()
-    const { query } = useAPI("GET", `/friends/lectures/${lectureId}/overlaps`, {
-    })
+    const { query } = useAPI("GET", `/friends/lectures/${lectureId}/overlaps`, {})
 
     if (query.isPending) return <LectureFriendOverlapsLoading />
 

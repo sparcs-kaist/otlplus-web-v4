@@ -10,9 +10,10 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
+import type { TimetableItem } from "@/common/schemas/timetableItem"
+import { timetableItemsOverlap, toLectureItem } from "@/common/utils/timetableItems"
 import isLectureAddDisabled from "@/features/timetable/utils/isLectureAddDisabled"
 import { media } from "@/styles/themes/media"
-import checkOverlap from "@/utils/timetable/checkOverlap"
 import useIsDevice from "@/utils/useIsDevice"
 import useUserStore from "@/utils/zustand/useUserStore"
 
@@ -86,7 +87,7 @@ interface LectureListBlockProps {
     course: GETLecturesResponse["courses"][number]
     wishlist: number[]
     currentTimetableId: number | null
-    timetableLectures: Lecture[]
+    timetableItems: TimetableItem[]
     selectedLectures: Lecture[] | null
     hoveredLecture: Lecture[] | null
     handleSetHoveredLecture: (lecture: Lecture) => void
@@ -101,7 +102,7 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
     course,
     wishlist,
     currentTimetableId,
-    timetableLectures,
+    timetableItems,
     handleSetHoveredLecture,
     handleClearHoveredLecture,
     handleSetSelectedLecture,
@@ -170,8 +171,8 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
                 const wish = wishlist.includes(lecture.id)
                 const isHovered = hoveredLecture?.some((lec) => lec.id === lecture.id)
                 const isSelected = selectedLectures?.some((lec) => lec.id === lecture.id)
-                const hasOverlap = timetableLectures.some((timetableLecture) =>
-                    checkOverlap(timetableLecture.classes, lecture.classes),
+                const hasOverlap = timetableItems.some((item) =>
+                    timetableItemsOverlap(item, toLectureItem(lecture)),
                 )
                 const addDisabled = isLectureAddDisabled({
                     status,
@@ -288,7 +289,7 @@ export default memo(LectureListBlock, (prev, next) => {
         prev.course !== next.course ||
         prev.wishlist !== next.wishlist || // Assuming array ref changes if content changes, or use deep compare if necessary (usually ref change from state)
         prev.currentTimetableId !== next.currentTimetableId ||
-        prev.timetableLectures !== next.timetableLectures ||
+        prev.timetableItems !== next.timetableItems ||
         prev.selectedLectures !== next.selectedLectures ||
         prev.hoveredLecture !== next.hoveredLecture
     ) {

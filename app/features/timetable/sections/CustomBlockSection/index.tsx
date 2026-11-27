@@ -18,7 +18,10 @@ import Typography from "@/common/primitives/Typography"
 import type { CustomBlock } from "@/common/schemas/customBlock"
 import type { TimeBlock } from "@/common/schemas/timeblock"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
-import { getCustomBlockTimes } from "@/common/utils/timetableItems"
+import {
+    getCustomBlockTimes,
+    hasInternalTimeOverlap,
+} from "@/common/utils/timetableItems"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
 
 const CustomBlockSectionInner = styled(FlexWrapper)`
@@ -121,18 +124,7 @@ function CustomBlockSection({
             alert(t("timetable.customBlock.errorTimeInvalid"))
             return false
         }
-        if (
-            times.some((time, index) =>
-                times
-                    .slice(index + 1)
-                    .some(
-                        (other) =>
-                            time.day === other.day &&
-                            time.begin < other.end &&
-                            other.begin < time.end,
-                    ),
-            )
-        ) {
+        if (hasInternalTimeOverlap(times)) {
             alert(t("timetable.customBlock.errorTimeOverlap"))
             return false
         }

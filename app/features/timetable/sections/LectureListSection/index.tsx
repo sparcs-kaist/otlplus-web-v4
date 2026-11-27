@@ -13,7 +13,12 @@ import { LECTURE_ORDERS, LectureOrderEnum } from "@/common/enum/orderEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
-import { isLectureItem, toLectureItem } from "@/common/utils/timetableItems"
+import type { TimetableItem } from "@/common/schemas/timetableItem"
+import {
+    isLectureItem,
+    timetableItemsOverlap,
+    toLectureItem,
+} from "@/common/utils/timetableItems"
 import {
     useHoveredLectures,
     useSelectedLectures,
@@ -26,7 +31,6 @@ import type { getAPIResponseType } from "@/utils/api/getAPIType"
 import { useAPI } from "@/utils/api/useAPI"
 import { useInfiniteAPI } from "@/utils/api/useInfiniteAPI"
 import checkEmpty from "@/utils/search/checkEmpty"
-import checkOverlap from "@/utils/timetable/checkOverlap"
 import useIsDevice from "@/utils/useIsDevice"
 import useUserStore from "@/utils/zustand/useUserStore"
 
@@ -156,7 +160,7 @@ const mergeCoursesById = (response?: GETLecturesResponse) => {
 }
 
 interface LectureListSectionProps {
-    timetableLectures: Lecture[]
+    timetableItems: TimetableItem[]
     addLectures: (lectures: Lecture[]) => void
     onLectureSelect?: (lecture: Lecture, e?: React.MouseEvent) => void
 }
@@ -164,7 +168,7 @@ interface LectureListSectionProps {
 const SEARCH_LIMIT = 50
 
 const LectureListSection: React.FC<LectureListSectionProps> = ({
-    timetableLectures,
+    timetableItems,
     addLectures,
     onLectureSelect,
 }) => {
@@ -400,45 +404,27 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     }
 
     const handleAddToTimetable = (lecture: Lecture) => {
-        if (status === "success") {
-            if (currentTimetableId == null) {
-                alert(t("timetable.myTimeTableLectureAddWarning"))
-                return
-            }
-            if (
-                timetableLectures.some((lec) =>
-                    checkOverlap(lec.classes, lecture.classes),
-                )
-            ) {
-                alert(t("timetable.addLectureConflict"))
-                return
-            }
-
-            addLectures([lecture])
-            trackEvent("Add Lecture to Timetable", {
-                lectureId: lecture.id,
-                lectureCode: lecture.code,
-                courseName: lecture.name,
-                timetableId: currentTimetableId,
-            })
-        } else {
-            if (
-                timetableLectures.some((lec) =>
-                    checkOverlap(lec.classes, lecture.classes),
-                )
-            ) {
-                alert(t("timetable.addLectureConflict"))
-                return
-            }
-            addLectures([lecture])
-            trackEvent("Add Lecture to Timetable", {
-                lectureId: lecture.id,
-                lectureCode: lecture.code,
-                courseName: lecture.name,
-                timetableId: null,
-                isGuest: true,
-            })
+        if (status === "success" && currentTimetableId == null) {
+            alert(t("timetable.myTimeTableLectureAddWarning"))
+            return
         }
+        if (
+            timetableItems.some((item) =>
+                timetableItemsOverlap(item, toLectureItem(lecture)),
+            )
+        ) {
+            alert(t("timetable.addLectureConflict"))
+            return
+        }
+
+        addLectures([lecture])
+        trackEvent("Add Lecture to Timetable", {
+            lectureId: lecture.id,
+            lectureCode: lecture.code,
+            courseName: lecture.name,
+            timetableId: status === "success" ? currentTimetableId : null,
+            ...(status !== "success" ? { isGuest: true } : {}),
+        })
     }
 
     const handleSetHoveredLecture = useCallback(
@@ -526,7 +512,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
                                     selectedLectures={selectedLectures}
                                     wishlist={wishlist}
                                     currentTimetableId={currentTimetableId}
-                                    timetableLectures={timetableLectures}
+                                    timetableItems={timetableItems}
                                     handleSetHoveredLecture={handleSetHoveredLecture}
                                     handleClearHoveredLecture={handleClearHoveredLecture}
                                     handleSetSelectedLecture={handleSetSelectedLecture}
@@ -554,7 +540,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
 
 const LectureListSectionMemo = React.memo(LectureListSection, (prev, next) => {
     return (
-        prev.timetableLectures === next.timetableLectures &&
+        prev.timetableItems === next.timetableItems &&
         prev.addLectures === next.addLectures &&
         prev.onLectureSelect === next.onLectureSelect
     )

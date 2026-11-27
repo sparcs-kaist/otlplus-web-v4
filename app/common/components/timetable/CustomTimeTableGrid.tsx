@@ -7,7 +7,6 @@ import { WeekdayEnum } from "@/common/enum/weekdayEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import GridWrapper from "@/common/primitives/GridWrapper"
 import Typography from "@/common/primitives/Typography"
-import { type CustomBlock } from "@/common/schemas/customBlock"
 import { type Lecture } from "@/common/schemas/lecture"
 import { type TimeBlock } from "@/common/schemas/timeblock"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
@@ -21,14 +20,13 @@ import {
     toLectureItem,
 } from "@/common/utils/timetableItems"
 
-import CustomBlockTile from "./CustomBlockTile"
 import {
     HoverTile,
     LECTURE_TILE_CLASSNAME,
-    LectureTile,
-    LectureTileHoverCss,
     OverflowTile,
     OverlapTile,
+    TileHoverCss,
+    TimetableTile,
 } from "./Tile"
 
 const TIME_BEGIN = 8
@@ -170,7 +168,7 @@ const LectureTileWrapper = styled.div<{ lectureId: number }>`
         )
         &
         .${LECTURE_TILE_CLASSNAME} {
-        ${({ theme }) => LectureTileHoverCss(theme)}
+        ${({ theme }) => TileHoverCss(theme)}
     }
 `
 
@@ -196,6 +194,8 @@ const MemoizedLectureTiles = memo(
         deleteLecture,
         isGhost = false,
     }: LectureTilesProps) => {
+        const lectureItem = useMemo(() => toLectureItem(lecture), [lecture])
+
         const handleMouseEnter = useCallback(() => {
             handleLectureTileHover?.(lecture)
         }, [handleLectureTileHover, lecture])
@@ -228,14 +228,14 @@ const MemoizedLectureTiles = memo(
             >
                 {lecture.classes.map((cls, classIdx) =>
                     validTime(cls, displayedDayCount) ? (
-                        <LectureTile
+                        <TimetableTile
                             key={`${classIdx}-lecture`}
-                            lecture={lecture}
+                            item={lectureItem}
+                            time={cls}
                             classIdx={classIdx}
+                            displayedDayCount={displayedDayCount}
                             overlapLabel={overlapLabel}
-                            deleteLecture={
-                                deleteLecture ? deleteLectureCallback : undefined
-                            }
+                            onDelete={deleteLecture ? deleteLectureCallback : undefined}
                         />
                     ) : null,
                 )}
@@ -257,7 +257,7 @@ const OverlapTileWrapper = styled.div`
     z-index: 4;
 
     .custom-timetable:has(.${LECTURE_TILE_CLASSNAME}:hover) .${LECTURE_TILE_CLASSNAME} {
-        ${({ theme }) => LectureTileHoverCss(theme)}
+        ${({ theme }) => TileHoverCss(theme)}
     }
 `
 
@@ -301,7 +301,7 @@ const OverflowTileWrapper = styled.div<{ lectureId: number }>`
         )
         &
         .${LECTURE_TILE_CLASSNAME} {
-        ${({ theme }) => LectureTileHoverCss(theme)}
+        ${({ theme }) => TileHoverCss(theme)}
     }
 `
 
@@ -481,9 +481,15 @@ function CustomTimeTableGrid({
     )
     const customBlockSlots = useMemo(
         () =>
-            customBlocks.flatMap((block) =>
-                getCustomBlockTimes(block).map((time, index) => ({ block, time, index })),
-            ),
+            customBlocks.flatMap((block) => {
+                const item = toCustomBlockItem(block)
+                return getCustomBlockTimes(block).map((time, index) => ({
+                    item,
+                    block,
+                    time,
+                    index,
+                }))
+            }),
         [customBlocks],
     )
     const activeLectures = useMemo(() => extractLectures(selectedItems), [selectedItems])
@@ -726,48 +732,40 @@ function CustomTimeTableGrid({
         overlayRef.current?.setAttribute("data-is-hovering", "false")
     }, [onItemLeave])
 
+    const deleteItemCallback = useCallback(
+        (item: TimetableItem) => {
+            if (needLectureInteraction && needLectureDeletable) {
+                clearHoveredLecturesCallback()
+                onItemDelete?.(item)
+            }
+        },
+        [
+            needLectureInteraction,
+            needLectureDeletable,
+            onItemDelete,
+            clearHoveredLecturesCallback,
+        ],
+    )
+
     const deleteLectureCallback = useCallback(
         (lecture: Lecture) => {
-            if (needLectureInteraction && needLectureDeletable) {
-                clearHoveredLecturesCallback()
-                onItemDelete?.(toLectureItem(lecture))
-            }
+            deleteItemCallback(toLectureItem(lecture))
         },
-        [
-            needLectureInteraction,
-            needLectureDeletable,
-            onItemDelete,
-            clearHoveredLecturesCallback,
-        ],
+        [deleteItemCallback],
     )
 
-    const deleteCustomBlockCallback = useCallback(
-        (block: CustomBlock) => {
-            if (needLectureInteraction && needLectureDeletable) {
-                clearHoveredLecturesCallback()
-                onItemDelete?.(toCustomBlockItem(block))
-            }
-        },
-        [
-            needLectureInteraction,
-            needLectureDeletable,
-            onItemDelete,
-            clearHoveredLecturesCallback,
-        ],
-    )
-
-    const handleCustomBlockSelect = useCallback(
-        (block: CustomBlock, event?: React.PointerEvent) => {
+    const handleItemSelectCallback = useCallback(
+        (item: TimetableItem, event?: React.PointerEvent) => {
             if (!needLectureInteraction) return
-            onItemSelect?.(toCustomBlockItem(block), event)
+            onItemSelect?.(item, event)
         },
         [needLectureInteraction, onItemSelect],
     )
 
-    const handleCustomBlockHover = useCallback(
-        (block: CustomBlock) => {
+    const handleItemHoverCallback = useCallback(
+        (item: TimetableItem) => {
             if (!needLectureInteraction) return
-            onItemHover?.(toCustomBlockItem(block))
+            onItemHover?.(item)
         },
         [needLectureInteraction, onItemHover],
     )
@@ -800,6 +798,7 @@ function CustomTimeTableGrid({
                     ? selectedItems.map(timetableItemKey).join(" ")
                     : ""
             }
+            data-flash-items={(flashItemKeys ?? []).join(" ")}
             data-flash-custom-blocks={(flashItemKeys ?? [])
                 .filter((key) => key.startsWith("custom:"))
                 .map((key) => key.split(":")[1])
@@ -972,27 +971,27 @@ function CustomTimeTableGrid({
                             ))}
                             {customBlockSlots
                                 .filter(({ time }) => validTime(time, displayedDayCount))
-                                .map(({ block, time, index }) => (
-                                    <CustomBlockTile
+                                .map(({ item, block, time, index }) => (
+                                    <TimetableTile
                                         key={`custom-block-${block.id}-${index}`}
-                                        block={block}
+                                        item={item}
                                         time={time}
                                         displayedDayCount={displayedDayCount}
                                         onSelect={
                                             needLectureInteraction && onItemSelect
-                                                ? handleCustomBlockSelect
+                                                ? handleItemSelectCallback
                                                 : undefined
                                         }
                                         onDelete={
                                             needLectureInteraction &&
                                             needLectureDeletable &&
                                             onItemDelete
-                                                ? deleteCustomBlockCallback
+                                                ? deleteItemCallback
                                                 : undefined
                                         }
                                         onHover={
                                             needLectureInteraction
-                                                ? handleCustomBlockHover
+                                                ? handleItemHoverCallback
                                                 : undefined
                                         }
                                         onLeave={
@@ -1046,27 +1045,27 @@ function CustomTimeTableGrid({
                     >
                         {customBlockSlots
                             .filter(({ time }) => !validTime(time, displayedDayCount))
-                            .map(({ block, time, index }) => (
-                                <CustomBlockTile
+                            .map(({ item, block, time, index }) => (
+                                <TimetableTile
                                     key={`custom-overflow-${block.id}-${index}`}
-                                    block={block}
+                                    item={item}
                                     time={time}
                                     displayedDayCount={displayedDayCount}
                                     onSelect={
                                         needLectureInteraction && onItemSelect
-                                            ? handleCustomBlockSelect
+                                            ? handleItemSelectCallback
                                             : undefined
                                     }
                                     onDelete={
                                         needLectureInteraction &&
                                         needLectureDeletable &&
                                         onItemDelete
-                                            ? deleteCustomBlockCallback
+                                            ? deleteItemCallback
                                             : undefined
                                     }
                                     onHover={
                                         needLectureInteraction
-                                            ? handleCustomBlockHover
+                                            ? handleItemHoverCallback
                                             : undefined
                                     }
                                     onLeave={

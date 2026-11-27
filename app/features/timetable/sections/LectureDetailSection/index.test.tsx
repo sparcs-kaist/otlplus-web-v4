@@ -133,7 +133,7 @@ function renderDetail(props = {}) {
             <LectureDetailSection
                 addLectures={vi.fn()}
                 currentTimetableId={42}
-                timetableLectures={[]}
+                timetableItems={[]}
                 {...props}
             />
             <LocationProbe />
@@ -388,7 +388,7 @@ describe("timetable lecture friend overlaps", () => {
                 addLectures,
                 removeLectures,
                 onMobileModalClose,
-                timetableLectures: alreadyAdded ? [lecture] : [],
+                timetableItems: alreadyAdded ? [{ kind: "lecture", data: lecture }] : [],
             })
 
             expect(screen.getByText("Same section 101")).toBeInTheDocument()

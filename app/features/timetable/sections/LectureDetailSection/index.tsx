@@ -23,10 +23,15 @@ import Icon from "@/common/primitives/Icon"
 import { IconButton } from "@/common/primitives/IconButton"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
+import type { TimetableItem } from "@/common/schemas/timetableItem"
 import {
+    getPaletteColor,
+    getTimetableItemColorIndex,
     isCustomBlockItem,
     isLectureItem,
     timetableItemKey,
+    timetableItemsOverlap,
+    toLectureItem,
 } from "@/common/utils/timetableItems"
 import FriendCustomBlockDetail from "@/features/friends/FriendCustomBlockDetail"
 import LectureFriendOverlaps, {
@@ -37,7 +42,6 @@ import isLectureAddDisabled from "@/features/timetable/utils/isLectureAddDisable
 import { trackEvent } from "@/libs/mixpanel"
 import { queryKeys } from "@/libs/query/queryKeys"
 import { useAPI } from "@/utils/api/useAPI"
-import checkOverlap from "@/utils/timetable/checkOverlap"
 import getSyllabusUrl from "@/utils/timetable/getSyllabusUrl"
 import useIsDevice from "@/utils/useIsDevice"
 import useUserStore from "@/utils/zustand/useUserStore"
@@ -106,7 +110,7 @@ interface LectureDetailSectionProps {
     removeLectures?: (lectureId: number) => void
     onMobileModalClose?: () => void
     currentTimetableId?: number | null
-    timetableLectures?: Lecture[]
+    timetableItems?: TimetableItem[]
 }
 
 const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
@@ -114,7 +118,7 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
     removeLectures,
     onMobileModalClose,
     currentTimetableId,
-    timetableLectures = [],
+    timetableItems = [],
     readOnlySelection,
 }) => {
     const queryClient = useQueryClient()
@@ -193,9 +197,8 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
     const reviewSectionRef = useRef<HTMLDivElement>(null)
 
     const handleAddToTimetable = (lecture: Lecture) => {
-        if (!timetableLectures) return
-        const hasOverlap = timetableLectures.some((lec) =>
-            checkOverlap(lec.classes, lecture.classes),
+        const hasOverlap = timetableItems.some((item) =>
+            timetableItemsOverlap(item, toLectureItem(lecture)),
         )
         if (
             isLectureAddDisabled({
@@ -274,9 +277,8 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                         )}
                     </FlexWrapper>
                     {selectedItems.map((item) => {
-                        const { colorIndex, title, description } = match(item)
+                        const { title, description } = match(item)
                             .with({ kind: TimetableItemKind.LECTURE }, ({ data: l }) => ({
-                                colorIndex: l.courseId,
                                 title: `${l.name} ${l.subtitle}`,
                                 description: (
                                     <>
@@ -290,7 +292,6 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                                 ),
                             }))
                             .with({ kind: TimetableItemKind.CUSTOM }, ({ data }) => ({
-                                colorIndex: data.id * 3 + 7,
                                 title: data.block_name,
                                 description: data.place,
                             }))
@@ -305,7 +306,10 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                             >
                                 <Icon
                                     size={14}
-                                    color={tileColors[colorIndex % tileColors.length]}
+                                    color={getPaletteColor(
+                                        tileColors,
+                                        getTimetableItemColorIndex(item),
+                                    )}
                                 >
                                     <CircleIcon />
                                 </Icon>
@@ -463,8 +467,10 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                             )}
 
                             {(currentTimetableId != null || status === "idle") &&
-                                (!timetableLectures?.some(
-                                    (lec) => lec.id === selectedLecture.id,
+                                (!timetableItems.some(
+                                    (item) =>
+                                        isLectureItem(item) &&
+                                        item.data.id === selectedLecture.id,
                                 ) ? (
                                     <Button
                                         type="selected"

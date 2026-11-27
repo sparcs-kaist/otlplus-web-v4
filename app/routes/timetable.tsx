@@ -15,7 +15,6 @@ import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
 import {
-    extractLectures,
     getCustomBlockTimes,
     timetableItemKey,
     toLectureItem,
@@ -283,10 +282,6 @@ export default function Timetable() {
                       currentTimetableId === null ? myTimetable.data : timetable.data,
                   ),
         [currentTimetableId, myTimetable.data, nonLoginTimetable, status, timetable.data],
-    )
-    const currentTimetableLectures = useMemo(
-        () => extractLectures(currentTimetableItems),
-        [currentTimetableItems],
     )
     const { cloneTimetable, isCloning } = useTimetableClone(currentTimetableItems)
 
@@ -578,7 +573,7 @@ export default function Timetable() {
                         >
                             <LectureListArea>
                                 <LectureListSection
-                                    timetableLectures={currentTimetableLectures}
+                                    timetableItems={currentTimetableItems}
                                     addLectures={addLectures}
                                     onLectureSelect={handleLectureSelect}
                                 />
@@ -613,7 +608,7 @@ export default function Timetable() {
                                 removeLectures={handleDeleteLecture}
                                 onMobileModalClose={closeMobileLectureModal}
                                 currentTimetableId={currentTimetableId}
-                                timetableLectures={currentTimetableLectures}
+                                timetableItems={currentTimetableItems}
                             />
                         </Modal>
                     )}
@@ -641,7 +636,7 @@ export default function Timetable() {
                         {/*과목 목록 영역*/}
                         <LectureListArea style={{ overflow: "auto" }}>
                             <LectureListSection
-                                timetableLectures={currentTimetableLectures}
+                                timetableItems={currentTimetableItems}
                                 addLectures={addLectures}
                                 onLectureSelect={handleLectureSelect}
                             />
@@ -653,7 +648,7 @@ export default function Timetable() {
                                 <CustomBlockSection {...customBlockEditorProps} />
                             ) : (
                                 <LectureDetailSection
-                                    timetableLectures={currentTimetableLectures}
+                                    timetableItems={currentTimetableItems}
                                     addLectures={addLectures}
                                     removeLectures={handleDeleteLecture}
                                 />

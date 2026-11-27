@@ -51,15 +51,35 @@ export const groupTimetableItems = (items: readonly TimetableItem[]): TimetableI
 
 export const timetableItemKey = (item: TimetableItem) => `${item.kind}:${item.data.id}`
 
+export const getTimetableItemColorIndex = (item: TimetableItem): number =>
+    isLectureItem(item) ? item.data.courseId : item.data.id * 3 + 7
+
+export const getPaletteColor = <T>(
+    palette: readonly T[],
+    colorIndex: number,
+): T | undefined =>
+    palette.length === 0
+        ? undefined
+        : palette[((colorIndex % palette.length) + palette.length) % palette.length]
+
 export const getCustomBlockTimes = (block: CustomBlock): TimeBlock[] =>
     block.times ?? [{ day: block.day, begin: block.begin, end: block.end }]
 
 export const getTimetableItemTimes = (item: TimetableItem): TimeBlock[] =>
     isLectureItem(item) ? item.data.classes : getCustomBlockTimes(item.data)
 
-export const timetableItemsOverlap = (left: TimetableItem, right: TimetableItem) =>
-    getTimetableItemTimes(left).some((a) =>
-        getTimetableItemTimes(right).some(
-            (b) => a.day === b.day && a.begin < b.end && b.begin < a.end,
-        ),
+export const timeBlocksOverlap = (left: TimeBlock, right: TimeBlock): boolean =>
+    left.day === right.day && left.begin < right.end && right.begin < left.end
+
+export const timeBlockListsOverlap = (
+    left: readonly TimeBlock[],
+    right: readonly TimeBlock[],
+): boolean => left.some((a) => right.some((b) => timeBlocksOverlap(a, b)))
+
+export const hasInternalTimeOverlap = (times: readonly TimeBlock[]): boolean =>
+    times.some((time, index) =>
+        times.slice(index + 1).some((other) => timeBlocksOverlap(time, other)),
     )
+
+export const timetableItemsOverlap = (left: TimetableItem, right: TimetableItem) =>
+    timeBlockListsOverlap(getTimetableItemTimes(left), getTimetableItemTimes(right))

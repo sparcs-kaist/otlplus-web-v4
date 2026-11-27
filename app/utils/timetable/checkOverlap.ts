@@ -1,14 +1,9 @@
 import type { TimeBlock } from "@/common/schemas/timeblock"
+import { timeBlockListsOverlap } from "@/common/utils/timetableItems"
 
-export default function checkOverlap(blockA: TimeBlock[], blockB: TimeBlock[]): boolean {
-    for (const a of blockA) {
-        for (const b of blockB) {
-            if (a.day == b.day) {
-                if (a.begin < b.end && b.begin < a.end) {
-                    return true
-                }
-            }
-        }
-    }
-    return false
+export default function checkOverlap(
+    blockA: readonly TimeBlock[],
+    blockB: readonly TimeBlock[],
+): boolean {
+    return timeBlockListsOverlap(blockA, blockB)
 }
