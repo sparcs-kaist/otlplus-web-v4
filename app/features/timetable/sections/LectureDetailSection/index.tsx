@@ -23,14 +23,16 @@ import Icon from "@/common/primitives/Icon"
 import { IconButton } from "@/common/primitives/IconButton"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
-import { timetableItemKey } from "@/common/utils/timetableItems"
+import {
+    isCustomBlockItem,
+    isLectureItem,
+    timetableItemKey,
+} from "@/common/utils/timetableItems"
+import FriendCustomBlockDetail from "@/features/friends/FriendCustomBlockDetail"
 import LectureFriendOverlaps, {
     LectureFriendOverlapsLoading,
 } from "@/features/friends/LectureFriendOverlaps"
-import {
-    useHoveredLectures,
-    useTimetableUIStore,
-} from "@/features/timetable/store/useTimetableUIStore"
+import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
 import isLectureAddDisabled from "@/features/timetable/utils/isLectureAddDisabled"
 import { trackEvent } from "@/libs/mixpanel"
 import { queryKeys } from "@/libs/query/queryKeys"
@@ -123,23 +125,32 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
 
     const editorSelection = useTimetableUIStore((s) => s.selectedItems)
     const selectedItems = readOnlySelection ? [] : editorSelection
-    const hoveredLectures = useHoveredLectures()
+    const hoveredItems = useTimetableUIStore((s) => s.hoveredItems)
+    const currentTimetableName = useTimetableUIStore((s) => s.currentTimetableName)
     const editorYear = useTimetableUIStore((s) => s.year)
     const year = readOnlySelection?.year ?? editorYear
     const editorSemester = useTimetableUIStore((s) => s.semesterEnum)
     const semester = readOnlySelection?.semester ?? editorSemester
 
     const selectedItem = selectedItems.length === 1 ? selectedItems[0] : undefined
+    const hoveredItem = hoveredItems.length === 1 ? hoveredItems[0] : undefined
     const selectedLecture = readOnlySelection
         ? readOnlySelection.lecture
-        : selectedItem?.kind === TimetableItemKind.LECTURE
+        : selectedItem && isLectureItem(selectedItem)
           ? selectedItem.data
-          : selectedItems.length === 0 && hoveredLectures.length === 1
-            ? hoveredLectures[0]
+          : selectedItems.length === 0 && hoveredItem && isLectureItem(hoveredItem)
+            ? hoveredItem.data
+            : null
+    const hoveredCustomBlock =
+        !readOnlySelection &&
+        selectedItems.length === 0 &&
+        hoveredItem &&
+        isCustomBlockItem(hoveredItem)
+            ? hoveredItem.data
             : null
     const showSelectedItems =
         selectedItems.length > 1 ||
-        (selectedItem !== undefined && selectedItem.kind !== TimetableItemKind.LECTURE)
+        (selectedItem !== undefined && !isLectureItem(selectedItem))
     const tileColors = flattenTimeTableColors(theme.colors.Tile.TimeTable.default)
 
     const [wishListIds, setWishListIds] = useState<number[]>([])
@@ -227,7 +238,11 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
             direction="column"
             gap={12}
             align={"center"}
-            justify={!selectedLecture && !selectedItems.length ? "center" : "start"}
+            justify={
+                !selectedLecture && !hoveredCustomBlock && !selectedItems.length
+                    ? "center"
+                    : "start"
+            }
         >
             {showSelectedItems ? (
                 <MultipleSelectWrapper
@@ -486,6 +501,11 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                         </LectureActionsWrapper>
                     )}
                 </>
+            ) : hoveredCustomBlock ? (
+                <FriendCustomBlockDetail
+                    block={hoveredCustomBlock}
+                    timetableName={currentTimetableName}
+                />
             ) : readOnlySelection ? (
                 <Typography type="Normal" color="Text.placeholder">
                     {t("friends.selectLecture")}

@@ -209,6 +209,22 @@ it.each(["selected", "hovered"] as const)(
     },
 )
 
+it("shows custom block detail when hovering a custom block with no selection", () => {
+    useTimetableUIStore.setState({
+        currentTimetableName: "시간표 1",
+        selectedItems: [],
+        hoveredItems: [custom],
+    })
+    renderDetail()
+    expect(screen.getByText("Study")).toBeInTheDocument()
+    expect(screen.getByText("Library")).toBeInTheDocument()
+    expect(screen.getByText("시간표 1")).toBeInTheDocument()
+    expect(screen.queryByText("credits")).not.toBeInTheDocument()
+
+    act(() => useTimetableUIStore.setState({ hoveredItems: [] }))
+    expect(screen.getByText("credits")).toBeInTheDocument()
+})
+
 describe("timetable lecture friend overlaps", () => {
     it("keeps ratings above friends and reviews", () => {
         useTimetableUIStore.setState({

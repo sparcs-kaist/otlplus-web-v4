@@ -17,6 +17,7 @@ import type { TimetableItem } from "@/common/schemas/timetableItem"
 import {
     extractLectures,
     getCustomBlockTimes,
+    timetableItemKey,
     toLectureItem,
     toTimetableItems,
 } from "@/common/utils/timetableItems"
@@ -236,6 +237,7 @@ export default function Timetable() {
     const setMobileSearchOpen = useTimetableUIStore((s) => s.setMobileSearchOpen)
 
     const flashItemKeys = useTimetableUIStore((s) => s.flashItemKeys)
+    const selectedCustomBlock = useTimetableUIStore((s) => s.selectedCustomBlock)
     const setSelectedCustomBlock = useTimetableUIStore((s) => s.setSelectedCustomBlock)
     const isCustomBlockSectionOpen = useTimetableUIStore(
         (s) => s.isCustomBlockSectionOpen,
@@ -386,13 +388,23 @@ export default function Timetable() {
     const handleItemLeave = useCallback(() => setHoveredItems([]), [setHoveredItems])
 
     useEffect(() => {
-        if (!isCustomBlockSectionOpen || selectedItems.length < 2) return
+        if (!isCustomBlockSectionOpen) return
+        const isMultiSelected = selectedItems.length >= 2
+        const isEditingBlockUnselected =
+            selectedCustomBlock !== null &&
+            !selectedItems.some(
+                (item) =>
+                    item.kind === TimetableItemKind.CUSTOM &&
+                    item.data.id === selectedCustomBlock.id,
+            )
+        if (!isMultiSelected && !isEditingBlockUnselected) return
         setIsCustomBlockSectionOpen(false)
         setSelectedCustomBlock(null)
         setTimeFilter(null)
     }, [
         isCustomBlockSectionOpen,
-        selectedItems.length,
+        selectedCustomBlock,
+        selectedItems,
         setIsCustomBlockSectionOpen,
         setSelectedCustomBlock,
         setTimeFilter,
@@ -423,9 +435,15 @@ export default function Timetable() {
     const handleItemSelect = useCallback(
         (item: TimetableItem, event?: React.MouseEvent) => {
             onItemSelect(item, event)
+            const nextSelectedItems = useTimetableUIStore.getState().selectedItems
             const isMultipleSelection =
                 event?.ctrlKey || event?.metaKey || event?.shiftKey
-            if (item.kind === TimetableItemKind.CUSTOM && !isMultipleSelection) {
+            if (
+                item.kind === TimetableItemKind.CUSTOM &&
+                !isMultipleSelection &&
+                nextSelectedItems.length === 1 &&
+                timetableItemKey(nextSelectedItems[0]!) === timetableItemKey(item)
+            ) {
                 setSelectedCustomBlock(item.data)
                 setTimeFilter(getCustomBlockTimes(item.data)[0] ?? null)
                 setIsCustomBlockSectionOpen(true)

@@ -1064,6 +1064,16 @@ function CustomTimeTableGrid({
                                             ? deleteCustomBlockCallback
                                             : undefined
                                     }
+                                    onHover={
+                                        needLectureInteraction
+                                            ? handleCustomBlockHover
+                                            : undefined
+                                    }
+                                    onLeave={
+                                        needLectureInteraction
+                                            ? clearHoveredLecturesCallback
+                                            : undefined
+                                    }
                                     overflow
                                 />
                             ))}
