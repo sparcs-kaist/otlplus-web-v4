@@ -193,9 +193,6 @@ export default function FriendsPage() {
     const activeCustomBlock = selectedCustomBlock || hoveredCustomBlock
     const activeLecture = selectedLecture || hoveredLecture
     const [friendListOpen, setFriendListOpen] = useState(false)
-    const [pageVisible, setPageVisible] = useState(
-        () => typeof document === "undefined" || document.visibilityState !== "hidden",
-    )
     const [scheduleFresh, setScheduleFresh] = useState(false)
     const [detailOpen, setDetailOpen] = useState(false)
     const detailActionRef = useRef<HTMLButtonElement>(null)
@@ -293,30 +290,8 @@ export default function FriendsPage() {
     const friendListVisible = !isTablet || friendListOpen
     const { query: friendsQuery } = useAPI("GET", "/friends", {
         enabled: status === "success",
-        refetchInterval:
-            status === "success" && friendListVisible && pageVisible ? 60_000 : false,
-        refetchOnWindowFocus: friendListVisible,
+        refetchInterval: status === "success" && friendListVisible ? 60_000 : false,
     })
-
-    useEffect(() => {
-        const onVisibilityChange = () =>
-            setPageVisible(document.visibilityState !== "hidden")
-        const onFocus = () => {
-            if (
-                status === "success" &&
-                friendListVisible &&
-                document.visibilityState !== "hidden"
-            ) {
-                void friendsQuery.refetch({ cancelRefetch: false })
-            }
-        }
-        document.addEventListener("visibilitychange", onVisibilityChange)
-        window.addEventListener("focus", onFocus)
-        return () => {
-            document.removeEventListener("visibilitychange", onVisibilityChange)
-            window.removeEventListener("focus", onFocus)
-        }
-    }, [status, friendListVisible, friendsQuery.refetch])
 
     useEffect(() => {
         if (

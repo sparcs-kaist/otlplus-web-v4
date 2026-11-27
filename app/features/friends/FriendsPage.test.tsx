@@ -504,9 +504,7 @@ describe("mobile friend timetable navigation", () => {
         expect(latestListOptions()).toMatchObject({
             enabled: true,
             refetchInterval: false,
-            refetchOnWindowFocus: false,
         })
-        fireEvent(window, new Event("focus"))
         expect(refetchFriends).not.toHaveBeenCalled()
 
         fireEvent.click(screen.getByRole("button", { name: "friends.selectFriend" }))
@@ -514,37 +512,17 @@ describe("mobile friend timetable navigation", () => {
         expect(latestListOptions()).toMatchObject({
             enabled: true,
             refetchInterval: 60_000,
-            refetchOnWindowFocus: true,
         })
-        fireEvent(window, new Event("focus"))
-        expect(refetchFriends).toHaveBeenCalledTimes(2)
 
         fireEvent.click(screen.getByRole("button", { name: /Test friend/ }))
         expect(latestListOptions()).toMatchObject({ refetchInterval: false })
-        fireEvent(window, new Event("focus"))
-        expect(refetchFriends).toHaveBeenCalledTimes(2)
+        expect(refetchFriends).toHaveBeenCalledTimes(1)
     })
 
-    it("pauses desktop polling in a hidden tab and resumes when visible", () => {
+    it("polls the always-visible desktop friend list", () => {
         testWindow.happyDOM.setViewport({ width: 1440, height: 844 })
-        const visibility = vi.spyOn(document, "visibilityState", "get")
-        visibility.mockReturnValue("visible")
         renderPage()
-        expect(latestListOptions()).toMatchObject({
-            refetchInterval: 60_000,
-            refetchOnWindowFocus: true,
-        })
-        visibility.mockReturnValue("hidden")
-        fireEvent(document, new Event("visibilitychange"))
-        expect(latestListOptions()).toMatchObject({ refetchInterval: false })
-        fireEvent(window, new Event("focus"))
-        expect(refetchFriends).not.toHaveBeenCalled()
-
-        visibility.mockReturnValue("visible")
-        fireEvent(document, new Event("visibilitychange"))
         expect(latestListOptions()).toMatchObject({ refetchInterval: 60_000 })
-        fireEvent(window, new Event("focus"))
-        expect(refetchFriends).toHaveBeenCalledTimes(1)
     })
 
     it("does not poll or refresh a logged-out friend's list", () => {
@@ -555,7 +533,6 @@ describe("mobile friend timetable navigation", () => {
             enabled: false,
             refetchInterval: false,
         })
-        fireEvent(window, new Event("focus"))
         expect(refetchFriends).not.toHaveBeenCalled()
     })
 
