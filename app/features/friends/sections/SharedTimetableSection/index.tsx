@@ -1,15 +1,18 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useMemo, useRef } from "react"
 
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
 
 import CustomTimeTableGrid from "@/common/components/timetable/CustomTimeTableGrid"
+import { WeekdayEnum } from "@/common/enum/weekdayEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import Widget from "@/common/primitives/Widget"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
 import TabButton from "@/features/timetable/sections/TabsRowSubSection/TabButton"
 import { media } from "@/styles/themes/media"
+import { getTimetableItemTimes } from "@/utils/timetable/timetableItems"
+import useIsDevice from "@/utils/useIsDevice"
 
 const TimetablePanel = styled(Widget)`
     display: flex;
@@ -83,6 +86,16 @@ export default function SharedTimetableSection({
     onLeaveItem,
 }: Props) {
     const { t } = useTranslation()
+    const isTablet = useIsDevice("tablet")
+    // 모바일에서는 주말 일정이 없으면 토·일 열을 숨긴다
+    const hasWeekend = useMemo(
+        () =>
+            timetableItems.some((item) =>
+                getTimetableItemTimes(item).some((time) => time.day >= WeekdayEnum.Sat),
+            ),
+        [timetableItems],
+    )
+    const displayedDayCount = isTablet && !hasWeekend ? 5 : 7
     const selectedTabRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
@@ -144,7 +157,7 @@ export default function SharedTimetableSection({
                     <CustomTimeTableGrid
                         timetableItems={timetableItems}
                         overlappedLectureIds={overlappedLectureIds}
-                        displayedDayCount={7}
+                        displayedDayCount={displayedDayCount}
                         needTimeFilter={false}
                         needItemDeletable={false}
                         selectedItems={selectedItem ? [selectedItem] : []}
