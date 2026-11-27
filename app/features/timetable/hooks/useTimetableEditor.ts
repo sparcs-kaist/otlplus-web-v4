@@ -10,15 +10,7 @@ import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import type { CustomBlock } from "@/common/schemas/customBlock"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
-import {
-    getCustomBlockTimes,
-    isCustomBlockItem,
-    isLectureItem,
-    timetableItemKey,
-    toCustomBlockItem,
-    toLectureItem,
-    toTimetableItems,
-} from "@/common/utils/timetableItems"
+import { timetableItemKey, toTimetableItems } from "@/utils/timetable/timetableItems"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
 import { queryKeys } from "@/libs/query/queryKeys"
 import { useAPI } from "@/utils/api/useAPI"
@@ -66,8 +58,8 @@ function buildPatch(edits: Transaction): PATCHTimetableItemsBody {
 
 function sameCustomBlockContent(left: CustomBlock, right: CustomBlock) {
     if (left.block_name !== right.block_name || left.place !== right.place) return false
-    const times = getCustomBlockTimes(left)
-    const otherTimes = getCustomBlockTimes(right)
+    const times = left.times
+    const otherTimes = right.times
     return (
         times.length === otherTimes.length &&
         times.every(({ day, begin, end }) =>
@@ -176,7 +168,7 @@ export function useTimetableEditor({
                 void queryClient.cancelQueries({ queryKey: [detailPath] })
                 const previousBlockIds = new Set(
                     currentItems().flatMap((item) =>
-                        isCustomBlockItem(item) ? [item.data.id] : [],
+                        item.kind === TimetableItemKind.CUSTOM ? [item.data.id] : [],
                     ),
                 )
                 const detail = await mutation.mutateAsync(buildPatch(edits))
@@ -407,21 +399,30 @@ export function useTimetableEditor({
                 .map((before) => ({ before })),
         )
     }
-    const addLectures = (lectures: Lecture[]) => addItems(lectures.map(toLectureItem))
+    const addLectures = (lectures: Lecture[]) =>
+        addItems(lectures.map((data) => ({ kind: TimetableItemKind.LECTURE, data })))
     const removeLectures = (ids: number[]) =>
         removeItems(
             currentItems().filter(
-                (item) => isLectureItem(item) && ids.includes(item.data.id),
+                (item) =>
+                    item.kind === TimetableItemKind.LECTURE && ids.includes(item.data.id),
             ),
         )
     const addCustomBlock = (data: Omit<CustomBlock, "id">) =>
-        addItems([toCustomBlockItem({ ...data, id: nextLocalId.current-- })])
+        addItems([
+            {
+                kind: TimetableItemKind.CUSTOM,
+                data: { ...data, id: nextLocalId.current-- },
+            },
+        ])
     const updateCustomBlock = async (id: number, data: Omit<CustomBlock, "id">) => {
         const before = currentItems().find(
-            (item) => isCustomBlockItem(item) && item.data.id === id,
+            (item) => item.kind === TimetableItemKind.CUSTOM && item.data.id === id,
         )
         return before
-            ? execute([{ before, after: toCustomBlockItem({ ...data, id }) }])
+            ? execute([
+                  { before, after: { kind: TimetableItemKind.CUSTOM, data: { ...data, id } } },
+              ])
             : false
     }
     const undo = async () => {

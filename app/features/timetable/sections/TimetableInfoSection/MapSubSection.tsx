@@ -4,7 +4,7 @@ import styled from "@emotion/styled"
 
 import { flattenTimeTableColors } from "@/common/components/timetable/Tile"
 import type { Lecture } from "@/common/schemas/lecture"
-import { getPaletteColor } from "@/common/utils/timetableItems"
+import { getPaletteColor } from "@/utils/timetable/timetableItems"
 import useThemeStore from "@/utils/zustand/useThemeStore"
 
 const MapContainer = styled.div`

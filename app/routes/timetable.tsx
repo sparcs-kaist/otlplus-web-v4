@@ -14,12 +14,7 @@ import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
-import {
-    getCustomBlockTimes,
-    timetableItemKey,
-    toLectureItem,
-    toTimetableItems,
-} from "@/common/utils/timetableItems"
+import { timetableItemKey, toTimetableItems } from "@/utils/timetable/timetableItems"
 import KeyboardShortcutModal from "@/features/timetable/components/KeyboardShortcutModal"
 import { useTimetableClone } from "@/features/timetable/hooks/useTimetableClone"
 import { useTimetableEditor } from "@/features/timetable/hooks/useTimetableEditor"
@@ -367,9 +362,7 @@ export default function Timetable() {
     )
     const handleDeleteItem = useMemo(
         () =>
-            canDeleteItem
-                ? (item: TimetableItem) => void removeItems([item])
-                : undefined,
+            canDeleteItem ? (item: TimetableItem) => void removeItems([item]) : undefined,
         [canDeleteItem, removeItems],
     )
     const closeMobileLectureModal = useCallback(() => {
@@ -440,7 +433,7 @@ export default function Timetable() {
                 timetableItemKey(nextSelectedItems[0]!) === timetableItemKey(item)
             ) {
                 setSelectedCustomBlock(item.data)
-                setTimeFilter(getCustomBlockTimes(item.data)[0] ?? null)
+                setTimeFilter(item.data.times[0] ?? null)
                 setIsCustomBlockSectionOpen(true)
             } else {
                 setIsCustomBlockSectionOpen(false)
@@ -457,7 +450,7 @@ export default function Timetable() {
     )
     const handleLectureSelect = useCallback(
         (lecture: Lecture, event?: React.MouseEvent) =>
-            handleItemSelect(toLectureItem(lecture), event),
+            handleItemSelect({ kind: TimetableItemKind.LECTURE, data: lecture }, event),
         [handleItemSelect],
     )
     const customBlockEditorProps = {

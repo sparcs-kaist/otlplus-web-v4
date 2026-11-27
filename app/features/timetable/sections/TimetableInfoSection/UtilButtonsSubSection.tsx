@@ -14,7 +14,7 @@ import { SemesterEnum, semesterToString } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
-import { getTimetableItemTimes } from "@/common/utils/timetableItems"
+import { getTimetableItemTimes } from "@/utils/timetable/timetableItems"
 import {
     copyTimetableImageToClipboard,
     downloadTimetableCalendar,

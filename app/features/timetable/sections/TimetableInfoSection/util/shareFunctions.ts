@@ -7,7 +7,7 @@ import {
     getPaletteColor,
     getTimetableItemColorIndex,
     getTimetableItemTimes,
-} from "@/common/utils/timetableItems"
+} from "@/utils/timetable/timetableItems"
 import { colors } from "@/styles/themes/_base/variables/colors"
 import { darkThemeColors } from "@/styles/themes/dark/variables/colors"
 import professorName from "@/utils/professorName"

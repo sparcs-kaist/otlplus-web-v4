@@ -3,6 +3,7 @@ import { Fragment, memo, useCallback, useEffect, useMemo, useRef, useState } fro
 import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
 
+import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import { WeekdayEnum } from "@/common/enum/weekdayEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import GridWrapper from "@/common/primitives/GridWrapper"
@@ -13,12 +14,9 @@ import type { TimetableItem } from "@/common/schemas/timetableItem"
 import {
     extractCustomBlocks,
     extractLectures,
-    getCustomBlockTimes,
     getTimetableItemTimes,
     timetableItemKey,
-    toCustomBlockItem,
-    toLectureItem,
-} from "@/common/utils/timetableItems"
+} from "@/utils/timetable/timetableItems"
 
 import {
     HoverTile,
@@ -185,7 +183,10 @@ const MemoizedLectureTiles = memo(
         deleteLecture,
         isGhost = false,
     }: LectureTilesProps) => {
-        const lectureItem = useMemo(() => toLectureItem(lecture), [lecture])
+        const lectureItem = useMemo<TimetableItem>(
+            () => ({ kind: TimetableItemKind.LECTURE, data: lecture }),
+            [lecture],
+        )
 
         const handleMouseEnter = useCallback(() => {
             handleLectureTileHover?.(lecture)
@@ -462,8 +463,11 @@ function CustomTimeTableGrid({
     const customBlockSlots = useMemo(
         () =>
             customBlocks.flatMap((block) => {
-                const item = toCustomBlockItem(block)
-                return getCustomBlockTimes(block).map((time, index) => ({
+                const item: TimetableItem = {
+                    kind: TimetableItemKind.CUSTOM,
+                    data: block,
+                }
+                return block.times.map((time, index) => ({
                     item,
                     block,
                     time,
@@ -567,7 +571,7 @@ function CustomTimeTableGrid({
         const intervals: { day: WeekdayEnum; begin: number; end: number }[] = []
         const times = timetableItems.flatMap(getTimetableItemTimes)
         for (const ghostLecture of ghostLectures) {
-            for (const ghost of getTimetableItemTimes(toLectureItem(ghostLecture))) {
+            for (const ghost of ghostLecture.classes) {
                 for (const time of times) {
                     const begin = Math.max(ghost.begin, time.begin)
                     const end = Math.min(ghost.end, time.end)
@@ -694,7 +698,7 @@ function CustomTimeTableGrid({
     const handleLectureTileHoverCallBack = useCallback(
         (lecture: Lecture) => {
             if (!needItemInteraction) return
-            onItemHover?.(toLectureItem(lecture))
+            onItemHover?.({ kind: TimetableItemKind.LECTURE, data: lecture })
         },
         [onItemHover, needItemInteraction],
     )
@@ -702,7 +706,7 @@ function CustomTimeTableGrid({
     const handleLectureTileSelectCallback = useCallback(
         (lecture: Lecture, e?: React.PointerEvent) => {
             if (!needItemInteraction) return
-            onItemSelect?.(toLectureItem(lecture), e)
+            onItemSelect?.({ kind: TimetableItemKind.LECTURE, data: lecture }, e)
         },
         [onItemSelect, needItemInteraction],
     )
@@ -729,7 +733,7 @@ function CustomTimeTableGrid({
 
     const deleteLectureCallback = useCallback(
         (lecture: Lecture) => {
-            deleteItemCallback(toLectureItem(lecture))
+            deleteItemCallback({ kind: TimetableItemKind.LECTURE, data: lecture })
         },
         [deleteItemCallback],
     )
@@ -761,22 +765,16 @@ function CustomTimeTableGrid({
             className="custom-timetable"
             ref={customTimeTableRef}
             data-hovered-lectures={
-                needItemInteraction
-                    ? hoveredLectures.map((lec) => lec.id).join(" ")
-                    : ""
+                needItemInteraction ? hoveredLectures.map((lec) => lec.id).join(" ") : ""
             }
             data-selected-lectures={
-                needItemInteraction
-                    ? activeLectures.map((lec) => lec.id).join(" ")
-                    : ""
+                needItemInteraction ? activeLectures.map((lec) => lec.id).join(" ") : ""
             }
             data-selected-custom-blocks={
                 needItemInteraction ? activeCustomIds.join(" ") : ""
             }
             data-selected-items={
-                needItemInteraction
-                    ? selectedItems.map(timetableItemKey).join(" ")
-                    : ""
+                needItemInteraction ? selectedItems.map(timetableItemKey).join(" ") : ""
             }
             data-flash-items={(flashItemKeys ?? []).join(" ")}
             data-flash-custom-blocks={(flashItemKeys ?? [])

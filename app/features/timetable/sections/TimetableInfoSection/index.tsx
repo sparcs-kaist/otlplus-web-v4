@@ -3,9 +3,10 @@ import { useCallback, useMemo } from "react"
 import styled from "@emotion/styled"
 
 import StyledDivider from "@/common/components/StyledDivider"
+import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
-import { extractLectures, toLectureItem } from "@/common/utils/timetableItems"
+import { extractLectures } from "@/utils/timetable/timetableItems"
 import CreditGridSubSection from "@/features/timetable/sections/TimetableInfoSection/CreditGridSubSection"
 import CreditScoreSubSection from "@/features/timetable/sections/TimetableInfoSection/CreditScoreSubSection"
 import ExamTimeSubSection from "@/features/timetable/sections/TimetableInfoSection/ExamTimeSubSection"
@@ -68,7 +69,10 @@ export default function TimetableInfoSection({
                     typeof lecturesOrUpdater === "function"
                         ? lecturesOrUpdater(extractLectures(prev))
                         : lecturesOrUpdater
-                return nextLectures.map(toLectureItem)
+                return nextLectures.map((data) => ({
+                    kind: TimetableItemKind.LECTURE,
+                    data,
+                }))
             })
         },
         [setHoveredItems],

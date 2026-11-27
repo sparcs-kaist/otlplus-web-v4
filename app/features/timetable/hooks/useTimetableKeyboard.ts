@@ -11,8 +11,7 @@ import {
     getTimetableItemTimes,
     timetableItemKey,
     timetableItemsOverlap,
-    toLectureItem,
-} from "@/common/utils/timetableItems"
+} from "@/utils/timetable/timetableItems"
 import {
     type TimetableEditOptions,
     timetableHistoryKey,
@@ -134,7 +133,7 @@ export function useTimetableKeyboard({
     )
 
     const onLectureSelect = (lecture: Lecture, event?: React.MouseEvent) =>
-        onItemSelect(toLectureItem(lecture), event)
+        onItemSelect({ kind: TimetableItemKind.LECTURE, data: lecture }, event)
 
     const { requestFunction: addTimetable } = useAPI("POST", "/timetables", {
         onSuccess: (data, variables) => {
@@ -315,7 +314,7 @@ export function useTimetableKeyboard({
                             : Math.min(searchLectures.length - 1, index + 1)
                     ]
                 if (next) {
-                    setHoveredItems([toLectureItem(next)])
+                    setHoveredItems([{ kind: TimetableItemKind.LECTURE, data: next }])
                     requestAnimationFrame(() => {
                         const element = document.querySelector(
                             `[data-search-lecture-id="${next.id}"]`,
@@ -329,7 +328,10 @@ export function useTimetableKeyboard({
             } else if (editable) {
                 const lecture = searchLectures[index]
                 if (!lecture) return
-                const item = toLectureItem(lecture)
+                const item: TimetableItem = {
+                    kind: TimetableItemKind.LECTURE,
+                    data: lecture,
+                }
                 if (
                     currentTimetableItems.some(
                         (existing) =>

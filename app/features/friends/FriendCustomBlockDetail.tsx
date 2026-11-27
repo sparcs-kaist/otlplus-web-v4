@@ -8,7 +8,6 @@ import Icon from "@/common/primitives/Icon"
 import { IconButton } from "@/common/primitives/IconButton"
 import Typography from "@/common/primitives/Typography"
 import type { CustomBlock } from "@/common/schemas/customBlock"
-import { getCustomBlockTimes } from "@/common/utils/timetableItems"
 
 const Detail = styled(FlexWrapper)`
     color: ${({ theme }) => theme.colors.Text.default};
@@ -75,7 +74,7 @@ export default function FriendCustomBlockDetail({
                     flex="1"
                     style={{ minWidth: 0 }}
                 >
-                    {getCustomBlockTimes(block).map((time, index) => (
+                    {block.times.map((time, index) => (
                         <TimeFilterArea
                             key={index}
                             timeFilter={time}

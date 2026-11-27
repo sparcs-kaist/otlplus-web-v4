@@ -6,12 +6,13 @@ import FavoriteIcon from "@mui/icons-material/Favorite"
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder"
 
 import type { GETLecturesResponse } from "@/api/lectures"
+import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
-import { timetableItemsOverlap, toLectureItem } from "@/common/utils/timetableItems"
+import { timetableItemsOverlap } from "@/utils/timetable/timetableItems"
 import isLectureAddDisabled from "@/features/timetable/utils/isLectureAddDisabled"
 import { media } from "@/styles/themes/media"
 import useIsDevice from "@/utils/useIsDevice"
@@ -172,7 +173,10 @@ const LectureListBlock: React.FC<LectureListBlockProps> = ({
                 const isHovered = hoveredLecture?.some((lec) => lec.id === lecture.id)
                 const isSelected = selectedLectures?.some((lec) => lec.id === lecture.id)
                 const hasOverlap = timetableItems.some((item) =>
-                    timetableItemsOverlap(item, toLectureItem(lecture)),
+                    timetableItemsOverlap(item, {
+                        kind: TimetableItemKind.LECTURE,
+                        data: lecture,
+                    }),
                 )
                 const addDisabled = isLectureAddDisabled({
                     status,

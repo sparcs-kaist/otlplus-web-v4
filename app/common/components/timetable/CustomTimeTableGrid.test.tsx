@@ -5,7 +5,7 @@ import { GETResponse as FriendSharedResponse } from "@/api/friends/$friendId/tim
 import type { CustomBlock } from "@/common/schemas/customBlock"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
-import { toTimetableItems } from "@/common/utils/timetableItems"
+import { toTimetableItems } from "@/utils/timetable/timetableItems"
 import themes from "@/styles/themes"
 import { fireEvent, render, screen } from "@/test/test-utils"
 

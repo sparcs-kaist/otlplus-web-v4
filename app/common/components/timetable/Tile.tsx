@@ -5,6 +5,7 @@ import styled from "@emotion/styled"
 import Close from "@mui/icons-material/Close"
 import { useTranslation } from "react-i18next"
 
+import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import { IconButton } from "@/common/primitives/IconButton"
@@ -15,10 +16,8 @@ import type { TimetableItem } from "@/common/schemas/timetableItem"
 import {
     getPaletteColor,
     getTimetableItemColorIndex,
-    isLectureItem,
     timetableItemKey,
-    toLectureItem,
-} from "@/common/utils/timetableItems"
+} from "@/utils/timetable/timetableItems"
 import { media } from "@/styles/themes/media"
 import { formatMinuteToString } from "@/utils/timetable/formatTimeblockToString"
 
@@ -185,7 +184,8 @@ const TileInner = styled(SelectableTileBase)<{
 
     @media (hover: hover) {
         .custom-timetable[data-interaction="true"]:has(
-                .${TIMETABLE_TILE_CLASSNAME}[data-item-key="${({ itemKey }) => itemKey}"]:hover
+                .${TIMETABLE_TILE_CLASSNAME}[data-item-key="${({ itemKey }) =>
+            itemKey}"]:hover
             )
             & {
             ${({ theme }) => TileHoverCss(theme)}
@@ -258,16 +258,14 @@ function TimetableTileTitle({
     item: TimetableItem
     overlapLabel?: string
 }) {
-    const isLecture = isLectureItem(item)
+    const isLecture = item.kind === TimetableItemKind.LECTURE
     const title = (
         <Typography
             type="SmallMedium"
             className={isLecture ? "tile-title lecture-title" : "tile-title block-title"}
             color="TimeTable.title"
         >
-            {isLecture
-                ? `${item.data.name} ${item.data.subtitle}`
-                : item.data.block_name}
+            {isLecture ? `${item.data.name} ${item.data.subtitle}` : item.data.block_name}
         </Typography>
     )
     return overlapLabel ? (
@@ -299,7 +297,7 @@ function TimetableTileContent({
     timeLabel?: string
     overflow?: boolean
 }) {
-    const isLecture = isLectureItem(item)
+    const isLecture = item.kind === TimetableItemKind.LECTURE
     const cls = isLecture && classIdx != null ? item.data.classes[classIdx] : null
     const infoClassName = isLecture ? "tile-info lecture-info" : "tile-info block-info"
     const infoLines = isLecture
@@ -407,7 +405,7 @@ function TimetableTile({
     onDelete,
 }: TimetableTileProps) {
     const { t } = useTranslation()
-    const isLecture = isLectureItem(item)
+    const isLecture = item.kind === TimetableItemKind.LECTURE
     const itemKey = timetableItemKey(item)
 
     const handlePointerDown = useCallback(
@@ -618,7 +616,7 @@ function OverflowTile({
 }: OverflowTileProps) {
     const cls = classIdx == null ? null : lecture.classes[classIdx]
     const { t } = useTranslation()
-    const item = toLectureItem(lecture)
+    const item: TimetableItem = { kind: TimetableItemKind.LECTURE, data: lecture }
 
     return (
         <OverflowTileWrapper

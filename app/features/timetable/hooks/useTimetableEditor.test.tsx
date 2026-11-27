@@ -10,7 +10,7 @@ import {
 } from "@/api/timetables/$timetableId/items"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
-import { toTimetableItems } from "@/common/utils/timetableItems"
+import { toTimetableItems } from "@/utils/timetable/timetableItems"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
 import { axiosClient } from "@/libs/axios"
 import { useAPI } from "@/utils/api/useAPI"

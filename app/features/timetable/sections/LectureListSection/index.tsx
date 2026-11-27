@@ -10,15 +10,12 @@ import LoadingCircle from "@/common/components/LoadingCircle"
 import { type SearchParamsType } from "@/common/components/search/SearchArea"
 import { LectureActionEnum } from "@/common/enum/lectureActionEnum"
 import { LECTURE_ORDERS, LectureOrderEnum } from "@/common/enum/orderEnum"
+import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
-import {
-    isLectureItem,
-    timetableItemsOverlap,
-    toLectureItem,
-} from "@/common/utils/timetableItems"
+import { timetableItemsOverlap } from "@/utils/timetable/timetableItems"
 import {
     useHoveredLectures,
     useSelectedLectures,
@@ -343,7 +340,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
             )
             const lecture = allLectures.find((lec) => lec.id === lectureId)
             if (lecture) {
-                setHoveredItems([toLectureItem(lecture)])
+                setHoveredItems([{ kind: TimetableItemKind.LECTURE, data: lecture }])
             } else {
                 setHoveredItems([])
             }
@@ -410,7 +407,10 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
         }
         if (
             timetableItems.some((item) =>
-                timetableItemsOverlap(item, toLectureItem(lecture)),
+                timetableItemsOverlap(item, {
+                    kind: TimetableItemKind.LECTURE,
+                    data: lecture,
+                }),
             )
         ) {
             alert(t("timetable.addLectureConflict"))
@@ -434,11 +434,11 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
             setHoveredItems((prev) => {
                 if (
                     prev.length === 1 &&
-                    isLectureItem(prev[0]!) &&
+                    prev[0]?.kind === TimetableItemKind.LECTURE &&
                     prev[0].data.id === lecture.id
                 )
                     return prev
-                return [toLectureItem(lecture)]
+                return [{ kind: TimetableItemKind.LECTURE, data: lecture }]
             })
         },
         [isTablet, setHoveredItems],

@@ -9,19 +9,14 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom"
 import Button from "@/common/components/Button"
 import Modal from "@/common/components/Modal"
 import { SemesterEnum, semesterToString } from "@/common/enum/semesterEnum"
+import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import Widget from "@/common/primitives/Widget"
 import type { Friend } from "@/common/schemas/friend"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
-import {
-    extractLectures,
-    isCustomBlockItem,
-    isLectureItem,
-    toLectureItem,
-    toTimetableItems,
-} from "@/common/utils/timetableItems"
+import { extractLectures, toTimetableItems } from "@/utils/timetable/timetableItems"
 import FriendCustomBlockDetail from "@/features/friends/FriendCustomBlockDetail"
 import FriendInviteModal from "@/features/friends/FriendInviteModal"
 import FriendLectureDetail from "@/features/friends/FriendLectureDetail"
@@ -189,13 +184,13 @@ export default function FriendsPage() {
     const [hoveredItem, setHoveredItem] = useState<TimetableItem | null>(null)
     const [selectedItem, setSelectedItem] = useState<TimetableItem | null>(null)
     const hoveredLecture =
-        hoveredItem && isLectureItem(hoveredItem) ? hoveredItem.data : null
+        hoveredItem?.kind === TimetableItemKind.LECTURE ? hoveredItem.data : null
     const hoveredCustomBlock =
-        hoveredItem && isCustomBlockItem(hoveredItem) ? hoveredItem.data : null
+        hoveredItem?.kind === TimetableItemKind.CUSTOM ? hoveredItem.data : null
     const selectedLecture =
-        selectedItem && isLectureItem(selectedItem) ? selectedItem.data : null
+        selectedItem?.kind === TimetableItemKind.LECTURE ? selectedItem.data : null
     const selectedCustomBlock =
-        selectedItem && isCustomBlockItem(selectedItem) ? selectedItem.data : null
+        selectedItem?.kind === TimetableItemKind.CUSTOM ? selectedItem.data : null
     const activeCustomBlock = selectedCustomBlock || hoveredCustomBlock
     const activeLecture = selectedLecture || hoveredLecture
     const [friendListOpen, setFriendListOpen] = useState(false)
@@ -549,7 +544,7 @@ export default function FriendsPage() {
                         key={lecture.id}
                         ref={index === 0 ? detailActionRef : undefined}
                         type="button"
-                        onClick={() => setSelectedItem(toLectureItem(lecture))}
+                        onClick={() => setSelectedItem({ kind: TimetableItemKind.LECTURE, data: lecture })}
                     >
                         {lecture.name}
                         {lecture.subtitle} {lecture.classNo && `(${lecture.classNo})`}
@@ -749,7 +744,7 @@ export default function FriendsPage() {
                                     ref={index === 0 ? detailActionRef : undefined}
                                     type="button"
                                     onClick={() =>
-                                        setSelectedItem(toLectureItem(lecture))
+                                        setSelectedItem({ kind: TimetableItemKind.LECTURE, data: lecture })
                                     }
                                 >
                                     {lecture.name}

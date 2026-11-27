@@ -18,10 +18,7 @@ import Typography from "@/common/primitives/Typography"
 import type { CustomBlock } from "@/common/schemas/customBlock"
 import type { TimeBlock } from "@/common/schemas/timeblock"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
-import {
-    getCustomBlockTimes,
-    hasInternalTimeOverlap,
-} from "@/common/utils/timetableItems"
+import { hasInternalTimeOverlap } from "@/utils/timetable/timetableItems"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
 
 const CustomBlockSectionInner = styled(FlexWrapper)`
@@ -66,7 +63,7 @@ function CustomBlockSection({
     const [title, setTitle] = useState(customBlock?.block_name ?? "")
     const [place, setPlace] = useState(customBlock?.place ?? "")
     const [times, setTimes] = useState<TimeBlock[]>(() =>
-        customBlock ? getCustomBlockTimes(customBlock) : timeBlock ? [timeBlock] : [],
+        customBlock ? customBlock.times : timeBlock ? [timeBlock] : [],
     )
     const consumedTimeBlock = useRef(timeBlock)
     const setCustomBlockDraftTimes = useTimetableUIStore(
@@ -92,7 +89,7 @@ function CustomBlockSection({
         consumedTimeBlock.current = currentTime
         setTimes(
             customBlock
-                ? getCustomBlockTimes(customBlock)
+                ? customBlock.times
                 : currentTime
                   ? [currentTime]
                   : [],

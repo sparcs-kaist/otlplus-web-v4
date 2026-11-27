@@ -6,7 +6,7 @@ import type { CustomBlock } from "@/common/schemas/customBlock"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimeBlock } from "@/common/schemas/timeblock"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
-import { extractLectures } from "@/common/utils/timetableItems"
+import { extractLectures } from "@/utils/timetable/timetableItems"
 
 interface TimetableUIState {
     // 1. 시간표 & 리스트 상호작용

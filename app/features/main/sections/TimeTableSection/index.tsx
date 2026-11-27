@@ -8,11 +8,12 @@ import { useNavigate } from "react-router"
 
 import LoadingCircle from "@/common/components/LoadingCircle"
 import CustomTimeTableGrid from "@/common/components/timetable/CustomTimeTableGrid"
+import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
-import { isLectureItem, toTimetableItems } from "@/common/utils/timetableItems"
+import { toTimetableItems } from "@/utils/timetable/timetableItems"
 import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
 import { handleLogin } from "@/utils/handleLoginLogout"
@@ -181,7 +182,8 @@ const TimeTableSection = () => {
                                 needItemDeletable={false}
                                 needTimeFilter={false}
                                 onItemSelect={(item) => {
-                                    if (isLectureItem(item)) setSelectedLecture(item.data)
+                                    if (item.kind === TimetableItemKind.LECTURE)
+                                        setSelectedLecture(item.data)
                                 }}
                                 needCurrentTimeBar={true}
                             />
