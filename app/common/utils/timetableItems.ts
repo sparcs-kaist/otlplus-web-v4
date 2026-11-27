@@ -44,9 +44,7 @@ export const toTimetableItems = (
           ]
         : []
 
-export const groupTimetableItems = (
-    items: readonly TimetableItem[],
-): TimetableItems => ({
+export const groupTimetableItems = (items: readonly TimetableItem[]): TimetableItems => ({
     lectures: extractLectures(items),
     customBlocks: extractCustomBlocks(items),
 })

@@ -748,7 +748,9 @@ export default function FriendsPage() {
                                     key={lecture.id}
                                     ref={index === 0 ? detailActionRef : undefined}
                                     type="button"
-                                    onClick={() => setSelectedItem(toLectureItem(lecture))}
+                                    onClick={() =>
+                                        setSelectedItem(toLectureItem(lecture))
+                                    }
                                 >
                                     {lecture.name}
                                     {lecture.subtitle}{" "}

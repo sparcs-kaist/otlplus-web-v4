@@ -245,7 +245,9 @@ export function useTimetableEditor({
                     predicate: (query) =>
                         query.queryKey[2] !== language && query.queryKey[3] === "/api/v2",
                 })
-                void queryClient.invalidateQueries({ queryKey: [queryKeys.homeTimetable] })
+                void queryClient.invalidateQueries({
+                    queryKey: [queryKeys.homeTimetable],
+                })
                 void queryClient.invalidateQueries({
                     queryKey: [queryKeys.sharedTimetable],
                 })
@@ -372,7 +374,9 @@ export function useTimetableEditor({
                         ui.setIsCustomBlockSectionOpen(false)
                     }
                 }
-                void queryClient.invalidateQueries({ queryKey: [queryKeys.homeTimetable] })
+                void queryClient.invalidateQueries({
+                    queryKey: [queryKeys.homeTimetable],
+                })
                 void queryClient.invalidateQueries({
                     queryKey: [queryKeys.sharedTimetable],
                 })
