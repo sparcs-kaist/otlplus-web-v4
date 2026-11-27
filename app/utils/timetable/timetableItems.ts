@@ -28,17 +28,6 @@ export const toTimetableItems = (
 
 export const timetableItemKey = (item: TimetableItem) => `${item.kind}:${item.data.id}`
 
-export const getTimetableItemColorIndex = (item: TimetableItem): number =>
-    item.kind === TimetableItemKind.LECTURE ? item.data.courseId : item.data.id * 3 + 7
-
-export const getPaletteColor = <T>(
-    palette: readonly T[],
-    colorIndex: number,
-): T | undefined =>
-    palette.length === 0
-        ? undefined
-        : palette[((colorIndex % palette.length) + palette.length) % palette.length]
-
 export const getTimetableItemTimes = (item: TimetableItem): TimeBlock[] =>
     item.kind === TimetableItemKind.LECTURE ? item.data.classes : item.data.times
 

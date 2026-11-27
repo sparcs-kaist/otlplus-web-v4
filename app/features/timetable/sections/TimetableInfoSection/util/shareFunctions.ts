@@ -6,11 +6,7 @@ import type { TimetableItem } from "@/common/schemas/timetableItem"
 import { colors } from "@/styles/themes/_base/variables/colors"
 import { darkThemeColors } from "@/styles/themes/dark/variables/colors"
 import professorName from "@/utils/professorName"
-import {
-    getPaletteColor,
-    getTimetableItemColorIndex,
-    getTimetableItemTimes,
-} from "@/utils/timetable/timetableItems"
+import { getTimetableItemTimes } from "@/utils/timetable/timetableItems"
 
 import { isExpectedClipboardError } from "./clipboardErrors"
 
@@ -76,7 +72,10 @@ function getTimetableExportEntries(items: TimetableItem[]) {
                 item.kind === TimetableItemKind.LECTURE
                     ? `${item.data.classes[index]!.buildingCode} ${item.data.classes[index]!.roomName}`.trim()
                     : item.data.place,
-            colorIndex: getTimetableItemColorIndex(item),
+            colorIndex:
+                item.kind === TimetableItemKind.LECTURE
+                    ? item.data.courseId
+                    : item.data.id,
         })),
     )
 }
@@ -239,7 +238,8 @@ async function timeTableImage(drawTimetableData: DrawTimetableDatas) {
 
     for (const entry of getTimetableExportEntries(timetableItems)) {
         const color =
-            getPaletteColor(TIMETABLE_CELL_COLORS, entry.colorIndex) || "#F2CECE"
+            TIMETABLE_CELL_COLORS.at(entry.colorIndex % TIMETABLE_CELL_COLORS.length) ||
+            "#F2CECE"
         const [x, y, width, height] = [
             178 * entry.day + 76,
             (entry.begin * 4) / 3 - 486,

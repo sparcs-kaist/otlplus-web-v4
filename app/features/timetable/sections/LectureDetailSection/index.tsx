@@ -35,8 +35,6 @@ import { queryKeys } from "@/libs/query/queryKeys"
 import { useAPI } from "@/utils/api/useAPI"
 import getSyllabusUrl from "@/utils/timetable/getSyllabusUrl"
 import {
-    getPaletteColor,
-    getTimetableItemColorIndex,
     timetableItemKey,
     timetableItemsOverlap,
 } from "@/utils/timetable/timetableItems"
@@ -276,9 +274,10 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                         )}
                     </FlexWrapper>
                     {selectedItems.map((item) => {
-                        const { title, description } = match(item)
+                        const { title, description, colorIndex } = match(item)
                             .with({ kind: TimetableItemKind.LECTURE }, ({ data: l }) => ({
                                 title: `${l.name} ${l.subtitle}`,
+                                colorIndex: l.courseId,
                                 description: (
                                     <>
                                         {l.professors[0]?.name}{" "}
@@ -292,6 +291,7 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                             }))
                             .with({ kind: TimetableItemKind.CUSTOM }, ({ data }) => ({
                                 title: data.block_name,
+                                colorIndex: data.id,
                                 description: data.place,
                             }))
                             .exhaustive()
@@ -305,10 +305,7 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                             >
                                 <Icon
                                     size={14}
-                                    color={getPaletteColor(
-                                        tileColors,
-                                        getTimetableItemColorIndex(item),
-                                    )}
+                                    color={tileColors.at(colorIndex % tileColors.length)}
                                 >
                                     <CircleIcon />
                                 </Icon>

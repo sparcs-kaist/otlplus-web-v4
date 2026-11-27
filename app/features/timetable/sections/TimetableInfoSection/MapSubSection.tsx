@@ -4,7 +4,6 @@ import styled from "@emotion/styled"
 
 import { flattenTimeTableColors } from "@/common/components/timetable/Tile"
 import type { Lecture } from "@/common/schemas/lecture"
-import { getPaletteColor } from "@/utils/timetable/timetableItems"
 import useThemeStore from "@/utils/zustand/useThemeStore"
 
 const MapContainer = styled.div`
@@ -55,13 +54,11 @@ const MapPinPointer = styled.div`
 `
 
 const MapPin = styled.div<{ courseId: number; highlighted: boolean }>`
-    background-color: ${({ theme, courseId, highlighted }) =>
-        highlighted
-            ? theme.colors.Highlight.default
-            : (getPaletteColor(
-                  flattenTimeTableColors(theme.colors.Tile.TimeTable.default),
-                  courseId,
-              ) ?? "#CCCCCC")};
+    background-color: ${({ theme, courseId, highlighted }) => {
+        if (highlighted) return theme.colors.Highlight.default
+        const colors = flattenTimeTableColors(theme.colors.Tile.TimeTable.default)
+        return colors.at(courseId % colors.length) ?? "#CCCCCC"
+    }};
     width: 10px;
     height: 10px;
     border-radius: 100%;

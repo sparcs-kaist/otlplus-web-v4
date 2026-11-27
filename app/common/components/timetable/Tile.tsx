@@ -15,11 +15,7 @@ import type { TimeBlock } from "@/common/schemas/timeblock"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
 import { media } from "@/styles/themes/media"
 import { formatMinuteToString } from "@/utils/timetable/formatTimeblockToString"
-import {
-    getPaletteColor,
-    getTimetableItemColorIndex,
-    timetableItemKey,
-} from "@/utils/timetable/timetableItems"
+import { timetableItemKey } from "@/utils/timetable/timetableItems"
 
 const DAYS = [
     "monday",
@@ -164,11 +160,10 @@ const TileInner = styled(SelectableTileBase)<{
     colorIndex: number
     lectureId?: number
 }>`
-    background: ${({ theme, colorIndex }) =>
-        getPaletteColor(
-            flattenTimeTableColors(theme.colors.Tile.TimeTable.default),
-            colorIndex,
-        )};
+    background: ${({ theme, colorIndex }) => {
+        const colors = flattenTimeTableColors(theme.colors.Tile.TimeTable.default)
+        return colors.at(colorIndex % colors.length)
+    }};
     border-radius: 2px;
     overflow: hidden;
     pointer-events: none;
@@ -432,7 +427,7 @@ function TimetableTile({
 
     const day = DAYS[time.day]
     const timeLabel = `${t(`common.days.${day}`)} ${formatMinuteToString(time.begin)}–${formatMinuteToString(time.end)}`
-    const colorIndex = getTimetableItemColorIndex(item)
+    const colorIndex = isLecture ? item.data.courseId : item.data.id
 
     return (
         <TileWrapper
@@ -648,7 +643,7 @@ function OverflowTile({
                 gap={0}
                 align="flex-start"
                 padding="6px"
-                colorIndex={getTimetableItemColorIndex(item)}
+                colorIndex={lecture.courseId}
                 lectureId={lecture.id}
                 flex="1 1 auto"
                 className={`${TIMETABLE_TILE_CLASSNAME} ${LECTURE_TILE_CLASSNAME}`}
