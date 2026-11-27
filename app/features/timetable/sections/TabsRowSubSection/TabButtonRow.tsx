@@ -286,7 +286,11 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
                                 onClick={onSetHome}
                                 styles={{ padding: 3.75 }}
                             >
-                                <Icon size={17.5} color={theme.colors.Highlight.default} onClick={() => {}}>
+                                <Icon
+                                    size={17.5}
+                                    color={theme.colors.Highlight.default}
+                                    onClick={() => {}}
+                                >
                                     {isHome ? <StarIcon /> : <StarBorderIcon />}
                                 </Icon>
                             </IconButton>
@@ -339,7 +343,11 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
                                 onClick={onDelete}
                                 styles={{ padding: 3.75 }}
                             >
-                                <Icon size={17.5} color={theme.colors.Highlight.default} onClick={() => {}}>
+                                <Icon
+                                    size={17.5}
+                                    color={theme.colors.Highlight.default}
+                                    onClick={() => {}}
+                                >
                                     <CloseIcon />
                                 </Icon>
                             </IconButton>
@@ -718,7 +726,11 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                         onClick={() => addTimetable({ year, semester, lectureIds: [] })}
                         styles={{ padding: 3.75 }}
                     >
-                        <Icon size={17.5} color={theme.colors.Text.default} onClick={() => {}}>
+                        <Icon
+                            size={17.5}
+                            color={theme.colors.Text.default}
+                            onClick={() => {}}
+                        >
                             <AddIcon />
                         </Icon>
                     </IconButton>

@@ -796,7 +796,9 @@ function CustomTimeTableGrid({
                 needLectureInteraction ? activeCustomIds.join(" ") : ""
             }
             data-selected-items={
-                needLectureInteraction ? selectedItems.map(timetableItemKey).join(" ") : ""
+                needLectureInteraction
+                    ? selectedItems.map(timetableItemKey).join(" ")
+                    : ""
             }
             data-flash-custom-blocks={(flashItemKeys ?? [])
                 .filter((key) => key.startsWith("custom:"))
