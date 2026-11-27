@@ -94,7 +94,6 @@ const OverlayGrid = styled(GridWrapper)`
 
 const BackgroundGridBlock = styled(FlexWrapper)`
     box-sizing: border-box;
-    touch-action: none;
 
     &.half {
         border-top: ${LINE_HEIGHT}px dashed ${({ theme }) => theme.colors.Line.block};
@@ -117,6 +116,7 @@ const BackgroundGridBlock = styled(FlexWrapper)`
     [data-need-time-filter="true"] & {
         pointer-events: auto;
         cursor: pointer;
+        touch-action: none;
 
         @media (hover: hover) {
             :hover div {

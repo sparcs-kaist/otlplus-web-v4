@@ -39,6 +39,8 @@ interface CustomBlockSectionProps {
     updateCustomBlock: (id: number, data: Omit<CustomBlock, "id">) => Promise<boolean>
     removeItems: (items: TimetableItem[]) => Promise<boolean>
     isPending: boolean
+    /** 편집기가 닫힐 때(X·Escape·저장·삭제) 추가로 실행할 동작 */
+    onClose?: () => void
 }
 
 function CustomBlockSection({
@@ -46,6 +48,7 @@ function CustomBlockSection({
     updateCustomBlock,
     removeItems,
     isPending,
+    onClose,
 }: CustomBlockSectionProps) {
     const { t } = useTranslation()
     const theme = useTheme()
@@ -86,7 +89,8 @@ function CustomBlockSection({
         setIsCustomBlockSectionOpen(false)
         setSelectedCustomBlock(null)
         setTimeBlock(null)
-    }, [setIsCustomBlockSectionOpen, setSelectedCustomBlock, setTimeBlock])
+        onClose?.()
+    }, [onClose, setIsCustomBlockSectionOpen, setSelectedCustomBlock, setTimeBlock])
 
     useEffect(() => {
         setTitle(customBlock?.block_name ?? "")
