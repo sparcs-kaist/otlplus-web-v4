@@ -238,6 +238,13 @@ export default function Timetable() {
     const setIsCustomBlockSectionOpen = useTimetableUIStore(
         (s) => s.setIsCustomBlockSectionOpen,
     )
+    const customBlockTimeInput = useTimetableUIStore((s) => s.customBlockTimeInput)
+    const setCustomBlockTimeInput = useTimetableUIStore((s) => s.setCustomBlockTimeInput)
+    // 커스텀 블록 편집 중에는 그리드 드래그가 검색 필터가 아니라 블록 시간 입력으로 간다
+    const gridTimeFilter = isCustomBlockSectionOpen ? customBlockTimeInput : timeFilter
+    const setGridTimeFilter = isCustomBlockSectionOpen
+        ? setCustomBlockTimeInput
+        : setTimeFilter
 
     const { query: timetables, setParams: setTimetablesParams } = useAPI(
         "GET",
@@ -512,9 +519,9 @@ export default function Timetable() {
                                     flashItemKeys={flashItemKeys ?? undefined}
                                     hoveredItems={hoveredItems}
                                     selectedItems={selectedItems}
-                                    timeFilter={timeFilter}
+                                    timeFilter={gridTimeFilter}
                                     customBlockDraftTimes={customBlockDraftTimes}
-                                    setTimeFilter={setTimeFilter}
+                                    setTimeFilter={setGridTimeFilter}
                                 />
                             </TimetableArea>
                         </Block>
@@ -677,9 +684,9 @@ export default function Timetable() {
                                         flashItemKeys={flashItemKeys ?? undefined}
                                         hoveredItems={hoveredItems}
                                         selectedItems={selectedItems}
-                                        timeFilter={timeFilter}
+                                        timeFilter={gridTimeFilter}
                                         customBlockDraftTimes={customBlockDraftTimes}
-                                        setTimeFilter={setTimeFilter}
+                                        setTimeFilter={setGridTimeFilter}
                                     />
                                 </TimetableArea>
                                 {!isLaptop && <StyledDivider direction="column" />}

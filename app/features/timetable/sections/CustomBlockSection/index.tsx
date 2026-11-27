@@ -57,8 +57,8 @@ function CustomBlockSection({
     const setIsCustomBlockSectionOpen = useTimetableUIStore(
         (s) => s.setIsCustomBlockSectionOpen,
     )
-    const timeBlock = useTimetableUIStore((s) => s.timeFilter)
-    const setTimeBlock = useTimetableUIStore((s) => s.setTimeFilter)
+    const timeBlock = useTimetableUIStore((s) => s.customBlockTimeInput)
+    const setTimeBlock = useTimetableUIStore((s) => s.setCustomBlockTimeInput)
 
     const [title, setTitle] = useState(customBlock?.block_name ?? "")
     const [place, setPlace] = useState(customBlock?.place ?? "")
@@ -74,7 +74,13 @@ function CustomBlockSection({
         setCustomBlockDraftTimes(times)
     }, [setCustomBlockDraftTimes, times])
 
-    useEffect(() => () => setCustomBlockDraftTimes([]), [setCustomBlockDraftTimes])
+    useEffect(
+        () => () => {
+            setCustomBlockDraftTimes([])
+            setTimeBlock(null)
+        },
+        [setCustomBlockDraftTimes, setTimeBlock],
+    )
 
     const closeEditor = useCallback(() => {
         setIsCustomBlockSectionOpen(false)
@@ -85,7 +91,7 @@ function CustomBlockSection({
     useEffect(() => {
         setTitle(customBlock?.block_name ?? "")
         setPlace(customBlock?.place ?? "")
-        const currentTime = useTimetableUIStore.getState().timeFilter
+        const currentTime = useTimetableUIStore.getState().customBlockTimeInput
         consumedTimeBlock.current = currentTime
         setTimes(customBlock ? customBlock.times : currentTime ? [currentTime] : [])
     }, [customBlock, currentTimetableId])

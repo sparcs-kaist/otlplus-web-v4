@@ -37,6 +37,8 @@ interface TimetableUIState {
     selectedCustomBlock: CustomBlock | null
     isCustomBlockSectionOpen: boolean
     customBlockDraftTimes: TimeBlock[]
+    // 커스텀 블록 편집 중 그리드 드래그로 입력된 시간 (검색 timeFilter와 분리)
+    customBlockTimeInput: TimeBlock | null
 
     // Actions
     setHoveredItems: (
@@ -80,6 +82,9 @@ interface TimetableUIState {
     ) => void
     setIsCustomBlockSectionOpen: (open: boolean) => void
     setCustomBlockDraftTimes: (times: TimeBlock[]) => void
+    setCustomBlockTimeInput: (
+        timeOrUpdater: TimeBlock | null | ((prev: TimeBlock | null) => TimeBlock | null),
+    ) => void
 
     // Flash Action
     triggerFlash: (ids: string[]) => void
@@ -108,6 +113,7 @@ export const useTimetableUIStore = create<TimetableUIState>((set) => ({
     selectedCustomBlock: null,
     isCustomBlockSectionOpen: false,
     customBlockDraftTimes: [],
+    customBlockTimeInput: null,
 
     // Actions
     setHoveredItems: (val) =>
@@ -200,6 +206,11 @@ export const useTimetableUIStore = create<TimetableUIState>((set) => ({
     setIsCustomBlockSectionOpen: (isCustomBlockSectionOpen) =>
         set({ isCustomBlockSectionOpen }),
     setCustomBlockDraftTimes: (customBlockDraftTimes) => set({ customBlockDraftTimes }),
+    setCustomBlockTimeInput: (val) =>
+        set((state) => ({
+            customBlockTimeInput:
+                typeof val === "function" ? val(state.customBlockTimeInput) : val,
+        })),
 
     triggerFlash: (ids) => {
         set({ flashItemKeys: ids })

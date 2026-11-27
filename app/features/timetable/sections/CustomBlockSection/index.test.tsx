@@ -85,7 +85,7 @@ it("keeps edited grouped time slots when a save fails", async () => {
     })
     act(() =>
         useTimetableUIStore.setState({
-            timeFilter: { day: 1, begin: 540, end: 660 },
+            customBlockTimeInput: { day: 1, begin: 540, end: 660 },
         }),
     )
     fireEvent.click(screen.getByRole("button", { name: "timetable.customBlock.save" }))
@@ -111,7 +111,10 @@ it("keeps edited grouped time slots when a save fails", async () => {
 })
 
 it("appends separate grid drags to one new block and suppresses duplicate ranges", async () => {
-    useTimetableUIStore.setState({ selectedCustomBlock: null, timeFilter: null })
+    useTimetableUIStore.setState({
+        selectedCustomBlock: null,
+        customBlockTimeInput: null,
+    })
     render(<CustomBlockSection {...callbacks} isPending={false} />)
     fireEvent.change(screen.getByPlaceholderText("timetable.customBlock.name"), {
         target: { value: "  Study  " },
@@ -122,7 +125,7 @@ it("appends separate grid drags to one new block and suppresses duplicate ranges
         { day: 2, begin: 540, end: 600 },
     ]
     for (const timeFilter of [...times, { ...times[0]! }]) {
-        act(() => useTimetableUIStore.setState({ timeFilter }))
+        act(() => useTimetableUIStore.setState({ customBlockTimeInput: timeFilter }))
     }
     expect(
         screen.getAllByRole("button", { name: /timetable.customBlock.removeTime/ }),
@@ -143,7 +146,7 @@ it("preserves grouped ranges while removing one range and dragging a new one", a
     const thirdTime = { day: 4, begin: 1380, end: 1440 }
     useTimetableUIStore.setState({
         selectedCustomBlock: { ...block, times: [firstTime, secondTime, thirdTime] },
-        timeFilter: firstTime,
+        customBlockTimeInput: firstTime,
     })
     render(<CustomBlockSection {...callbacks} isPending={false} />)
     expect(
@@ -156,7 +159,7 @@ it("preserves grouped ranges while removing one range and dragging a new one", a
         screen.getAllByRole("button", { name: /timetable.customBlock.removeTime/ }),
     ).toHaveLength(2)
     const addedTime = { day: 6, begin: 1320, end: 1440 }
-    act(() => useTimetableUIStore.setState({ timeFilter: addedTime }))
+    act(() => useTimetableUIStore.setState({ customBlockTimeInput: addedTime }))
     fireEvent.click(screen.getByRole("button", { name: "timetable.customBlock.save" }))
     await waitFor(() =>
         expect(callbacks.updateCustomBlock).toHaveBeenCalledExactlyOnceWith(11, {
@@ -173,7 +176,7 @@ it("rejects overlapping draft ranges without losing them, then allows adjacent r
     render(<CustomBlockSection {...callbacks} isPending={false} />)
     act(() =>
         useTimetableUIStore.setState({
-            timeFilter: { day: 0, begin: 570, end: 660 },
+            customBlockTimeInput: { day: 0, begin: 570, end: 660 },
         }),
     )
     fireEvent.click(screen.getByRole("button", { name: "timetable.customBlock.save" }))
@@ -187,7 +190,7 @@ it("rejects overlapping draft ranges without losing them, then allows adjacent r
     )
     act(() =>
         useTimetableUIStore.setState({
-            timeFilter: { day: 0, begin: 600, end: 660 },
+            customBlockTimeInput: { day: 0, begin: 600, end: 660 },
         }),
     )
     fireEvent.click(screen.getByRole("button", { name: "timetable.customBlock.save" }))
