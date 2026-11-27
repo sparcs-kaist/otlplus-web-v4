@@ -82,7 +82,7 @@ function setup(friendBResponse = Promise.resolve()) {
             return {
                 data: {
                     timetableType: "timetable",
-                    lectures: [{ id: term?.year }],
+                    lectures: [{ id: term?.year, classes: [] }],
                     customBlocks: [],
                 },
             }
@@ -93,7 +93,7 @@ function setup(friendBResponse = Promise.resolve()) {
                 data: {
                     name: `Shared ${friendId} ${term?.year}`,
                     timetableType: "timetable",
-                    lectures: [{ id: term?.year }],
+                    lectures: [{ id: term?.year, classes: [] }],
                     customBlocks: [],
                 },
             }

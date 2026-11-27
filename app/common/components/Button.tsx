@@ -66,11 +66,11 @@ const ButtonDarkInner = styled(ButtonInner)`
 `
 
 const ButtonHighlightedInner = styled(ButtonInner)`
-    color: ${({ theme }) => theme.colors.Text.default};
-    background: ${({ theme }) => theme.colors.Highlight.default};
+    color: ${({ theme }) => theme.colors.Highlight.default};
+    background: ${({ theme }) => theme.colors.Background.Button.highlight};
     cursor: pointer;
     &:hover {
-        background: ${({ theme }) => theme.colors.Highlight.dark};
+        background: ${({ theme }) => theme.colors.Background.Button.highlightDark};
     }
 `
 

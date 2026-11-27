@@ -128,13 +128,6 @@ const MobileAction = styled.button`
     }
 `
 
-const LectureChoice = styled(MobileAction)`
-    flex: none;
-    width: 100%;
-    justify-content: flex-start;
-    text-align: left;
-`
-
 const LoginPage = styled(FlexWrapper)`
     width: 100%;
     height: 100%;
@@ -198,8 +191,6 @@ export default function FriendsPage() {
     const activeLecture = selectedLecture || hoveredLecture
     const [friendListOpen, setFriendListOpen] = useState(false)
     const [scheduleFresh, setScheduleFresh] = useState(false)
-    const [detailOpen, setDetailOpen] = useState(false)
-    const detailActionRef = useRef<HTMLButtonElement>(null)
     const timetableAreaRef = useRef<HTMLDivElement>(null)
     const detailAreaRef = useRef<HTMLDivElement>(null)
     const [inviteOpen, setInviteOpen] = useState(false)
@@ -288,10 +279,6 @@ export default function FriendsPage() {
         sharedSemesters,
         handleSelectSemester,
     ])
-
-    useEffect(() => {
-        if (isTablet && detailOpen) detailActionRef.current?.focus()
-    }, [isTablet, detailOpen, selectedItem])
 
     useEffect(() => {
         if (isTablet) return
@@ -390,7 +377,6 @@ export default function FriendsPage() {
 
     useEffect(() => {
         setSelectedItem(null)
-        setDetailOpen(false)
         setFriendListOpen(false)
     }, [selectedFriendId, year, semester, location.key])
 
@@ -501,54 +487,7 @@ export default function FriendsPage() {
             onClose={() => setSelectedItem(null)}
         />
     ) : activeLecture ? (
-        <>
-            {isTablet && (
-                <LectureChoice
-                    ref={detailActionRef}
-                    type="button"
-                    onClick={() => setSelectedItem(null)}
-                >
-                    {t("friends.chooseAnotherLecture")}
-                </LectureChoice>
-            )}
-            <FriendLectureDetail
-                lecture={activeLecture}
-                year={year}
-                semester={semester}
-            />
-        </>
-    ) : isTablet ? (
-        <FlexWrapper direction="column" gap={8} align="stretch">
-            <Typography type="Normal" color="Text.default">
-                {t("friends.chooseLecture")}
-            </Typography>
-            {isLoadingTimetable ? (
-                <Typography role="status">{t("friends.loadingLectures")}</Typography>
-            ) : hasLoadError ? (
-                <Typography role="alert">{t("friends.loadError")}</Typography>
-            ) : noSharedTimetables ? (
-                <Typography>{t("friends.noSharedTimetables")}</Typography>
-            ) : lectures.length === 0 ? (
-                <Typography>{t("friends.noLectures")}</Typography>
-            ) : (
-                lectures.map((lecture, index) => (
-                    <LectureChoice
-                        key={lecture.id}
-                        ref={index === 0 ? detailActionRef : undefined}
-                        type="button"
-                        onClick={() =>
-                            setSelectedItem({
-                                kind: TimetableItemKind.LECTURE,
-                                data: lecture,
-                            })
-                        }
-                    >
-                        {lecture.name}
-                        {lecture.subtitle} {lecture.classNo && `(${lecture.classNo})`}
-                    </LectureChoice>
-                ))
-            )}
-        </FlexWrapper>
+        <FriendLectureDetail lecture={activeLecture} year={year} semester={semester} />
     ) : (
         <FlexWrapper
             direction="column"
@@ -610,17 +549,6 @@ export default function FriendsPage() {
                             </Icon>
                             {t("friends.selectFriend")}
                         </MobileAction>
-                        <MobileAction
-                            type="button"
-                            aria-haspopup="dialog"
-                            aria-expanded={detailOpen}
-                            onClick={() => {
-                                if (selectedCustomBlock) setSelectedItem(null)
-                                setDetailOpen(true)
-                            }}
-                        >
-                            {t("friends.viewOverlaps")}
-                        </MobileAction>
                     </MobileOnly>
                     <SharedTimetableSection
                         tabs={timetableTabs}
@@ -645,7 +573,6 @@ export default function FriendsPage() {
                                     ? null
                                     : item,
                             )
-                            if (isTablet) setDetailOpen(true)
                         }}
                         onHoverItem={(item) => {
                             onHoverItem(item)
@@ -690,12 +617,12 @@ export default function FriendsPage() {
                 />
             </Modal>
             <Modal
-                isOpen={isTablet && detailOpen}
-                onClose={() => setDetailOpen(false)}
+                isOpen={isTablet && selectedItem !== null}
+                onClose={() => setSelectedItem(null)}
                 title={t(
                     selectedCustomBlock
                         ? "friends.customBlockDetail"
-                        : "friends.viewOverlaps",
+                        : "friends.lectureDetail",
                 )}
                 fullScreen
             >
@@ -705,56 +632,12 @@ export default function FriendsPage() {
                         timetableName={timetableName}
                     />
                 ) : selectedLecture ? (
-                    <>
-                        <LectureChoice
-                            ref={detailActionRef}
-                            type="button"
-                            onClick={() => setSelectedItem(null)}
-                        >
-                            {t("friends.chooseAnotherLecture")}
-                        </LectureChoice>
-                        <FriendLectureDetail
-                            lecture={selectedLecture}
-                            year={year}
-                            semester={semester}
-                        />
-                    </>
-                ) : (
-                    <FlexWrapper direction="column" gap={8} align="stretch">
-                        <Typography type="Normal" color="Text.default">
-                            {t("friends.chooseLecture")}
-                        </Typography>
-                        {isLoadingTimetable ? (
-                            <Typography role="status">
-                                {t("friends.loadingLectures")}
-                            </Typography>
-                        ) : hasLoadError ? (
-                            <Typography role="alert">{t("friends.loadError")}</Typography>
-                        ) : noSharedTimetables ? (
-                            <Typography>{t("friends.noSharedTimetables")}</Typography>
-                        ) : lectures.length === 0 ? (
-                            <Typography>{t("friends.noLectures")}</Typography>
-                        ) : (
-                            lectures.map((lecture, index) => (
-                                <LectureChoice
-                                    key={lecture.id}
-                                    ref={index === 0 ? detailActionRef : undefined}
-                                    type="button"
-                                    onClick={() =>
-                                        setSelectedItem({
-                                            kind: TimetableItemKind.LECTURE,
-                                            data: lecture,
-                                        })
-                                    }
-                                >
-                                    {lecture.name}
-                                    {lecture.subtitle}{" "}
-                                    {lecture.classNo && `(${lecture.classNo})`}
-                                </LectureChoice>
-                            ))
-                        )}
-                    </FlexWrapper>
-                )}
+                    <FriendLectureDetail
+                        lecture={selectedLecture}
+                        year={year}
+                        semester={semester}
+                    />
+                ) : null}
             </Modal>
             <FriendInviteModal
                 isOpen={inviteOpen}

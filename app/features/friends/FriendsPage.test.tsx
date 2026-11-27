@@ -10,7 +10,15 @@ import type { FriendListItem } from "@/common/schemas/friend"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
 import FriendsPage from "@/routes/friends"
-import { act, fireEvent, render, screen, waitFor, within } from "@/test/test-utils"
+import {
+    act,
+    cleanup,
+    fireEvent,
+    render,
+    screen,
+    waitFor,
+    within,
+} from "@/test/test-utils"
 import { useAPI } from "@/utils/api/useAPI"
 
 vi.mock("@/utils/api/useAPI", () => ({ useAPI: vi.fn() }))
@@ -105,7 +113,13 @@ vi.mock("@/common/components/timetable/CustomTimeTableGrid", () => ({
     },
 }))
 
-const lecture = { id: 1, name: "Fluid mechanics", subtitle: "", classNo: "A" } as Lecture
+const lecture = {
+    id: 1,
+    name: "Fluid mechanics",
+    subtitle: "",
+    classNo: "A",
+    classes: [],
+} as unknown as Lecture
 const friend = { id: 7, name: "Test friend", isFavorite: false }
 const friends = { friends: [friend] }
 let friendsResponse: { checkedAt?: string; friends: FriendListItem[] } = friends
@@ -552,31 +566,50 @@ describe("mobile friend timetable navigation", () => {
         expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
     })
 
-    it("shows classmates through the explicit lecture list without touching small timetable tiles", () => {
+    it("opens lecture details from a timetable tile without a separate overlaps action", () => {
         renderPage()
-        expect(screen.queryByTestId("overlap-detail")).not.toBeInTheDocument()
-        fireEvent.click(screen.getByRole("button", { name: "friends.viewOverlaps" }))
-        const dialog = screen.getByRole("dialog", { name: "friends.viewOverlaps" })
-        fireEvent.click(
-            within(dialog).getByRole("button", { name: "Fluid mechanics (A)" }),
+        expect(
+            screen.queryByRole("button", { name: "friends.viewOverlaps" }),
+        ).not.toBeInTheDocument()
+        fireEvent.pointerDown(
+            screen.getByRole("button", { name: "Tile: Fluid mechanics" }),
+            { pointerType: "touch" },
         )
-        expect(screen.getAllByTestId("overlap-detail")).toHaveLength(1)
+        const dialog = screen.getByRole("dialog", { name: "friends.lectureDetail" })
         expect(within(dialog).getByTestId("overlap-detail")).toHaveTextContent(
             "Fluid mechanics",
         )
-        expect(
-            within(dialog).getByRole("button", { name: "friends.chooseAnotherLecture" }),
-        ).toHaveFocus()
-        fireEvent.click(
-            within(dialog).getByRole("button", { name: "friends.chooseAnotherLecture" }),
-        )
-        expect(
-            within(dialog).getByRole("button", { name: "Fluid mechanics (A)" }),
-        ).toHaveFocus()
         fireEvent.click(
             within(dialog).getByRole("button", { name: "common.search.close" }),
         )
         expect(screen.queryByTestId("overlap-detail")).not.toBeInTheDocument()
+        expect(screen.getByTestId("timetable-grid")).toHaveAttribute(
+            "data-selected-lectures",
+            "",
+        )
+    })
+
+    it("shows weekend columns on mobile only when the timetable has weekend items", () => {
+        renderPage()
+        expect(screen.getByTestId("timetable-grid")).toHaveAttribute(
+            "data-displayed-days",
+            "5",
+        )
+        cleanup()
+        ownSharedResponse = {
+            ...ownSharedResponse,
+            lectures: [
+                {
+                    ...lecture,
+                    classes: [{ day: 5, begin: 600, end: 660 }],
+                } as unknown as Lecture,
+            ],
+        }
+        renderPage()
+        expect(screen.getByTestId("timetable-grid")).toHaveAttribute(
+            "data-displayed-days",
+            "7",
+        )
     })
 
     it("still opens mobile detail on a lecture tile pointer interaction", () => {
@@ -625,7 +658,13 @@ describe("mobile friend timetable navigation", () => {
                     { ...lecture, id: 3 },
                     { ...lecture, id: 99 },
                 ],
-                customBlocks: [{ id: 4, block_name: "My custom block" } as CustomBlock],
+                customBlocks: [
+                    {
+                        id: 4,
+                        block_name: "My custom block",
+                        times: [],
+                    } as unknown as CustomBlock,
+                ],
             }
             ownSharedResponse = {
                 timetableType: "timetable",
@@ -633,7 +672,13 @@ describe("mobile friend timetable navigation", () => {
                     { ...lecture, id: 2 },
                     { ...lecture, id: 6 },
                 ],
-                customBlocks: [{ id: 4, block_name: "My custom block" } as CustomBlock],
+                customBlocks: [
+                    {
+                        id: 4,
+                        block_name: "My custom block",
+                        times: [],
+                    } as unknown as CustomBlock,
+                ],
             }
             friendSharedResponse = {
                 lectures: [
@@ -644,8 +689,16 @@ describe("mobile friend timetable navigation", () => {
                     { ...lecture, id: 90, name: "Private saved only" },
                 ],
                 customBlocks: [
-                    { id: 6, block_name: "Friend custom block" } as CustomBlock,
-                    { id: 2, block_name: "Shared ID custom block" } as CustomBlock,
+                    {
+                        id: 6,
+                        block_name: "Friend custom block",
+                        times: [],
+                    } as unknown as CustomBlock,
+                    {
+                        id: 2,
+                        block_name: "Shared ID custom block",
+                        times: [],
+                    } as unknown as CustomBlock,
                 ],
             }
 
@@ -657,7 +710,7 @@ describe("mobile friend timetable navigation", () => {
             )
             expect(screen.getByTestId("timetable-grid")).toHaveAttribute(
                 "data-displayed-days",
-                "7",
+                width === 390 ? "5" : "7",
             )
             expect(vi.mocked(useAPI).mock.calls).toContainEqual([
                 "GET",
@@ -730,7 +783,7 @@ describe("mobile friend timetable navigation", () => {
             )
             expect(screen.getByTestId("timetable-grid")).toHaveAttribute(
                 "data-displayed-days",
-                "7",
+                "5",
             )
             expect(
                 vi
@@ -766,13 +819,6 @@ describe("mobile friend timetable navigation", () => {
                     .mocked(useAPI)
                     .mock.calls.some(([, path]) => path.includes("custom-blocks")),
             ).toBe(false)
-
-            fireEvent.click(screen.getByRole("button", { name: "friends.viewOverlaps" }))
-            const dialog = screen.getByRole("dialog")
-            expect(
-                within(dialog).getByRole("button", { name: "Saved fluid mechanics (A)" }),
-            ).toBeInTheDocument()
-            expect(within(dialog).queryByText("Club meeting")).not.toBeInTheDocument()
         },
     )
 
@@ -891,24 +937,6 @@ describe("mobile friend timetable navigation", () => {
         expect(
             screen.queryByRole("region", { name: "friends.customBlockDetail" }),
         ).not.toBeInTheDocument()
-        expect(screen.getByTestId("timetable-grid")).toHaveAttribute(
-            "data-selected-custom-block",
-            "",
-        )
-    })
-
-    it("opens the lecture picker from the mobile classmates action after viewing a custom block", () => {
-        renderPage("/friends?friendId=7&year=2026&semester=3&timetableId=42")
-        fireEvent.pointerDown(
-            screen.getByRole("button", { name: "Custom tile: Club meeting" }),
-        )
-        fireEvent.click(screen.getByRole("button", { name: "common.search.close" }))
-        fireEvent.click(screen.getByRole("button", { name: "friends.viewOverlaps" }))
-        const dialog = screen.getByRole("dialog", { name: "friends.viewOverlaps" })
-        expect(
-            within(dialog).getByRole("button", { name: "Saved fluid mechanics (A)" }),
-        ).toBeInTheDocument()
-        expect(within(dialog).queryByRole("region")).not.toBeInTheDocument()
         expect(screen.getByTestId("timetable-grid")).toHaveAttribute(
             "data-selected-custom-block",
             "",
@@ -1064,10 +1092,6 @@ describe("mobile friend timetable navigation", () => {
             "/friends/7/timetables/shared",
             expect.objectContaining({ enabled: false }),
         )
-        fireEvent.click(screen.getByRole("button", { name: "friends.viewOverlaps" }))
-        const dialog = within(screen.getByRole("dialog"))
-        expect(dialog.getByText("friends.noSharedTimetables")).toBeInTheDocument()
-        expect(dialog.queryByText("friends.noLectures")).not.toBeInTheDocument()
     })
 
     it.each(["empty", "custom-only"])(
@@ -1082,13 +1106,6 @@ describe("mobile friend timetable navigation", () => {
                 "true",
             )
             expect(screen.getByText("Saved timetable")).toBeInTheDocument()
-
-            fireEvent.click(screen.getByRole("button", { name: "friends.viewOverlaps" }))
-            const dialog = within(screen.getByRole("dialog"))
-            expect(dialog.getByText("friends.noLectures")).toBeInTheDocument()
-            expect(
-                dialog.queryByText("friends.noSharedTimetables"),
-            ).not.toBeInTheDocument()
         },
     )
 
@@ -1157,17 +1174,11 @@ describe("mobile friend timetable navigation", () => {
         },
     )
 
-    it("shows semester load errors in both the grid and mobile lecture picker", () => {
+    it("shows semester load errors in the grid", () => {
         sharedSemestersResponse = { semesters: [] }
         sharedSemestersQueryState = { isSuccess: false, isPending: false, isError: true }
         renderPage("/friends?friendId=7&year=2026&semester=3")
         expect(screen.getByRole("alert")).toHaveTextContent("friends.loadError")
-
-        fireEvent.click(screen.getByRole("button", { name: "friends.viewOverlaps" }))
-        const dialog = within(screen.getByRole("dialog"))
-        expect(dialog.getByRole("alert")).toHaveTextContent("friends.loadError")
-        expect(dialog.queryByText("friends.noLectures")).not.toBeInTheDocument()
-        expect(dialog.queryByText("friends.noSharedTimetables")).not.toBeInTheDocument()
     })
 
     it("updates both shared queries on semester tab selection without changing the URL", () => {
