@@ -9,7 +9,6 @@ import FavoriteIcon from "@mui/icons-material/Favorite"
 import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router-dom"
-import { match } from "ts-pattern"
 
 import Button from "@/common/components/Button"
 import Credits from "@/common/components/Credits"
@@ -275,54 +274,47 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                             </IconButton>
                         )}
                     </FlexWrapper>
-                    {selectedItems.map((item) => {
-                        const { title, description } = match(item)
-                            .with({ kind: TimetableItemKind.LECTURE }, ({ data: l }) => ({
-                                title: `${l.name} ${l.subtitle}`,
-                                description: (
-                                    <>
-                                        {l.professors[0]?.name}{" "}
-                                        {l.professors.length > 1
-                                            ? `${t("common.professors.over")} ${l.professors.length - 1}${t("common.professors.people")} `
-                                            : " "}
-                                        | {l.department.name} | {l.credit}
-                                        {t("common.credit")}
-                                    </>
-                                ),
-                            }))
-                            .with({ kind: TimetableItemKind.CUSTOM }, ({ data }) => ({
-                                title: data.block_name,
-                                description: data.place,
-                            }))
-                            .exhaustive()
-                        return (
-                            <MultipleSelectLectureBlock
-                                key={timetableItemKey(item)}
-                                data-timetable-item-key={timetableItemKey(item)}
-                                direction="row"
-                                gap={12}
-                                align="center"
+                    {selectedItems.map((item) => (
+                        <MultipleSelectLectureBlock
+                            key={timetableItemKey(item)}
+                            data-timetable-item-key={timetableItemKey(item)}
+                            direction="row"
+                            gap={12}
+                            align="center"
+                        >
+                            <Icon
+                                size={14}
+                                color={getPaletteColor(
+                                    tileColors,
+                                    getTimetableItemColorIndex(item),
+                                )}
                             >
-                                <Icon
-                                    size={14}
-                                    color={getPaletteColor(
-                                        tileColors,
-                                        getTimetableItemColorIndex(item),
+                                <CircleIcon />
+                            </Icon>
+                            <FlexWrapper direction="column" gap={4} flex="1 1 auto">
+                                <Typography type="BigBold" color="Text.default">
+                                    {item.kind === TimetableItemKind.LECTURE
+                                        ? `${item.data.name} ${item.data.subtitle}`
+                                        : item.data.block_name}
+                                </Typography>
+                                <Typography type="Small" color="Text.dark">
+                                    {item.kind === TimetableItemKind.LECTURE ? (
+                                        <>
+                                            {item.data.professors[0]?.name}{" "}
+                                            {item.data.professors.length > 1
+                                                ? `${t("common.professors.over")} ${item.data.professors.length - 1}${t("common.professors.people")} `
+                                                : " "}
+                                            | {item.data.department.name} |{" "}
+                                            {item.data.credit}
+                                            {t("common.credit")}
+                                        </>
+                                    ) : (
+                                        item.data.place
                                     )}
-                                >
-                                    <CircleIcon />
-                                </Icon>
-                                <FlexWrapper direction="column" gap={4} flex="1 1 auto">
-                                    <Typography type="BigBold" color="Text.default">
-                                        {title}
-                                    </Typography>
-                                    <Typography type="Small" color="Text.dark">
-                                        {description}
-                                    </Typography>
-                                </FlexWrapper>
-                            </MultipleSelectLectureBlock>
-                        )
-                    })}
+                                </Typography>
+                            </FlexWrapper>
+                        </MultipleSelectLectureBlock>
+                    ))}
                 </MultipleSelectWrapper>
             ) : selectedLecture ? (
                 <>

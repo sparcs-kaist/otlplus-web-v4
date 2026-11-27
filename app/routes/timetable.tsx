@@ -3,7 +3,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import SearchIcon from "@mui/icons-material/Search"
-import { match } from "ts-pattern"
 
 import Modal from "@/common/components/Modal"
 import StyledDivider from "@/common/components/StyledDivider"
@@ -579,16 +578,9 @@ export default function Timetable() {
                         <Modal
                             ariaLabel={selectedItems
                                 .map((item) =>
-                                    match(item)
-                                        .with(
-                                            { kind: TimetableItemKind.LECTURE },
-                                            ({ data }) => data.name,
-                                        )
-                                        .with(
-                                            { kind: TimetableItemKind.CUSTOM },
-                                            ({ data }) => data.block_name,
-                                        )
-                                        .exhaustive(),
+                                    item.kind === TimetableItemKind.LECTURE
+                                        ? item.data.name
+                                        : item.data.block_name,
                                 )
                                 .join(", ")}
                             isOpen={true}
