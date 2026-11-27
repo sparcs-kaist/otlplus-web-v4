@@ -230,7 +230,11 @@ function CustomBlockSection({
                                         : undefined
                                 }
                             >
-                                <Icon size={20} color={theme.colors.Text.default} onClick={() => {}}>
+                                <Icon
+                                    size={20}
+                                    color={theme.colors.Text.default}
+                                    onClick={() => {}}
+                                >
                                     <Delete />
                                 </Icon>
                             </IconButton>
@@ -238,7 +242,11 @@ function CustomBlockSection({
                                 aria-label="Close custom block editor"
                                 onClick={closeEditor}
                             >
-                                <Icon size={20} color={theme.colors.Text.default} onClick={() => {}}>
+                                <Icon
+                                    size={20}
+                                    color={theme.colors.Text.default}
+                                    onClick={() => {}}
+                                >
                                     <Close />
                                 </Icon>
                             </IconButton>
