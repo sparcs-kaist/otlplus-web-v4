@@ -34,10 +34,7 @@ import { trackEvent } from "@/libs/mixpanel"
 import { queryKeys } from "@/libs/query/queryKeys"
 import { useAPI } from "@/utils/api/useAPI"
 import getSyllabusUrl from "@/utils/timetable/getSyllabusUrl"
-import {
-    timetableItemKey,
-    timetableItemsOverlap,
-} from "@/utils/timetable/timetableItems"
+import { timetableItemKey, timetableItemsOverlap } from "@/utils/timetable/timetableItems"
 import useIsDevice from "@/utils/useIsDevice"
 import useUserStore from "@/utils/zustand/useUserStore"
 
