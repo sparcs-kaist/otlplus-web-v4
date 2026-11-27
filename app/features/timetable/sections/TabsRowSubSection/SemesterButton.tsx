@@ -4,6 +4,7 @@ import { useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore"
 import NavigateNextIcon from "@mui/icons-material/NavigateNext"
+import { useTranslation } from "react-i18next"
 
 import { type SemesterEnum, semesterToString } from "@/common/enum/semesterEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
@@ -24,30 +25,28 @@ const SemesterButtonWrapper = styled(FlexWrapper)`
 interface SemesterButtonProps {
     year: number
     semester: SemesterEnum
-    setYear: React.Dispatch<React.SetStateAction<number>>
-    setSemester: React.Dispatch<React.SetStateAction<SemesterEnum>>
-    setCurrentTimetableId: React.Dispatch<React.SetStateAction<number | null>>
+    onChange: (year: number, semester: SemesterEnum) => void
 }
 
 export default function SemesterButton({
     year,
     semester,
-    setYear,
-    setSemester,
-    setCurrentTimetableId,
+    onChange,
 }: SemesterButtonProps) {
     const theme = useTheme()
+    const { t } = useTranslation()
 
     const { query: semestersRequest } = useAPI("GET", "/semesters")
+
     const { query: currentSemesterRequest } = useAPI("GET", "/semesters/current")
 
     useEffect(() => {
+        if (year >= 0) return
         const currentSemester = currentSemesterRequest.data
         if (currentSemester) {
-            setYear(currentSemester.year)
-            setSemester(currentSemester.semester)
+            onChange(currentSemester.year, currentSemester.semester)
         }
-    }, [currentSemesterRequest.data])
+    }, [currentSemesterRequest.data, year, onChange])
 
     const { previousSemester, nextSemester } = useMemo(() => {
         const semesters = semestersRequest.data?.semesters
@@ -57,24 +56,19 @@ export default function SemesterButton({
         if (currentIndex === undefined || currentIndex === -1) {
             return { previousSemester: undefined, nextSemester: undefined }
         }
-
         return {
             previousSemester: semesters?.[currentIndex - 1],
             nextSemester: semesters?.[currentIndex + 1],
         }
     }, [semestersRequest.data, year, semester])
+    const isFirstSemester = !previousSemester
+    const isLastSemester = !nextSemester
 
     const onClickPreviousSemester = () => {
-        if (!previousSemester) return
-        setYear(previousSemester.year)
-        setSemester(previousSemester.semester)
-        setCurrentTimetableId(null)
+        if (previousSemester) onChange(previousSemester.year, previousSemester.semester)
     }
     const onClickNextSemester = () => {
-        if (!nextSemester) return
-        setYear(nextSemester.year)
-        setSemester(nextSemester.semester)
-        setCurrentTimetableId(null)
+        if (nextSemester) onChange(nextSemester.year, nextSemester.semester)
     }
 
     return (
@@ -85,17 +79,18 @@ export default function SemesterButton({
             align="center"
         >
             <IconButton
-                onClick={previousSemester ? onClickPreviousSemester : undefined}
+                aria-label={t("friends.previousSemester")}
+                onClick={isFirstSemester ? undefined : onClickPreviousSemester}
                 styles={{ padding: 2.5 }}
             >
                 <Icon
                     size={20}
                     color={
-                        !previousSemester
+                        isFirstSemester
                             ? theme.colors.Text.disable
                             : theme.colors.Highlight.default
                     }
-                    onClick={previousSemester ? () => {} : undefined}
+                    onClick={isFirstSemester ? undefined : () => {}}
                 >
                     <NavigateBeforeIcon />
                 </Icon>
@@ -104,19 +99,19 @@ export default function SemesterButton({
             <Typography color="Highlight.default">
                 {semesterToString(semester)}
             </Typography>
-
             <IconButton
-                onClick={nextSemester ? onClickNextSemester : undefined}
+                aria-label={t("friends.nextSemester")}
+                onClick={isLastSemester ? undefined : onClickNextSemester}
                 styles={{ padding: 2.5 }}
             >
                 <Icon
                     size={20}
                     color={
-                        !nextSemester
+                        isLastSemester
                             ? theme.colors.Text.disable
                             : theme.colors.Highlight.default
                     }
-                    onClick={nextSemester ? () => {} : undefined}
+                    onClick={isLastSemester ? undefined : () => {}}
                 >
                     <NavigateNextIcon />
                 </Icon>

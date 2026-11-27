@@ -76,6 +76,7 @@ function ReviewSection() {
             speech: reviewSpeech,
             source: "Home",
         })
+        queryClient.invalidateQueries({ queryKey: [queryKeys.reviews] })
         queryClient.invalidateQueries({ queryKey: [queryKeys.writtenReviews] })
         if (user) {
             queryClient.invalidateQueries({

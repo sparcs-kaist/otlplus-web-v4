@@ -32,10 +32,12 @@ const DetailHeaderText = styled(Typography)`
 
 interface LectureInfoSubsectionProps {
     selectedLecture: Lecture | null
+    metrics?: "enrollment" | "course"
 }
 
 const LectureInfoSubsection: React.FC<LectureInfoSubsectionProps> = ({
     selectedLecture,
+    metrics = "enrollment",
 }) => {
     const { t } = useTranslation()
 
@@ -104,11 +106,23 @@ const LectureInfoSubsection: React.FC<LectureInfoSubsectionProps> = ({
                 justify={"space-around"}
                 align={"center"}
             >
-                {[
-                    [selectedLecture.isEnglish ? "Eng" : "한", t("common.language")],
-                    [selectedLecture.credit, t("common.credit")],
-                    [competitionRate, t("timetable.competitionRate")],
-                ].map(([value, label], index) => (
+                {(metrics === "course"
+                    ? [
+                          [selectedLecture.classDuration, t("common.numClasses")],
+                          [selectedLecture.expDuration, t("common.numLabs")],
+                          selectedLecture.creditAU
+                              ? [selectedLecture.creditAU, "AU"]
+                              : [selectedLecture.credit, t("common.credit")],
+                      ]
+                    : [
+                          [
+                              selectedLecture.isEnglish ? "Eng" : "한",
+                              t("common.language"),
+                          ],
+                          [selectedLecture.credit, t("common.credit")],
+                          [competitionRate, t("timetable.competitionRate")],
+                      ]
+                ).map(([value, label], index) => (
                     <NumberContent
                         key={index}
                         direction="column"

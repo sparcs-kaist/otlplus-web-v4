@@ -1,29 +1,10 @@
-import { type CSSProperties, useMemo } from "react"
+import { useMemo } from "react"
 
 import styled from "@emotion/styled"
 
+import { flattenTimeTableColors } from "@/common/components/timetable/Tile"
 import type { Lecture } from "@/common/schemas/lecture"
 import useThemeStore from "@/utils/zustand/useThemeStore"
-
-const flattenTimeTableColors = (timeTable: any): Array<CSSProperties["color"]> => {
-    return [
-        timeTable?.red?.[1],
-        timeTable?.red?.[2],
-        timeTable?.orange?.[1],
-        timeTable?.orange?.[2],
-        timeTable?.yellow?.[1],
-        timeTable?.yellow?.[2],
-        timeTable?.green?.[1],
-        timeTable?.green?.[2],
-        timeTable?.green?.[3],
-        timeTable?.blue?.[1],
-        timeTable?.blue?.[2],
-        timeTable?.purple?.[1],
-        timeTable?.purple?.[2],
-        timeTable?.pink?.[1],
-        timeTable?.pink?.[2],
-    ].map((c) => c ?? "#CCCCCC")
-}
 
 const MapContainer = styled.div`
     width: 100%;
@@ -73,15 +54,11 @@ const MapPinPointer = styled.div`
 `
 
 const MapPin = styled.div<{ courseId: number; highlighted: boolean }>`
-    background-color: ${({ theme, courseId, highlighted }) =>
-        highlighted
-            ? theme.colors.Highlight.default
-            : (() => {
-                  const flat = flattenTimeTableColors(
-                      theme.colors?.Tile?.TimeTable?.default,
-                  )
-                  return flat[courseId % flat.length]
-              })()};
+    background-color: ${({ theme, courseId, highlighted }) => {
+        if (highlighted) return theme.colors.Highlight.default
+        const colors = flattenTimeTableColors(theme.colors.Tile.TimeTable.default)
+        return colors.at(courseId % colors.length) ?? "#CCCCCC"
+    }};
     width: 10px;
     height: 10px;
     border-radius: 100%;

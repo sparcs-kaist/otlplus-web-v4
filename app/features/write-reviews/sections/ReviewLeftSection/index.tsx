@@ -80,9 +80,13 @@ const LockIconWrapper = styled.div`
 const LoginButton = styled.div`
     padding: 8px 20px;
     border-radius: 20px;
-    background-color: ${({ theme }) => theme.colors.Highlight.default};
+    background-color: ${({ theme }) => theme.colors.Background.Button.highlight};
     cursor: pointer;
     user-select: none;
+
+    &:hover {
+        background-color: ${({ theme }) => theme.colors.Background.Button.highlightDark};
+    }
 `
 
 function ReviewLeftSection({
@@ -151,7 +155,7 @@ function ReviewLeftSection({
                                 </Icon>
                             </LockIconWrapper>
                             <LoginButton onClick={handleLogin}>
-                                <Typography type="BigBold" style={{ color: "#FFFFFF" }}>
+                                <Typography type="BigBold" color="Highlight.default">
                                     로그인하러가기
                                 </Typography>
                             </LoginButton>

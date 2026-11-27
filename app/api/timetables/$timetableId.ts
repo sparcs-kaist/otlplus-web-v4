@@ -2,13 +2,12 @@ import { z } from "zod"
 
 import { LectureActionEnum } from "@/common/enum/lectureActionEnum"
 import { LectureSchema } from "@/common/schemas/lecture"
+import { TimetableItemsSchema } from "@/common/schemas/timetableItem"
 
 //GET /api/timetables/:timetableId
 export const GETRequest = z.object({})
 
-export const GETResponse = z.object({
-    lectures: z.array(LectureSchema),
-})
+export const GETResponse = TimetableItemsSchema
 
 export type GETTimetableByIdResponse = z.infer<typeof GETResponse>
 

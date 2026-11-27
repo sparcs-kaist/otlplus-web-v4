@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest"
 
+import { GETResponse as GetHome, PATCHResponse as PatchHome } from "@/api/timetables/home"
+import {
+    GETResponse as GetShared,
+    PATCHResponse as PatchShared,
+} from "@/api/timetables/shared"
 import { SemesterEnum } from "@/common/enum/semesterEnum"
 import type { Timetables } from "@/common/schemas/timetables"
 
@@ -13,6 +18,29 @@ const timetable = {
     semester: SemesterEnum.SPRING,
     timeTableOrder: 0,
 } as Timetables
+
+describe("timetable selection response contracts", () => {
+    it.each([
+        ["main", GetHome, PatchHome],
+        ["shared", GetShared, PatchShared],
+    ] as const)(
+        "keeps %s PATCH metadata-only while GET requires both arrays",
+        (_, get, patch) => {
+            const metadata = {
+                timetableType: "timetable",
+                timetableId: 42,
+                name: "Spring timetable",
+                year: 2026,
+                semester: SemesterEnum.SPRING,
+            }
+            const contents = { ...metadata, lectures: [], customBlocks: [] }
+            expect(patch.parse(metadata)).toEqual(metadata)
+            expect(patch.parse(contents)).toEqual(metadata)
+            expect(get.safeParse(metadata).success).toBe(false)
+            expect(get.parse(contents)).toEqual(contents)
+        },
+    )
+})
 
 describe("getTimetableAutoSelection", () => {
     it("selects the first editable timetable once per semester", () => {
@@ -121,6 +149,23 @@ describe("getTimetableAutoSelection", () => {
 })
 
 describe("getSemesterTimetables", () => {
+    it("pins the main timetable while preserving the order of the other tabs", () => {
+        const main = { ...timetable, id: 3, timeTableOrder: 2 }
+        const second = { ...timetable, id: 2, timeTableOrder: 1 }
+        const input = [second, main, timetable]
+        expect(
+            getSemesterTimetables(input, 2026, SemesterEnum.SPRING, main.id).map(
+                ({ id }) => id,
+            ),
+        ).toEqual([3, 42, 2])
+        expect(input).toEqual([second, main, timetable])
+        expect(
+            getSemesterTimetables(input, 2026, SemesterEnum.SPRING, 999).map(
+                ({ id }) => id,
+            ),
+        ).toEqual([42, 2, 3])
+    })
+
     it("does not treat stale previous-semester data as selectable", () => {
         const staleTimetable = { ...timetable, semester: SemesterEnum.SPRING }
 

@@ -1,10 +1,17 @@
-import { describe, expect, it } from "vitest"
+import { describe, expect, expectTypeOf, it } from "vitest"
+
+import type { TimetableItemKind } from "@/common/enum/timetableItemKind"
+import type { TimetableItem } from "@/common/schemas/timetableItem"
 
 import { DepartmentSchema } from "./department"
 import { LectureSchema } from "./lecture"
 import { ProfessorSchema } from "./professor"
 
 describe("Schema validations", () => {
+    it("covers every timetable item kind in the item schema", () => {
+        expectTypeOf<TimetableItem["kind"]>().toEqualTypeOf<TimetableItemKind>()
+    })
+
     describe("ProfessorSchema", () => {
         it("validates valid professor data", () => {
             const validProfessor = { id: 1, name: "John Doe" }

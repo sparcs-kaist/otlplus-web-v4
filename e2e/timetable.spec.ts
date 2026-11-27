@@ -12,6 +12,20 @@ test.describe("Timetable Page", () => {
         await page.waitForLoadState("domcontentloaded")
         await expect(page.locator("body")).toBeVisible()
     })
+
+    test("shows one temporary timetable without account-only controls", async ({
+        page,
+    }) => {
+        await page.goto("/timetable")
+
+        const temporaryTimetable = page.locator('[data-timetable-tab="temporary"]')
+        await expect(temporaryTimetable).toHaveCount(1)
+        await expect(temporaryTimetable).toContainText(/^(시간표|Timetable)$/)
+        await expect(page.locator('[data-timetable-tab="academic"]')).toHaveCount(0)
+        await expect(
+            page.getByRole("button", { name: /^(빈 시간표 추가|Add empty timetable)$/ }),
+        ).toHaveCount(0)
+    })
 })
 
 test.describe("Timetable Responsive", () => {

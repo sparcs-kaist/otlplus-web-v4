@@ -8,22 +8,32 @@ import CloseIcon from "@mui/icons-material/Close"
 import FavoriteIcon from "@mui/icons-material/Favorite"
 import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
-import { Link } from "react-router"
+import { Link } from "react-router-dom"
 
 import Button from "@/common/components/Button"
 import Credits from "@/common/components/Credits"
+import StyledDivider from "@/common/components/StyledDivider"
+import ReviewScoreSummary from "@/common/components/reviews/ReviewScoreSummary"
 import { flattenTimeTableColors } from "@/common/components/timetable/Tile"
 import { LectureActionEnum } from "@/common/enum/lectureActionEnum"
+import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
+import { IconButton } from "@/common/primitives/IconButton"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
+import type { TimetableItem } from "@/common/schemas/timetableItem"
+import FriendCustomBlockDetail from "@/features/friends/FriendCustomBlockDetail"
+import LectureFriendOverlaps, {
+    LectureFriendOverlapsLoading,
+} from "@/features/friends/LectureFriendOverlaps"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
 import isLectureAddDisabled from "@/features/timetable/utils/isLectureAddDisabled"
 import { trackEvent } from "@/libs/mixpanel"
 import { queryKeys } from "@/libs/query/queryKeys"
 import { useAPI } from "@/utils/api/useAPI"
-import checkOverlap from "@/utils/timetable/checkOverlap"
+import getSyllabusUrl from "@/utils/timetable/getSyllabusUrl"
+import { timetableItemKey, timetableItemsOverlap } from "@/utils/timetable/timetableItems"
 import useIsDevice from "@/utils/useIsDevice"
 import useUserStore from "@/utils/zustand/useUserStore"
 
@@ -86,11 +96,12 @@ const MultipleSelectLectureBlock = styled(FlexWrapper)`
 `
 
 interface LectureDetailSectionProps {
-    addLectures: (lectures: Lecture[]) => void
+    readOnlySelection?: { lecture: Lecture | null; year: number; semester: number }
+    addLectures?: (lectures: Lecture[]) => void
     removeLectures?: (lectureId: number) => void
     onMobileModalClose?: () => void
     currentTimetableId?: number | null
-    timetableLectures: Lecture[]
+    timetableItems?: TimetableItem[]
 }
 
 const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
@@ -98,7 +109,8 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
     removeLectures,
     onMobileModalClose,
     currentTimetableId,
-    timetableLectures,
+    timetableItems = [],
+    readOnlySelection,
 }) => {
     const queryClient = useQueryClient()
     const theme = useTheme()
@@ -106,17 +118,34 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
     const { user, status } = useUserStore()
     const isTablet = useIsDevice("tablet")
 
-    const selectedLectures = useTimetableUIStore((s) => s.selectedLectures)
-    const hoveredLectures = useTimetableUIStore((s) => s.hoveredLectures)
-    const year = useTimetableUIStore((s) => s.year)
-    const semester = useTimetableUIStore((s) => s.semesterEnum)
+    const editorSelection = useTimetableUIStore((s) => s.selectedItems)
+    const selectedItems = readOnlySelection ? [] : editorSelection
+    const hoveredItems = useTimetableUIStore((s) => s.hoveredItems)
+    const currentTimetableName = useTimetableUIStore((s) => s.currentTimetableName)
+    const editorYear = useTimetableUIStore((s) => s.year)
+    const year = readOnlySelection?.year ?? editorYear
+    const editorSemester = useTimetableUIStore((s) => s.semesterEnum)
+    const semester = readOnlySelection?.semester ?? editorSemester
 
-    const selectedLecture =
-        selectedLectures.length === 1
-            ? selectedLectures[0]
-            : hoveredLectures.length === 1
-              ? hoveredLectures[0]
-              : null
+    const selectedItem = selectedItems.length === 1 ? selectedItems[0] : undefined
+    const hoveredItem = hoveredItems.length === 1 ? hoveredItems[0] : undefined
+    const selectedLecture = readOnlySelection
+        ? readOnlySelection.lecture
+        : selectedItem?.kind === TimetableItemKind.LECTURE
+          ? selectedItem.data
+          : selectedItems.length === 0 && hoveredItem?.kind === TimetableItemKind.LECTURE
+            ? hoveredItem.data
+            : null
+    const hoveredCustomBlock =
+        !readOnlySelection &&
+        selectedItems.length === 0 &&
+        hoveredItem?.kind === TimetableItemKind.CUSTOM
+            ? hoveredItem.data
+            : null
+    const showSelectedItems =
+        selectedItems.length > 1 ||
+        (selectedItem !== undefined && selectedItem.kind !== TimetableItemKind.LECTURE)
+    const tileColors = flattenTimeTableColors(theme.colors.Tile.TimeTable.default)
 
     const [wishListIds, setWishListIds] = useState<number[]>([])
 
@@ -124,12 +153,12 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
         "GET",
         `/users/${user?.id}/wishlist`,
         {
-            enabled: status === "success" && year !== -1,
+            enabled: !readOnlySelection && status === "success" && year !== -1,
         },
     )
 
     useEffect(() => {
-        if (year === -1) return
+        if (readOnlySelection || year === -1) return
         setWishListQuery({ year: year, semester: semester })
     }, [year, semester, currentTimetableId])
     useEffect(() => {
@@ -157,21 +186,12 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
 
     const reviewSectionRef = useRef<HTMLDivElement>(null)
 
-    const getSyllabusUrl = (lecture: Lecture) => {
-        const payload = {
-            syy: String(year),
-            smtDivCd: String(semester),
-            subjtCd: lecture.code,
-            syllabusOpenYn: "0",
-        }
-        const encodedLecture = btoa(JSON.stringify(payload))
-        return `https://erp.kaist.ac.kr/com/lgin/SsoCtr/initExtPageWork.do?link=estblSubjt&params=${encodedLecture}`
-    }
-
     const handleAddToTimetable = (lecture: Lecture) => {
-        if (!timetableLectures) return
-        const hasOverlap = timetableLectures.some((lec) =>
-            checkOverlap(lec.classes, lecture.classes),
+        const hasOverlap = timetableItems.some((item) =>
+            timetableItemsOverlap(item, {
+                kind: TimetableItemKind.LECTURE,
+                data: lecture,
+            }),
         )
         if (
             isLectureAddDisabled({
@@ -183,7 +203,7 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
             if (hasOverlap) alert(t("timetable.addLectureConflict"))
             return
         }
-        addLectures([lecture])
+        addLectures?.([lecture])
         trackEvent("Add Lecture to Timetable", {
             lectureId: lecture.id,
             lectureCode: lecture.code,
@@ -214,45 +234,84 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
             direction="column"
             gap={12}
             align={"center"}
-            justify={!selectedLecture && !selectedLectures.length ? "center" : "start"}
+            justify={
+                !selectedLecture && !hoveredCustomBlock && !selectedItems.length
+                    ? "center"
+                    : "start"
+            }
         >
-            {selectedLectures.length > 1 ? (
+            {showSelectedItems ? (
                 <MultipleSelectWrapper
                     direction="column"
                     gap={16}
                     align="stretch"
                     justify="flex-start"
                 >
-                    <Typography type="Bigger" color="Text.default">
-                        {selectedLectures.length}
-                        {t("timetable.numSelected")}
-                    </Typography>
-                    {selectedLectures.map((l) => {
-                        const tileColors = flattenTimeTableColors(
-                            theme.colors.Tile.TimeTable.default,
-                        )
-                        const color = tileColors[l.courseId % tileColors.length]
+                    <FlexWrapper
+                        direction="row"
+                        gap={8}
+                        align="center"
+                        justify={isTablet ? "space-between" : "center"}
+                    >
+                        {isTablet && <div style={{ width: 20 }} />}
+                        <Typography type="Bigger" color="Text.default">
+                            {selectedItems.length}
+                            {t("timetable.numSelected")}
+                        </Typography>
+                        {isTablet && onMobileModalClose && (
+                            <IconButton
+                                aria-label="Close selected items"
+                                onClick={onMobileModalClose}
+                            >
+                                <Icon size={20} color={theme.colors.Text.default}>
+                                    <CloseIcon />
+                                </Icon>
+                            </IconButton>
+                        )}
+                    </FlexWrapper>
+                    {selectedItems.map((item) => {
+                        const { title, description, colorIndex } =
+                            item.kind === TimetableItemKind.LECTURE
+                                ? {
+                                      title: `${item.data.name} ${item.data.subtitle}`,
+                                      colorIndex: item.data.courseId,
+                                      description: (
+                                          <>
+                                              {item.data.professors[0]?.name}{" "}
+                                              {item.data.professors.length > 1
+                                                  ? `${t("common.professors.over")} ${item.data.professors.length - 1}${t("common.professors.people")} `
+                                                  : " "}
+                                              | {item.data.department.name} |{" "}
+                                              {item.data.credit}
+                                              {t("common.credit")}
+                                          </>
+                                      ),
+                                  }
+                                : {
+                                      title: item.data.block_name,
+                                      colorIndex: item.data.id,
+                                      description: item.data.place,
+                                  }
                         return (
                             <MultipleSelectLectureBlock
-                                key={l.id}
+                                key={timetableItemKey(item)}
+                                data-timetable-item-key={timetableItemKey(item)}
                                 direction="row"
                                 gap={12}
                                 align="center"
                             >
-                                <Icon size={14} color={color as string}>
+                                <Icon
+                                    size={14}
+                                    color={tileColors.at(colorIndex % tileColors.length)}
+                                >
                                     <CircleIcon />
                                 </Icon>
                                 <FlexWrapper direction="column" gap={4} flex="1 1 auto">
                                     <Typography type="BigBold" color="Text.default">
-                                        {l.name} {l.subtitle}
+                                        {title}
                                     </Typography>
                                     <Typography type="Small" color="Text.dark">
-                                        {l.professors[0]?.name}{" "}
-                                        {l.professors.length > 1
-                                            ? `${t("common.professors.over")} ${l.professors.length - 1}${t("common.professors.people")} `
-                                            : " "}
-                                        | {l.department.name} | {l.credit}
-                                        {t("common.credit")}
+                                        {description}
                                     </Typography>
                                 </FlexWrapper>
                             </MultipleSelectLectureBlock>
@@ -271,14 +330,20 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                             direction="row"
                             align="center"
                             gap={8}
-                            justify={isTablet ? "space-between" : "center"}
+                            justify={
+                                isTablet && onMobileModalClose
+                                    ? "space-between"
+                                    : "center"
+                            }
                             style={{ width: "100%" }}
                         >
-                            {isTablet && <div style={{ width: 20 }}></div>}
+                            {isTablet && onMobileModalClose && (
+                                <div style={{ width: 20 }}></div>
+                            )}
                             <Typography type={"Bigger"} color={"Text.default"}>
                                 {selectedLecture.name + selectedLecture.subtitle}
                             </Typography>
-                            {isTablet && (
+                            {isTablet && onMobileModalClose && (
                                 <Icon
                                     size={20}
                                     onClick={onMobileModalClose}
@@ -314,7 +379,8 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                             </Typography>
                         </StyledLink>
                         <StyledAnchor
-                            href={getSyllabusUrl(selectedLecture)}
+                            href={getSyllabusUrl(selectedLecture.code, year, semester)}
+                            rel="noopener noreferrer"
                             target="_blank"
                         >
                             <Typography
@@ -327,19 +393,46 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                         </StyledAnchor>
                     </FlexWrapper>
                     <LectureDetailWrapper direction="column" gap={10} align="center">
-                        <LectureInfoSubsection selectedLecture={selectedLecture} />
+                        <LectureInfoSubsection
+                            selectedLecture={selectedLecture}
+                            metrics={readOnlySelection ? "course" : "enrollment"}
+                        />
+                        <ReviewScoreSummary
+                            averageGrade={selectedLecture.averageGrade / 3}
+                            averageLoad={selectedLecture.averageLoad / 3}
+                            averageSpeech={selectedLecture.averageSpeech / 3}
+                            reviewCount={undefined}
+                            labels={{
+                                grade: t("common.grade"),
+                                load: t("common.load"),
+                                speech: t("common.speech"),
+                            }}
+                            fluid
+                        />
                     </LectureDetailWrapper>
+                    <StyledDivider />
+                    {(status !== "idle" || readOnlySelection) && (
+                        <>
+                            {status === "loading" && !readOnlySelection ? (
+                                <LectureFriendOverlapsLoading />
+                            ) : (
+                                <LectureFriendOverlaps lectureId={selectedLecture.id} />
+                            )}
+                            <StyledDivider />
+                        </>
+                    )}
                     <LectureDetailWrapper
                         ref={reviewSectionRef}
                         direction="column"
                         gap={10}
                     >
                         <LectureReviewSubsection
+                            key={selectedLecture.id}
                             selectedCourseId={selectedLecture.courseId}
                             selectedProfessorId={selectedLecture.professors[0]?.id ?? -1}
                         />
                     </LectureDetailWrapper>
-                    {isTablet && (
+                    {isTablet && !readOnlySelection && (
                         <LectureActionsWrapper
                             direction="row"
                             gap={12}
@@ -367,8 +460,10 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                             )}
 
                             {(currentTimetableId != null || status === "idle") &&
-                                (!timetableLectures?.some(
-                                    (lec) => lec.id === selectedLecture.id,
+                                (!timetableItems.some(
+                                    (item) =>
+                                        item.kind === TimetableItemKind.LECTURE &&
+                                        item.data.id === selectedLecture.id,
                                 ) ? (
                                     <Button
                                         type="selected"
@@ -405,6 +500,15 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                         </LectureActionsWrapper>
                     )}
                 </>
+            ) : hoveredCustomBlock ? (
+                <FriendCustomBlockDetail
+                    block={hoveredCustomBlock}
+                    timetableName={currentTimetableName}
+                />
+            ) : readOnlySelection ? (
+                <Typography type="Normal" color="Text.placeholder">
+                    {t("friends.selectLecture")}
+                </Typography>
             ) : (
                 <Credits />
             )}
