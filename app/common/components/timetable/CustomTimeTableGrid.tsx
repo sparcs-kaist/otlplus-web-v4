@@ -72,6 +72,11 @@ const OverflowGridWrapper = styled(FlexWrapper)`
     grid-row: 2;
     display: none;
 
+    scrollbar-width: none;
+    &::-webkit-scrollbar {
+        display: none;
+    }
+
     &.has-overflow {
         display: flex;
     }
