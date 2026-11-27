@@ -3,9 +3,10 @@ import { useCallback, useRef } from "react"
 import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 
-import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
+import { extractLectures } from "@/common/utils/timetableItems"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
+import { queryKeys } from "@/libs/query/queryKeys"
 import { useAPI } from "@/utils/api/useAPI"
 import useUserStore from "@/utils/zustand/useUserStore"
 
@@ -32,16 +33,12 @@ export function useTimetableClone(timetableItems: TimetableItem[]) {
                 semester: source.semesterEnum,
                 ...(source.currentTimetableId === null
                     ? {
-                          lectureIds: timetableItems.flatMap((item) =>
-                              item.kind === TimetableItemKind.LECTURE
-                                  ? [item.data.id]
-                                  : [],
-                          ),
+                          lectureIds: extractLectures(timetableItems).map(({ id }) => id),
                       }
                     : { sourceTimetableId: source.currentTimetableId }),
             })
-            void queryClient.invalidateQueries({ queryKey: ["/timetables"] })
-            void queryClient.invalidateQueries({ queryKey: ["/timetables/home"] })
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.timetables] })
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.homeTimetable] })
             const current = useTimetableUIStore.getState()
             if (
                 useUserStore.getState().user?.id === auth.user?.id &&
@@ -56,8 +53,8 @@ export function useTimetableClone(timetableItems: TimetableItem[]) {
             }
         } catch {
             // Refetch in case creation succeeded but the response was lost; never retry the POST.
-            void queryClient.invalidateQueries({ queryKey: ["/timetables"] })
-            void queryClient.invalidateQueries({ queryKey: ["/timetables/home"] })
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.timetables] })
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.homeTimetable] })
             alert(t("timetable.cloneFailed"))
         } finally {
             pending.current = false

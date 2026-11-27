@@ -65,14 +65,16 @@ describe("unified timetable item reads", () => {
     })
 
     it("renders each slot once, including weekend/exact-minute overflow, without editing controls", () => {
-        const onLectureSelect = vi.fn()
+        const onItemSelect = vi.fn()
+        const lectureItem: TimetableItem = { kind: "lecture", data: lecture }
+        const customItem: TimetableItem = { kind: "custom", data: block }
         const items = toTimetableItems({ lectures: [lecture], customBlocks: [block] })
         const { container } = render(
             <CustomTimeTableGrid
                 timetableItems={items}
                 needTimeFilter={false}
                 needLectureDeletable={false}
-                onLectureSelect={onLectureSelect}
+                onItemSelect={onItemSelect}
             />,
         )
 
@@ -83,13 +85,13 @@ describe("unified timetable item reads", () => {
         ).toHaveAttribute("title", "Study group · common.days.saturday 10:35–11:35")
         expect(
             container.querySelectorAll('[data-custom-block-interaction="true"]'),
-        ).toHaveLength(0)
+        ).toHaveLength(3)
         expect(container.querySelectorAll("button")).toHaveLength(0)
 
         fireEvent.pointerDown(screen.getAllByText("Study group")[0]!)
-        expect(onLectureSelect).not.toHaveBeenCalled()
+        expect(onItemSelect).toHaveBeenLastCalledWith(customItem, expect.anything())
         fireEvent.pointerDown(screen.getByText("Physics"))
-        expect(onLectureSelect).toHaveBeenCalledWith(lecture, expect.anything())
+        expect(onItemSelect).toHaveBeenLastCalledWith(lectureItem, expect.anything())
     })
 
     it("supports legacy single-slot blocks and updates when only timetableItems changes", () => {
@@ -107,27 +109,22 @@ describe("unified timetable item reads", () => {
     })
 
     it("selects a custom block from every slot without exposing editing controls", () => {
-        const onCustomBlockSelect = vi.fn()
-        const onLectureSelect = vi.fn()
+        const onItemSelect = vi.fn()
+        const customItem: TimetableItem = { kind: "custom", data: block }
         const { container } = render(
             <CustomTimeTableGrid
-                timetableItems={[
-                    { kind: "lecture", data: lecture },
-                    { kind: "custom", data: block },
-                ]}
+                timetableItems={[{ kind: "lecture", data: lecture }, customItem]}
                 needTimeFilter={false}
                 needLectureDeletable={false}
-                onCustomBlockSelect={onCustomBlockSelect}
-                onLectureSelect={onLectureSelect}
+                onItemSelect={onItemSelect}
             />,
         )
 
         for (const title of screen.getAllByText("Study group")) {
             fireEvent.pointerDown(title)
-            expect(onCustomBlockSelect).toHaveBeenLastCalledWith(block, expect.anything())
+            expect(onItemSelect).toHaveBeenLastCalledWith(customItem, expect.anything())
         }
-        expect(onCustomBlockSelect).toHaveBeenCalledTimes(3)
-        expect(onLectureSelect).not.toHaveBeenCalled()
+        expect(onItemSelect).toHaveBeenCalledTimes(3)
         expect(container.querySelectorAll("button")).toHaveLength(0)
 
         const slots = screen.getAllByRole("button")
@@ -137,75 +134,11 @@ describe("unified timetable item reads", () => {
             fireEvent.keyDown(slot, { key: "Enter" })
             fireEvent.keyDown(slot, { key: " " })
         }
-        expect(onCustomBlockSelect).toHaveBeenCalledTimes(9)
-        expect(onCustomBlockSelect).toHaveBeenLastCalledWith(block, undefined)
+        expect(onItemSelect).toHaveBeenCalledTimes(9)
+        expect(onItemSelect).toHaveBeenLastCalledWith(customItem, undefined)
     })
 
-    it.each(["items", "legacy"])(
-        "dims other item kinds across normal and overflow tiles using %s props",
-        (propsKind) => {
-            const mixedLecture = {
-                ...lecture,
-                classes: [
-                    ...lecture.classes,
-                    { ...lecture.classes[0]!, day: 6, begin: 600, end: 660 },
-                ],
-            }
-            const otherBlock = { ...block, id: 9, block_name: "Other block" }
-            const timetableItems: TimetableItem[] = [
-                { kind: "lecture", data: mixedLecture },
-                { kind: "custom", data: block },
-                { kind: "custom", data: otherBlock },
-            ]
-            const props = {
-                ...(propsKind === "items"
-                    ? { timetableItems }
-                    : { lectures: [mixedLecture], customBlocks: [block, otherBlock] }),
-                needTimeFilter: false,
-                needLectureDeletable: false,
-                onCustomBlockSelect: vi.fn(),
-            }
-            const { container, rerender } = render(<CustomTimeTableGrid {...props} />)
-            const expectOpacity = (selector: string, opacity: string, count: number) => {
-                const tiles = container.querySelectorAll(selector)
-                expect(tiles).toHaveLength(count)
-                tiles.forEach((tile) => expect(tile).toHaveStyle({ opacity }))
-            }
-            const customTiles = '[data-custom-block-id="7"] .custom-block-tile'
-            const otherCustomTiles = '[data-custom-block-id="9"] .custom-block-tile'
-
-            expectOpacity(".lecture-tile", "1", 2)
-            expectOpacity(customTiles, "1", 3)
-            expectOpacity(otherCustomTiles, "1", 3)
-
-            rerender(<CustomTimeTableGrid {...props} selectedLectures={[mixedLecture]} />)
-            expect(container.querySelector(".custom-timetable")).toHaveAttribute(
-                "data-selected-items",
-                "lecture:7",
-            )
-            expectOpacity(".lecture-tile", "1", 2)
-            expectOpacity(customTiles, "0.5", 3)
-            expectOpacity(otherCustomTiles, "0.5", 3)
-
-            rerender(<CustomTimeTableGrid {...props} selectedCustomBlock={block} />)
-            expect(container.querySelector(".custom-timetable")).toHaveAttribute(
-                "data-selected-items",
-                "custom:7",
-            )
-            expectOpacity(".lecture-tile", "0.5", 2)
-            expectOpacity(customTiles, "1", 3)
-            expectOpacity(otherCustomTiles, "0.5", 3)
-
-            rerender(<CustomTimeTableGrid {...props} />)
-            expectOpacity(".lecture-tile", "1", 2)
-            expectOpacity(customTiles, "1", 3)
-            expectOpacity(otherCustomTiles, "1", 3)
-        },
-    )
-
-    it("disables selection and dimming for a noninteractive export after rerender", () => {
-        const onCustomBlockSelect = vi.fn()
-        const onLectureSelect = vi.fn()
+    it("dims other item kinds across normal and overflow tiles using unified items props", () => {
         const mixedLecture = {
             ...lecture,
             classes: [
@@ -213,28 +146,89 @@ describe("unified timetable item reads", () => {
                 { ...lecture.classes[0]!, day: 6, begin: 600, end: 660 },
             ],
         }
+        const otherBlock = { ...block, id: 9, block_name: "Other block" }
+        const lectureItem: TimetableItem = { kind: "lecture", data: mixedLecture }
+        const customItem: TimetableItem = { kind: "custom", data: block }
+        const timetableItems: TimetableItem[] = [
+            lectureItem,
+            customItem,
+            { kind: "custom", data: otherBlock },
+        ]
         const props = {
-            lectures: [mixedLecture],
-            customBlocks: [block],
-            selectedCustomBlock: block,
+            timetableItems,
             needTimeFilter: false,
             needLectureDeletable: false,
-            onCustomBlockSelect,
-            onLectureSelect,
+            onItemSelect: vi.fn(),
+        }
+        const { container, rerender } = render(<CustomTimeTableGrid {...props} />)
+        const expectOpacity = (selector: string, opacity: string, count: number) => {
+            const tiles = container.querySelectorAll(selector)
+            expect(tiles).toHaveLength(count)
+            tiles.forEach((tile) => expect(tile).toHaveStyle({ opacity }))
+        }
+        const customTiles = '[data-custom-block-id="7"] .custom-block-tile'
+        const otherCustomTiles = '[data-custom-block-id="9"] .custom-block-tile'
+
+        expectOpacity(".lecture-tile", "1", 2)
+        expectOpacity(customTiles, "1", 3)
+        expectOpacity(otherCustomTiles, "1", 3)
+
+        rerender(<CustomTimeTableGrid {...props} selectedItems={[lectureItem]} />)
+        expect(container.querySelector(".custom-timetable")).toHaveAttribute(
+            "data-selected-items",
+            "lecture:7",
+        )
+        expectOpacity(".lecture-tile", "1", 2)
+        expectOpacity(customTiles, "0.5", 3)
+        expectOpacity(otherCustomTiles, "0.5", 3)
+
+        rerender(<CustomTimeTableGrid {...props} selectedItems={[customItem]} />)
+        expect(container.querySelector(".custom-timetable")).toHaveAttribute(
+            "data-selected-items",
+            "custom:7",
+        )
+        expectOpacity(".lecture-tile", "0.5", 2)
+        expectOpacity(customTiles, "1", 3)
+        expectOpacity(otherCustomTiles, "0.5", 3)
+
+        rerender(<CustomTimeTableGrid {...props} />)
+        expectOpacity(".lecture-tile", "1", 2)
+        expectOpacity(customTiles, "1", 3)
+        expectOpacity(otherCustomTiles, "1", 3)
+    })
+
+    it("disables selection and dimming for a noninteractive export after rerender", () => {
+        const onItemSelect = vi.fn()
+        const mixedLecture = {
+            ...lecture,
+            classes: [
+                ...lecture.classes,
+                { ...lecture.classes[0]!, day: 6, begin: 600, end: 660 },
+            ],
+        }
+        const customItem: TimetableItem = { kind: "custom", data: block }
+        const props = {
+            timetableItems: [
+                { kind: "lecture" as const, data: mixedLecture },
+                customItem,
+            ],
+            selectedItems: [customItem],
+            needTimeFilter: false,
+            needLectureDeletable: false,
+            onItemSelect,
         }
         const { container, rerender } = render(<CustomTimeTableGrid {...props} />)
         const titles = screen.getAllByText("Physics")
         fireEvent.pointerDown(titles[0]!)
         fireEvent.pointerDown(titles[1]!)
-        expect(onLectureSelect).toHaveBeenCalledTimes(2)
-        onLectureSelect.mockClear()
+        expect(onItemSelect).toHaveBeenCalledTimes(2)
+        onItemSelect.mockClear()
 
         rerender(<CustomTimeTableGrid {...props} needLectureInteraction={false} />)
         for (const title of screen.getAllByText(/Study group|Physics/)) {
             fireEvent.pointerDown(title)
         }
-        expect(onCustomBlockSelect).not.toHaveBeenCalled()
-        expect(onLectureSelect).not.toHaveBeenCalled()
+        expect(onItemSelect).not.toHaveBeenCalled()
         expect(container.querySelector(".custom-timetable")).toHaveAttribute(
             "data-selected-items",
             "",
@@ -253,7 +247,6 @@ describe("unified timetable item reads", () => {
         const lectureItem: TimetableItem = { kind: "lecture", data: lecture }
         const customItem: TimetableItem = { kind: "custom", data: block }
         const onItemSelect = vi.fn()
-        const onCustomBlockSelect = vi.fn()
         const { container } = render(
             <CustomTimeTableGrid
                 timetableItems={[
@@ -262,9 +255,7 @@ describe("unified timetable item reads", () => {
                     { kind: "custom", data: otherBlock },
                 ]}
                 selectedItems={[lectureItem, customItem]}
-                selectedCustomBlock={otherBlock}
                 onItemSelect={onItemSelect}
-                onCustomBlockSelect={onCustomBlockSelect}
                 flashItemKeys={["lecture:7", "custom:7"]}
                 isCustomBlockSectionOpen
                 customBlockDraftTimes={block.times!.slice(0, 2)}
@@ -293,7 +284,6 @@ describe("unified timetable item reads", () => {
         expect(onItemSelect).toHaveBeenLastCalledWith(customItem, expect.anything())
         fireEvent.pointerDown(screen.getByText("Physics"))
         expect(onItemSelect).toHaveBeenLastCalledWith(lectureItem, expect.anything())
-        expect(onCustomBlockSelect).not.toHaveBeenCalled()
     })
 
     it("keeps editor deletion separate from keyboard selection and removes controls in readonly mode", () => {
@@ -491,6 +481,44 @@ describe("unified timetable item reads", () => {
         expect(overflowGrid.querySelectorAll(".custom-block-tile")).toHaveLength(2)
         for (const tile of overflowGrid.querySelectorAll('[data-custom-block-id="7"]')) {
             expect(tile).toHaveStyle({ gridColumn: "5" })
+        }
+    })
+
+    it("ignores a single-cell click when adding custom block times, and only commits multi-slot drags", () => {
+        const setTimeFilter = vi.fn()
+        const { container } = render(
+            <CustomTimeTableGrid
+                timetableItems={[]}
+                isCustomBlockSectionOpen
+                setTimeFilter={setTimeFilter}
+            />,
+        )
+        const cell1 = container.querySelector(
+            '.background-grid-block[data-day-idx="1"][data-time-idx="4"]',
+        )!
+        const cell2 = container.querySelector(
+            '.background-grid-block[data-day-idx="1"][data-time-idx="5"]',
+        )!
+        const grid = cell1.parentElement!
+        const originalElementFromPoint = document.elementFromPoint
+        document.elementFromPoint = vi.fn((x: number) =>
+            x === 10 ? cell1 : cell2,
+        ) as typeof document.elementFromPoint
+        try {
+            fireEvent.pointerDown(grid, { clientX: 10, clientY: 10 })
+            fireEvent.pointerUp(grid, { clientX: 10, clientY: 10 })
+            expect(setTimeFilter).not.toHaveBeenCalled()
+
+            fireEvent.pointerDown(grid, { clientX: 10, clientY: 10 })
+            fireEvent.pointerMove(grid, { clientX: 20, clientY: 20 })
+            fireEvent.pointerUp(grid, { clientX: 20, clientY: 20 })
+            expect(setTimeFilter).toHaveBeenCalledExactlyOnceWith({
+                day: 1,
+                begin: 600,
+                end: 660,
+            })
+        } finally {
+            document.elementFromPoint = originalElementFromPoint
         }
     })
 })

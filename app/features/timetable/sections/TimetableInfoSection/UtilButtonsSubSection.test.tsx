@@ -51,7 +51,7 @@ const renderSubject = () =>
     render(
         <UtilButtonsSubSection
             timetableName="Test timetable"
-            timetableLectures={[]}
+            timetableItems={[]}
             year={2026}
             semester={SemesterEnum.SPRING}
         />,

@@ -27,7 +27,10 @@ import { timetableItemKey } from "@/common/utils/timetableItems"
 import LectureFriendOverlaps, {
     LectureFriendOverlapsLoading,
 } from "@/features/friends/LectureFriendOverlaps"
-import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
+import {
+    useHoveredLectures,
+    useTimetableUIStore,
+} from "@/features/timetable/store/useTimetableUIStore"
 import isLectureAddDisabled from "@/features/timetable/utils/isLectureAddDisabled"
 import { trackEvent } from "@/libs/mixpanel"
 import { queryKeys } from "@/libs/query/queryKeys"
@@ -120,7 +123,7 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
 
     const editorSelection = useTimetableUIStore((s) => s.selectedItems)
     const selectedItems = readOnlySelection ? [] : editorSelection
-    const hoveredLectures = useTimetableUIStore((s) => s.hoveredLectures)
+    const hoveredLectures = useHoveredLectures()
     const editorYear = useTimetableUIStore((s) => s.year)
     const year = readOnlySelection?.year ?? editorYear
     const editorSemester = useTimetableUIStore((s) => s.semesterEnum)

@@ -1,16 +1,13 @@
 import { z } from "zod"
 
 import { LectureActionEnum } from "@/common/enum/lectureActionEnum"
-import { CustomBlockSchema } from "@/common/schemas/customBlock"
 import { LectureSchema } from "@/common/schemas/lecture"
+import { TimetableItemsSchema } from "@/common/schemas/timetableItem"
 
 //GET /api/timetables/:timetableId
 export const GETRequest = z.object({})
 
-export const GETResponse = z.object({
-    lectures: z.array(LectureSchema),
-    customBlocks: z.array(CustomBlockSchema),
-})
+export const GETResponse = TimetableItemsSchema
 
 export type GETTimetableByIdResponse = z.infer<typeof GETResponse>
 

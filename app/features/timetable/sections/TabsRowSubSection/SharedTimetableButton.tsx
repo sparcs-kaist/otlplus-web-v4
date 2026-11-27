@@ -36,7 +36,7 @@ export default function SharedTimetableButton({
                     }}
                     styles={{ padding: 3.75 }}
                 >
-                    <Icon size={17.5} color={theme.colors.Highlight.default}>
+                    <Icon size={17.5} color={theme.colors.Highlight.default} onClick={() => {}}>
                         <PeopleIcon
                             style={{
                                 fill: shared ? "currentColor" : "none",
@@ -59,6 +59,7 @@ export default function SharedTimetableButton({
                 role="img"
                 aria-label={label}
                 style={{ margin: 3.75 }}
+                onClick={() => {}}
             >
                 <PeopleIcon />
             </Icon>

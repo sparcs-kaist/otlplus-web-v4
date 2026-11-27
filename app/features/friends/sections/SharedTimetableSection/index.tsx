@@ -4,7 +4,6 @@ import styled from "@emotion/styled"
 import { useTranslation } from "react-i18next"
 
 import CustomTimeTableGrid from "@/common/components/timetable/CustomTimeTableGrid"
-import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import Widget from "@/common/primitives/Widget"
@@ -148,31 +147,10 @@ export default function SharedTimetableSection({
                         displayedDayCount={7}
                         needTimeFilter={false}
                         needLectureDeletable={false}
-                        selectedLectures={
-                            selectedItem?.kind === TimetableItemKind.LECTURE
-                                ? [selectedItem.data]
-                                : []
-                        }
-                        selectedCustomBlock={
-                            selectedItem?.kind === TimetableItemKind.CUSTOM
-                                ? selectedItem.data
-                                : null
-                        }
-                        onLectureSelect={(lecture) =>
-                            onSelectItem({
-                                kind: TimetableItemKind.LECTURE,
-                                data: lecture,
-                            })
-                        }
-                        onCustomBlockSelect={(block) =>
-                            onSelectItem({ kind: TimetableItemKind.CUSTOM, data: block })
-                        }
-                        onItemHover={(item) => {
-                            onHoverItem(item)
-                        }}
-                        onItemLeave={() => {
-                            onLeaveItem()
-                        }}
+                        selectedItems={selectedItem ? [selectedItem] : []}
+                        onItemSelect={(item) => onSelectItem(item)}
+                        onItemHover={onHoverItem}
+                        onItemLeave={onLeaveItem}
                     />
                 </TimetableGrid>
             </TimetablePanel>

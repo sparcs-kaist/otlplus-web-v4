@@ -14,20 +14,22 @@ it("exports every custom slot to the calendar, including split times and weekend
     try {
         downloadTimetableCalendar({
             name: "Schedule",
-            lectures: [],
-            customBlocks: [
+            timetableItems: [
                 {
-                    id: 1,
-                    block_name: "Study",
-                    place: "Library",
-                    day: 0,
-                    begin: 600,
-                    end: 660,
-                    times: [
-                        { day: 0, begin: 600, end: 660 },
-                        { day: 0, begin: 780, end: 840 },
-                        { day: 5, begin: 1380, end: 1440 },
-                    ],
+                    kind: "custom",
+                    data: {
+                        id: 1,
+                        block_name: "Study",
+                        place: "Library",
+                        day: 0,
+                        begin: 600,
+                        end: 660,
+                        times: [
+                            { day: 0, begin: 600, end: 660 },
+                            { day: 0, begin: 780, end: 840 },
+                            { day: 5, begin: 1380, end: 1440 },
+                        ],
+                    },
                 },
             ],
             semesterObject: {

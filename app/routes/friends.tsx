@@ -9,14 +9,19 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom"
 import Button from "@/common/components/Button"
 import Modal from "@/common/components/Modal"
 import { SemesterEnum, semesterToString } from "@/common/enum/semesterEnum"
-import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import Widget from "@/common/primitives/Widget"
 import type { Friend } from "@/common/schemas/friend"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
-import { toTimetableItems } from "@/common/utils/timetableItems"
+import {
+    extractLectures,
+    isCustomBlockItem,
+    isLectureItem,
+    toLectureItem,
+    toTimetableItems,
+} from "@/common/utils/timetableItems"
 import FriendCustomBlockDetail from "@/features/friends/FriendCustomBlockDetail"
 import FriendInviteModal from "@/features/friends/FriendInviteModal"
 import FriendLectureDetail from "@/features/friends/FriendLectureDetail"
@@ -184,13 +189,13 @@ export default function FriendsPage() {
     const [hoveredItem, setHoveredItem] = useState<TimetableItem | null>(null)
     const [selectedItem, setSelectedItem] = useState<TimetableItem | null>(null)
     const hoveredLecture =
-        hoveredItem?.kind === TimetableItemKind.LECTURE ? hoveredItem.data : null
+        hoveredItem && isLectureItem(hoveredItem) ? hoveredItem.data : null
     const hoveredCustomBlock =
-        hoveredItem?.kind === TimetableItemKind.CUSTOM ? hoveredItem.data : null
+        hoveredItem && isCustomBlockItem(hoveredItem) ? hoveredItem.data : null
     const selectedLecture =
-        selectedItem?.kind === TimetableItemKind.LECTURE ? selectedItem.data : null
+        selectedItem && isLectureItem(selectedItem) ? selectedItem.data : null
     const selectedCustomBlock =
-        selectedItem?.kind === TimetableItemKind.CUSTOM ? selectedItem.data : null
+        selectedItem && isCustomBlockItem(selectedItem) ? selectedItem.data : null
     const activeCustomBlock = selectedCustomBlock || hoveredCustomBlock
     const activeLecture = selectedLecture || hoveredLecture
     const [friendListOpen, setFriendListOpen] = useState(false)
@@ -205,10 +210,6 @@ export default function FriendsPage() {
     const [addedFriendName, setAddedFriendName] = useState<string | null>(
         (location.state as { friendAddedName?: string } | null)?.friendAddedName ?? null,
     )
-
-    const handleOutsideClick = useCallback(() => {
-        setSelectedItem(null)
-    }, [setSelectedItem])
 
     const handleSelectFriend = useCallback(
         (friendId: number | null) => {
@@ -440,9 +441,7 @@ export default function FriendsPage() {
                 : toTimetableItems(timetableQuery.data),
         [hasSharedSemester, paramsReady, hasLoadError, timetableQuery.data],
     )
-    const lectures = timetableItems.flatMap((item) =>
-        item.kind === TimetableItemKind.LECTURE ? [item.data] : [],
-    )
+    const lectures = useMemo(() => extractLectures(timetableItems), [timetableItems])
     const overlappedLectureIds = useMemo(() => {
         if (selectedFriendId === null) return []
         const ownLectureIds = new Set(
@@ -450,12 +449,10 @@ export default function FriendsPage() {
                 (lecture) => lecture.id,
             ),
         )
-        return timetableItems.flatMap((item) =>
-            item.kind === TimetableItemKind.LECTURE && ownLectureIds.has(item.data.id)
-                ? [item.data.id]
-                : [],
-        )
-    }, [selectedFriendId, ownShared.data, ownShared.isError, timetableItems])
+        return lectures
+            .filter((lecture) => ownLectureIds.has(lecture.id))
+            .map((lecture) => lecture.id)
+    }, [selectedFriendId, ownShared.data, ownShared.isError, lectures])
     const semesterName = (termYear: number, termSemester: SemesterEnum) =>
         t("friends.semesterLabel", {
             year: termYear,
@@ -552,12 +549,7 @@ export default function FriendsPage() {
                         key={lecture.id}
                         ref={index === 0 ? detailActionRef : undefined}
                         type="button"
-                        onClick={() =>
-                            setSelectedItem({
-                                kind: TimetableItemKind.LECTURE,
-                                data: lecture,
-                            })
-                        }
+                        onClick={() => setSelectedItem(toLectureItem(lecture))}
                     >
                         {lecture.name}
                         {lecture.subtitle} {lecture.classNo && `(${lecture.classNo})`}
@@ -756,12 +748,7 @@ export default function FriendsPage() {
                                     key={lecture.id}
                                     ref={index === 0 ? detailActionRef : undefined}
                                     type="button"
-                                    onClick={() =>
-                                        setSelectedItem({
-                                            kind: TimetableItemKind.LECTURE,
-                                            data: lecture,
-                                        })
-                                    }
+                                    onClick={() => setSelectedItem(toLectureItem(lecture))}
                                 >
                                     {lecture.name}
                                     {lecture.subtitle}{" "}

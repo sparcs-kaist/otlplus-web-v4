@@ -52,54 +52,57 @@ vi.mock("@/common/components/timetable/CustomTimeTableGrid", () => ({
         timetableItems,
         needTimeFilter,
         needLectureDeletable,
-        onLectureSelect,
-        onCustomBlockSelect,
-        selectedCustomBlock,
-        selectedLectures,
+        onItemSelect,
+        selectedItems = [],
         overlappedLectureIds,
         displayedDayCount,
     }: {
         timetableItems: TimetableItem[]
         needTimeFilter: boolean
         needLectureDeletable: boolean
-        onLectureSelect: (lecture: Lecture) => void
-        onCustomBlockSelect: (block: CustomBlock) => void
-        selectedCustomBlock: CustomBlock | null
-        selectedLectures: Lecture[]
+        onItemSelect: (item: TimetableItem) => void
+        selectedItems?: TimetableItem[]
         overlappedLectureIds: readonly number[]
         displayedDayCount: 5 | 7
-    }) => (
-        <div
-            data-testid="timetable-grid"
-            data-time-filter={needTimeFilter}
-            data-deletable={needLectureDeletable}
-            data-selected-custom-block={selectedCustomBlock?.id ?? ""}
-            data-selected-lectures={selectedLectures.map(({ id }) => id).join(" ")}
-            data-overlapped-lectures={overlappedLectureIds.join(" ")}
-            data-displayed-days={displayedDayCount}
-        >
-            {timetableItems.map((item) =>
-                item.kind === "lecture" ? (
-                    <button
-                        key={`lecture-${item.data.id}`}
-                        type="button"
-                        onPointerDown={() => onLectureSelect(item.data)}
-                    >
-                        Tile: {item.data.name}
-                    </button>
-                ) : (
-                    <button
-                        key={`custom-${item.data.id}`}
-                        type="button"
-                        aria-label={`Custom tile: ${item.data.block_name}`}
-                        onPointerDown={() => onCustomBlockSelect(item.data)}
-                    >
-                        {item.data.block_name}
-                    </button>
-                ),
-            )}
-        </div>
-    ),
+    }) => {
+        const selectedCustomBlock =
+            selectedItems.find((item) => item.kind === "custom")?.data ?? null
+        const selectedLectures = selectedItems.flatMap((item) =>
+            item.kind === "lecture" ? [item.data] : [],
+        )
+        return (
+            <div
+                data-testid="timetable-grid"
+                data-time-filter={needTimeFilter}
+                data-deletable={needLectureDeletable}
+                data-selected-custom-block={selectedCustomBlock?.id ?? ""}
+                data-selected-lectures={selectedLectures.map(({ id }) => id).join(" ")}
+                data-overlapped-lectures={overlappedLectureIds.join(" ")}
+                data-displayed-days={displayedDayCount}
+            >
+                {timetableItems.map((item) =>
+                    item.kind === "lecture" ? (
+                        <button
+                            key={`lecture-${item.data.id}`}
+                            type="button"
+                            onPointerDown={() => onItemSelect(item)}
+                        >
+                            Tile: {item.data.name}
+                        </button>
+                    ) : (
+                        <button
+                            key={`custom-${item.data.id}`}
+                            type="button"
+                            aria-label={`Custom tile: ${item.data.block_name}`}
+                            onPointerDown={() => onItemSelect(item)}
+                        >
+                            {item.data.block_name}
+                        </button>
+                    ),
+                )}
+            </div>
+        )
+    },
 }))
 
 const lecture = { id: 1, name: "Fluid mechanics", subtitle: "", classNo: "A" } as Lecture

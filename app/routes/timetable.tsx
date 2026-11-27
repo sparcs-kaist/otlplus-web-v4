@@ -14,7 +14,12 @@ import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
-import { getCustomBlockTimes, toTimetableItems } from "@/common/utils/timetableItems"
+import {
+    extractLectures,
+    getCustomBlockTimes,
+    toLectureItem,
+    toTimetableItems,
+} from "@/common/utils/timetableItems"
 import KeyboardShortcutModal from "@/features/timetable/components/KeyboardShortcutModal"
 import { useTimetableClone } from "@/features/timetable/hooks/useTimetableClone"
 import { useTimetableEditor } from "@/features/timetable/hooks/useTimetableEditor"
@@ -211,10 +216,8 @@ export default function Timetable() {
     const timetableAreaRef = useRef<HTMLDivElement>(null)
     const outerRef = useRef<HTMLDivElement>(null)
 
-    const hoveredLectures = useTimetableUIStore((s) => s.hoveredLectures)
-    const setHoveredLectures = useTimetableUIStore((s) => s.setHoveredLectures)
-    const hoveredCustomBlocks = useTimetableUIStore((s) => s.hoveredCustomBlocks)
-    const setHoveredCustomBlocks = useTimetableUIStore((s) => s.setHoveredCustomBlocks)
+    const hoveredItems = useTimetableUIStore((s) => s.hoveredItems)
+    const setHoveredItems = useTimetableUIStore((s) => s.setHoveredItems)
     const selectedItems = useTimetableUIStore((s) => s.selectedItems)
     const setSelectedItems = useTimetableUIStore((s) => s.setSelectedItems)
 
@@ -275,17 +278,7 @@ export default function Timetable() {
         [currentTimetableId, myTimetable.data, nonLoginTimetable, status, timetable.data],
     )
     const currentTimetableLectures = useMemo(
-        () =>
-            currentTimetableItems.flatMap((item) =>
-                item.kind === TimetableItemKind.LECTURE ? [item.data] : [],
-            ),
-        [currentTimetableItems],
-    )
-    const currentCustomBlocks = useMemo(
-        () =>
-            currentTimetableItems.flatMap((item) =>
-                item.kind === TimetableItemKind.CUSTOM ? [item.data] : [],
-            ),
+        () => extractLectures(currentTimetableItems),
         [currentTimetableItems],
     )
     const { cloneTimetable, isCloning } = useTimetableClone(currentTimetableItems)
@@ -302,7 +295,7 @@ export default function Timetable() {
     }, [currentTimetableId, refetchTimetables, setCurrentTimetableId, timetable.error])
 
     useEffect(() => {
-        setHoveredLectures([])
+        setHoveredItems([])
         setSelectedItems([])
     }, [mobileSearchOpen])
 
@@ -315,7 +308,7 @@ export default function Timetable() {
                 timetableAreaRef.current &&
                 !timetableAreaRef.current.contains(event.target as Node)
             ) {
-                setHoveredLectures([])
+                setHoveredItems([])
                 setSelectedItems([])
                 setSelectedCustomBlock(null)
                 setIsCustomBlockSectionOpen(false)
@@ -327,7 +320,7 @@ export default function Timetable() {
 
     useEffect(() => {
         setSelectedItems([])
-        setHoveredLectures([])
+        setHoveredItems([])
 
         if (year !== -1) {
             setMyTimetableParams({ year: year, semester: semesterEnum })
@@ -338,7 +331,7 @@ export default function Timetable() {
 
     useEffect(() => {
         setSelectedItems([])
-        setHoveredLectures([])
+        setHoveredItems([])
         setSelectedCustomBlock(null)
         setIsCustomBlockSectionOpen(false)
     }, [currentTimetableId])
@@ -348,12 +341,6 @@ export default function Timetable() {
             setMobileSearchOpen(true)
         }
     }, [isCustomBlockSectionOpen, isTablet, setMobileSearchOpen, timeFilter])
-
-    useEffect(() => {
-        if (hoveredCustomBlocks) {
-            setIsCustomBlockSectionOpen(true)
-        }
-    }, [hoveredCustomBlocks])
 
     const {
         addLectures,
@@ -384,9 +371,14 @@ export default function Timetable() {
         [canDeleteLecture, removeItems],
     )
     const closeMobileLectureModal = useCallback(() => {
-        setHoveredLectures([])
+        setHoveredItems([])
         setSelectedItems([])
-    }, [setHoveredLectures, setSelectedItems])
+    }, [setHoveredItems, setSelectedItems])
+    const handleItemHover = useCallback(
+        (item: TimetableItem) => setHoveredItems([item]),
+        [setHoveredItems],
+    )
+    const handleItemLeave = useCallback(() => setHoveredItems([]), [setHoveredItems])
 
     useEffect(() => {
         if (!isCustomBlockSectionOpen || selectedItems.length < 2) return
@@ -447,7 +439,7 @@ export default function Timetable() {
     )
     const handleLectureSelect = useCallback(
         (lecture: Lecture, event?: React.MouseEvent) =>
-            handleItemSelect({ kind: TimetableItemKind.LECTURE, data: lecture }, event),
+            handleItemSelect(toLectureItem(lecture), event),
         [handleItemSelect],
     )
     const customBlockEditorProps = {
@@ -503,12 +495,12 @@ export default function Timetable() {
                                     timetableItems={currentTimetableItems}
                                     needLectureDeletable={canDeleteLecture}
                                     onItemSelect={handleItemSelect}
+                                    onItemHover={handleItemHover}
+                                    onItemLeave={handleItemLeave}
                                     onItemDelete={handleDeleteItem}
                                     isCustomBlockSectionOpen={isCustomBlockSectionOpen}
                                     flashItemKeys={flashItemKeys ?? undefined}
-                                    deleteLecture={handleDeleteLecture}
-                                    hoveredLectures={hoveredLectures}
-                                    setHoveredLectures={setHoveredLectures}
+                                    hoveredItems={hoveredItems}
                                     selectedItems={selectedItems}
                                     timeFilter={timeFilter}
                                     customBlockDraftTimes={customBlockDraftTimes}
@@ -524,16 +516,14 @@ export default function Timetable() {
                             <CustomBlockSection {...customBlockEditorProps} />
                         ) : (
                             <TimetableInfoSection
-                                timetableLectures={currentTimetableLectures}
-                                customBlocks={currentCustomBlocks}
+                                timetableItems={currentTimetableItems}
                             />
                         )}
                     </TimetableInfoArea>
                     <MobileControlBar direction="row" gap={0}>
                         <UtilButtonsSubSection
                             timetableName={currentTimetableName}
-                            timetableLectures={currentTimetableLectures}
-                            customBlocks={currentCustomBlocks}
+                            timetableItems={currentTimetableItems}
                             year={year}
                             semester={semesterEnum}
                         />
@@ -619,8 +609,7 @@ export default function Timetable() {
                             <UtilButtonsArea>
                                 <UtilButtonsSubSection
                                     timetableName={currentTimetableName}
-                                    timetableLectures={currentTimetableLectures}
-                                    customBlocks={currentCustomBlocks}
+                                    timetableItems={currentTimetableItems}
                                     year={year}
                                     semester={semesterEnum}
                                 />
@@ -676,14 +665,14 @@ export default function Timetable() {
                                         timetableItems={currentTimetableItems}
                                         needLectureDeletable={canDeleteLecture}
                                         onItemSelect={handleItemSelect}
+                                        onItemHover={handleItemHover}
+                                        onItemLeave={handleItemLeave}
                                         onItemDelete={handleDeleteItem}
                                         isCustomBlockSectionOpen={
                                             isCustomBlockSectionOpen
                                         }
                                         flashItemKeys={flashItemKeys ?? undefined}
-                                        deleteLecture={handleDeleteLecture}
-                                        hoveredLectures={hoveredLectures}
-                                        setHoveredLectures={setHoveredLectures}
+                                        hoveredItems={hoveredItems}
                                         selectedItems={selectedItems}
                                         timeFilter={timeFilter}
                                         customBlockDraftTimes={customBlockDraftTimes}
@@ -694,8 +683,7 @@ export default function Timetable() {
                                 {/*시간표 정보 영역*/}
                                 <TimetableInfoArea>
                                     <TimetableInfoSection
-                                        timetableLectures={currentTimetableLectures}
-                                        customBlocks={currentCustomBlocks}
+                                        timetableItems={currentTimetableItems}
                                     />
                                 </TimetableInfoArea>
                             </Block>

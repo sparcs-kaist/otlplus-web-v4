@@ -12,7 +12,12 @@ import type { Lecture } from "@/common/schemas/lecture"
 import type { TimetableChange, TimetableItem } from "@/common/schemas/timetableItem"
 import {
     getCustomBlockTimes,
+    groupTimetableItems,
+    isCustomBlockItem,
+    isLectureItem,
     timetableItemKey,
+    toCustomBlockItem,
+    toLectureItem,
     toTimetableItems,
 } from "@/common/utils/timetableItems"
 import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
@@ -225,14 +230,7 @@ export function useTimetableEditor({
                         },
                     }
                 })
-                const detail: GETTimetableByIdResponse = {
-                    lectures: finalItems.flatMap((item) =>
-                        item.kind === TimetableItemKind.LECTURE ? [item.data] : [],
-                    ),
-                    customBlocks: finalItems.flatMap((item) =>
-                        item.kind === TimetableItemKind.CUSTOM ? [item.data] : [],
-                    ),
-                }
+                const detail: GETTimetableByIdResponse = groupTimetableItems(finalItems)
                 queryClient.setQueriesData(
                     {
                         queryKey: [detailPath],
@@ -247,8 +245,10 @@ export function useTimetableEditor({
                     predicate: (query) =>
                         query.queryKey[2] !== language && query.queryKey[3] === "/api/v2",
                 })
-                void queryClient.invalidateQueries({ queryKey: ["/timetables/home"] })
-                void queryClient.invalidateQueries({ queryKey: ["/timetables/shared"] })
+                void queryClient.invalidateQueries({ queryKey: [queryKeys.homeTimetable] })
+                void queryClient.invalidateQueries({
+                    queryKey: [queryKeys.sharedTimetable],
+                })
                 void queryClient.invalidateQueries({ queryKey: [queryKeys.timetables] })
             } else {
                 const removed = new Set(
@@ -372,8 +372,10 @@ export function useTimetableEditor({
                         ui.setIsCustomBlockSectionOpen(false)
                     }
                 }
-                void queryClient.invalidateQueries({ queryKey: ["/timetables/home"] })
-                void queryClient.invalidateQueries({ queryKey: ["/timetables/shared"] })
+                void queryClient.invalidateQueries({ queryKey: [queryKeys.homeTimetable] })
+                void queryClient.invalidateQueries({
+                    queryKey: [queryKeys.sharedTimetable],
+                })
             }
             if (isCurrent())
                 alert(
@@ -433,33 +435,21 @@ export function useTimetableEditor({
                 .map((before) => ({ before })),
         )
     }
-    const addLectures = (lectures: Lecture[]) =>
-        addItems(lectures.map((data) => ({ kind: TimetableItemKind.LECTURE, data })))
+    const addLectures = (lectures: Lecture[]) => addItems(lectures.map(toLectureItem))
     const removeLectures = (ids: number[]) =>
         removeItems(
             currentItems().filter(
-                (item) =>
-                    item.kind === TimetableItemKind.LECTURE && ids.includes(item.data.id),
+                (item) => isLectureItem(item) && ids.includes(item.data.id),
             ),
         )
     const addCustomBlock = (data: Omit<CustomBlock, "id">) =>
-        addItems([
-            {
-                kind: TimetableItemKind.CUSTOM,
-                data: { ...data, id: nextLocalId.current-- },
-            },
-        ])
+        addItems([toCustomBlockItem({ ...data, id: nextLocalId.current-- })])
     const updateCustomBlock = async (id: number, data: Omit<CustomBlock, "id">) => {
         const before = currentItems().find(
-            (item) => item.kind === TimetableItemKind.CUSTOM && item.data.id === id,
+            (item) => isCustomBlockItem(item) && item.data.id === id,
         )
         return before
-            ? execute([
-                  {
-                      before,
-                      after: { kind: TimetableItemKind.CUSTOM, data: { ...data, id } },
-                  },
-              ])
+            ? execute([{ before, after: toCustomBlockItem({ ...data, id }) }])
             : false
     }
     const undo = async () => {

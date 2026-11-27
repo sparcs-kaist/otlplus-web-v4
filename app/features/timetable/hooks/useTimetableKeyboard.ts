@@ -11,12 +11,16 @@ import {
     getTimetableItemTimes,
     timetableItemKey,
     timetableItemsOverlap,
+    toLectureItem,
 } from "@/common/utils/timetableItems"
 import {
     type TimetableEditOptions,
     timetableHistoryKey,
 } from "@/features/timetable/hooks/useTimetableEditor"
-import { useTimetableUIStore } from "@/features/timetable/store/useTimetableUIStore"
+import {
+    useHoveredLectures,
+    useTimetableUIStore,
+} from "@/features/timetable/store/useTimetableUIStore"
 import { queryKeys } from "@/libs/query/queryKeys"
 import { useAPI } from "@/utils/api/useAPI"
 import { getPlatform } from "@/utils/getPlatform"
@@ -62,8 +66,8 @@ export function useTimetableKeyboard({
     const currentTimetableId = useTimetableUIStore((s) => s.currentTimetableId)
     const setCurrentTimetableId = useTimetableUIStore((s) => s.setCurrentTimetableId)
     const searchLectures = useTimetableUIStore((s) => s.searchLectures)
-    const hover = useTimetableUIStore((s) => s.hoveredLectures)
-    const setHover = useTimetableUIStore((s) => s.setHoveredLectures)
+    const hover = useHoveredLectures()
+    const setHoveredItems = useTimetableUIStore((s) => s.setHoveredItems)
     const isShortcutModalOpen = useTimetableUIStore((s) => s.isShortcutModalOpen)
     const setIsShortcutModalOpen = useTimetableUIStore((s) => s.setIsShortcutModalOpen)
     const lastSelectedTime = useRef<number | null>(null)
@@ -130,12 +134,12 @@ export function useTimetableKeyboard({
     )
 
     const onLectureSelect = (lecture: Lecture, event?: React.MouseEvent) =>
-        onItemSelect({ kind: TimetableItemKind.LECTURE, data: lecture }, event)
+        onItemSelect(toLectureItem(lecture), event)
 
     const { requestFunction: addTimetable } = useAPI("POST", "/timetables", {
         onSuccess: (data, variables) => {
             void queryClient.invalidateQueries({ queryKey: [queryKeys.timetables] })
-            void queryClient.invalidateQueries({ queryKey: ["/timetables/home"] })
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.homeTimetable] })
             const state = useTimetableUIStore.getState()
             if (
                 state.year === variables.year &&
@@ -149,7 +153,8 @@ export function useTimetableKeyboard({
             if (useTimetableUIStore.getState().currentTimetableId === variables.id)
                 setCurrentTimetableId(null)
             void queryClient.invalidateQueries({ queryKey: [queryKeys.timetables] })
-            void queryClient.invalidateQueries({ queryKey: ["/timetables/home"] })
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.homeTimetable] })
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.sharedTimetable] })
         },
     })
 
@@ -171,7 +176,7 @@ export function useTimetableKeyboard({
         const ui = useTimetableUIStore.getState()
         if (!isMod && event.key === "Escape") {
             ui.setSelectedItems([])
-            ui.setHoveredLectures([])
+            ui.setHoveredItems([])
             ui.setSelectedCustomBlock(null)
             ui.setIsCustomBlockSectionOpen(false)
             ui.setTimeFilter(null)
@@ -310,7 +315,7 @@ export function useTimetableKeyboard({
                             : Math.min(searchLectures.length - 1, index + 1)
                     ]
                 if (next) {
-                    setHover([next])
+                    setHoveredItems([toLectureItem(next)])
                     requestAnimationFrame(() => {
                         const element = document.querySelector(
                             `[data-search-lecture-id="${next.id}"]`,
@@ -324,7 +329,7 @@ export function useTimetableKeyboard({
             } else if (editable) {
                 const lecture = searchLectures[index]
                 if (!lecture) return
-                const item = { kind: TimetableItemKind.LECTURE, data: lecture } as const
+                const item = toLectureItem(lecture)
                 if (
                     currentTimetableItems.some(
                         (existing) =>

@@ -287,6 +287,7 @@ export function TimetableItemDeleteButton({
                         opacity: 1,
                         pointerEvents: "auto",
                     }}
+                    onClick={() => {}}
                 >
                     <Close />
                 </Icon>

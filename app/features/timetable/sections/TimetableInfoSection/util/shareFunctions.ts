@@ -2,8 +2,6 @@ import { CanvasRenderingContext2D, createCanvas, loadImage } from "canvas"
 import ical, { ICalAlarmType, ICalEventRepeatingFreq } from "ical-generator"
 
 import { TimetableItemKind } from "@/common/enum/timetableItemKind"
-import type { CustomBlock } from "@/common/schemas/customBlock"
-import type { Lecture } from "@/common/schemas/lecture"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
 import { getTimetableItemTimes } from "@/common/utils/timetableItems"
 import { colors } from "@/styles/themes/_base/variables/colors"
@@ -49,8 +47,7 @@ interface DrawTileOptions {
 
 interface DrawTimetableDatas {
     timetableName: string
-    lectures: Lecture[]
-    customBlocks: CustomBlock[]
+    timetableItems: TimetableItem[]
     timetableType: string
     semesterName: string
     semesterFontSize: number
@@ -59,11 +56,7 @@ interface DrawTimetableDatas {
     language: "ko" | "en"
 }
 
-function getTimetableExportEntries(lectures: Lecture[], customBlocks: CustomBlock[]) {
-    const items: TimetableItem[] = [
-        ...lectures.map((data) => ({ kind: TimetableItemKind.LECTURE, data })),
-        ...customBlocks.map((data) => ({ kind: TimetableItemKind.CUSTOM, data })),
-    ]
+function getTimetableExportEntries(items: TimetableItem[]) {
     return items.flatMap((item) =>
         getTimetableItemTimes(item).map((time, index) => ({
             ...time,
@@ -203,8 +196,7 @@ function drawTile(options: DrawTileOptions) {
 async function timeTableImage(drawTimetableData: DrawTimetableDatas) {
     const {
         timetableName,
-        lectures,
-        customBlocks,
+        timetableItems,
         timetableType,
         semesterName,
         semesterFontSize,
@@ -244,7 +236,7 @@ async function timeTableImage(drawTimetableData: DrawTimetableDatas) {
         align: "right",
     })
 
-    for (const entry of getTimetableExportEntries(lectures, customBlocks)) {
+    for (const entry of getTimetableExportEntries(timetableItems)) {
         const color =
             TIMETABLE_CELL_COLORS[entry.colorIndex % TIMETABLE_CELL_COLORS.length] ||
             "#F2CECE"
@@ -311,11 +303,10 @@ interface Semester {
 
 export function downloadTimetableCalendar(timetableIcalData: {
     name: string
-    lectures: Lecture[]
-    customBlocks: CustomBlock[]
+    timetableItems: TimetableItem[]
     semesterObject: Semester
 }) {
-    const { name, lectures, customBlocks, semesterObject } = timetableIcalData
+    const { name, timetableItems, semesterObject } = timetableIcalData
 
     const calendar = ical({
         name,
@@ -323,7 +314,7 @@ export function downloadTimetableCalendar(timetableIcalData: {
         timezone: "Asia/Seoul",
     })
 
-    for (const entry of getTimetableExportEntries(lectures, customBlocks)) {
+    for (const entry of getTimetableExportEntries(timetableItems)) {
         const semesterBeginning = new Date(semesterObject.beginning)
         const dayOfWeek = (entry.day + 1) % 7
 

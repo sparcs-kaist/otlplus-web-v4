@@ -286,7 +286,7 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
                                 onClick={onSetHome}
                                 styles={{ padding: 3.75 }}
                             >
-                                <Icon size={17.5} color={theme.colors.Highlight.default}>
+                                <Icon size={17.5} color={theme.colors.Highlight.default} onClick={() => {}}>
                                     {isHome ? <StarIcon /> : <StarBorderIcon />}
                                 </Icon>
                             </IconButton>
@@ -299,6 +299,7 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
                                 role="img"
                                 aria-label={t("timetable.homeTimetable")}
                                 style={{ margin: 3.75 }}
+                                onClick={() => {}}
                             >
                                 <StarIcon />
                             </Icon>
@@ -338,7 +339,7 @@ const SortableTimetableTab: React.FC<SortableTimetableTabProps> = ({
                                 onClick={onDelete}
                                 styles={{ padding: 3.75 }}
                             >
-                                <Icon size={17.5} color={theme.colors.Highlight.default}>
+                                <Icon size={17.5} color={theme.colors.Highlight.default} onClick={() => {}}>
                                     <CloseIcon />
                                 </Icon>
                             </IconButton>
@@ -416,6 +417,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
             }
             timetables.refetch()
             void queryClient.invalidateQueries({ queryKey: [queryKeys.homeTimetable] })
+            void queryClient.invalidateQueries({ queryKey: [queryKeys.sharedTimetable] })
         },
     })
     const { requestFunction: changeTimetableMetaData } = useAPI("PATCH", "/timetables", {
@@ -426,7 +428,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
     const { mutation: setHomeTimetable } = useAPI("PATCH", "/timetables/home", {
         onSuccess: () =>
             Promise.all([
-                queryClient.invalidateQueries({ queryKey: ["/timetables"] }),
+                queryClient.invalidateQueries({ queryKey: [queryKeys.timetables] }),
                 queryClient.invalidateQueries({ queryKey: [queryKeys.homeTimetable] }),
             ]),
     })
@@ -451,7 +453,11 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
         )?.id ?? null
     const isAcademicShared = isSharedSelectionLoaded && sharedTimetableId === null
     const { mutation: setSharedTimetable } = useAPI("PATCH", "/timetables/shared", {
-        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/timetables"] }),
+        onSuccess: () =>
+            Promise.all([
+                queryClient.invalidateQueries({ queryKey: [queryKeys.timetables] }),
+                queryClient.invalidateQueries({ queryKey: [queryKeys.sharedTimetable] }),
+            ]),
     })
     const isSettingShared =
         setSharedTimetable.isPending || !isSharedSelectionLoaded || timetables.isFetching
@@ -712,7 +718,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                         onClick={() => addTimetable({ year, semester, lectureIds: [] })}
                         styles={{ padding: 3.75 }}
                     >
-                        <Icon size={17.5} color={theme.colors.Text.default}>
+                        <Icon size={17.5} color={theme.colors.Text.default} onClick={() => {}}>
                             <AddIcon />
                         </Icon>
                     </IconButton>
@@ -772,6 +778,7 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
                                     role="img"
                                     aria-label={t("timetable.homeTimetable")}
                                     style={{ margin: 3.75 }}
+                                    onClick={() => {}}
                                 >
                                     <StarIcon />
                                 </Icon>

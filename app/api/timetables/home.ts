@@ -1,13 +1,16 @@
 import { z } from "zod"
 
-import {
-    GETResponse as EnrolledTimetableResponse,
-    GETRequest as SemesterRequest,
-} from "./my-timetable"
+import { TimetableItemsSchema } from "@/common/schemas/timetableItem"
+
+import { GETRequest as SemesterRequest } from "./my-timetable"
 
 export const GETRequest = SemesterRequest
 
-export const GETResponse = EnrolledTimetableResponse.extend({
+export const PATCHRequest = GETRequest.extend({
+    timetableId: z.number().int().positive(),
+})
+
+export const PATCHResponse = z.object({
     source: z.enum(["saved", "enrolled"]),
     timetableId: z.number().int().nullable(),
     name: z.string(),
@@ -15,8 +18,4 @@ export const GETResponse = EnrolledTimetableResponse.extend({
     semester: GETRequest.shape.semester,
 })
 
-export const PATCHRequest = GETRequest.extend({
-    timetableId: z.number().int().positive(),
-})
-
-export const PATCHResponse = GETResponse.omit({ lectures: true, customBlocks: true })
+export const GETResponse = TimetableItemsSchema.extend(PATCHResponse.shape)

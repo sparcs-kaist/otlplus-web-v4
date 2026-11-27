@@ -1,14 +1,18 @@
+import { useCallback, useMemo } from "react"
+
 import styled from "@emotion/styled"
 
 import StyledDivider from "@/common/components/StyledDivider"
-import type { CustomBlock } from "@/common/schemas/customBlock"
 import type { Lecture } from "@/common/schemas/lecture"
+import type { TimetableItem } from "@/common/schemas/timetableItem"
+import { extractLectures, toLectureItem } from "@/common/utils/timetableItems"
 import CreditGridSubSection from "@/features/timetable/sections/TimetableInfoSection/CreditGridSubSection"
 import CreditScoreSubSection from "@/features/timetable/sections/TimetableInfoSection/CreditScoreSubSection"
 import ExamTimeSubSection from "@/features/timetable/sections/TimetableInfoSection/ExamTimeSubSection"
 import MapSubSection from "@/features/timetable/sections/TimetableInfoSection/MapSubSection"
 import UtilButtonsSubSection from "@/features/timetable/sections/TimetableInfoSection/UtilButtonsSubSection"
 import {
+    useHoveredLectures,
     useSelectedLectures,
     useTimetableUIStore,
 } from "@/features/timetable/store/useTimetableUIStore"
@@ -37,23 +41,38 @@ const InfoArea = styled.div`
 `
 
 interface TimetableInfoSectionProps {
-    timetableLectures: Lecture[]
-    customBlocks: CustomBlock[]
+    timetableItems: TimetableItem[]
 }
 
 export default function TimetableInfoSection({
-    timetableLectures,
-    customBlocks,
+    timetableItems,
 }: TimetableInfoSectionProps) {
     const isLaptop = useIsDevice("laptop")
+
+    const timetableLectures = useMemo(
+        () => extractLectures(timetableItems),
+        [timetableItems],
+    )
 
     const timetableName = useTimetableUIStore((s) => s.currentTimetableName)
     const year = useTimetableUIStore((s) => s.year)
     const semester = useTimetableUIStore((s) => s.semesterEnum)
 
     const selectedLectures = useSelectedLectures()
-    const hoveredLectures = useTimetableUIStore((s) => s.hoveredLectures)
-    const setHover = useTimetableUIStore((s) => s.setHoveredLectures)
+    const hoveredLectures = useHoveredLectures()
+    const setHoveredItems = useTimetableUIStore((s) => s.setHoveredItems)
+    const setHover = useCallback<React.Dispatch<React.SetStateAction<Lecture[]>>>(
+        (lecturesOrUpdater) => {
+            setHoveredItems((prev) => {
+                const nextLectures =
+                    typeof lecturesOrUpdater === "function"
+                        ? lecturesOrUpdater(extractLectures(prev))
+                        : lecturesOrUpdater
+                return nextLectures.map(toLectureItem)
+            })
+        },
+        [setHoveredItems],
+    )
 
     const hover = selectedLectures.length > 0 ? selectedLectures : hoveredLectures
 
@@ -100,8 +119,7 @@ export default function TimetableInfoSection({
             {!isLaptop && (
                 <UtilButtonsSubSection
                     timetableName={timetableName}
-                    timetableLectures={timetableLectures}
-                    customBlocks={customBlocks}
+                    timetableItems={timetableItems}
                     year={year}
                     semester={semester}
                 />

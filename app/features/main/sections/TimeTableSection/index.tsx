@@ -12,7 +12,7 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
-import { toTimetableItems } from "@/common/utils/timetableItems"
+import { isLectureItem, toTimetableItems } from "@/common/utils/timetableItems"
 import { media } from "@/styles/themes/media"
 import { useAPI } from "@/utils/api/useAPI"
 import { handleLogin } from "@/utils/handleLoginLogout"
@@ -180,7 +180,9 @@ const TimeTableSection = () => {
                                 timetableItems={timetableItems}
                                 needLectureDeletable={false}
                                 needTimeFilter={false}
-                                onLectureSelect={(lecture) => setSelectedLecture(lecture)}
+                                onItemSelect={(item) => {
+                                    if (isLectureItem(item)) setSelectedLecture(item.data)
+                                }}
                                 needCurrentTimeBar={true}
                             />
                         </TimeTableGridWrapper>

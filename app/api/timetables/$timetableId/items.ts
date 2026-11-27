@@ -1,12 +1,11 @@
 import { z } from "zod"
 
 import { TimetableItemKind } from "@/common/enum/timetableItemKind"
-import { CustomBlockSchema } from "@/common/schemas/customBlock"
-import { LectureSchema } from "@/common/schemas/lecture"
 import {
     CustomBlockInputSchema,
     TimetableChangeSchema,
     TimetableItemSchema,
+    TimetableItemsSchema,
 } from "@/common/schemas/timetableItem"
 
 export const POSTRequest = z
@@ -44,10 +43,7 @@ export const PATCHResponse = z.object({
     ),
 })
 
-export const POSTResponse = z.object({
-    lectures: z.array(LectureSchema),
-    customBlocks: z.array(CustomBlockSchema),
-})
+export const POSTResponse = TimetableItemsSchema
 export const DELETEResponse = z.object({
     lectureIds: z.array(z.number().int().positive()),
     customBlockIds: z.array(z.number().int().positive()),

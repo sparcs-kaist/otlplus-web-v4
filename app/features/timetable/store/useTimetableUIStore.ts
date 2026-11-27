@@ -2,16 +2,15 @@ import { create } from "zustand"
 import { useShallow } from "zustand/react/shallow"
 
 import { SemesterEnum } from "@/common/enum/semesterEnum"
-import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import type { CustomBlock } from "@/common/schemas/customBlock"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimeBlock } from "@/common/schemas/timeblock"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
+import { extractLectures } from "@/common/utils/timetableItems"
 
 interface TimetableUIState {
     // 1. 시간표 & 리스트 상호작용
-    hoveredLectures: Lecture[]
-    hoveredCustomBlocks: CustomBlock[]
+    hoveredItems: TimetableItem[]
     selectedItems: TimetableItem[]
     clipboard: { items: TimetableItem[]; sourceKey: string } | null
     timeFilter: TimeBlock | null
@@ -40,11 +39,8 @@ interface TimetableUIState {
     customBlockDraftTimes: TimeBlock[]
 
     // Actions
-    setHoveredLectures: (
-        lecturesOrUpdater: Lecture[] | ((prev: Lecture[]) => Lecture[]),
-    ) => void
-    setHoveredCustomBlocks: (
-        blocksOrUpdater: CustomBlock[] | ((prev: CustomBlock[]) => CustomBlock[]),
+    setHoveredItems: (
+        itemsOrUpdater: TimetableItem[] | ((prev: TimetableItem[]) => TimetableItem[]),
     ) => void
     setSelectedItems: (
         items: TimetableItem[] | ((prev: TimetableItem[]) => TimetableItem[]),
@@ -91,8 +87,7 @@ interface TimetableUIState {
 
 export const useTimetableUIStore = create<TimetableUIState>((set) => ({
     // Initial States
-    hoveredLectures: [],
-    hoveredCustomBlocks: [],
+    hoveredItems: [],
     selectedItems: [],
     clipboard: null,
     timeFilter: null,
@@ -115,14 +110,9 @@ export const useTimetableUIStore = create<TimetableUIState>((set) => ({
     customBlockDraftTimes: [],
 
     // Actions
-    setHoveredLectures: (val) =>
+    setHoveredItems: (val) =>
         set((state) => ({
-            hoveredLectures: typeof val === "function" ? val(state.hoveredLectures) : val,
-        })),
-    setHoveredCustomBlocks: (val) =>
-        set((state) => ({
-            hoveredCustomBlocks:
-                typeof val === "function" ? val(state.hoveredCustomBlocks) : val,
+            hoveredItems: typeof val === "function" ? val(state.hoveredItems) : val,
         })),
     setSelectedItems: (val) =>
         set((state) => ({
@@ -225,12 +215,12 @@ export const useTimetableUIStore = create<TimetableUIState>((set) => ({
     },
 }))
 
+export function useHoveredLectures() {
+    return useTimetableUIStore(useShallow((state) => extractLectures(state.hoveredItems)))
+}
+
 export function useSelectedLectures() {
     return useTimetableUIStore(
-        useShallow((state) =>
-            state.selectedItems.flatMap((item) =>
-                item.kind === TimetableItemKind.LECTURE ? [item.data] : [],
-            ),
-        ),
+        useShallow((state) => extractLectures(state.selectedItems)),
     )
 }

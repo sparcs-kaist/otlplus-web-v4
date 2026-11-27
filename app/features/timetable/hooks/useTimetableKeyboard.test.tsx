@@ -188,7 +188,7 @@ it.each([
         act(() =>
             useTimetableUIStore.setState({
                 searchLectures: [item.data as Lecture],
-                hoveredLectures: [item.data as Lecture],
+                hoveredItems: [item],
             }),
         )
         const button = document.createElement("button")

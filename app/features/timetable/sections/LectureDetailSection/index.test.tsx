@@ -81,7 +81,7 @@ beforeEach(() => {
     useUserStore.setState({ user: { id: 7, name: "Viewer" }, status: "success" })
     useTimetableUIStore.setState({
         selectedItems: [{ kind: "lecture", data: lecture }],
-        hoveredLectures: [],
+        hoveredItems: [],
         year: 2026,
     })
     const wishlist = { courses: [] }
@@ -146,7 +146,10 @@ function renderSelection(
     hoveredLectures: Lecture[] = [],
     onMobileModalClose?: () => void,
 ) {
-    useTimetableUIStore.setState({ selectedItems, hoveredLectures })
+    useTimetableUIStore.setState({
+        selectedItems,
+        hoveredItems: hoveredLectures.map((data) => ({ kind: "lecture", data })),
+    })
     return renderDetail({ onMobileModalClose })
 }
 
@@ -293,7 +296,7 @@ describe("timetable lecture friend overlaps", () => {
         ({ selected, hovered, status }) => {
             useTimetableUIStore.setState({
                 selectedItems: selected.map((data) => ({ kind: "lecture", data })),
-                hoveredLectures: [...hovered],
+                hoveredItems: hovered.map((data) => ({ kind: "lecture", data })),
             })
             useUserStore.setState({ status })
             renderDetail()
@@ -327,7 +330,7 @@ describe("timetable lecture friend overlaps", () => {
         act(() =>
             useTimetableUIStore.setState({
                 selectedItems: [],
-                hoveredLectures: [lecture],
+                hoveredItems: [{ kind: "lecture", data: lecture }],
             }),
         )
         expect(overlapCalls().at(-1)?.[1]).toBe("/friends/lectures/101/overlaps")

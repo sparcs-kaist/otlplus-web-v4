@@ -13,7 +13,9 @@ import { LECTURE_ORDERS, LectureOrderEnum } from "@/common/enum/orderEnum"
 import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
+import { isLectureItem, toLectureItem } from "@/common/utils/timetableItems"
 import {
+    useHoveredLectures,
     useSelectedLectures,
     useTimetableUIStore,
 } from "@/features/timetable/store/useTimetableUIStore"
@@ -173,8 +175,8 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     const currentTimetableId = useTimetableUIStore((s) => s.currentTimetableId)
     const year = useTimetableUIStore((s) => s.year)
     const semester = useTimetableUIStore((s) => s.semesterEnum)
-    const hoveredLecture = useTimetableUIStore((s) => s.hoveredLectures)
-    const setHoveredLecture = useTimetableUIStore((s) => s.setHoveredLectures)
+    const hoveredLecture = useHoveredLectures()
+    const setHoveredItems = useTimetableUIStore((s) => s.setHoveredItems)
     const selectedLectures = useSelectedLectures()
     const setSelectedItems = useTimetableUIStore((s) => s.setSelectedItems)
     const timeFilter = useTimetableUIStore((s) => s.timeFilter)
@@ -315,7 +317,7 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     const handleMobileScroll = useCallback(() => {
         if (!isTablet) return
         if (!courseResultRef.current) {
-            setHoveredLecture([])
+            setHoveredItems([])
             return
         }
 
@@ -337,12 +339,12 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
             )
             const lecture = allLectures.find((lec) => lec.id === lectureId)
             if (lecture) {
-                setHoveredLecture([lecture])
+                setHoveredItems([toLectureItem(lecture)])
             } else {
-                setHoveredLecture([])
+                setHoveredItems([])
             }
         }
-    }, [isTablet, allLectures, setHoveredLecture])
+    }, [isTablet, allLectures, setHoveredItems])
 
     useEffect(() => {
         if (!isTablet || !courseResultRef.current) return
@@ -443,19 +445,24 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
         (lecture: Lecture) => {
             if (isTablet) return
             if (useTimetableUIStore.getState().isKeyboardNavigating) return
-            setHoveredLecture((prev) => {
-                if (prev.length === 1 && prev[0]?.id === lecture.id) return prev
-                return [lecture]
+            setHoveredItems((prev) => {
+                if (
+                    prev.length === 1 &&
+                    isLectureItem(prev[0]!) &&
+                    prev[0].data.id === lecture.id
+                )
+                    return prev
+                return [toLectureItem(lecture)]
             })
         },
-        [isTablet, setHoveredLecture],
+        [isTablet, setHoveredItems],
     )
 
     const handleClearHoveredLecture = useCallback(() => {
         if (isTablet) return
         if (useTimetableUIStore.getState().isKeyboardNavigating) return
-        setHoveredLecture([])
-    }, [isTablet, setHoveredLecture])
+        setHoveredItems([])
+    }, [isTablet, setHoveredItems])
 
     const handleSetSelectedLecture = useCallback(
         (lecture: Lecture, e?: React.MouseEvent) => {

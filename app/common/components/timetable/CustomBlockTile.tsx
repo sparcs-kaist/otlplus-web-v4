@@ -106,6 +106,7 @@ function CustomBlockTile({
     time,
     onSelect,
     onHover,
+    onLeave,
     onDelete,
     overflow = false,
     displayedDayCount = 5,
@@ -113,6 +114,7 @@ function CustomBlockTile({
     block: CustomBlock
     time: TimeBlock
     onHover?: (block: CustomBlock) => void
+    onLeave?: () => void
     onSelect?: (block: CustomBlock, event?: React.PointerEvent) => void
     onDelete?: (block: CustomBlock) => void
     overflow?: boolean
@@ -134,7 +136,7 @@ function CustomBlockTile({
             blockId={block.id}
             onPointerDown={(event) => onSelect?.(block, event)}
             onPointerEnter={() => onHover?.(block)}
-            onPointerLeave={() => onHover?.(null as any)}
+            onPointerLeave={() => onLeave?.()}
             data-custom-block-id={block.id}
             data-custom-block-interaction={Boolean(onSelect)}
             data-class-time={time.day * 1440 + time.begin}
