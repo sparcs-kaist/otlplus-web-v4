@@ -1,7 +1,7 @@
 import { expect, it } from "vitest"
 
 import { CustomBlockSchema } from "@/common/schemas/customBlock"
-import { TimetableChangeSchema } from "@/common/schemas/timetableItem"
+import { CustomBlockInputSchema } from "@/common/schemas/timetableItem"
 
 import {
     getCustomBlockTimes,
@@ -26,11 +26,12 @@ it("preserves multiple slots through both response and mutation schemas, with le
     expect(getCustomBlockTimes(CustomBlockSchema.parse(legacyBlock))).toEqual([times[0]])
     const block = CustomBlockSchema.parse({ ...legacyBlock, times })
     expect(getTimetableItemTimes({ kind: "custom", data: block })).toEqual(times)
-    const change = TimetableChangeSchema.parse({ op: "add", kind: "custom", data: block })
-    expect(change).toEqual({
-        op: "add",
-        kind: "custom",
-        data: { block_name: "Study", place: "Library", ...times[0], times },
+    const input = CustomBlockInputSchema.parse(block)
+    expect(input).toEqual({
+        block_name: "Study",
+        place: "Library",
+        ...times[0],
+        times,
     })
     expect(CustomBlockSchema.safeParse({ ...legacyBlock, times: [] }).success).toBe(false)
 })

@@ -178,8 +178,10 @@ const TileInner = styled(SelectableTileBase)<{
         opacity: 0.8;
     }
 
-    [data-interaction="true"] &.${LECTURE_TILE_CLASSNAME},
-    [data-custom-block-interaction="true"] &.${CUSTOM_BLOCK_TILE_CLASSNAME} {
+    [data-interaction="true"]
+        &.${LECTURE_TILE_CLASSNAME},
+        [data-custom-block-interaction="true"]
+        &.${CUSTOM_BLOCK_TILE_CLASSNAME} {
         pointer-events: auto;
         cursor: pointer;
     }
