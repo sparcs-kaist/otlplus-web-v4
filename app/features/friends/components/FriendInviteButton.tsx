@@ -71,7 +71,9 @@ export function FriendInviteButtonContent({
 }) {
     return (
         <>
-            <Icon size={16}>{succeeded ? <CheckIcon /> : icon}</Icon>
+            <Icon size={16} onClick={() => {}}>
+                {succeeded ? <CheckIcon /> : icon}
+            </Icon>
             <ButtonLabel data-label={label} data-success-label={successLabel}>
                 <span>{succeeded ? successLabel : label}</span>
             </ButtonLabel>

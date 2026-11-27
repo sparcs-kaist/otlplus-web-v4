@@ -36,10 +36,11 @@ const Preview = styled.div`
 `
 
 const ShareButton = styled(FriendInviteButton)`
-    background: ${({ theme }) => theme.colors.Highlight.default};
+    background: ${({ theme }) => theme.colors.Background.Button.highlight};
+    color: ${({ theme }) => theme.colors.Highlight.default};
 
     &:hover:not(:disabled) {
-        background: ${({ theme }) => theme.colors.Highlight.dark};
+        background: ${({ theme }) => theme.colors.Background.Button.highlightDark};
     }
 `
 
