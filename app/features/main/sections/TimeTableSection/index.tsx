@@ -178,7 +178,7 @@ const TimeTableSection = () => {
                         <TimeTableGridWrapper style={{ overflow: "hidden" }}>
                             <CustomTimeTableGrid
                                 timetableItems={timetableItems}
-                                needLectureDeletable={false}
+                                needItemDeletable={false}
                                 needTimeFilter={false}
                                 onItemSelect={(item) => {
                                     if (isLectureItem(item)) setSelectedLecture(item.data)

@@ -285,7 +285,7 @@ export default function Timetable() {
     )
     const { cloneTimetable, isCloning } = useTimetableClone(currentTimetableItems)
 
-    const canDeleteLecture = status !== "success" || currentTimetableId !== null
+    const canDeleteItem = status !== "success" || currentTimetableId !== null
     const refetchTimetables = timetables.refetch
 
     useEffect(() => {
@@ -362,15 +362,15 @@ export default function Timetable() {
     })
 
     const handleDeleteLecture = useMemo(
-        () => (canDeleteLecture ? (id: number) => removeLectures([id]) : undefined),
-        [canDeleteLecture, removeLectures],
+        () => (canDeleteItem ? (id: number) => removeLectures([id]) : undefined),
+        [canDeleteItem, removeLectures],
     )
     const handleDeleteItem = useMemo(
         () =>
-            canDeleteLecture
+            canDeleteItem
                 ? (item: TimetableItem) => void removeItems([item])
                 : undefined,
-        [canDeleteLecture, removeItems],
+        [canDeleteItem, removeItems],
     )
     const closeMobileLectureModal = useCallback(() => {
         setHoveredItems([])
@@ -511,7 +511,7 @@ export default function Timetable() {
                             >
                                 <CustomTimeTableGrid
                                     timetableItems={currentTimetableItems}
-                                    needLectureDeletable={canDeleteLecture}
+                                    needItemDeletable={canDeleteItem}
                                     onItemSelect={handleItemSelect}
                                     onItemHover={handleItemHover}
                                     onItemLeave={handleItemLeave}
@@ -681,7 +681,7 @@ export default function Timetable() {
                                     <CustomTimeTableGrid
                                         cellWidth={isLaptop ? "113px" : "125px"}
                                         timetableItems={currentTimetableItems}
-                                        needLectureDeletable={canDeleteLecture}
+                                        needItemDeletable={canDeleteItem}
                                         onItemSelect={handleItemSelect}
                                         onItemHover={handleItemHover}
                                         onItemLeave={handleItemLeave}

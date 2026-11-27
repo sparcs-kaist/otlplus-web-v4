@@ -146,7 +146,7 @@ export default function SharedTimetableSection({
                         overlappedLectureIds={overlappedLectureIds}
                         displayedDayCount={7}
                         needTimeFilter={false}
-                        needLectureDeletable={false}
+                        needItemDeletable={false}
                         selectedItems={selectedItem ? [selectedItem] : []}
                         onItemSelect={(item) => onSelectItem(item)}
                         onItemHover={onHoverItem}

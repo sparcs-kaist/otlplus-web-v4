@@ -420,8 +420,8 @@ interface CustomTimeTableGridProps {
     needTimeFilter?: boolean
     timeFilter?: TimeBlock | null
     setTimeFilter?: React.Dispatch<React.SetStateAction<TimeBlock | null>>
-    needLectureInteraction?: boolean
-    needLectureDeletable?: boolean
+    needItemInteraction?: boolean
+    needItemDeletable?: boolean
     isCustomBlockSectionOpen?: boolean
     customBlockDraftTimes?: TimeBlock[]
     needCurrentTimeBar?: boolean
@@ -442,8 +442,8 @@ function CustomTimeTableGrid({
     needTimeFilter = true,
     timeFilter,
     setTimeFilter,
-    needLectureInteraction = true,
-    needLectureDeletable = true,
+    needItemInteraction = true,
+    needItemDeletable = true,
     isCustomBlockSectionOpen = false,
     customBlockDraftTimes = [],
     needCurrentTimeBar = false,
@@ -546,7 +546,7 @@ function CustomTimeTableGrid({
     }, [lectures, hoveredLectures, activeLectures])
 
     const ghostLectures = useMemo(() => {
-        if (!needLectureInteraction) return []
+        if (!needItemInteraction) return []
 
         const hoveredGhosts = hoveredLectures.filter(
             (hLec) => !lectures.some((lec) => lec.id === hLec.id),
@@ -560,10 +560,10 @@ function CustomTimeTableGrid({
         hoveredGhosts.forEach((lec) => allGhostsMap.set(lec.id, lec))
 
         return Array.from(allGhostsMap.values())
-    }, [hoveredLectures, activeLectures, lectures, needLectureInteraction])
+    }, [hoveredLectures, activeLectures, lectures, needItemInteraction])
 
     const overlaps = useMemo(() => {
-        if (!needLectureInteraction || ghostLectures.length === 0) return []
+        if (!needItemInteraction || ghostLectures.length === 0) return []
         const intervals: { day: WeekdayEnum; begin: number; end: number }[] = []
         const times = timetableItems.flatMap(getTimetableItemTimes)
         for (const ghostLecture of ghostLectures) {
@@ -582,7 +582,7 @@ function CustomTimeTableGrid({
             }
         }
         return intervals
-    }, [ghostLectures, timetableItems, needLectureInteraction])
+    }, [ghostLectures, timetableItems, needItemInteraction])
 
     const hasOverflow =
         overflowLectures.some(
@@ -693,18 +693,18 @@ function CustomTimeTableGrid({
 
     const handleLectureTileHoverCallBack = useCallback(
         (lecture: Lecture) => {
-            if (!needLectureInteraction) return
+            if (!needItemInteraction) return
             onItemHover?.(toLectureItem(lecture))
         },
-        [onItemHover, needLectureInteraction],
+        [onItemHover, needItemInteraction],
     )
 
     const handleLectureTileSelectCallback = useCallback(
         (lecture: Lecture, e?: React.PointerEvent) => {
-            if (!needLectureInteraction) return
+            if (!needItemInteraction) return
             onItemSelect?.(toLectureItem(lecture), e)
         },
-        [onItemSelect, needLectureInteraction],
+        [onItemSelect, needItemInteraction],
     )
 
     const clearHoveredLecturesCallback = useCallback(() => {
@@ -714,14 +714,14 @@ function CustomTimeTableGrid({
 
     const deleteItemCallback = useCallback(
         (item: TimetableItem) => {
-            if (needLectureInteraction && needLectureDeletable) {
+            if (needItemInteraction && needItemDeletable) {
                 clearHoveredLecturesCallback()
                 onItemDelete?.(item)
             }
         },
         [
-            needLectureInteraction,
-            needLectureDeletable,
+            needItemInteraction,
+            needItemDeletable,
             onItemDelete,
             clearHoveredLecturesCallback,
         ],
@@ -736,18 +736,18 @@ function CustomTimeTableGrid({
 
     const handleItemSelectCallback = useCallback(
         (item: TimetableItem, event?: React.PointerEvent) => {
-            if (!needLectureInteraction) return
+            if (!needItemInteraction) return
             onItemSelect?.(item, event)
         },
-        [needLectureInteraction, onItemSelect],
+        [needItemInteraction, onItemSelect],
     )
 
     const handleItemHoverCallback = useCallback(
         (item: TimetableItem) => {
-            if (!needLectureInteraction) return
+            if (!needItemInteraction) return
             onItemHover?.(item)
         },
-        [needLectureInteraction, onItemHover],
+        [needItemInteraction, onItemHover],
     )
 
     return (
@@ -761,20 +761,20 @@ function CustomTimeTableGrid({
             className="custom-timetable"
             ref={customTimeTableRef}
             data-hovered-lectures={
-                needLectureInteraction
+                needItemInteraction
                     ? hoveredLectures.map((lec) => lec.id).join(" ")
                     : ""
             }
             data-selected-lectures={
-                needLectureInteraction
+                needItemInteraction
                     ? activeLectures.map((lec) => lec.id).join(" ")
                     : ""
             }
             data-selected-custom-blocks={
-                needLectureInteraction ? activeCustomIds.join(" ") : ""
+                needItemInteraction ? activeCustomIds.join(" ") : ""
             }
             data-selected-items={
-                needLectureInteraction
+                needItemInteraction
                     ? selectedItems.map(timetableItemKey).join(" ")
                     : ""
             }
@@ -784,8 +784,8 @@ function CustomTimeTableGrid({
                 .map((key) => key.split(":")[1])
                 .join(" ")}
             data-flash-lectures={highlightedLectureIds.join(" ")}
-            data-interaction={needLectureInteraction}
-            data-lecture-deletable={needLectureDeletable}
+            data-interaction={needItemInteraction}
+            data-item-deletable={needItemDeletable}
             onPointerLeave={clearHoveredLecturesCallback}
             onTouchEnd={clearHoveredLecturesCallback}
         >
@@ -934,8 +934,8 @@ function CustomTimeTableGrid({
                                             : undefined
                                     }
                                     deleteLecture={
-                                        needLectureInteraction &&
-                                        needLectureDeletable &&
+                                        needItemInteraction &&
+                                        needItemDeletable &&
                                         onItemDelete
                                             ? deleteLectureCallback
                                             : undefined
@@ -958,24 +958,24 @@ function CustomTimeTableGrid({
                                         time={time}
                                         displayedDayCount={displayedDayCount}
                                         onSelect={
-                                            needLectureInteraction && onItemSelect
+                                            needItemInteraction && onItemSelect
                                                 ? handleItemSelectCallback
                                                 : undefined
                                         }
                                         onDelete={
-                                            needLectureInteraction &&
-                                            needLectureDeletable &&
+                                            needItemInteraction &&
+                                            needItemDeletable &&
                                             onItemDelete
                                                 ? deleteItemCallback
                                                 : undefined
                                         }
                                         onHover={
-                                            needLectureInteraction
+                                            needItemInteraction
                                                 ? handleItemHoverCallback
                                                 : undefined
                                         }
                                         onLeave={
-                                            needLectureInteraction
+                                            needItemInteraction
                                                 ? clearHoveredLecturesCallback
                                                 : undefined
                                         }
@@ -1032,24 +1032,24 @@ function CustomTimeTableGrid({
                                     time={time}
                                     displayedDayCount={displayedDayCount}
                                     onSelect={
-                                        needLectureInteraction && onItemSelect
+                                        needItemInteraction && onItemSelect
                                             ? handleItemSelectCallback
                                             : undefined
                                     }
                                     onDelete={
-                                        needLectureInteraction &&
-                                        needLectureDeletable &&
+                                        needItemInteraction &&
+                                        needItemDeletable &&
                                         onItemDelete
                                             ? deleteItemCallback
                                             : undefined
                                     }
                                     onHover={
-                                        needLectureInteraction
+                                        needItemInteraction
                                             ? handleItemHoverCallback
                                             : undefined
                                     }
                                     onLeave={
-                                        needLectureInteraction
+                                        needItemInteraction
                                             ? clearHoveredLecturesCallback
                                             : undefined
                                     }
@@ -1069,8 +1069,8 @@ function CustomTimeTableGrid({
                                 }
                                 isGhost={lectures.every((lec) => lec.id !== lecture.id)}
                                 deleteLecture={
-                                    needLectureInteraction &&
-                                    needLectureDeletable &&
+                                    needItemInteraction &&
+                                    needItemDeletable &&
                                     onItemDelete
                                         ? deleteLectureCallback
                                         : undefined

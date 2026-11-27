@@ -51,7 +51,7 @@ vi.mock("@/common/components/timetable/CustomTimeTableGrid", () => ({
     default: ({
         timetableItems,
         needTimeFilter,
-        needLectureDeletable,
+        needItemDeletable,
         onItemSelect,
         selectedItems = [],
         overlappedLectureIds,
@@ -59,7 +59,7 @@ vi.mock("@/common/components/timetable/CustomTimeTableGrid", () => ({
     }: {
         timetableItems: TimetableItem[]
         needTimeFilter: boolean
-        needLectureDeletable: boolean
+        needItemDeletable: boolean
         onItemSelect: (item: TimetableItem) => void
         selectedItems?: TimetableItem[]
         overlappedLectureIds: readonly number[]
@@ -74,7 +74,7 @@ vi.mock("@/common/components/timetable/CustomTimeTableGrid", () => ({
             <div
                 data-testid="timetable-grid"
                 data-time-filter={needTimeFilter}
-                data-deletable={needLectureDeletable}
+                data-deletable={needItemDeletable}
                 data-selected-custom-block={selectedCustomBlock?.id ?? ""}
                 data-selected-lectures={selectedLectures.map(({ id }) => id).join(" ")}
                 data-overlapped-lectures={overlappedLectureIds.join(" ")}

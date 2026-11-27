@@ -220,7 +220,7 @@ const TileInner = styled(SelectableTileBase)<{
     }
 `
 
-const LectureTitleRow = styled.div`
+const TileTitleRow = styled.div`
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     column-gap: 4px;
@@ -229,7 +229,7 @@ const LectureTitleRow = styled.div`
     min-width: 0;
     flex-shrink: 0;
 
-    .lecture-title {
+    .tile-title {
         min-width: 0;
         overflow-wrap: anywhere;
     }
@@ -251,24 +251,27 @@ const LectureTitleRow = styled.div`
     }
 `
 
-function LectureTileTitle({
-    lecture,
+function TimetableTileTitle({
+    item,
     overlapLabel,
 }: {
-    lecture: Lecture
+    item: TimetableItem
     overlapLabel?: string
 }) {
+    const isLecture = isLectureItem(item)
     const title = (
         <Typography
             type="SmallMedium"
-            className="tile-title lecture-title"
+            className={isLecture ? "tile-title lecture-title" : "tile-title block-title"}
             color="TimeTable.title"
         >
-            {lecture.name + " " + lecture.subtitle}
+            {isLecture
+                ? `${item.data.name} ${item.data.subtitle}`
+                : item.data.block_name}
         </Typography>
     )
     return overlapLabel ? (
-        <LectureTitleRow>
+        <TileTitleRow>
             {title}
             <Typography
                 type="SmallBold"
@@ -277,9 +280,55 @@ function LectureTileTitle({
             >
                 {overlapLabel}
             </Typography>
-        </LectureTitleRow>
+        </TileTitleRow>
     ) : (
         title
+    )
+}
+
+function TimetableTileContent({
+    item,
+    classIdx,
+    overlapLabel,
+    timeLabel,
+    overflow = false,
+}: {
+    item: TimetableItem
+    classIdx?: number
+    overlapLabel?: string
+    timeLabel?: string
+    overflow?: boolean
+}) {
+    const isLecture = isLectureItem(item)
+    const cls = isLecture && classIdx != null ? item.data.classes[classIdx] : null
+    const infoClassName = isLecture ? "tile-info lecture-info" : "tile-info block-info"
+    const infoLines = isLecture
+        ? [
+              item.data.professors.map((professor) => professor.name).join(", "),
+              cls != null ? `(${cls.buildingCode}) ${cls.roomName}` : "",
+          ]
+        : [
+              ...(item.data.place ? [item.data.place] : []),
+              ...(overflow && timeLabel ? [timeLabel] : []),
+          ]
+
+    return (
+        <>
+            <TimetableTileTitle
+                item={item}
+                overlapLabel={isLecture ? overlapLabel : undefined}
+            />
+            {infoLines.map((line, index) => (
+                <Typography
+                    key={index}
+                    type="Small"
+                    className={infoClassName}
+                    color="TimeTable.detail"
+                >
+                    {line}
+                </Typography>
+            ))}
+        </>
     )
 }
 
@@ -291,7 +340,7 @@ const TimetableItemDeleteWrapper = styled(FlexWrapper)`
     right: 4px;
     backdrop-filter: blur(16px);
 
-    [data-lecture-deletable="false"] & {
+    [data-item-deletable="false"] & {
         pointer-events: none !important;
         display: none !important;
     }
@@ -453,58 +502,13 @@ function TimetableTile({
                         align="flex-start"
                         style={{ overflow: "hidden" }}
                     >
-                        {isLecture ? (
-                            <>
-                                <LectureTileTitle
-                                    lecture={item.data}
-                                    overlapLabel={overlapLabel}
-                                />
-                                <Typography
-                                    type="Small"
-                                    className="tile-info lecture-info"
-                                    color="TimeTable.detail"
-                                >
-                                    {item.data.professors
-                                        .map((professor) => professor.name)
-                                        .join(", ")}
-                                </Typography>
-                                <Typography
-                                    type="Small"
-                                    className="tile-info lecture-info"
-                                    color="TimeTable.detail"
-                                >
-                                    {cls ? `(${cls.buildingCode}) ${cls.roomName}` : ""}
-                                </Typography>
-                            </>
-                        ) : (
-                            <>
-                                <Typography
-                                    type="SmallMedium"
-                                    color="TimeTable.title"
-                                    className="tile-title block-title"
-                                >
-                                    {item.data.block_name}
-                                </Typography>
-                                {item.data.place && (
-                                    <Typography
-                                        type="Small"
-                                        color="TimeTable.detail"
-                                        className="tile-info block-info"
-                                    >
-                                        {item.data.place}
-                                    </Typography>
-                                )}
-                                {overflow && (
-                                    <Typography
-                                        type="Small"
-                                        color="TimeTable.detail"
-                                        className="tile-info block-info"
-                                    >
-                                        {timeLabel}
-                                    </Typography>
-                                )}
-                            </>
-                        )}
+                        <TimetableTileContent
+                            item={item}
+                            classIdx={classIdx}
+                            overlapLabel={overlapLabel}
+                            timeLabel={timeLabel}
+                            overflow={overflow}
+                        />
                     </FlexWrapper>
                 </FlexWrapper>
 
@@ -652,21 +656,11 @@ function OverflowTile({
                 className={`${TIMETABLE_TILE_CLASSNAME} ${LECTURE_TILE_CLASSNAME}`}
                 data-friend-overlap={overlapLabel ? true : undefined}
             >
-                <LectureTileTitle lecture={lecture} overlapLabel={overlapLabel} />
-                <Typography
-                    type="Small"
-                    className="tile-info lecture-info"
-                    color="TimeTable.detail"
-                >
-                    {lecture.professors.map((professor) => professor.name).join(", ")}
-                </Typography>
-                <Typography
-                    type="Small"
-                    className="tile-info lecture-info"
-                    color="TimeTable.detail"
-                >
-                    {cls != null ? `(${cls.buildingCode}) ${cls.roomName}` : ""}
-                </Typography>
+                <TimetableTileContent
+                    item={item}
+                    classIdx={classIdx}
+                    overlapLabel={overlapLabel}
+                />
 
                 {deleteLecture && <TimetableItemDeleteButton onDelete={deleteLecture} />}
             </OverflowTileInner>

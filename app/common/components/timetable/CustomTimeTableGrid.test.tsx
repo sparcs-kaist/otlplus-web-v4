@@ -70,7 +70,7 @@ describe("unified timetable item reads", () => {
             <CustomTimeTableGrid
                 timetableItems={items}
                 needTimeFilter={false}
-                needLectureDeletable={false}
+                needItemDeletable={false}
                 onItemSelect={onItemSelect}
             />,
         )
@@ -113,7 +113,7 @@ describe("unified timetable item reads", () => {
             <CustomTimeTableGrid
                 timetableItems={[{ kind: "lecture", data: lecture }, customItem]}
                 needTimeFilter={false}
-                needLectureDeletable={false}
+                needItemDeletable={false}
                 onItemSelect={onItemSelect}
             />,
         )
@@ -155,7 +155,7 @@ describe("unified timetable item reads", () => {
         const props = {
             timetableItems,
             needTimeFilter: false,
-            needLectureDeletable: false,
+            needItemDeletable: false,
             onItemSelect: vi.fn(),
         }
         const { container, rerender } = render(<CustomTimeTableGrid {...props} />)
@@ -212,7 +212,7 @@ describe("unified timetable item reads", () => {
             ],
             selectedItems: [customItem],
             needTimeFilter: false,
-            needLectureDeletable: false,
+            needItemDeletable: false,
             onItemSelect,
         }
         const { container, rerender } = render(<CustomTimeTableGrid {...props} />)
@@ -222,7 +222,7 @@ describe("unified timetable item reads", () => {
         expect(onItemSelect).toHaveBeenCalledTimes(2)
         onItemSelect.mockClear()
 
-        rerender(<CustomTimeTableGrid {...props} needLectureInteraction={false} />)
+        rerender(<CustomTimeTableGrid {...props} needItemInteraction={false} />)
         for (const title of screen.getAllByText(/Study group|Physics/)) {
             fireEvent.pointerDown(title)
         }
@@ -258,7 +258,7 @@ describe("unified timetable item reads", () => {
                 isCustomBlockSectionOpen
                 customBlockDraftTimes={block.times!.slice(0, 2)}
                 needTimeFilter={false}
-                needLectureDeletable={false}
+                needItemDeletable={false}
             />,
         )
 
@@ -310,11 +310,15 @@ describe("unified timetable item reads", () => {
         expect(onItemDelete).toHaveBeenCalledTimes(3)
         expect(onItemDelete).toHaveBeenLastCalledWith(customItem)
 
-        rerender(<CustomTimeTableGrid {...props} needLectureDeletable={false} />)
+        rerender(<CustomTimeTableGrid {...props} needItemDeletable={false} />)
+        expect(container.querySelector(".custom-timetable")).toHaveAttribute(
+            "data-item-deletable",
+            "false",
+        )
         expect(container.querySelectorAll("button")).toHaveLength(0)
         expect(screen.getAllByRole("button")).toHaveLength(3)
 
-        rerender(<CustomTimeTableGrid {...props} needLectureInteraction={false} />)
+        rerender(<CustomTimeTableGrid {...props} needItemInteraction={false} />)
         expect(screen.queryAllByRole("button")).toHaveLength(0)
         expect(container.querySelector(".custom-timetable")).toHaveAttribute(
             "data-interaction",
@@ -368,7 +372,7 @@ describe("unified timetable item reads", () => {
             <CustomTimeTableGrid
                 timetableItems={timetableItems}
                 overlappedLectureIds={[sharedLecture.id]}
-                needLectureDeletable={false}
+                needItemDeletable={false}
                 needTimeFilter={false}
             />,
         )
@@ -399,7 +403,7 @@ describe("unified timetable item reads", () => {
                     timetableItems={timetableItems}
                     overlappedLectureIds={[sharedLecture.id]}
                     selectedItems={[selectedItem]}
-                    needLectureDeletable={false}
+                    needItemDeletable={false}
                     needTimeFilter={false}
                 />,
             )
@@ -423,7 +427,7 @@ describe("unified timetable item reads", () => {
         rerender(
             <CustomTimeTableGrid
                 timetableItems={timetableItems}
-                needLectureDeletable={false}
+                needItemDeletable={false}
                 needTimeFilter={false}
             />,
         )
