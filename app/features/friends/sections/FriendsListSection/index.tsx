@@ -10,8 +10,7 @@ import FlexWrapper from "@/common/primitives/FlexWrapper"
 import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import type { Friend, FriendListItem } from "@/common/schemas/friend"
-import FriendRow from "@/features/friends/components/FriendRow"
-import { friendRowStyles } from "@/features/friends/components/friendRowStyles"
+import FriendRow, { friendRowStyles } from "@/features/friends/components/FriendRow"
 
 const SidebarHeading = styled(Typography)`
     align-self: center;

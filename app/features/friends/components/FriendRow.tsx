@@ -1,6 +1,6 @@
 import { memo } from "react"
 
-import { useTheme } from "@emotion/react"
+import { type Theme, css, useTheme } from "@emotion/react"
 import styled from "@emotion/styled"
 import DeleteOutlineOutlined from "@mui/icons-material/DeleteOutlineOutlined"
 import EventNote from "@mui/icons-material/EventNote"
@@ -18,7 +18,24 @@ import type { FriendListItem } from "@/common/schemas/friend"
 import { invalidateFriendQueries } from "@/features/friends/friendQueries"
 import { useAPI } from "@/utils/api/useAPI"
 
-import { friendRowStyles } from "./friendRowStyles"
+export const friendRowStyles = ({
+    theme,
+    $selected,
+}: {
+    theme: Theme
+    $selected: boolean
+}) => css`
+    cursor: pointer;
+    min-height: 44px;
+    border-radius: 4px;
+    background: ${$selected
+        ? theme.colors.Background.Button.dark
+        : theme.colors.Background.Section.default};
+
+    &:hover {
+        background-color: ${theme.colors.Background.Tab.dark};
+    }
+`
 
 const FriendRowWrapper = styled(FlexWrapper)<{ $selected: boolean }>`
     ${friendRowStyles}
@@ -131,7 +148,7 @@ function FriendRow({
                     size={18}
                     color={
                         friend.isFavorite
-                            ? theme.colors.Icon.yellow
+                            ? theme.colors.Highlight.default
                             : theme.colors.Text.lighter
                     }
                     onClick={() => {}}

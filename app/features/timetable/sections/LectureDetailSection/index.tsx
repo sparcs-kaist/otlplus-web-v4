@@ -9,7 +9,6 @@ import FavoriteIcon from "@mui/icons-material/Favorite"
 import { useQueryClient } from "@tanstack/react-query"
 import { useTranslation } from "react-i18next"
 import { Link } from "react-router-dom"
-import { match } from "ts-pattern"
 
 import Button from "@/common/components/Button"
 import Credits from "@/common/components/Credits"
@@ -271,27 +270,28 @@ const LectureDetailSection: React.FC<LectureDetailSectionProps> = ({
                         )}
                     </FlexWrapper>
                     {selectedItems.map((item) => {
-                        const { title, description, colorIndex } = match(item)
-                            .with({ kind: TimetableItemKind.LECTURE }, ({ data: l }) => ({
-                                title: `${l.name} ${l.subtitle}`,
-                                colorIndex: l.courseId,
-                                description: (
-                                    <>
-                                        {l.professors[0]?.name}{" "}
-                                        {l.professors.length > 1
-                                            ? `${t("common.professors.over")} ${l.professors.length - 1}${t("common.professors.people")} `
-                                            : " "}
-                                        | {l.department.name} | {l.credit}
-                                        {t("common.credit")}
-                                    </>
-                                ),
-                            }))
-                            .with({ kind: TimetableItemKind.CUSTOM }, ({ data }) => ({
-                                title: data.block_name,
-                                colorIndex: data.id,
-                                description: data.place,
-                            }))
-                            .exhaustive()
+                        const { title, description, colorIndex } =
+                            item.kind === TimetableItemKind.LECTURE
+                                ? {
+                                      title: `${item.data.name} ${item.data.subtitle}`,
+                                      colorIndex: item.data.courseId,
+                                      description: (
+                                          <>
+                                              {item.data.professors[0]?.name}{" "}
+                                              {item.data.professors.length > 1
+                                                  ? `${t("common.professors.over")} ${item.data.professors.length - 1}${t("common.professors.people")} `
+                                                  : " "}
+                                              | {item.data.department.name} |{" "}
+                                              {item.data.credit}
+                                              {t("common.credit")}
+                                          </>
+                                      ),
+                                  }
+                                : {
+                                      title: item.data.block_name,
+                                      colorIndex: item.data.id,
+                                      description: item.data.place,
+                                  }
                         return (
                             <MultipleSelectLectureBlock
                                 key={timetableItemKey(item)}

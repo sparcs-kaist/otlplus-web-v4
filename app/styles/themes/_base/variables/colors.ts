@@ -5,9 +5,6 @@ export const colors = {
     background: "#ffffff",
     backgroundText: "#ffffff",
 
-    Icon: {
-        yellow: "#ffcc01",
-    },
     Background: {
         Block: {
             default: "#FAFAFA",

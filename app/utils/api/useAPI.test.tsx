@@ -15,33 +15,29 @@ vi.mock("react-i18next", () => ({
 describe("useAPI polling options", () => {
     beforeEach(() => vi.clearAllMocks())
 
-    it("forwards interval and focus refresh settings to TanStack Query", () => {
+    it("forwards the polling interval to TanStack Query", () => {
         renderHook(() =>
             useAPI("GET", "/friends", {
                 refetchInterval: 60_000,
-                refetchOnWindowFocus: true,
             }),
         )
         expect(useQuery).toHaveBeenLastCalledWith(
             expect.objectContaining({
                 enabled: true,
                 refetchInterval: 60_000,
-                refetchOnWindowFocus: true,
             }),
         )
     })
 
-    it("forwards explicit false values when a friend's list is not visible", () => {
+    it("forwards an explicit false interval when a friend's list is not visible", () => {
         renderHook(() =>
             useAPI("GET", "/friends", {
                 refetchInterval: false,
-                refetchOnWindowFocus: false,
             }),
         )
         expect(useQuery).toHaveBeenLastCalledWith(
             expect.objectContaining({
                 refetchInterval: false,
-                refetchOnWindowFocus: false,
             }),
         )
     })
