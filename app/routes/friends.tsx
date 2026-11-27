@@ -91,6 +91,10 @@ const DetailPanel = styled(Widget)`
     min-width: 0;
     overflow: hidden;
 `
+const DetailArea = styled.div`
+    display: contents;
+`
+
 const MobileOnly = styled.div`
     display: none;
     flex-shrink: 0;
@@ -196,6 +200,8 @@ export default function FriendsPage() {
     const [scheduleFresh, setScheduleFresh] = useState(false)
     const [detailOpen, setDetailOpen] = useState(false)
     const detailActionRef = useRef<HTMLButtonElement>(null)
+    const timetableAreaRef = useRef<HTMLDivElement>(null)
+    const detailAreaRef = useRef<HTMLDivElement>(null)
     const [inviteOpen, setInviteOpen] = useState(false)
     const [deletingFriend, setDeletingFriend] = useState<Friend | null>(null)
     const [addedFriendName, setAddedFriendName] = useState<string | null>(
@@ -286,6 +292,22 @@ export default function FriendsPage() {
     useEffect(() => {
         if (isTablet && detailOpen) detailActionRef.current?.focus()
     }, [isTablet, detailOpen, selectedItem])
+
+    useEffect(() => {
+        if (isTablet) return
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as Node
+            if (
+                timetableAreaRef.current?.contains(target) ||
+                detailAreaRef.current?.contains(target)
+            )
+                return
+            setHoveredItem(null)
+            setSelectedItem(null)
+        }
+        document.addEventListener("mousedown", handleClickOutside)
+        return () => document.removeEventListener("mousedown", handleClickOutside)
+    }, [isTablet])
 
     const friendListVisible = !isTablet || friendListOpen
     const { query: friendsQuery } = useAPI("GET", "/friends", {
@@ -570,12 +592,12 @@ export default function FriendsPage() {
                                 align="stretch"
                                 flex="1 1 0"
                             >
-                                {detail}
+                                <DetailArea ref={detailAreaRef}>{detail}</DetailArea>
                             </DetailPanel>
                         )}
                     </Sidebar>
                 )}
-                <TimetableColumn>
+                <TimetableColumn ref={timetableAreaRef}>
                     <MobileOnly>
                         <MobileAction
                             type="button"
@@ -641,7 +663,7 @@ export default function FriendsPage() {
                         padding="16px"
                         align="stretch"
                     >
-                        {detail}
+                        <DetailArea ref={detailAreaRef}>{detail}</DetailArea>
                     </DetailPanel>
                 )}
             </Layout>
