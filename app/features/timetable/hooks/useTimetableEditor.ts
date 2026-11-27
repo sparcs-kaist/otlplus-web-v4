@@ -211,6 +211,9 @@ export function useTimetableEditor({
                 void queryClient.invalidateQueries({
                     queryKey: [queryKeys.sharedTimetable],
                 })
+                void queryClient.invalidateQueries({
+                    queryKey: [queryKeys.sharedTimetableSemesters],
+                })
                 void queryClient.invalidateQueries({ queryKey: [queryKeys.timetables] })
             } else {
                 const removed = new Set(
@@ -339,6 +342,9 @@ export function useTimetableEditor({
                 })
                 void queryClient.invalidateQueries({
                     queryKey: [queryKeys.sharedTimetable],
+                })
+                void queryClient.invalidateQueries({
+                    queryKey: [queryKeys.sharedTimetableSemesters],
                 })
             }
             if (isCurrent())

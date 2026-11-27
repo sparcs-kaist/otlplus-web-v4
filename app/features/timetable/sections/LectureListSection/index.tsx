@@ -219,7 +219,6 @@ const LectureListSection: React.FC<LectureListSectionProps> = ({
     const { query, setParams, data } = useInfiniteAPI("GET", "/lectures", {
         infinites: ["courses"],
         limit: SEARCH_LIMIT,
-        gcTime: 0,
         select: mergeCoursesById,
         enabled: enabled,
         iterate: (data) => {

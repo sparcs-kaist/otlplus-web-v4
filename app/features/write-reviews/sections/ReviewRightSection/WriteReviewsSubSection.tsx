@@ -21,7 +21,6 @@ interface WriteReviewsSubSectionType {
 function WriteReviewsSubSection({ selectedLecture }: WriteReviewsSubSectionType) {
     const { query, setParams, data } = useInfiniteAPI("GET", "/reviews", {
         infinites: ["reviews"],
-        gcTime: 0,
         initialOffset: 0,
         limit: 10,
         enabled: selectedLecture !== null,

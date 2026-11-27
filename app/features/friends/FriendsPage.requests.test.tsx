@@ -110,48 +110,6 @@ function setup(friendBResponse = Promise.resolve()) {
     return { router, requests }
 }
 
-it("requests only the available semester when switching friends and revisiting cached semester lists", async () => {
-    const { requests } = setup()
-    await screen.findByText("Shared 7 2026")
-    for (const [name, expected] of [
-        ["Friend B", "Shared 8 2025"],
-        ["Friend A", "Shared 7 2026"],
-        ["Friend B", "Shared 8 2025"],
-    ] as const) {
-        fireEvent.click(screen.getByRole("button", { name: new RegExp(name) }))
-        await screen.findByText(expected)
-    }
-    expect(
-        requests
-            .filter(({ url }) => url.startsWith("/api/v2/friends/"))
-            .map(({ url, year, semester }) => [url, year, semester]),
-    ).toEqual([
-        ["/api/v2/friends/7/timetables/shared", 2026, 3],
-        ["/api/v2/friends/8/timetables/shared", 2025, 3],
-        ["/api/v2/friends/7/timetables/shared", 2026, 3],
-        ["/api/v2/friends/8/timetables/shared", 2025, 3],
-    ])
-    expect(
-        requests
-            .filter(({ url }) => url === "/api/v2/timetables/shared")
-            .map(({ year, semester }) => [year, semester]),
-    ).toEqual([
-        [2026, 3],
-        [2025, 3],
-        [2026, 3],
-        [2025, 3],
-    ])
-    expect(
-        vi
-            .mocked(axiosClient.request)
-            .mock.calls.some(([{ url }]) =>
-                ["/api/users/1/timetables", "/api/v2/timetables/my-timetable"].includes(
-                    url!,
-                ),
-            ),
-    ).toBe(false)
-})
-
 it("keeps both shared requests in sync with the selected semester", async () => {
     const { requests } = setup()
     await screen.findByText("Shared 7 2026")

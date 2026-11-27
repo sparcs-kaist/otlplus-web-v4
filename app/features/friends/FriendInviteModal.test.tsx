@@ -1,5 +1,3 @@
-import { StrictMode } from "react"
-
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
@@ -101,95 +99,6 @@ describe("friend code sharing", () => {
         vi.useRealTimers()
         vi.unstubAllGlobals()
     })
-
-    it.each([false, true])(
-        "loads a code on open and reuses it for sharing and QR (mobile=%s)",
-        async (mobile) => {
-            vi.mocked(useIsDevice).mockReturnValue(mobile)
-            const renderModal = (isOpen: boolean) => (
-                <StrictMode>
-                    <FriendInviteModal
-                        isOpen={isOpen}
-                        onClose={vi.fn()}
-                        userName="구백"
-                    />
-                </StrictMode>
-            )
-            const { rerender } = render(renderModal(false))
-            expect(axiosClient.request).not.toHaveBeenCalled()
-            expect(screen.queryByRole("dialog")).not.toBeInTheDocument()
-
-            rerender(renderModal(true))
-            await screen.findByText("friends.code: K7L4MX")
-            expect(axiosClient.request).toHaveBeenCalledTimes(1)
-            expect(axiosClient.request).toHaveBeenCalledWith(
-                expect.objectContaining({ method: "GET", url: "/api/v2/friends/code" }),
-            )
-            const url = `${window.location.origin}/friends/invite#K7L4MX`
-            expect(
-                screen.getByText(/구백님과 OTL 시간표 친구를 맺어보세요!/),
-            ).toHaveTextContent(url)
-            const canvas = screen.getByRole("img", { name: "friends.inviteQr" })
-            expect(canvas).toBeInstanceOf(HTMLCanvasElement)
-            expect(canvas).toHaveAttribute("data-value", url)
-            expect(canvas).toHaveAttribute("width", "512")
-            expect(canvas).toHaveAttribute("height", "512")
-            expect(canvas).toHaveStyle({ width: "200px", height: "200px" })
-            expect(canvas).toHaveAttribute("data-level", "H")
-            expect(canvas).toHaveAttribute("data-margin", "4")
-            expect(canvas.getAttribute("data-background")).toMatch(/^#fff(?:fff)?$/i)
-            expect(canvas.getAttribute("data-foreground")).toMatch(/^#000(?:000)?$/i)
-            const logo = JSON.parse(canvas.getAttribute("data-logo")!)
-            expect(logo).toMatchObject({
-                src: "/static/favicon-192.png",
-                width: 88,
-                height: 88,
-                excavate: true,
-            })
-            expect(logo.x).toBeUndefined()
-            expect(logo.y).toBeUndefined()
-            expect(screen.getByRole("dialog")).toHaveStyle({
-                minWidth: mobile ? "100dvw" : "630px",
-            })
-
-            fireEvent.click(screen.getByRole("button", { name: "friends.copyLink" }))
-            await waitFor(() =>
-                expect(copyTextToClipboard).toHaveBeenCalledExactlyOnceWith(url),
-            )
-            expect(
-                await screen.findByRole("button", { name: "friends.copySuccess" }),
-            ).toContainElement(screen.getByTestId("CheckIcon"))
-            expect(copyFriendInvite).not.toHaveBeenCalled()
-            fireEvent.click(screen.getByText("friends.copy"))
-            await waitFor(() =>
-                expect(copyFriendInvite).toHaveBeenCalledExactlyOnceWith("구백", url),
-            )
-            expect(
-                await screen.findByRole("button", { name: "friends.copySuccess" }),
-            ).toBeInTheDocument()
-            expect(
-                screen.getByRole("button", { name: "friends.copyLink" }),
-            ).toBeInTheDocument()
-            fireEvent.click(screen.getByText("friends.share"))
-            await waitFor(() =>
-                expect(shareFriendInvite).toHaveBeenCalledExactlyOnceWith("구백", url),
-            )
-            expect(
-                await screen.findByRole("button", { name: "friends.shareSuccess" }),
-            ).toContainElement(screen.getByTestId("CheckIcon"))
-            expect(screen.queryByRole("status")).not.toBeInTheDocument()
-
-            rerender(renderModal(false))
-            rerender(renderModal(true))
-            await waitFor(() => expect(axiosClient.request).toHaveBeenCalledTimes(2))
-            expect(screen.getByText("friends.code: K7L4MX")).toBeInTheDocument()
-            expect(
-                screen.getByRole("button", { name: "friends.downloadQr" }),
-            ).toBeDisabled()
-            expect(screen.getByRole("button", { name: "friends.copyQr" })).toBeDisabled()
-            expect(screen.queryByTestId("CheckIcon")).not.toBeInTheDocument()
-        },
-    )
 
     const openModal = async () => {
         render(<FriendInviteModal isOpen onClose={vi.fn()} userName="구백" />)

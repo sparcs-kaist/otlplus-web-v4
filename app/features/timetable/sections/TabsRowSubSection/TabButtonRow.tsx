@@ -426,6 +426,9 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
             timetables.refetch()
             void queryClient.invalidateQueries({ queryKey: [queryKeys.homeTimetable] })
             void queryClient.invalidateQueries({ queryKey: [queryKeys.sharedTimetable] })
+            void queryClient.invalidateQueries({
+                queryKey: [queryKeys.sharedTimetableSemesters],
+            })
         },
     })
     const { requestFunction: changeTimetableMetaData } = useAPI("PATCH", "/timetables", {
@@ -465,6 +468,9 @@ const TabButtonRow: React.FC<TabButtonRowProps> = ({
             Promise.all([
                 queryClient.invalidateQueries({ queryKey: [queryKeys.timetables] }),
                 queryClient.invalidateQueries({ queryKey: [queryKeys.sharedTimetable] }),
+                queryClient.invalidateQueries({
+                    queryKey: [queryKeys.sharedTimetableSemesters],
+                }),
             ]),
     })
     const isSettingShared =
