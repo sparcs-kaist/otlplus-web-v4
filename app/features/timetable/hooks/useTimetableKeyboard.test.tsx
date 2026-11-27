@@ -27,7 +27,12 @@ const lecture = (id: number, begin = 600): TimetableItem => ({
 })
 const custom = (id: number, begin = 600): TimetableItem => ({
     kind: "custom",
-    data: { id, block_name: "Study", place: "", day: 1, begin, end: begin + 60 },
+    data: {
+        id,
+        block_name: "Study",
+        place: "",
+        times: [{ day: 1, begin, end: begin + 60 }],
+    },
 })
 const clients: QueryClient[] = []
 const unmounts: (() => void)[] = []

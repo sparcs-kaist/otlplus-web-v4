@@ -18,9 +18,6 @@ const block: CustomBlock = {
     id: 7,
     block_name: "Study group",
     place: "Library",
-    day: 0,
-    begin: 600,
-    end: 660,
     times: [
         { day: 0, begin: 600, end: 660 },
         { day: 2, begin: 840, end: 900 },
@@ -94,11 +91,11 @@ describe("unified timetable item reads", () => {
         expect(onItemSelect).toHaveBeenLastCalledWith(lectureItem, expect.anything())
     })
 
-    it("supports legacy single-slot blocks and updates when only timetableItems changes", () => {
-        const legacyBlock = { ...block, times: undefined }
+    it("supports single-slot blocks and updates when only timetableItems changes", () => {
+        const singleBlock = { ...block, times: block.times.slice(0, 1) }
         const { rerender } = render(
             <CustomTimeTableGrid
-                timetableItems={[{ kind: "custom", data: legacyBlock }]}
+                timetableItems={[{ kind: "custom", data: singleBlock }]}
             />,
         )
         expect(screen.getAllByText("Study group")).toHaveLength(1)

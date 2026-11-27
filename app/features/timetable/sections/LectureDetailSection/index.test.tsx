@@ -62,9 +62,6 @@ const custom: TimetableItem = {
         id: lecture.id,
         block_name: "Study",
         place: "Library",
-        day: 0,
-        begin: 540,
-        end: 600,
         times: [
             { day: 0, begin: 540, end: 600 },
             { day: 2, begin: 540, end: 600 },

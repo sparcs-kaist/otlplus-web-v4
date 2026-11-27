@@ -62,8 +62,7 @@ export const getPaletteColor = <T>(
         ? undefined
         : palette[((colorIndex % palette.length) + palette.length) % palette.length]
 
-export const getCustomBlockTimes = (block: CustomBlock): TimeBlock[] =>
-    block.times ?? [{ day: block.day, begin: block.begin, end: block.end }]
+export const getCustomBlockTimes = (block: CustomBlock): TimeBlock[] => block.times
 
 export const getTimetableItemTimes = (item: TimetableItem): TimeBlock[] =>
     isLectureItem(item) ? item.data.classes : getCustomBlockTimes(item.data)

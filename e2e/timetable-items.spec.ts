@@ -60,9 +60,7 @@ async function setup(page: Page, initialHomeId: number | null = null) {
                         id: 7,
                         block_name: "Study time",
                         place: "Library",
-                        day: 1,
-                        begin: 720,
-                        end: 780,
+                        times: [{ day: 1, begin: 720, end: 780 }],
                     },
                 },
             ],
@@ -323,9 +321,7 @@ test("keeps zero-time lectures and off-grid blocks visible as separate items", a
                 id: 21,
                 block_name: "Saturday study",
                 place: "",
-                day: 5,
-                begin: 720,
-                end: 780,
+                times: [{ day: 5, begin: 720, end: 780 }],
             },
         },
         {
@@ -334,9 +330,7 @@ test("keeps zero-time lectures and off-grid blocks visible as separate items", a
                 id: 22,
                 block_name: "Sunday study",
                 place: "",
-                day: 6,
-                begin: 720,
-                end: 780,
+                times: [{ day: 6, begin: 720, end: 780 }],
             },
         },
     ])
@@ -387,9 +381,7 @@ async function setupGroupedBlocks(page: Page) {
             id: 8,
             block_name: "Team meeting",
             place: "Study room",
-            day: 3,
-            begin: 840,
-            end: 900,
+            times: [{ day: 3, begin: 840, end: 900 }],
         },
     })
     return state
