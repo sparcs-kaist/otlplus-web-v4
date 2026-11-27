@@ -432,7 +432,7 @@ export default function Timetable() {
                 timetableItemKey(nextSelectedItems[0]!) === timetableItemKey(item)
             ) {
                 setSelectedCustomBlock(item.data)
-                setTimeFilter(item.data.times[0] ?? null)
+                setTimeFilter(null)
                 setIsCustomBlockSectionOpen(true)
             } else {
                 setIsCustomBlockSectionOpen(false)
