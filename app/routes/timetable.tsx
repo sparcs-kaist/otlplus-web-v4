@@ -14,7 +14,7 @@ import Icon from "@/common/primitives/Icon"
 import Typography from "@/common/primitives/Typography"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
-import { getCustomBlockTimes } from "@/common/utils/timetableItems"
+import { getCustomBlockTimes, toTimetableItems } from "@/common/utils/timetableItems"
 import KeyboardShortcutModal from "@/features/timetable/components/KeyboardShortcutModal"
 import { useTimetableClone } from "@/features/timetable/hooks/useTimetableClone"
 import { useTimetableEditor } from "@/features/timetable/hooks/useTimetableEditor"
@@ -269,9 +269,9 @@ export default function Timetable() {
         () =>
             status !== "success"
                 ? nonLoginTimetable
-                : currentTimetableId === null
-                  ? (myTimetable.data?.timetableItems ?? [])
-                  : (timetable.data?.timetableItems ?? []),
+                : toTimetableItems(
+                      currentTimetableId === null ? myTimetable.data : timetable.data,
+                  ),
         [currentTimetableId, myTimetable.data, nonLoginTimetable, status, timetable.data],
     )
     const currentTimetableLectures = useMemo(

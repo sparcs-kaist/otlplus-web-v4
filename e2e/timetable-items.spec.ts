@@ -88,8 +88,12 @@ async function setup(page: Page, initialHomeId: number | null = null) {
                 : tables
                       .get(homeId)!
                       .flatMap((i) => (i.kind === "lecture" ? [i.data] : [])),
-        timetableItems:
-            homeId === null ? [{ kind: "lecture", data: lecture }] : tables.get(homeId),
+        customBlocks:
+            homeId === null
+                ? []
+                : tables
+                      .get(homeId)!
+                      .flatMap((i) => (i.kind === "custom" ? [i.data] : [])),
     })
     await page.route("**/api/v2/**", async (route) => {
         const request = route.request()
@@ -109,12 +113,15 @@ async function setup(page: Page, initialHomeId: number | null = null) {
         else if (path === "/semesters") json = { semesters: [semester] }
         else if (path === "/semesters/current") json = semester
         else if (path === "/timetables/home") {
-            if (method === "PATCH") homeId = request.postDataJSON().timetableId
-            json = home()
+            if (method === "PATCH") {
+                homeId = request.postDataJSON().timetableId
+                const { lectures, customBlocks, ...selection } = home()
+                json = selection
+            } else json = home()
         } else if (path === "/timetables/my-timetable")
             json = {
                 lectures: [lecture],
-                timetableItems: [{ kind: "lecture", data: lecture }],
+                customBlocks: [],
             }
         else if (path === "/timetables") {
             if (method === "POST") {
@@ -233,8 +240,8 @@ async function setup(page: Page, initialHomeId: number | null = null) {
         } else if (/^\/timetables\/\d+$/.test(path)) {
             const items = tables.get(Number(path.split("/")[2])) ?? []
             json = {
-                timetableItems: items,
                 lectures: items.flatMap((i) => (i.kind === "lecture" ? [i.data] : [])),
+                customBlocks: items.flatMap((i) => (i.kind === "custom" ? [i.data] : [])),
             }
         } else if (path === "/departments") json = { departments: [] }
         else if (path === "/reviews") json = { reviews: [], totalCount: 0 }
@@ -625,7 +632,7 @@ for (const viewport of [
                           source: "saved",
                           name: "Alex's timetable",
                           lectures: [lecture],
-                          timetableItems: [{ kind: "lecture", data: lecture }],
+                          customBlocks: [],
                       }
             await route.fulfill({ json })
         })
@@ -634,7 +641,8 @@ for (const viewport of [
                 json: {
                     source: "saved",
                     timetableId: 1,
-                    timetableItems: [{ kind: "lecture", data: lecture }],
+                    lectures: [lecture],
+                    customBlocks: [],
                 },
             }),
         )

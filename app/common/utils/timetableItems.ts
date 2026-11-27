@@ -1,7 +1,24 @@
 import { TimetableItemKind } from "@/common/enum/timetableItemKind"
 import type { CustomBlock } from "@/common/schemas/customBlock"
+import type { Lecture } from "@/common/schemas/lecture"
 import type { TimeBlock } from "@/common/schemas/timeblock"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
+
+export const toTimetableItems = (
+    timetable: { lectures: Lecture[]; customBlocks: CustomBlock[] } | undefined,
+): TimetableItem[] =>
+    timetable
+        ? [
+              ...timetable.lectures.map((data) => ({
+                  kind: TimetableItemKind.LECTURE,
+                  data,
+              })),
+              ...timetable.customBlocks.map((data) => ({
+                  kind: TimetableItemKind.CUSTOM,
+                  data,
+              })),
+          ]
+        : []
 
 export const timetableItemKey = (item: TimetableItem) => `${item.kind}:${item.data.id}`
 

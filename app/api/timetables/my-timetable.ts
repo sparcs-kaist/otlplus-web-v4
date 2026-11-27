@@ -1,8 +1,8 @@
 import { z } from "zod"
 
 import { SemesterEnum } from "@/common/enum/semesterEnum"
+import { CustomBlockSchema } from "@/common/schemas/customBlock"
 import { LectureSchema } from "@/common/schemas/lecture"
-import { TimetableItemSchema } from "@/common/schemas/timetableItem"
 
 // GET /api/timetables/my-timetable
 export const GETRequest = z.object({
@@ -12,7 +12,7 @@ export const GETRequest = z.object({
 
 export const GETResponse = z.object({
     lectures: z.array(LectureSchema),
-    timetableItems: z.array(TimetableItemSchema),
+    customBlocks: z.array(CustomBlockSchema),
 })
 
 export type GETMyTimetableResponse = z.infer<typeof GETResponse>

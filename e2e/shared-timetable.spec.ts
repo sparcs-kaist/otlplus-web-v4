@@ -77,8 +77,7 @@ test("selects one shared timetable per semester independently of the main timeta
                     timetableId: shared.get(term) ?? null,
                     source: shared.get(term) == null ? "enrolled" : "saved",
                     name: "Shared",
-                    lectures: [],
-                    timetableItems: [],
+                    ...(method === "GET" ? { lectures: [], customBlocks: [] } : {}),
                 }
             } else if (path === "/timetables/home") {
                 if (method === "PATCH") homeId = request.postDataJSON().timetableId
@@ -88,8 +87,7 @@ test("selects one shared timetable per semester independently of the main timeta
                     timetableId: homeId,
                     source: homeId === null ? "enrolled" : "saved",
                     name: "Main",
-                    lectures: [],
-                    timetableItems: [],
+                    ...(method === "GET" ? { lectures: [], customBlocks: [] } : {}),
                 }
             } else if (path === "/timetables") {
                 if (method === "DELETE") {
@@ -129,11 +127,10 @@ test("selects one shared timetable per semester independently of the main timeta
                     source: shared.get(term) == null ? "enrolled" : "saved",
                     name: "Shared",
                     lectures: [],
-                    timetableItems:
-                        shared.get(term) == null ? [] : [{ kind: "custom", data: block }],
+                    customBlocks: shared.get(term) == null ? [] : [block],
                 }
             } else if (path.startsWith("/timetables/")) {
-                json = { lectures: [], timetableItems: [] }
+                json = { lectures: [], customBlocks: [] }
             } else if (path.includes("/lectures") || path.includes("/wishlist")) {
                 json = { courses: [] }
             } else if (path.includes("/reviews")) {

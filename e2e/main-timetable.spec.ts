@@ -71,8 +71,9 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
                 year: 2026,
                 semester: 3,
                 name: "Main",
-                lectures: [],
-                timetableItems: homeId === 2 ? [{ kind: "custom", data: block }] : [],
+                ...(method === "GET"
+                    ? { lectures: [], customBlocks: homeId === 2 ? [block] : [] }
+                    : {}),
             }
         } else if (path === "/timetables/shared") {
             json = {
@@ -82,7 +83,7 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
                 source: "enrolled",
                 name: "Enrolled",
                 lectures: [],
-                timetableItems: [],
+                customBlocks: [],
             }
         } else if (path === "/timetables") {
             if (method === "POST") {
@@ -113,7 +114,7 @@ test("sets, creates, and deletes the main timetable from the timetable tabs", as
         } else if (path.endsWith("/custom-blocks")) {
             json = { custom_blocks: path.includes("/2/") ? [block] : [] }
         } else if (path.startsWith("/timetables/")) {
-            json = { lectures: [], timetableItems: [] }
+            json = { lectures: [], customBlocks: [] }
         } else if (path.includes("/lectures") || path.includes("/wishlist")) {
             json = { courses: [] }
         } else if (path.includes("/reviews")) {

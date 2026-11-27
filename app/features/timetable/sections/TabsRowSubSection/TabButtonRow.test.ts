@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest"
 
+import { GETResponse as GetHome, PATCHResponse as PatchHome } from "@/api/timetables/home"
+import {
+    GETResponse as GetShared,
+    PATCHResponse as PatchShared,
+} from "@/api/timetables/shared"
 import { SemesterEnum } from "@/common/enum/semesterEnum"
 import type { Timetables } from "@/common/schemas/timetables"
 
@@ -13,6 +18,29 @@ const timetable = {
     semester: SemesterEnum.SPRING,
     timeTableOrder: 0,
 } as Timetables
+
+describe("timetable selection response contracts", () => {
+    it.each([
+        ["main", GetHome, PatchHome],
+        ["shared", GetShared, PatchShared],
+    ] as const)(
+        "keeps %s PATCH metadata-only while GET requires both arrays",
+        (_, get, patch) => {
+            const metadata = {
+                source: "saved",
+                timetableId: 42,
+                name: "Spring timetable",
+                year: 2026,
+                semester: SemesterEnum.SPRING,
+            }
+            const contents = { ...metadata, lectures: [], customBlocks: [] }
+            expect(patch.parse(metadata)).toEqual(metadata)
+            expect(patch.parse(contents)).toEqual(metadata)
+            expect(get.safeParse(metadata).success).toBe(false)
+            expect(get.parse(contents)).toEqual(contents)
+        },
+    )
+})
 
 describe("getTimetableAutoSelection", () => {
     it("selects the first editable timetable once per semester", () => {

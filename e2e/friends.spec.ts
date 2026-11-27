@@ -149,7 +149,7 @@ async function setup(page: Page, language = "ko") {
         } else if (path === "/api/v2/timetables/my-timetable") {
             json = {
                 lectures: [lectures[5]],
-                timetableItems: [{ kind: "lecture", data: lectures[5] }],
+                customBlocks: [],
             }
         } else if (
             path === "/api/v2/timetables/shared" ||
@@ -163,12 +163,8 @@ async function setup(page: Page, language = "ko") {
                           name: "지난 시간표",
                           year,
                           semester: term,
-                          timetableItems: [
-                              {
-                                  kind: "lecture",
-                                  data: lecture(81, "지난 학기 공유 수업", [0], 600, 690),
-                              },
-                          ],
+                          lectures: [lecture(81, "지난 학기 공유 수업", [0], 600, 690)],
+                          customBlocks: [],
                       }
                     : term === 1
                       ? {
@@ -178,7 +174,7 @@ async function setup(page: Page, language = "ko") {
                             year,
                             semester: term,
                             lectures: [academicLecture],
-                            timetableItems: [{ kind: "lecture", data: academicLecture }],
+                            customBlocks: [],
                         }
                       : {
                             source: "saved",
@@ -186,16 +182,17 @@ async function setup(page: Page, language = "ko") {
                             name: "공유 시간표",
                             year,
                             semester: term,
-                            lectures,
-                            timetableItems:
+                            lectures:
                                 path === "/api/v2/timetables/shared"
-                                    ? items.filter(
-                                          (item) =>
-                                              item.kind === "custom" ||
-                                              item.data.id === sharedLecture.id ||
-                                              item.data.id === 12,
+                                    ? lectures.filter(
+                                          (lecture) =>
+                                              lecture.id === sharedLecture.id ||
+                                              lecture.id === 12,
                                       )
-                                    : items,
+                                    : lectures,
+                            customBlocks: items.flatMap((item) =>
+                                item.kind === "custom" ? [item.data] : [],
+                            ),
                         }
         } else if (path === "/api/v2/timetables") {
             json = {

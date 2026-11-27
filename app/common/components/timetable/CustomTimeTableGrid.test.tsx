@@ -5,6 +5,7 @@ import { GETResponse as FriendSharedResponse } from "@/api/friends/$friendId/tim
 import type { CustomBlock } from "@/common/schemas/customBlock"
 import type { Lecture } from "@/common/schemas/lecture"
 import type { TimetableItem } from "@/common/schemas/timetableItem"
+import { toTimetableItems } from "@/common/utils/timetableItems"
 import themes from "@/styles/themes"
 import { fireEvent, render, screen } from "@/test/test-utils"
 
@@ -45,7 +46,6 @@ const lecture = {
 
 describe("unified timetable item reads", () => {
     it("keeps all custom block times in a shared friend response", () => {
-        const timetableItems = [{ kind: "custom", data: block }]
         const response = {
             source: "saved",
             timetableId: 42,
@@ -53,25 +53,20 @@ describe("unified timetable item reads", () => {
             year: 2026,
             semester: 3,
             lectures: [],
-            timetableItems,
+            customBlocks: [block],
         }
-        expect(FriendSharedResponse.parse(response).timetableItems).toEqual(
-            timetableItems,
-        )
+        expect(FriendSharedResponse.parse(response).customBlocks).toEqual([block])
         expect(
             FriendSharedResponse.safeParse({
                 ...response,
-                timetableItems: [{ kind: "unknown", data: block }],
+                customBlocks: [{ ...block, times: [] }],
             }).success,
         ).toBe(false)
     })
 
     it("renders each slot once, including weekend/exact-minute overflow, without editing controls", () => {
         const onLectureSelect = vi.fn()
-        const items: TimetableItem[] = [
-            { kind: "lecture", data: lecture },
-            { kind: "custom", data: block },
-        ]
+        const items = toTimetableItems({ lectures: [lecture], customBlocks: [block] })
         const { container } = render(
             <CustomTimeTableGrid
                 timetableItems={items}
